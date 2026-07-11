@@ -1,0 +1,74 @@
+# ==============================
+# UBF Conferencia .gitignore
+# ==============================
+
+# --- 공통 / OS ---
+.DS_Store
+Thumbs.db
+*.log
+logs/
+
+# --- 임시 (Claude push 작업용) ---
+_to_delete/
+_push_source.tar.gz
+
+# --- 환경 변수 / 시크릿 ---
+.env
+.env.*
+*.pem
+*.key
+
+# ==============================
+# Node.js (server/)
+# ==============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+coverage/
+dist/
+
+# ==============================
+# Flutter / Dart (ubf_app/)
+# ==============================
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+**/generated_plugin_registrant.*
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Android
+**/android/.gradle/
+**/android/captures/
+**/android/local.properties
+**/android/key.properties
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+
+# iOS / macOS
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/Generated.xcconfig
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/macos/Pods/
+**/macos/Flutter/GeneratedPluginRegistrant.*
+**/macos/Flutter/ephemeral/
+
+# Web / Windows / Linux 빌드
+**/web/build/
+**/windows/flutter/ephemeral/
+**/linux/flutter/ephemeral/
