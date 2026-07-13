@@ -3,17 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../core/utils/api_client.dart';
 import '../../auth/providers/auth_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 enum SituationType {
-  health('health',  '🚑 건강/의료 응급',  Colors.red),
-  safety('safety',  '🆘 신변 위협',       Colors.deepOrange),
-  lost  ('lost',    '🗺️ 길을 잃음',       Colors.orange);
+  health('health', Colors.red),
+  safety('safety', Colors.deepOrange),
+  lost  ('lost',   Colors.orange);
 
-  const SituationType(this.value, this.label, this.color);
+  const SituationType(this.value, this.color);
   final String value;
-  final String label;
   final Color color;
 }
+
+// 상황 유형의 현재 언어 라벨 (이모지 포함)
+String _situationLabel(SituationType t, AppLocalizations l10n) => switch (t) {
+      SituationType.health => l10n.sosHealth,
+      SituationType.safety => l10n.sosSafety,
+      SituationType.lost => l10n.sosLost,
+    };
 
 class SosScreen extends ConsumerStatefulWidget {
   final String programId;
@@ -47,8 +54,10 @@ class _SosScreenState extends ConsumerState<SosScreen> {
   Future<void> _requestLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       if (!serviceEnabled) {
-        setState(() => _locationError = 'GPS가 꺼져 있습니다. 설정에서 활성화해 주세요.');
+        setState(() => _locationError = l10n.sosGpsOff);
         return;
       }
 
@@ -58,7 +67,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
       }
       if (permission == LocationPermission.deniedForever ||
           permission == LocationPermission.denied) {
-        setState(() => _locationError = '위치 권한이 거부되었습니다. 위치 없이 SOS를 전송합니다.');
+        setState(() => _locationError = l10n.sosPermDenied);
         return;
       }
 
@@ -67,11 +76,15 @@ class _SosScreenState extends ConsumerState<SosScreen> {
       );
       setState(() => _position = pos);
     } catch (e) {
-      setState(() => _locationError = '위치를 가져올 수 없습니다: $e');
+      if (mounted) {
+        setState(() => _locationError =
+            AppLocalizations.of(context)!.sosLocationError('$e'));
+      }
     }
   }
 
   Future<void> _send() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isSending = true);
 
     try {
@@ -93,17 +106,15 @@ class _SosScreenState extends ConsumerState<SosScreen> {
         barrierDismissible: false,
         builder: (_) => AlertDialog(
           icon: const Icon(Icons.check_circle, color: Colors.green, size: 48),
-          title: const Text('SOS 전송 완료'),
-          content: const Text(
-            '관리자에게 긴급 알림이 전송되었습니다.\n잠시만 기다려 주세요.',
-          ),
+          title: Text(l10n.sosSentTitle),
+          content: Text(l10n.sosSentMsg),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // dialog
                 Navigator.pop(context); // SOS 화면
               },
-              child: const Text('확인'),
+              child: Text(l10n.actionConfirm),
             ),
           ],
         ),
@@ -111,7 +122,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('전송 실패: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(l10n.sosSendFailed('$e')), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isSending = false);
@@ -120,12 +131,13 @@ class _SosScreenState extends ConsumerState<SosScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.red[50],
       appBar: AppBar(
         backgroundColor: Colors.red[700],
         foregroundColor: Colors.white,
-        title: const Text('긴급 SOS'),
+        title: Text(l10n.sosTitle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -139,14 +151,14 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                 color: Colors.red[700],
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.white, size: 32),
-                  SizedBox(width: 12),
+                  const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 32),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '관리자에게 즉시 알림이 전송됩니다.\n긴급한 상황에서만 사용해 주세요.',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                      l10n.sosBanner,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
@@ -156,7 +168,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
 
             // 상황 선택
             Text(
-              '상황 유형을 선택하세요',
+              l10n.sosSelectType,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -180,7 +192,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                   ),
                   child: Row(
                     children: [
-                      Text(type.label, style: const TextStyle(fontSize: 16)),
+                      Text(_situationLabel(type, l10n), style: const TextStyle(fontSize: 16)),
                       const Spacer(),
                       if (selected)
                         Icon(Icons.check_circle, color: type.color),
@@ -196,8 +208,8 @@ class _SosScreenState extends ConsumerState<SosScreen> {
               controller: _messageController,
               maxLines: 3,
               decoration: InputDecoration(
-                labelText: '추가 메시지 (선택)',
-                hintText: '현재 상황을 간단히 설명해 주세요',
+                labelText: l10n.sosMessageLabel,
+                hintText: l10n.sosMessageHint,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
                 fillColor: Colors.white,
@@ -226,8 +238,8 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                   Expanded(
                     child: Text(
                       _position != null
-                          ? 'GPS 위치 확인됨 (${_position!.latitude.toStringAsFixed(5)}, ${_position!.longitude.toStringAsFixed(5)})'
-                          : (_locationError ?? 'GPS 위치 확인 중...'),
+                          ? l10n.sosGpsConfirmed('(${_position!.latitude.toStringAsFixed(5)}, ${_position!.longitude.toStringAsFixed(5)})')
+                          : (_locationError ?? l10n.sosGpsChecking),
                       style: TextStyle(
                         fontSize: 13,
                         color: _position != null ? Colors.green[700] : Colors.orange[700],
@@ -237,7 +249,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                   if (_position == null && _locationError != null)
                     TextButton(
                       onPressed: _requestLocation,
-                      child: const Text('재시도'),
+                      child: Text(l10n.actionRetry),
                     ),
                 ],
               ),
@@ -266,7 +278,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                     )
                   : const Icon(Icons.emergency, size: 24),
-              label: Text(_isSending ? '전송 중...' : 'SOS 전송'),
+              label: Text(_isSending ? l10n.sosSending : l10n.sosSend),
             ),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/registration_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 class FoodStep extends ConsumerStatefulWidget {
   final String programId;
@@ -17,17 +18,17 @@ class _FoodStepState extends ConsumerState<FoodStep> {
   late final TextEditingController _medicalController;
   bool _skipsBreakfast = false;
 
-  static const _commonRestrictions = [
-    '채식주의자 (Vegetarian)',
-    '비건 (Vegan)',
-    '할랄 (Halal)',
-    '코셔 (Kosher)',
-    '글루텐 불내증',
-    '땅콩 알레르기',
-    '유제품 알레르기',
-    '해산물 알레르기',
-    '없음',
-  ];
+  List<String> _commonRestrictions(AppLocalizations l10n) => [
+        l10n.foodVegetarian,
+        l10n.foodVegan,
+        l10n.foodHalal,
+        l10n.foodKosher,
+        l10n.foodGluten,
+        l10n.foodPeanut,
+        l10n.foodDairy,
+        l10n.foodSeafood,
+        l10n.foodNone,
+      ];
 
   @override
   void initState() {
@@ -55,23 +56,25 @@ class _FoodStepState extends ConsumerState<FoodStep> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (!widget.enabled) {
-      return const Center(child: Text('이 섹션은 비활성화되어 있습니다'));
+      return Center(child: Text(l10n.sectionDisabled));
     }
 
     final theme = Theme.of(context);
+    final none = l10n.foodNone;
 
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         // ── 질병 유무 ───────────────────────────────────────
-        Text('질병 유무', style: theme.textTheme.titleSmall),
+        Text(l10n.foodMedicalTitle, style: theme.textTheme.titleSmall),
         const SizedBox(height: 4),
         TextField(
           controller: _medicalController,
           maxLines: 2,
-          decoration: const InputDecoration(
-            hintText: '당뇨, 고혈압, 알레르기 등 특이 질환을 입력하세요 (없으면 비워두세요)',
+          decoration: InputDecoration(
+            hintText: l10n.foodMedicalHint,
             alignLabelWithHint: true,
           ),
           onChanged: (_) => _save(),
@@ -79,25 +82,25 @@ class _FoodStepState extends ConsumerState<FoodStep> {
         const SizedBox(height: 20),
 
         // ── 섭취 불가능한 음식 ─────────────────────────────
-        Text('섭취 불가능한 음식', style: theme.textTheme.titleSmall),
+        Text(l10n.foodRestrictionTitle, style: theme.textTheme.titleSmall),
         const SizedBox(height: 4),
         Text(
-          '아래에서 선택하거나 직접 입력하세요',
+          l10n.foodRestrictionHelp,
           style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
         ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
           runSpacing: 6,
-          children: _commonRestrictions.map((restriction) {
+          children: _commonRestrictions(l10n).map((restriction) {
             return ActionChip(
               label: Text(restriction, style: const TextStyle(fontSize: 13)),
               onPressed: () {
-                if (restriction == '없음') {
-                  _cannotEatController.text = '없음';
+                if (restriction == none) {
+                  _cannotEatController.text = none;
                 } else {
                   final current = _cannotEatController.text;
-                  if (current.isEmpty || current == '없음') {
+                  if (current.isEmpty || current == none) {
                     _cannotEatController.text = restriction;
                   } else if (!current.contains(restriction)) {
                     _cannotEatController.text = '$current, $restriction';
@@ -112,8 +115,8 @@ class _FoodStepState extends ConsumerState<FoodStep> {
         TextField(
           controller: _cannotEatController,
           maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: '섭취 불가능한 음식을 입력하세요',
+          decoration: InputDecoration(
+            hintText: l10n.foodRestrictionInputHint,
             alignLabelWithHint: true,
           ),
           onChanged: (_) => _save(),
@@ -121,12 +124,12 @@ class _FoodStepState extends ConsumerState<FoodStep> {
         const SizedBox(height: 20),
 
         // ── 아침 식사 여부 ──────────────────────────────────
-        Text('아침 식사', style: theme.textTheme.titleSmall),
+        Text(l10n.foodBreakfastTitle, style: theme.textTheme.titleSmall),
         const SizedBox(height: 4),
         CheckboxListTile(
           value: _skipsBreakfast,
-          title: const Text('아침 식사를 주로 하지 않습니다'),
-          subtitle: const Text('식사 준비 인원 파악에 사용됩니다'),
+          title: Text(l10n.foodSkipBreakfast),
+          subtitle: Text(l10n.foodSkipBreakfastSub),
           controlAffinity: ListTileControlAffinity.leading,
           contentPadding: EdgeInsets.zero,
           onChanged: (val) {

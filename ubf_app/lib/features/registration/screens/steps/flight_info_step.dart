@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/flight_api_service.dart';
 import '../../providers/registration_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 // 도착/출발 비행기 정보 입력 + AviationStack API 연동
 class FlightInfoStep extends ConsumerStatefulWidget {
@@ -121,8 +122,9 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
     if (!mounted) return;
 
     if (info == null) {
+      final msg = AppLocalizations.of(context)!.flightNotFound;
       setState(() {
-        _searchError = '항공편 정보를 찾을 수 없습니다. 직접 입력해 주세요.';
+        _searchError = msg;
         _isSearching = false;
       });
       return;
@@ -187,18 +189,19 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (!widget.enabled) {
-      return const Center(child: Text('이 섹션은 비활성화되어 있습니다'));
+      return Center(child: Text(l10n.sectionDisabled));
     }
 
-    final label = widget.isArrival ? '도착' : '출발';
+    final label = widget.isArrival ? l10n.flightArrival : l10n.flightDeparture;
     final theme = Theme.of(context);
 
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         Text(
-          '$label 비행기 정보',
+          l10n.flightInfoTitle(label),
           style: theme.textTheme.titleSmall?.copyWith(color: Colors.grey[600]),
         ),
         const SizedBox(height: 16),
@@ -207,8 +210,8 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
           readOnly: true,
           controller: _dateLabelController,
           decoration: InputDecoration(
-            labelText: '$label 날짜 *',
-            hintText: '날짜를 선택하세요',
+            labelText: l10n.flightDateLabel(label),
+            hintText: l10n.flightPickDate,
             suffixIcon: IconButton(
               icon: const Icon(Icons.calendar_today),
               onPressed: _pickDate,
@@ -222,8 +225,8 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
           controller: _flightNoController,
           textCapitalization: TextCapitalization.characters,
           decoration: InputDecoration(
-            labelText: '항공편 번호',
-            hintText: '예: KE123, OZ456',
+            labelText: l10n.flightNumber,
+            hintText: l10n.flightNumberHint,
             suffixIcon: _isSearching
                 ? const Padding(
                     padding: EdgeInsets.all(12),
@@ -235,7 +238,7 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
                   )
                 : IconButton(
                     icon: const Icon(Icons.search),
-                    tooltip: '항공편 자동 조회',
+                    tooltip: l10n.flightAutoSearch,
                     onPressed: _searchFlight,
                   ),
           ),
@@ -270,7 +273,7 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
                 ),
                 if (_flightInfo!.status != null)
                   Text(
-                    '상태: ${_flightInfo!.status}',
+                    l10n.flightStatus('${_flightInfo!.status}'),
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
               ],
@@ -282,8 +285,8 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
         TextField(
           controller: _airportController,
           decoration: InputDecoration(
-            labelText: '$label 공항',
-            hintText: '항공편 번호 검색 시 자동 입력',
+            labelText: l10n.flightAirportLabel(label),
+            hintText: l10n.flightAutoFillHint,
           ),
           onChanged: (_) => _saveToProvider(),
         ),
@@ -292,8 +295,8 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
         TextField(
           controller: _timeController,
           decoration: InputDecoration(
-            labelText: '$label 예정 시각',
-            hintText: '항공편 번호 검색 시 자동 입력',
+            labelText: l10n.flightTimeLabel(label),
+            hintText: l10n.flightAutoFillHint,
           ),
           onChanged: (_) => _saveToProvider(),
         ),

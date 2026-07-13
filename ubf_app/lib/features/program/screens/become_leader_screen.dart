@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../core/utils/api_client.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 class BecomeLeaderScreen extends ConsumerStatefulWidget {
   const BecomeLeaderScreen({super.key});
@@ -30,10 +31,11 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
   }
 
   Future<void> _register() async {
+    final l10n = AppLocalizations.of(context)!;
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('이름을 입력하세요')),
+        SnackBar(content: Text(l10n.profileNameRequired)),
       );
       return;
     }
@@ -49,7 +51,7 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('리더 등록 실패: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.blLeaderRegFailed('$e'))),
         );
       }
     } finally {
@@ -61,9 +63,10 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final user = ref.watch(currentUserProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('리더 등록')),
+      appBar: AppBar(title: Text(l10n.blTitle)),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -80,7 +83,7 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        '리더로 등록하면 수양회 프로그램을 생성하고 참가자를 관리할 수 있습니다.',
+                        l10n.blInfo,
                         style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
                       ),
                     ),
@@ -90,7 +93,7 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
             ),
             const SizedBox(height: 32),
             // 로그인 정보 표시
-            Text('로그인 계정', style: theme.textTheme.labelLarge?.copyWith(color: Colors.grey[600])),
+            Text(l10n.blLoginAccount, style: theme.textTheme.labelLarge?.copyWith(color: Colors.grey[600])),
             const SizedBox(height: 4),
             Text(
               user.email ?? '-',
@@ -100,11 +103,11 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
             // 리더 이름 입력
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: '리더 이름 *',
-                hintText: '참가자들에게 보여질 이름',
-                prefixIcon: Icon(Icons.person_outline),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.blLeaderName,
+                hintText: l10n.blLeaderNameHint,
+                prefixIcon: const Icon(Icons.person_outline),
+                border: const OutlineInputBorder(),
               ),
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _register(),
@@ -121,7 +124,7 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                     : const Icon(Icons.arrow_forward),
-                label: const Text('리더 등록 후 이벤트 생성하기'),
+                label: Text(l10n.blRegisterButton),
               ),
             ),
             const SizedBox(height: 16),

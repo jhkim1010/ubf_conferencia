@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/utils/api_client.dart';
 import '../providers/program_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 class EditProgramScreen extends ConsumerStatefulWidget {
   final String programId;
@@ -39,15 +40,15 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     'volunteer_resources': true,
   };
 
-  final Map<String, String> _sectionLabels = {
-    'personal_info': '개인 정보',
-    'arrival_flight': '도착 비행기 정보',
-    'departure_flight': '출발 비행기 정보',
-    'food_requirements': '음식 특별 사항',
-    'special_programs': '특별 프로그램/투어 옵션',
-    'roommate': '룸메이트 희망',
-    'volunteer_resources': '프로그램 진행 도움 자원 (악기, 번역 etc)',
-  };
+  Map<String, String> _sectionLabels(AppLocalizations l10n) => {
+        'personal_info': l10n.regStepPersonal,
+        'arrival_flight': l10n.flightInfoTitle(l10n.flightArrival),
+        'departure_flight': l10n.flightInfoTitle(l10n.flightDeparture),
+        'food_requirements': l10n.summarySectionFood,
+        'special_programs': l10n.cpSpecialOptions,
+        'roommate': l10n.summarySectionRoommate,
+        'volunteer_resources': l10n.cpSecVolunteer,
+      };
 
   List<Map<String, dynamic>> _options = [];
 
@@ -141,6 +142,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
 
     try {
@@ -163,13 +165,13 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
       // 캐시 무효화 후 대시보드로 복귀
       ref.invalidate(programByIdProvider(widget.programId));
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('설정이 저장되었습니다')),
+        SnackBar(content: Text(l10n.epSaved)),
       );
       Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
+          SnackBar(content: Text(l10n.profileSaveFailed('$e'))),
         );
       }
     } finally {
@@ -181,13 +183,14 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
   Widget build(BuildContext context) {
     final programAsync = ref.watch(programByIdProvider(widget.programId));
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return programAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text('오류: $e'))),
+      error: (e, _) => Scaffold(body: Center(child: Text(l10n.commonErrorDetail('$e')))),
       data: (program) {
         if (program == null) {
-          return const Scaffold(body: Center(child: Text('프로그램을 찾을 수 없습니다')));
+          return Scaffold(body: Center(child: Text(l10n.epNotFound)));
         }
 
         // 한 번만 초기화 (setState 없이)
@@ -198,7 +201,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('프로그램 설정 편집'),
+            title: Text(l10n.dashEditSettings),
             actions: [
               TextButton(
                 onPressed: _isLoading ? null : _save,
@@ -207,7 +210,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                         width: 18, height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('저장', style: TextStyle(fontWeight: FontWeight.bold)),
+                    : Text(l10n.actionSave, style: const TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -217,19 +220,19 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
               padding: const EdgeInsets.all(20),
               children: [
                 // 프로그램 유형
-                Text('프로그램 유형', style: theme.textTheme.titleMedium),
+                Text(l10n.cpProgramType, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 12),
                 SegmentedButton<String>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: 'local',
-                      label: Text('지역 수양회'),
-                      icon: Icon(Icons.location_city),
+                      label: Text(l10n.cpTypeLocal),
+                      icon: const Icon(Icons.location_city),
                     ),
                     ButtonSegment(
                       value: 'international',
-                      label: Text('국제 수양회'),
-                      icon: Icon(Icons.flight),
+                      label: Text(l10n.cpTypeInternational),
+                      icon: const Icon(Icons.flight),
                     ),
                   ],
                   selected: {_programType},
@@ -238,18 +241,18 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                 const SizedBox(height: 28),
 
                 // 기본 정보
-                Text('기본 정보', style: theme.textTheme.titleMedium),
+                Text(l10n.cpBasicInfo, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: '프로그램 이름 *'),
-                  validator: (v) => v?.isEmpty == true ? '프로그램 이름을 입력하세요' : null,
+                  decoration: InputDecoration(labelText: l10n.cpNameLabel),
+                  validator: (v) => v?.isEmpty == true ? l10n.cpNameRequired : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _locationController,
-                  decoration: const InputDecoration(labelText: '장소 *'),
-                  validator: (v) => v?.isEmpty == true ? '장소를 입력하세요' : null,
+                  decoration: InputDecoration(labelText: l10n.cpLocationLabel),
+                  validator: (v) => v?.isEmpty == true ? l10n.cpLocationRequired : null,
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -259,7 +262,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                         icon: const Icon(Icons.calendar_today, size: 18),
                         label: Text(
                           _startDate == null
-                              ? '시작일 선택'
+                              ? l10n.cpStartDate
                               : '${_startDate!.year}.${_startDate!.month.toString().padLeft(2, '0')}.${_startDate!.day.toString().padLeft(2, '0')}',
                         ),
                         onPressed: () => _selectDate(true),
@@ -271,7 +274,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                         icon: const Icon(Icons.calendar_today, size: 18),
                         label: Text(
                           _endDate == null
-                              ? '종료일 선택'
+                              ? l10n.cpEndDate
                               : '${_endDate!.year}.${_endDate!.month.toString().padLeft(2, '0')}.${_endDate!.day.toString().padLeft(2, '0')}',
                         ),
                         onPressed: () => _selectDate(false),
@@ -283,24 +286,24 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
 
                 // 입국 안내 (국제만)
                 if (_programType == 'international') ...[
-                  Text('입국 안내 정보', style: theme.textTheme.titleMedium),
+                  Text(l10n.cpImmigrationInfo, style: theme.textTheme.titleMedium),
                   const SizedBox(height: 4),
                   Text(
-                    '참가자가 공항 입국 시 감사관에게 보여줄 정보 (선택)',
+                    l10n.cpImmigrationDesc,
                     style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _airportController,
-                    decoration: const InputDecoration(
-                      labelText: '가까운 공항',
-                      hintText: '예: 인천국제공항 (ICN)',
-                      prefixIcon: Icon(Icons.flight_land),
+                    decoration: InputDecoration(
+                      labelText: l10n.cpNearestAirport,
+                      hintText: l10n.cpAirportHint,
+                      prefixIcon: const Icon(Icons.flight_land),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '현장 대표 연락처 (2명)',
+                    l10n.cpContacts,
                     style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
@@ -310,7 +313,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                         flex: 2,
                         child: TextFormField(
                           controller: _contact1NameController,
-                          decoration: const InputDecoration(labelText: '이름 1'),
+                          decoration: InputDecoration(labelText: l10n.cpName1),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -319,7 +322,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                         child: TextFormField(
                           controller: _contact1PhoneController,
                           keyboardType: TextInputType.phone,
-                          decoration: const InputDecoration(labelText: '전화번호 1'),
+                          decoration: InputDecoration(labelText: l10n.cpPhone1),
                         ),
                       ),
                     ],
@@ -331,7 +334,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                         flex: 2,
                         child: TextFormField(
                           controller: _contact2NameController,
-                          decoration: const InputDecoration(labelText: '이름 2'),
+                          decoration: InputDecoration(labelText: l10n.cpName2),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -340,7 +343,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                         child: TextFormField(
                           controller: _contact2PhoneController,
                           keyboardType: TextInputType.phone,
-                          decoration: const InputDecoration(labelText: '전화번호 2'),
+                          decoration: InputDecoration(labelText: l10n.cpPhone2),
                         ),
                       ),
                     ],
@@ -349,16 +352,16 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                 ],
 
                 // 섹션 활성화
-                Text('등록 섹션 활성화', style: theme.textTheme.titleMedium),
+                Text(l10n.cpSectionsTitle, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  '참가자에게 보여줄 항목을 선택하세요',
+                  l10n.cpSectionsDesc,
                   style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 8),
                 Card(
                   child: Column(
-                    children: _sectionLabels.entries.map((entry) {
+                    children: _sectionLabels(l10n).entries.map((entry) {
                       return SwitchListTile(
                         title: Text(entry.value),
                         value: _enabledSections[entry.key] ?? true,
@@ -375,7 +378,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                 if (_programType == 'international') ...[
                   Row(
                     children: [
-                      Text('특별 프로그램/투어 옵션', style: theme.textTheme.titleMedium),
+                      Text(l10n.cpSpecialOptions, style: theme.textTheme.titleMedium),
                       if (_startDate != null && !_startDate!.isAfter(DateTime.now())) ...[
                         const SizedBox(width: 8),
                         const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
@@ -399,7 +402,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              '수양회가 이미 시작되어 투어 옵션을 수정할 수 없습니다',
+                              l10n.epTourLocked,
                               style: TextStyle(fontSize: 12, color: Colors.orange[800]),
                             ),
                           ),
@@ -408,7 +411,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                     )
                   else
                     Text(
-                      '옵션별 비용을 설정하면 참가자가 선택할 수 있습니다',
+                      l10n.cpOptionsDesc,
                       style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                     ),
                   const SizedBox(height: 8),
@@ -424,10 +427,10 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                       child: ListTile(
                         title: Text(option['name'] as String? ?? ''),
                         subtitle: Text([
-                          '비용: ${option['cost']}',
+                          l10n.cpOptionCost('${option['cost']}'),
                           if (dates.isNotEmpty) dates,
                           if ((option['contactName'] as String?)?.isNotEmpty == true)
-                            '담당: ${option['contactName']}',
+                            l10n.epOptionContact('${option['contactName']}'),
                         ].join('  |  ')),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -450,7 +453,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   if (_startDate == null || _startDate!.isAfter(DateTime.now()))
                     OutlinedButton.icon(
                       icon: const Icon(Icons.add),
-                      label: const Text('옵션 추가'),
+                      label: Text(l10n.epAddOption),
                       onPressed: () => _showOptionDialog(),
                     ),
                   const SizedBox(height: 32),
@@ -461,7 +464,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   onPressed: _isLoading ? null : _save,
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('변경사항 저장'),
+                      : Text(l10n.epSaveChanges),
                 ),
                 const SizedBox(height: 20),
               ],
@@ -537,14 +540,15 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
     setState(() => _photoUrls.add(xfile.path));
   }
 
-  String _fmt(DateTime? d) => d == null
-      ? '날짜 선택'
+  String _fmt(DateTime? d, AppLocalizations l10n) => d == null
+      ? l10n.epPickDate
       : '${d.year}.${d.month.toString().padLeft(2, '0')}.${d.day.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: Text(widget.existing == null ? '옵션 추가' : '옵션 편집'),
+      title: Text(widget.existing == null ? l10n.epAddOption : l10n.epEditOption),
       contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       content: SingleChildScrollView(
         child: Column(
@@ -553,29 +557,29 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
           children: [
             TextField(
               controller: _nameCtrl,
-              decoration: const InputDecoration(labelText: '옵션명 *', hintText: '제주 투어 A코스'),
+              decoration: InputDecoration(labelText: l10n.epOptionNameReq, hintText: l10n.cpOptionNameHint),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _costCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: '비용 (숫자)'),
+              decoration: InputDecoration(labelText: l10n.epOptionCostNum),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _contactCtrl,
-              decoration: const InputDecoration(
-                labelText: '담당자 이름',
-                prefixIcon: Icon(Icons.person_outline),
+              decoration: InputDecoration(
+                labelText: l10n.epOptionContactName,
+                prefixIcon: const Icon(Icons.person_outline),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _descCtrl,
               maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: '설명 (선택)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.epOptionDesc,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -585,7 +589,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => _pickDate(true),
-                    child: Text(_fmt(_startDate), style: const TextStyle(fontSize: 12)),
+                    child: Text(_fmt(_startDate, l10n), style: const TextStyle(fontSize: 12)),
                   ),
                 ),
                 const Padding(
@@ -595,7 +599,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => _pickDate(false),
-                    child: Text(_fmt(_endDate), style: const TextStyle(fontSize: 12)),
+                    child: Text(_fmt(_endDate, l10n), style: const TextStyle(fontSize: 12)),
                   ),
                 ),
               ],
@@ -604,13 +608,13 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
             // 사진 (최대 5장)
             Row(
               children: [
-                Text('사진 (${_photoUrls.length}/5)',
+                Text(l10n.epPhotos(_photoUrls.length),
                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
                 const Spacer(),
                 if (_photoUrls.length < 5)
                   TextButton.icon(
                     icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
-                    label: const Text('추가'),
+                    label: Text(l10n.actionAdd),
                     onPressed: _pickPhoto,
                   ),
               ],
@@ -665,7 +669,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
+          child: Text(l10n.actionCancel),
         ),
         ElevatedButton(
           onPressed: () {
@@ -681,7 +685,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               'photoUrls': List<String>.from(_photoUrls),
             });
           },
-          child: const Text('확인'),
+          child: Text(l10n.actionConfirm),
         ),
       ],
     );

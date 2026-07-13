@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/program_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 // 입국 카드 화면
 // 참가자가 공항 입국 시 감사관에게 보여주는 화면
@@ -39,6 +40,7 @@ class _ImmigrationCardScreenState
   @override
   Widget build(BuildContext context) {
     final programAsync = ref.watch(programByIdProvider(widget.programId));
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: const Color(0xFF1A3A6B), // 공식 느낌의 짙은 파란색
@@ -47,11 +49,11 @@ class _ImmigrationCardScreenState
           : AppBar(
               backgroundColor: const Color(0xFF1A3A6B),
               foregroundColor: Colors.white,
-              title: const Text('입국 안내 카드'),
+              title: Text(l10n.immTitle),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.fullscreen),
-                  tooltip: '전체화면 (감사관에게 보여주기)',
+                  tooltip: l10n.immFullscreenTooltip,
                   onPressed: _toggleFullscreen,
                 ),
               ],
@@ -61,13 +63,13 @@ class _ImmigrationCardScreenState
           child: CircularProgressIndicator(color: Colors.white),
         ),
         error: (e, _) => Center(
-          child: Text('오류: $e', style: const TextStyle(color: Colors.white)),
+          child: Text(l10n.commonErrorDetail('$e'), style: const TextStyle(color: Colors.white)),
         ),
         data: (program) {
           if (program == null) {
-            return const Center(
-              child: Text('프로그램 정보를 찾을 수 없습니다.',
-                  style: TextStyle(color: Colors.white)),
+            return Center(
+              child: Text(l10n.immNotFound,
+                  style: const TextStyle(color: Colors.white)),
             );
           }
           return _CardBody(
@@ -114,6 +116,7 @@ class _CardBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final contact1Name  = program['contact1_name']  as String?;
     final contact1Phone = program['contact1_phone'] as String?;
     final contact2Name  = program['contact2_name']  as String?;
@@ -141,14 +144,14 @@ class _CardBody extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.white70, size: 18),
-                      SizedBox(width: 8),
+                      const Icon(Icons.info_outline, color: Colors.white70, size: 18),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '우측 상단 전체화면 버튼을 눌러 감사관에게 보여주세요.',
-                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                          l10n.immBanner,
+                          style: const TextStyle(color: Colors.white70, fontSize: 13),
                         ),
                       ),
                     ],
@@ -183,9 +186,9 @@ class _CardBody extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'PURPOSE OF VISIT / 방문 목적',
-                            style: TextStyle(
+                          Text(
+                            l10n.immCardPurpose,
+                            style: const TextStyle(
                               color: Colors.white60,
                               fontSize: 11,
                               letterSpacing: 1.2,
@@ -202,9 +205,9 @@ class _CardBody extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          const Text(
-                            'Religious Conference / 종교 수양회',
-                            style: TextStyle(
+                          Text(
+                            l10n.immCardConference,
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 13,
                             ),
@@ -220,29 +223,29 @@ class _CardBody extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _CardRow(
-                            label: 'VENUE / 장소',
+                            label: l10n.immCardVenue,
                             value: program['location'] as String? ?? '-',
                             icon: Icons.location_on_outlined,
                           ),
                           const Divider(height: 24),
                           _CardRow(
-                            label: 'DATE / 기간',
+                            label: l10n.immCardDate,
                             value: _dateRange(),
                             icon: Icons.calendar_month_outlined,
                           ),
                           if (hasAirport) ...[
                             const Divider(height: 24),
                             _CardRow(
-                              label: 'NEAREST AIRPORT / 가까운 공항',
+                              label: l10n.immCardAirport,
                               value: program['nearest_airport'] as String,
                               icon: Icons.flight_land_outlined,
                             ),
                           ],
                           if (hasContacts) ...[
                             const Divider(height: 24),
-                            const Text(
-                              'ON-SITE CONTACT / 현장 연락처',
-                              style: TextStyle(
+                            Text(
+                              l10n.immCardContact,
+                              style: const TextStyle(
                                 fontSize: 11,
                                 color: Color(0xFF1A3A6B),
                                 fontWeight: FontWeight.w700,
@@ -274,10 +277,9 @@ class _CardBody extends StatelessWidget {
                         color: Color(0xFFF5F7FA),
                         borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
                       ),
-                      child: const Text(
-                        'I am attending the above religious conference as a participant.\n'
-                        '저는 위 종교 수양회 참가자입니다.',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.immCardFooter,
+                        style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF555555),
                           height: 1.6,
@@ -292,10 +294,10 @@ class _CardBody extends StatelessWidget {
               // 전체화면 모드 해제 안내
               if (isFullscreen) ...[
                 const SizedBox(height: 24),
-                const Text(
-                  'Tap anywhere to exit fullscreen\n화면을 탭하면 전체화면이 해제됩니다',
+                Text(
+                  l10n.immExitHint,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
                 ),
               ],
             ],

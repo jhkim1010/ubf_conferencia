@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../program/providers/program_provider.dart';
 import '../../../core/utils/export_service.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 // 리더용 대시보드 - 통계 + 참가자 관리
 class DashboardScreen extends ConsumerWidget {
@@ -15,38 +16,39 @@ class DashboardScreen extends ConsumerWidget {
     final programAsync = ref.watch(programByIdProvider(programId));
     final statsAsync = ref.watch(programStatsProvider(programId));
     final registrationsAsync = ref.watch(programRegistrationsProvider(programId));
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
         title: programAsync.when(
-          data: (p) => Text(p?['name'] ?? '대시보드'),
-          loading: () => const Text('대시보드'),
-          error: (_, _) => const Text('대시보드'),
+          data: (p) => Text(p?['name'] ?? l10n.dashTitle),
+          loading: () => Text(l10n.dashTitle),
+          error: (_, _) => Text(l10n.dashTitle),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            tooltip: '프로그램 설정 편집',
+            tooltip: l10n.dashEditSettings,
             onPressed: () => context.push('/leader/program/$programId/edit'),
           ),
           // 내보내기 메뉴
           PopupMenuButton<String>(
             icon: const Icon(Icons.download),
-            tooltip: '내보내기',
+            tooltip: l10n.dashExport,
             onSelected: (val) async {
               final registrations = (registrationsAsync.valueOrNull ?? [])
                   .cast<Map<String, dynamic>>();
               final programName =
                   (programAsync.valueOrNull?['name'] as String?) ?? 'program';
               if (val == 'csv') {
-                await ExportService.exportToCsv(registrations, programName);
+                await ExportService.exportToCsv(registrations, programName, l10n);
               } else {
-                await ExportService.exportToExcel(registrations, programName);
+                await ExportService.exportToExcel(registrations, programName, l10n);
               }
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'excel', child: Text('Excel로 내보내기')),
-              const PopupMenuItem(value: 'csv', child: Text('CSV로 내보내기')),
+              PopupMenuItem(value: 'excel', child: Text(l10n.dashExportExcel)),
+              PopupMenuItem(value: 'csv', child: Text(l10n.dashExportCsv)),
             ],
           ),
         ],
@@ -62,22 +64,63 @@ class DashboardScreen extends ConsumerWidget {
             // 통계 카드 그리드
             statsAsync.when(
               loading: () => const LinearProgressIndicator(),
-              error: (e, _) => Text('통계 오류: $e'),
+              error: (e, _) => Text(l10n.commonErrorDetail('$e')),
               data: (stats) => _StatsGrid(stats: stats),
+            ),
+            const SizedBox(height: 20),
+
+            // 편성 준비 — 방·조 정의 (배정 전 단계)
+            Card(
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.indigo.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.dashboard_customize_outlined,
+                      color: Colors.indigo),
+                ),
+                title: Text(l10n.setupTitle,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(l10n.dashSetupSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/leader/program/$programId/setup'),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // 배정 — 확정 묶음·자동배정
+            Card(
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.teal.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.assignment_ind_outlined, color: Colors.teal),
+                ),
+                title: Text(l10n.asnTitle,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(l10n.dashAssignSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/leader/program/$programId/assign'),
+              ),
             ),
             const SizedBox(height: 20),
 
             // 입금 대기 섹션
             _SectionHeader(
-              title: '입금 확인 대기',
+              title: l10n.dashPendingPayments,
               icon: Icons.payment,
-              actionLabel: '전체 보기',
+              actionLabel: l10n.dashViewAll,
               onAction: () => context.push('/leader/program/$programId/payments'),
             ),
             const SizedBox(height: 8),
             registrationsAsync.when(
               loading: () => const LinearProgressIndicator(),
-              error: (e, _) => Text('오류: $e'),
+              error: (e, _) => Text(l10n.commonErrorDetail('$e')),
               data: (registrations) {
                 final pendingPayments = registrations
                     .where((r) {
@@ -87,7 +130,7 @@ class DashboardScreen extends ConsumerWidget {
                     .toList();
 
                 if (pendingPayments.isEmpty) {
-                  return const _EmptyState(message: '입금 대기 중인 항목이 없습니다');
+                  return _EmptyState(message: l10n.dashNoPendingPayments);
                 }
 
                 return Column(
@@ -104,18 +147,18 @@ class DashboardScreen extends ConsumerWidget {
 
             // 참가자 목록
             _SectionHeader(
-              title: '참가자 목록',
+              title: l10n.dashAttendeeList,
               icon: Icons.people,
-              actionLabel: '전체 보기',
+              actionLabel: l10n.dashViewAll,
               onAction: () => context.push('/leader/program/$programId/attendees'),
             ),
             const SizedBox(height: 8),
             registrationsAsync.when(
               loading: () => const LinearProgressIndicator(),
-              error: (e, _) => Text('오류: $e'),
+              error: (e, _) => Text(l10n.commonErrorDetail('$e')),
               data: (registrations) {
                 if (registrations.isEmpty) {
-                  return const _EmptyState(message: '아직 등록된 참가자가 없습니다');
+                  return _EmptyState(message: l10n.dashNoAttendees);
                 }
 
                 return Column(
@@ -130,7 +173,7 @@ class DashboardScreen extends ConsumerWidget {
             // 공지 전송 버튼
             OutlinedButton.icon(
               icon: const Icon(Icons.notifications_outlined),
-              label: const Text('그룹 공지 전송'),
+              label: Text(l10n.dashSendNotice),
               onPressed: () => context.push('/leader/program/$programId/notify'),
             ),
           ],
@@ -148,9 +191,11 @@ class _StatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (stats == null) {
-      return const Center(child: Text('통계 데이터 없음'));
+      return Center(child: Text(l10n.dashNoStats));
     }
+    int n(String key) => ((stats![key] ?? 0) as num).toInt();
 
     return GridView.count(
       crossAxisCount: 2,
@@ -161,38 +206,38 @@ class _StatsGrid extends StatelessWidget {
       childAspectRatio: 1.5,
       children: [
         _StatCard(
-          label: '총 등록',
-          value: '${stats!['total_registrations'] ?? 0}명',
+          label: l10n.dashStatTotal,
+          value: l10n.unitPeople(n('total_registrations')),
           icon: Icons.people,
           color: Colors.blue,
         ),
         _StatCard(
-          label: '등록 완료',
-          value: '${stats!['submitted_count'] ?? 0}명',
+          label: l10n.dashStatSubmitted,
+          value: l10n.unitPeople(n('submitted_count')),
           icon: Icons.check_circle,
           color: Colors.green,
         ),
         _StatCard(
-          label: '식사 제한',
-          value: '${stats!['food_restriction_count'] ?? 0}명',
+          label: l10n.dashStatFoodRestriction,
+          value: l10n.unitPeople(n('food_restriction_count')),
           icon: Icons.restaurant,
           color: Colors.orange,
         ),
         _StatCard(
-          label: '입금 대기',
-          value: '${stats!['pending_payment_count'] ?? 0}건',
+          label: l10n.dashStatPendingPayment,
+          value: l10n.unitCases(n('pending_payment_count')),
           icon: Icons.payment,
           color: Colors.red,
         ),
         _StatCard(
-          label: '도착 비행',
-          value: '${stats!['arrival_flight_count'] ?? 0}명',
+          label: l10n.dashStatArrival,
+          value: l10n.unitPeople(n('arrival_flight_count')),
           icon: Icons.flight_land,
           color: Colors.purple,
         ),
         _StatCard(
-          label: '입금 확인',
-          value: '${stats!['confirmed_payment_count'] ?? 0}건',
+          label: l10n.dashStatConfirmedPayment,
+          value: l10n.unitCases(n('confirmed_payment_count')),
           icon: Icons.verified,
           color: Colors.teal,
         ),
@@ -290,10 +335,11 @@ class _PaymentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       child: ListTile(
         leading: const CircleAvatar(child: Icon(Icons.person)),
-        title: Text(registration['real_name'] ?? '이름 미입력'),
+        title: Text(registration['real_name'] ?? l10n.commonNoName),
         subtitle: Text(registration['country'] ?? ''),
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -303,7 +349,7 @@ class _PaymentTile extends StatelessWidget {
             border: Border.all(color: Colors.orange),
           ),
           child: Text(
-            '확인 대기',
+            l10n.dashPaymentPending,
             style: TextStyle(color: Colors.orange[800], fontSize: 12),
           ),
         ),
@@ -321,6 +367,7 @@ class _AttendeeListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final submitted = registration['submitted'] == true;
 
     return Card(
@@ -335,7 +382,7 @@ class _AttendeeListTile extends StatelessWidget {
           ),
         ),
         title: Text(
-          registration['real_name'] ?? '이름 미입력',
+          registration['real_name'] ?? l10n.commonNoName,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
@@ -343,7 +390,7 @@ class _AttendeeListTile extends StatelessWidget {
         ),
         trailing: Chip(
           label: Text(
-            submitted ? '완료' : '진행중',
+            submitted ? l10n.dashStatusDone : l10n.dashStatusInProgress,
             style: const TextStyle(fontSize: 11),
           ),
           backgroundColor: submitted ? Colors.green[50] : Colors.grey[100],

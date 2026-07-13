@@ -11,8 +11,10 @@ import 'steps/personal_info_step.dart';
 import 'steps/flight_info_step.dart';
 import 'steps/food_step.dart';
 import 'steps/options_step.dart';
-import 'steps/roommate_step.dart';
+import 'steps/buddy_step.dart';
+import 'steps/companion_step.dart';
 import 'steps/volunteer_resources_step.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 // 6단계 등록 폼 - PageView 기반
 class RegistrationFlowScreen extends ConsumerStatefulWidget {
@@ -25,8 +27,17 @@ class RegistrationFlowScreen extends ConsumerStatefulWidget {
       _RegistrationFlowScreenState();
 }
 
-// 각 스텝의 제목 (전역 상수)
-const _stepTitles = ['개인 정보', '도착 비행기', '출발 비행기', '음식', '투어/옵션', '룸메이트', '자원봉사'];
+// 각 스텝의 제목 (현재 언어로 반환)
+List<String> _stepTitles(AppLocalizations l10n) => [
+      l10n.regStepPersonal,
+      l10n.regStepCompanion,
+      l10n.regStepArrival,
+      l10n.regStepDeparture,
+      l10n.regStepFood,
+      l10n.regStepOptions,
+      l10n.regStepBuddy,
+      l10n.regStepVolunteer,
+    ];
 
 class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen> {
   late final PageController _pageController;
@@ -101,7 +112,7 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
     }
   }
 
-  int get _totalPages => 7;
+  int get _totalPages => 8;
 
   void _jumpToPage(int page) {
     _pageController.animateToPage(
@@ -114,18 +125,19 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
   @override
   Widget build(BuildContext context) {
     final programAsync = ref.watch(programByIdProvider(widget.programId));
+    final l10n = AppLocalizations.of(context)!;
 
     return programAsync.when(
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => Scaffold(
-        body: Center(child: Text('오류: $e')),
+        body: Center(child: Text(l10n.commonErrorDetail('$e'))),
       ),
       data: (program) {
         if (program == null) {
-          return const Scaffold(
-            body: Center(child: Text('유효하지 않은 프로그램 UUID입니다')),
+          return Scaffold(
+            body: Center(child: Text(l10n.regInvalidProgram)),
           );
         }
         // 프로그램 로드 성공 시 장치에 저장
@@ -141,11 +153,11 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
         return Scaffold(
           floatingActionButton: SosFab(programId: widget.programId),
           appBar: AppBar(
-            title: Text(program['name'] ?? '등록'),
+            title: Text(program['name'] ?? l10n.regTitle),
             actions: [
               IconButton(
                 icon: const Icon(Icons.event_note_outlined),
-                tooltip: '프로그램 일정',
+                tooltip: l10n.regScheduleTooltip,
                 onPressed: () => context.push('/program/${widget.programId}/schedule'),
               ),
             ],
@@ -200,7 +212,7 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${i + 1}. ${_stepTitles[i]}',
+                              '${i + 1}. ${_stepTitles(l10n)[i]}',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
@@ -220,7 +232,7 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                 child: Row(
                   children: [
                     Text(
-                      _stepTitles[_currentPage],
+                      _stepTitles(l10n)[_currentPage],
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -228,7 +240,7 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                     const Spacer(),
                     TextButton.icon(
                       icon: const Icon(Icons.save_outlined, size: 16),
-                      label: const Text('임시저장'),
+                      label: Text(l10n.regSaveDraft),
                       onPressed: () async {
                         // async 전에 미리 참조 확보
                         final messenger = ScaffoldMessenger.of(context);
@@ -237,7 +249,7 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                             .saveProgress(options);
                         if (!mounted) return;
                         messenger.showSnackBar(
-                          const SnackBar(content: Text('저장되었습니다')),
+                          SnackBar(content: Text(l10n.commonSaved)),
                         );
                       },
                     ),
@@ -255,6 +267,7 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                   }),
                   children: [
                     PersonalInfoStep(programId: widget.programId),
+                    CompanionStep(programId: widget.programId),
                     FlightInfoStep(
                       programId: widget.programId,
                       isArrival: true,
@@ -274,7 +287,7 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                       options: options,
                       enabled: enabledSections['special_programs'] ?? true,
                     ),
-                    RoommateStep(
+                    BuddyStep(
                       programId: widget.programId,
                       enabled: enabledSections['roommate'] ?? true,
                     ),
@@ -294,7 +307,7 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                       Expanded(
                         child: OutlinedButton(
                           onPressed: _prevPage,
-                          child: const Text('이전'),
+                          child: Text(l10n.actionPrevious),
                         ),
                       ),
                     if (_currentPage > 0) const SizedBox(width: 12),
@@ -307,7 +320,7 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                                 '/registration/${widget.programId}/summary',
                               ),
                         child: Text(
-                          _currentPage < _totalPages - 1 ? '다음' : '요약 확인',
+                          _currentPage < _totalPages - 1 ? l10n.actionNext : l10n.regReviewSummary,
                         ),
                       ),
                     ),

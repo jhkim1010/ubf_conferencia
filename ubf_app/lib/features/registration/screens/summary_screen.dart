@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../program/providers/program_provider.dart';
 import '../providers/registration_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 // 등록 요약 화면 - 모든 정보 확인 + 총 비용 표시
 class SummaryScreen extends ConsumerWidget {
@@ -14,12 +15,13 @@ class SummaryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final formState = ref.watch(registrationFormProvider(programId));
     final programAsync = ref.watch(programByIdProvider(programId));
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('등록 요약')),
+      appBar: AppBar(title: Text(l10n.summaryTitle)),
       body: programAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('오류: $e')),
+        error: (e, _) => Center(child: Text(l10n.commonErrorDetail('$e'))),
         data: (program) {
           if (program == null) return const SizedBox.shrink();
 
@@ -42,29 +44,29 @@ class SummaryScreen extends ConsumerWidget {
             children: [
               // 프로그램 정보
               _SectionCard(
-                title: '프로그램',
+                title: l10n.summarySectionProgram,
                 icon: Icons.event,
                 children: [
-                  _InfoRow('이름', program['name'] ?? ''),
-                  _InfoRow('장소', program['location'] ?? ''),
+                  _InfoRow(l10n.summaryName, program['name'] ?? ''),
+                  _InfoRow(l10n.summaryLocation, program['location'] ?? ''),
                   if (program['start_date'] != null)
-                    _InfoRow('기간', '${program['start_date']} ~ ${program['end_date'] ?? ''}'),
+                    _InfoRow(l10n.summaryPeriod, '${program['start_date']} ~ ${program['end_date'] ?? ''}'),
                 ],
               ),
               const SizedBox(height: 12),
 
               // 개인 정보
               _SectionCard(
-                title: '개인 정보',
+                title: l10n.regStepPersonal,
                 icon: Icons.person,
                 onEdit: () => context.go('/registration/$programId'),
                 children: [
-                  _InfoRow('국가', formState.country ?? '-'),
-                  _InfoRow('지부', formState.branch ?? '-'),
-                  _InfoRow('본명', formState.realName ?? '-'),
-                  _InfoRow('성경이름', formState.bibleName ?? '-'),
-                  _InfoRow('성별', formState.gender == 'M' ? '남' : formState.gender == 'F' ? '여' : '-'),
-                  _InfoRow('나이', formState.age?.toString() ?? '-'),
+                  _InfoRow(l10n.summaryCountry, formState.country ?? '-'),
+                  _InfoRow(l10n.summaryBranch, formState.branch ?? '-'),
+                  _InfoRow(l10n.summaryRealName, formState.realName ?? '-'),
+                  _InfoRow(l10n.summaryBibleName, formState.bibleName ?? '-'),
+                  _InfoRow(l10n.regGender, formState.gender == 'M' ? l10n.genderMale : formState.gender == 'F' ? l10n.genderFemale : '-'),
+                  _InfoRow(l10n.summaryAge, formState.age?.toString() ?? '-'),
                 ],
               ),
               const SizedBox(height: 12),
@@ -72,13 +74,13 @@ class SummaryScreen extends ConsumerWidget {
               // 도착 비행기
               if (formState.arrivalFlight != null)
                 _SectionCard(
-                  title: '도착 비행기',
+                  title: l10n.regStepArrival,
                   icon: Icons.flight_land,
                   onEdit: () => context.go('/registration/$programId'),
                   children: [
-                    _InfoRow('항공편', formState.arrivalFlight!['flight_no'] ?? '-'),
-                    _InfoRow('도착 공항', formState.arrivalFlight!['arrival_airport'] ?? '-'),
-                    _InfoRow('도착 예정', formState.arrivalFlight!['scheduled_arrival'] ?? '-'),
+                    _InfoRow(l10n.summaryFlightNo, formState.arrivalFlight!['flight_no'] ?? '-'),
+                    _InfoRow(l10n.summaryArrAirport, formState.arrivalFlight!['arrival_airport'] ?? '-'),
+                    _InfoRow(l10n.summaryArrTime, formState.arrivalFlight!['scheduled_arrival'] ?? '-'),
                   ],
                 ),
               if (formState.arrivalFlight != null) const SizedBox(height: 12),
@@ -86,13 +88,13 @@ class SummaryScreen extends ConsumerWidget {
               // 출발 비행기
               if (formState.departureFlight != null)
                 _SectionCard(
-                  title: '출발 비행기',
+                  title: l10n.regStepDeparture,
                   icon: Icons.flight_takeoff,
                   onEdit: () => context.go('/registration/$programId'),
                   children: [
-                    _InfoRow('항공편', formState.departureFlight!['flight_no'] ?? '-'),
-                    _InfoRow('출발 공항', formState.departureFlight!['departure_airport'] ?? '-'),
-                    _InfoRow('출발 예정', formState.departureFlight!['scheduled_departure'] ?? '-'),
+                    _InfoRow(l10n.summaryFlightNo, formState.departureFlight!['flight_no'] ?? '-'),
+                    _InfoRow(l10n.summaryDepAirport, formState.departureFlight!['departure_airport'] ?? '-'),
+                    _InfoRow(l10n.summaryDepTime, formState.departureFlight!['scheduled_departure'] ?? '-'),
                   ],
                 ),
               if (formState.departureFlight != null) const SizedBox(height: 12),
@@ -100,7 +102,7 @@ class SummaryScreen extends ConsumerWidget {
               // 음식 특별 사항
               if (formState.foodRequirements?.isNotEmpty == true)
                 _SectionCard(
-                  title: '음식 특별 사항',
+                  title: l10n.summarySectionFood,
                   icon: Icons.restaurant,
                   onEdit: () => context.go('/registration/$programId'),
                   children: [
@@ -112,7 +114,7 @@ class SummaryScreen extends ConsumerWidget {
               // 선택 옵션
               if (selectedOptionDetails.isNotEmpty)
                 _SectionCard(
-                  title: '선택한 프로그램',
+                  title: l10n.summarySectionOptions,
                   icon: Icons.checklist,
                   onEdit: () => context.go('/registration/$programId'),
                   children: selectedOptionDetails.map((o) => _InfoRow(
@@ -125,7 +127,7 @@ class SummaryScreen extends ConsumerWidget {
               // 룸메이트
               if (formState.roommatePreference?.isNotEmpty == true)
                 _SectionCard(
-                  title: '룸메이트 희망',
+                  title: l10n.summarySectionRoommate,
                   icon: Icons.hotel,
                   onEdit: () => context.go('/registration/$programId'),
                   children: [
@@ -145,7 +147,7 @@ class SummaryScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     Text(
-                      '총 납부 비용',
+                      l10n.summaryTotalCost,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
@@ -158,7 +160,7 @@ class SummaryScreen extends ConsumerWidget {
                     ),
                     if (totalCost == 0)
                       Text(
-                        '선택한 유료 옵션이 없습니다',
+                        l10n.summaryNoPaidOptions,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey[600],
                         ),
@@ -174,7 +176,7 @@ class SummaryScreen extends ConsumerWidget {
                   program['contact2_name'] != null)
                 OutlinedButton.icon(
                   icon: const Icon(Icons.flight_land),
-                  label: const Text('입국 안내 카드 보기'),
+                  label: Text(l10n.summaryViewImmigration),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF1A3A6B),
                     side: const BorderSide(color: Color(0xFF1A3A6B)),
@@ -191,12 +193,12 @@ class SummaryScreen extends ConsumerWidget {
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
                 ),
-                child: const Text('최종 제출'),
+                child: Text(l10n.summarySubmit),
               ),
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: () => context.go('/registration/$programId'),
-                child: const Text('수정하기'),
+                child: Text(l10n.summaryEditBtn),
               ),
               const SizedBox(height: 20),
             ],
@@ -211,20 +213,21 @@ class SummaryScreen extends ConsumerWidget {
     WidgetRef ref,
     List<Map<String, dynamic>> options,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     // 제출 확인 다이얼로그
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('최종 제출'),
-        content: const Text('등록 정보를 최종 제출하시겠습니까?\n제출 후에는 수정이 제한될 수 있습니다.'),
+        title: Text(l10n.summarySubmit),
+        content: Text(l10n.summarySubmitConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.actionCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('제출'),
+            child: Text(l10n.summarySubmit),
           ),
         ],
       ),
@@ -249,12 +252,12 @@ class SummaryScreen extends ConsumerWidget {
       await showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('제출 완료'),
-          content: const Text('등록이 성공적으로 제출되었습니다.\n담당자가 확인 후 연락드립니다.'),
+          title: Text(l10n.summarySubmitDone),
+          content: Text(l10n.summarySubmitDoneMsg),
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('확인'),
+              child: Text(l10n.actionConfirm),
             ),
           ],
         ),
@@ -266,7 +269,7 @@ class SummaryScreen extends ConsumerWidget {
       Navigator.pop(context); // 로딩 닫기
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('제출 실패: $e'),
+          content: Text(l10n.summarySubmitFailed('$e')),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 6),
         ),
@@ -317,7 +320,7 @@ class _SectionCard extends StatelessWidget {
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text('수정'),
+                    child: Text(AppLocalizations.of(context)!.actionEdit),
                   ),
               ],
             ),

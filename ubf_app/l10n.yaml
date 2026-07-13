@@ -1,0 +1,7 @@
+# Flutter gen-l10n 설정
+# `flutter pub get` 또는 `flutter gen-l10n` 실행 시 AppLocalizations 클래스가 생성된다.
+# ARB 파일은 lib/l10n/*.arb, 영어(app_en.arb)를 키 템플릿으로 사용.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations

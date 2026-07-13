@@ -14,6 +14,11 @@ import paymentsRouter from './routes/payments.js';
 import adminsRouter from './routes/admins.js';
 import schedulesRouter from './routes/schedules.js';
 import sosRouter from './routes/sos.js';
+import roomsRouter from './routes/rooms.js';
+import groupsRouter from './routes/groups.js';
+import buddyRequestsRouter from './routes/buddy_requests.js';
+import companionsRouter from './routes/companions.js';
+import assignmentsRouter from './routes/assignments.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -125,6 +130,11 @@ app.use('/payments', paymentsRouter);
 app.use('/admins', adminsRouter);
 app.use('/schedules', schedulesRouter);
 app.use('/sos', sosRouter);
+app.use('/rooms', roomsRouter);
+app.use('/groups', groupsRouter);
+app.use('/buddy-requests', buddyRequestsRouter);
+app.use('/companions', companionsRouter);
+app.use('/assignments', assignmentsRouter);
 
 // 에러 핸들러
 app.use((err, req, res, _next) => {

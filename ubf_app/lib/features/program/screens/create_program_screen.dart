@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/utils/api_client.dart';
 import '../providers/program_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 class CreateProgramScreen extends ConsumerStatefulWidget {
   const CreateProgramScreen({super.key});
@@ -47,15 +48,15 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
     });
   }
 
-  final Map<String, String> _sectionLabels = {
-    'personal_info': '개인 정보',
-    'arrival_flight': '도착 비행기 정보',
-    'departure_flight': '출발 비행기 정보',
-    'food_requirements': '음식 특별 사항',
-    'special_programs': '특별 프로그램/투어 옵션',
-    'roommate': '룸메이트 희망',
-    'volunteer_resources': '프로그램 진행 도움 자원 (악기, 번역 etc)',
-  };
+  Map<String, String> _sectionLabels(AppLocalizations l10n) => {
+        'personal_info': l10n.regStepPersonal,
+        'arrival_flight': l10n.flightInfoTitle(l10n.flightArrival),
+        'departure_flight': l10n.flightInfoTitle(l10n.flightDeparture),
+        'food_requirements': l10n.summarySectionFood,
+        'special_programs': l10n.cpSpecialOptions,
+        'roommate': l10n.summarySectionRoommate,
+        'volunteer_resources': l10n.cpSecVolunteer,
+      };
 
   // 특별 옵션 (투어, 특별프로그램 등)
   final List<Map<String, dynamic>> _options = [];
@@ -108,6 +109,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
 
   Future<void> _createProgram() async {
     if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context)!;
 
     setState(() => _isLoading = true);
 
@@ -135,18 +137,16 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
       final go = await showDialog<bool>(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('이미 존재하는 프로그램'),
-          content: const Text(
-            '같은 이름과 시작일의 프로그램이 이미 있습니다.\n기존 프로그램의 UUID 화면으로 이동할까요?',
-          ),
+          title: Text(l10n.cpDupTitle),
+          content: Text(l10n.cpDupBody),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('취소'),
+              child: Text(l10n.actionCancel),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('기존 프로그램으로'),
+              child: Text(l10n.cpDupGoExisting),
             ),
           ],
         ),
@@ -157,7 +157,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('프로그램 생성 실패: $e')),
+          SnackBar(content: Text(l10n.cpCreateFailed('$e'))),
         );
       }
     } finally {
@@ -168,28 +168,29 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('새 프로그램 생성')),
+      appBar: AppBar(title: Text(l10n.homeCreateProgram)),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
             // 프로그램 유형 선택
-            Text('프로그램 유형', style: theme.textTheme.titleMedium),
+            Text(l10n.cpProgramType, style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             SegmentedButton<String>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: 'local',
-                  label: Text('지역 수양회'),
-                  icon: Icon(Icons.location_city),
+                  label: Text(l10n.cpTypeLocal),
+                  icon: const Icon(Icons.location_city),
                 ),
                 ButtonSegment(
                   value: 'international',
-                  label: Text('국제 수양회'),
-                  icon: Icon(Icons.flight),
+                  label: Text(l10n.cpTypeInternational),
+                  icon: const Icon(Icons.flight),
                 ),
               ],
               selected: {_programType},
@@ -209,7 +210,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '지역 수양회: 항공편·투어 섹션은 자동으로 비활성화됩니다',
+                        l10n.cpLocalNote,
                         style: TextStyle(fontSize: 12, color: Colors.blue[700]),
                       ),
                     ),
@@ -220,24 +221,24 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
             const SizedBox(height: 28),
 
             // 프로그램 기본 정보
-            Text('기본 정보', style: theme.textTheme.titleMedium),
+            Text(l10n.cpBasicInfo, style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: '프로그램 이름 *',
-                hintText: '예: 2025 여름 수양회',
+              decoration: InputDecoration(
+                labelText: l10n.cpNameLabel,
+                hintText: l10n.cpNameHint,
               ),
-              validator: (v) => v?.isEmpty == true ? '프로그램 이름을 입력하세요' : null,
+              validator: (v) => v?.isEmpty == true ? l10n.cpNameRequired : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _locationController,
-              decoration: const InputDecoration(
-                labelText: '장소 *',
-                hintText: '예: 제주도 국제 컨벤션 센터',
+              decoration: InputDecoration(
+                labelText: l10n.cpLocationLabel,
+                hintText: l10n.cpLocationHint,
               ),
-              validator: (v) => v?.isEmpty == true ? '장소를 입력하세요' : null,
+              validator: (v) => v?.isEmpty == true ? l10n.cpLocationRequired : null,
             ),
             const SizedBox(height: 12),
             // 날짜 선택
@@ -248,7 +249,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     icon: const Icon(Icons.calendar_today, size: 18),
                     label: Text(
                       _startDate == null
-                          ? '시작일 선택'
+                          ? l10n.cpStartDate
                           : '${_startDate!.year}.${_startDate!.month.toString().padLeft(2, '0')}.${_startDate!.day.toString().padLeft(2, '0')}',
                     ),
                     onPressed: () => _selectDate(true),
@@ -260,7 +261,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     icon: const Icon(Icons.calendar_today, size: 18),
                     label: Text(
                       _endDate == null
-                          ? '종료일 선택'
+                          ? l10n.cpEndDate
                           : '${_endDate!.year}.${_endDate!.month.toString().padLeft(2, '0')}.${_endDate!.day.toString().padLeft(2, '0')}',
                     ),
                     onPressed: () => _selectDate(false),
@@ -272,24 +273,24 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
 
             // 입국 안내 정보 (국제 수양회만)
             if (_programType == 'international') ...[
-              Text('입국 안내 정보', style: theme.textTheme.titleMedium),
+              Text(l10n.cpImmigrationInfo, style: theme.textTheme.titleMedium),
               const SizedBox(height: 4),
               Text(
-                '참가자가 공항 입국 시 감사관에게 보여줄 정보입니다 (선택)',
+                l10n.cpImmigrationDesc,
                 style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _airportController,
-                decoration: const InputDecoration(
-                  labelText: '가까운 공항',
-                  hintText: '예: 인천국제공항 (ICN)',
-                  prefixIcon: Icon(Icons.flight_land),
+                decoration: InputDecoration(
+                  labelText: l10n.cpNearestAirport,
+                  hintText: l10n.cpAirportHint,
+                  prefixIcon: const Icon(Icons.flight_land),
                 ),
               ),
               const SizedBox(height: 16),
               Text(
-                '현장 대표 연락처 (2명)',
+                l10n.cpContacts,
                 style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
@@ -299,7 +300,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     flex: 2,
                     child: TextFormField(
                       controller: _contact1NameController,
-                      decoration: const InputDecoration(labelText: '이름 1', hintText: '홍길동'),
+                      decoration: InputDecoration(labelText: l10n.cpName1, hintText: l10n.cpName1Hint),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -308,8 +309,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     child: TextFormField(
                       controller: _contact1PhoneController,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: '전화번호 1',
+                      decoration: InputDecoration(
+                        labelText: l10n.cpPhone1,
                         hintText: '+82-10-1234-5678',
                       ),
                     ),
@@ -323,7 +324,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     flex: 2,
                     child: TextFormField(
                       controller: _contact2NameController,
-                      decoration: const InputDecoration(labelText: '이름 2', hintText: '김철수'),
+                      decoration: InputDecoration(labelText: l10n.cpName2, hintText: l10n.cpName2Hint),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -332,8 +333,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     child: TextFormField(
                       controller: _contact2PhoneController,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: '전화번호 2',
+                      decoration: InputDecoration(
+                        labelText: l10n.cpPhone2,
                         hintText: '+82-10-9876-5432',
                       ),
                     ),
@@ -344,16 +345,16 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
             ],
 
             // 활성화 섹션 설정
-            Text('등록 섹션 활성화', style: theme.textTheme.titleMedium),
+            Text(l10n.cpSectionsTitle, style: theme.textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(
-              '참가자에게 보여줄 항목을 선택하세요',
+              l10n.cpSectionsDesc,
               style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Card(
               child: Column(
-                children: _sectionLabels.entries.map((entry) {
+                children: _sectionLabels(l10n).entries.map((entry) {
                   return SwitchListTile(
                     title: Text(entry.value),
                     value: _enabledSections[entry.key] ?? true,
@@ -368,10 +369,10 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
 
             // 특별 옵션 추가 (국제 수양회만)
             if (_programType == 'international') ...[
-              Text('특별 프로그램/투어 옵션', style: theme.textTheme.titleMedium),
+              Text(l10n.cpSpecialOptions, style: theme.textTheme.titleMedium),
               const SizedBox(height: 4),
               Text(
-                '옵션별 비용을 설정하면 참가자가 선택할 수 있습니다',
+                l10n.cpOptionsDesc,
                 style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
               const SizedBox(height: 8),
@@ -381,7 +382,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                 return Card(
                   child: ListTile(
                     title: Text(option['name']),
-                    subtitle: Text('비용: ${option['cost']}'),
+                    subtitle: Text(l10n.cpOptionCost('${option['cost']}')),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
                       onPressed: () => setState(() => _options.removeAt(i)),
@@ -396,9 +397,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     flex: 3,
                     child: TextField(
                       controller: _optionNameController,
-                      decoration: const InputDecoration(
-                        labelText: '옵션명',
-                        hintText: '제주 투어 A코스',
+                      decoration: InputDecoration(
+                        labelText: l10n.cpOptionName,
+                        hintText: l10n.cpOptionNameHint,
                       ),
                     ),
                   ),
@@ -408,7 +409,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     child: TextField(
                       controller: _optionCostController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: '비용'),
+                      decoration: InputDecoration(labelText: l10n.cpOptionCostLabel),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -426,7 +427,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
               onPressed: _isLoading ? null : _createProgram,
               child: _isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('프로그램 생성 (UUID 발급)'),
+                  : Text(l10n.cpCreateButton),
             ),
           ],
         ),

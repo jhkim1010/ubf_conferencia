@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -23,7 +24,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('구글 로그인 실패: $e'),
+            content: Text(AppLocalizations.of(context)!.authGoogleFailed('$e')),
             duration: const Duration(seconds: 10),
           ),
         );
@@ -40,7 +41,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('테스트 로그인 실패: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.authDevFailed('$e'))),
         );
       }
     } finally {
@@ -57,7 +58,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('카카오 로그인 실패: $e'),
+            content: Text(AppLocalizations.of(context)!.authKakaoFailed('$e')),
             duration: const Duration(seconds: 10),
           ),
         );
@@ -70,6 +71,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: SafeArea(
@@ -108,7 +110,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                '수양회 참가자 등록 시스템',
+                l10n.appTagline,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: Colors.grey[600],
                 ),
@@ -125,9 +127,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         height: 24,
                         errorBuilder: (context, error, stackTrace) => const Icon(Icons.login),
                       ),
-                      label: const Text(
-                        '구글 어카운트로 로그인하기',
-                        style: TextStyle(fontSize: 16),
+                      label: Text(
+                        l10n.authSignInGoogle,
+                        style: const TextStyle(fontSize: 16),
                       ),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size.fromHeight(56),
@@ -141,9 +143,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ElevatedButton.icon(
                   onPressed: _isLoading ? null : _signInWithKakao,
                   icon: const Icon(Icons.chat_bubble, size: 22),
-                  label: const Text(
-                    '카카오로 로그인하기',
-                    style: TextStyle(fontSize: 16),
+                  label: Text(
+                    l10n.authSignInKakao,
+                    style: const TextStyle(fontSize: 16),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFEE500),
@@ -163,7 +165,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 OutlinedButton.icon(
                   onPressed: _isLoading ? null : _signInDev,
                   icon: const Icon(Icons.developer_mode, size: 18),
-                  label: const Text('테스트 로그인 (dev@test.com)'),
+                  label: Text(l10n.authSignInDev),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(44),
                     foregroundColor: Colors.grey[600],
@@ -173,7 +175,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ],
               const SizedBox(height: 16),
               Text(
-                '로그인하면 이용약관에 동의하는 것으로 간주합니다.',
+                l10n.authTermsNotice,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: Colors.grey[500],
                 ),

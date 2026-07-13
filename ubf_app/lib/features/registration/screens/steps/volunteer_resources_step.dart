@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/registration_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
-// 자원 유형 목록
-const _resourceOptions = [
-  ('piano',       Icons.piano,            '피아노'),
-  ('guitar',      Icons.music_note,       '기타'),
-  ('bass',        Icons.queue_music,      '베이스'),
-  ('drums',       Icons.library_music,    '드럼'),
-  ('violin',      Icons.music_note,       '바이올린'),
-  ('worship_lead',Icons.mic,              '워십 인도'),
-  ('vocals',      Icons.mic_none,         '보컬'),
-  ('translation', Icons.translate,        '통역/번역'),
-  ('photography', Icons.photo_camera,     '사진/영상'),
-  ('sound',       Icons.speaker,          '음향'),
-  ('design',      Icons.brush,            '디자인'),
-  ('it',          Icons.computer,         'IT/기술'),
-  ('childcare',   Icons.child_care,       '어린이 돌봄'),
-  ('cooking',     Icons.restaurant,       '요리/주방'),
-  ('driving',     Icons.directions_car,   '차량 운전'),
-  ('medical',     Icons.medical_services, '의료/구급'),
-];
+// 자원 유형 목록 (현재 언어의 라벨로 반환)
+List<(String, IconData, String)> _resourceOptions(AppLocalizations l10n) => [
+      ('piano',        Icons.piano,            l10n.volPiano),
+      ('guitar',       Icons.music_note,       l10n.volGuitar),
+      ('bass',         Icons.queue_music,      l10n.volBass),
+      ('drums',        Icons.library_music,    l10n.volDrums),
+      ('violin',       Icons.music_note,       l10n.volViolin),
+      ('worship_lead', Icons.mic,              l10n.volWorshipLead),
+      ('vocals',       Icons.mic_none,         l10n.volVocals),
+      ('translation',  Icons.translate,        l10n.volTranslation),
+      ('photography',  Icons.photo_camera,     l10n.volPhotography),
+      ('sound',        Icons.speaker,          l10n.volSound),
+      ('design',       Icons.brush,            l10n.volDesign),
+      ('it',           Icons.computer,         l10n.volIt),
+      ('childcare',    Icons.child_care,       l10n.volChildcare),
+      ('cooking',      Icons.restaurant,       l10n.volCooking),
+      ('driving',      Icons.directions_car,   l10n.volDriving),
+      ('medical',      Icons.medical_services, l10n.volMedical),
+    ];
 
 class VolunteerResourcesStep extends ConsumerWidget {
   final String programId;
@@ -34,8 +35,9 @@ class VolunteerResourcesStep extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     if (!enabled) {
-      return const Center(child: Text('이 섹션은 비활성화되어 있습니다'));
+      return Center(child: Text(l10n.sectionDisabled));
     }
 
     final selected = ref.watch(
@@ -50,13 +52,13 @@ class VolunteerResourcesStep extends ConsumerWidget {
         const Icon(Icons.volunteer_activism, size: 48, color: Colors.teal),
         const SizedBox(height: 16),
         Text(
-          '프로그램 진행에 도움을 드릴 수 있나요?',
+          l10n.volQuestion,
           style: theme.textTheme.titleMedium,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
-          '해당되는 항목을 모두 선택해 주세요. (선택 사항)',
+          l10n.volHelp,
           style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
           textAlign: TextAlign.center,
         ),
@@ -64,7 +66,7 @@ class VolunteerResourcesStep extends ConsumerWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: _resourceOptions.map((item) {
+          children: _resourceOptions(l10n).map((item) {
             final (key, icon, label) = item;
             final isSelected = selected.contains(key);
             return FilterChip(
@@ -86,11 +88,11 @@ class VolunteerResourcesStep extends ConsumerWidget {
         const SizedBox(height: 24),
         // 기타 입력
         TextField(
-          decoration: const InputDecoration(
-            labelText: '기타 도움 가능한 내용 (선택)',
-            hintText: '위 목록에 없는 재능이나 자원을 적어주세요',
-            prefixIcon: Icon(Icons.edit_note),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: l10n.volOtherLabel,
+            hintText: l10n.volOtherHint,
+            prefixIcon: const Icon(Icons.edit_note),
+            border: const OutlineInputBorder(),
           ),
           onChanged: notifier.updateVolunteerNote,
         ),

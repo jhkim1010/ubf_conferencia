@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/registration_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 class RoommateStep extends ConsumerStatefulWidget {
   final String programId;
@@ -30,8 +31,9 @@ class _RoommateStepState extends ConsumerState<RoommateStep> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (!widget.enabled) {
-      return const Center(child: Text('이 섹션은 비활성화되어 있습니다'));
+      return Center(child: Text(l10n.sectionDisabled));
     }
 
     return ListView(
@@ -40,13 +42,13 @@ class _RoommateStepState extends ConsumerState<RoommateStep> {
         const Icon(Icons.hotel, size: 48, color: Colors.indigo),
         const SizedBox(height: 16),
         Text(
-          '같이 머물고 싶은 분이 있으신가요?',
+          l10n.roommateQuestion,
           style: Theme.of(context).textTheme.titleMedium,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
-          '룸메이트 희망자의 이름(성경이름 또는 본명)을 입력해 주세요.\n최대한 반영하도록 노력하겠습니다.',
+          l10n.roommateHelp,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Colors.grey[600],
           ),
@@ -56,9 +58,9 @@ class _RoommateStepState extends ConsumerState<RoommateStep> {
         TextField(
           controller: _controller,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: '룸메이트 희망 (선택)',
-            hintText: '예: 베드로, 요한 (같은 방 희망)\n또는 "없음"으로 입력',
+          decoration: InputDecoration(
+            labelText: l10n.roommateFieldLabel,
+            hintText: l10n.roommateFieldHint,
             alignLabelWithHint: true,
           ),
           onChanged: (val) => ref
@@ -79,7 +81,7 @@ class _RoommateStepState extends ConsumerState<RoommateStep> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '룸메이트 배정은 리더의 재량으로 조정될 수 있습니다.',
+                  l10n.roommateNotice,
                   style: TextStyle(fontSize: 12, color: Colors.amber[900]),
                 ),
               ),

@@ -72,3 +72,6 @@ build/
 **/web/build/
 **/windows/flutter/ephemeral/
 **/linux/flutter/ephemeral/
+
+# Local DB backups (recovery artifacts)
+backups/

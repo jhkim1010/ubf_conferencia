@@ -4,6 +4,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:intl/intl.dart';
 import '../../../core/utils/api_client.dart';
 import '../../auth/providers/auth_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 // 프로그램 일정 화면
 // - 관리자(admin/director): 일정 추가/삭제/타임존 변경 가능
@@ -48,7 +49,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('일정 로드 실패: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.schLoadFailed('$e'))),
         );
       }
     } finally {
@@ -57,6 +58,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   }
 
   Future<void> _showAddDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final titleCtrl = TextEditingController();
     final descCtrl  = TextEditingController();
     final tzCtrl    = TextEditingController(text: _deviceTimezone);
@@ -67,25 +69,25 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) => AlertDialog(
-          title: const Text('일정 추가'),
+          title: Text(l10n.schAddTitle),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: titleCtrl,
-                  decoration: const InputDecoration(labelText: '제목 *', hintText: '개회 예배'),
+                  decoration: InputDecoration(labelText: l10n.schTitleLabel, hintText: l10n.schTitleHint),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: descCtrl,
-                  decoration: const InputDecoration(labelText: '설명 (선택)'),
+                  decoration: InputDecoration(labelText: l10n.schDescLabel),
                 ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today, size: 18),
                   label: Text(pickedDate == null
-                      ? '날짜 선택'
+                      ? l10n.epPickDate
                       : DateFormat('yyyy.MM.dd').format(pickedDate!)),
                   onPressed: () async {
                     final d = await showDatePicker(
@@ -101,7 +103,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                 OutlinedButton.icon(
                   icon: const Icon(Icons.access_time, size: 18),
                   label: Text(pickedTime == null
-                      ? '시간 선택'
+                      ? l10n.schPickTime
                       : pickedTime!.format(ctx)),
                   onPressed: () async {
                     final t = await showTimePicker(
@@ -116,13 +118,13 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                 TextField(
                   controller: tzCtrl,
                   decoration: InputDecoration(
-                    labelText: '타임존',
+                    labelText: l10n.schTimezone,
                     hintText: 'Asia/Seoul',
-                    helperText: '디바이스 타임존으로 자동 설정됨',
+                    helperText: l10n.schTzAuto,
                     prefixIcon: const Icon(Icons.public, size: 18),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.refresh, size: 18),
-                      tooltip: '디바이스 타임존으로 초기화',
+                      tooltip: l10n.schTzReset,
                       onPressed: () => tzCtrl.text = _deviceTimezone,
                     ),
                   ),
@@ -133,13 +135,13 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('취소'),
+              child: Text(l10n.actionCancel),
             ),
             ElevatedButton(
               onPressed: () async {
                 if (titleCtrl.text.trim().isEmpty || pickedDate == null || pickedTime == null) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(content: Text('제목, 날짜, 시간을 모두 입력하세요')),
+                    SnackBar(content: Text(l10n.schAllRequired)),
                   );
                   return;
                 }
@@ -159,12 +161,12 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                 } catch (e) {
                   if (ctx.mounted) {
                     ScaffoldMessenger.of(ctx).showSnackBar(
-                      SnackBar(content: Text('추가 실패: $e')),
+                      SnackBar(content: Text(l10n.schAddFailed('$e'))),
                     );
                   }
                 }
               },
-              child: const Text('추가'),
+              child: Text(l10n.actionAdd),
             ),
           ],
         ),
@@ -174,12 +176,13 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
   // 관리자: 타임존 변경 다이얼로그
   Future<void> _showTimezoneEditDialog(Map<String, dynamic> schedule) async {
+    final l10n = AppLocalizations.of(context)!;
     final tzCtrl = TextEditingController(text: schedule['timezone'] as String? ?? 'UTC');
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('타임존 변경'),
+        title: Text(l10n.schTzChangeTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,12 +195,12 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
             TextField(
               controller: tzCtrl,
               decoration: InputDecoration(
-                labelText: '타임존',
+                labelText: l10n.schTimezone,
                 hintText: 'Asia/Seoul',
                 prefixIcon: const Icon(Icons.public, size: 18),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.my_location, size: 18),
-                  tooltip: '내 디바이스 타임존 사용',
+                  tooltip: l10n.schTzUseDevice,
                   onPressed: () => tzCtrl.text = _deviceTimezone,
                 ),
               ),
@@ -205,7 +208,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              '예: Asia/Seoul, America/New_York, Europe/London',
+              l10n.schTzExamples,
               style: TextStyle(fontSize: 11, color: Colors.grey[500]),
             ),
           ],
@@ -213,11 +216,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('취소'),
+            child: Text(l10n.actionCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('확정'),
+            child: Text(l10n.actionConfirm),
           ),
         ],
       ),
@@ -236,24 +239,25 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('타임존 변경 실패: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.schTzChangeFailed('$e'))),
         );
       }
     }
   }
 
   Future<void> _delete(String scheduleId) async {
+    final l10n = AppLocalizations.of(context)!;
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('일정 삭제'),
-        content: const Text('이 일정을 삭제하시겠습니까?'),
+        title: Text(l10n.schDeleteTitle),
+        content: Text(l10n.schDeleteConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.actionCancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('삭제'),
+            child: Text(l10n.actionDelete),
           ),
         ],
       ),
@@ -266,7 +270,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('삭제 실패: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.schDeleteFailed('$e'))),
         );
       }
     }
@@ -275,16 +279,17 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     final isAdmin = ref.watch(currentUserProvider).isAdmin;
-    final fmt = DateFormat('MM/dd(E) HH:mm', 'ko');
+    final l10n = AppLocalizations.of(context)!;
+    final fmt = DateFormat('MM/dd(E) HH:mm', Localizations.localeOf(context).languageCode);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('프로그램 일정')),
+      appBar: AppBar(title: Text(l10n.regScheduleTooltip)),
       floatingActionButton: isAdmin
           ? FloatingActionButton.extended(
               heroTag: 'add_schedule',
               onPressed: _showAddDialog,
               icon: const Icon(Icons.add),
-              label: const Text('일정 추가'),
+              label: Text(l10n.schAddTitle),
             )
           : null,
       body: _isLoading
@@ -303,7 +308,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                                 Icon(Icons.event_note, size: 64, color: Colors.grey[400]),
                                 const SizedBox(height: 12),
                                 Text(
-                                  '등록된 일정이 없습니다',
+                                  l10n.schEmpty,
                                   style: TextStyle(color: Colors.grey[500]),
                                 ),
                               ],

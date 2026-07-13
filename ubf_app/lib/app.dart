@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/theme/app_theme.dart';
+import 'l10n/app_localizations.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/profile_setup_screen.dart';
@@ -18,6 +19,8 @@ import 'features/schedule/screens/schedule_screen.dart';
 import 'features/sos/screens/sos_screen.dart';
 import 'features/program/screens/immigration_card_screen.dart';
 import 'features/program/screens/edit_program_screen.dart';
+import 'features/setup/screens/setup_screen.dart';
+import 'features/assignment/screens/assignment_screen.dart';
 
 class UbfApp extends ConsumerStatefulWidget {
   const UbfApp({super.key});
@@ -85,6 +88,14 @@ class _UbfAppState extends ConsumerState<UbfApp> {
           builder: (_, s) => EditProgramScreen(programId: s.pathParameters['id']!),
         ),
         GoRoute(
+          path: '/leader/program/:id/setup',
+          builder: (_, s) => SetupScreen(programId: s.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: '/leader/program/:id/assign',
+          builder: (_, s) => AssignmentScreen(programId: s.pathParameters['id']!),
+        ),
+        GoRoute(
           path: '/registration/:id',
           builder: (_, s) => RegistrationFlowScreen(programId: s.pathParameters['id']!),
         ),
@@ -114,20 +125,26 @@ class _UbfAppState extends ConsumerState<UbfApp> {
     ref.listen<AuthState>(authProvider, (_, _) => _router.refresh());
 
     return MaterialApp.router(
-      title: 'Mana',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       theme: AppTheme.lightTheme,
       routerConfig: _router,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('ko'),
-        Locale('en'),
-        Locale('es'),
-      ],
-      locale: const Locale('ko'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      // locale 미지정 → 기기 언어를 따른다. 지원(ko/en/es) 언어면 그 언어,
+      // 그 외에는 영어로 폴백.
+      localeResolutionCallback: (deviceLocale, supported) {
+        if (deviceLocale != null) {
+          for (final l in supported) {
+            if (l.languageCode == deviceLocale.languageCode) return l;
+          }
+        }
+        return const Locale('en');
+      },
       debugShowCheckedModeBanner: false,
     );
   }

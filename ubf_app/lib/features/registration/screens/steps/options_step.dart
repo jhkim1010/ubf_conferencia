@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/registration_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 class OptionsStep extends ConsumerWidget {
   final String programId;
@@ -16,11 +17,12 @@ class OptionsStep extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     if (!enabled || options.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text('이 프로그램에는 특별 옵션이 없습니다'),
+          padding: const EdgeInsets.all(24),
+          child: Text(l10n.optionsNone),
         ),
       );
     }
@@ -40,7 +42,7 @@ class OptionsStep extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       children: [
         Text(
-          '참여할 프로그램을 선택하세요 (복수 선택 가능)',
+          l10n.optionsSelectPrompt,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Colors.grey[600],
           ),
@@ -79,7 +81,7 @@ class OptionsStep extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  cost == 0 ? '무료' : '₩${cost.toStringAsFixed(0)}',
+                  cost == 0 ? l10n.optionsFree : '₩${cost.toStringAsFixed(0)}',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: cost == 0
@@ -106,9 +108,9 @@ class OptionsStep extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '선택한 옵션 합계',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                Text(
+                  l10n.optionsSelectedTotal,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
                   '₩${totalCost.toStringAsFixed(0)}',

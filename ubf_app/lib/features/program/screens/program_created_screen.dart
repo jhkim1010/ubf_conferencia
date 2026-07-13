@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 // 프로그램 생성 완료 - UUID 공유 화면
 class ProgramCreatedScreen extends StatelessWidget {
@@ -11,10 +12,11 @@ class ProgramCreatedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('프로그램 생성 완료'),
+        title: Text(l10n.pcTitle),
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
@@ -33,7 +35,7 @@ class ProgramCreatedScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                '프로그램이 생성되었습니다!',
+                l10n.pcHeading,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -41,7 +43,7 @@ class ProgramCreatedScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '아래 UUID를 참가자들에게 공유하세요',
+                l10n.pcShareUuid,
                 style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
@@ -76,11 +78,11 @@ class ProgramCreatedScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       icon: const Icon(Icons.copy, size: 18),
-                      label: const Text('복사하기'),
+                      label: Text(l10n.pcCopy),
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: programId));
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('UUID가 복사되었습니다')),
+                          SnackBar(content: Text(l10n.pcCopied)),
                         );
                       },
                     ),
@@ -100,7 +102,7 @@ class ProgramCreatedScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        '참가자들은 이 UUID를 앱에 입력하여 등록할 수 있습니다.',
+                        l10n.pcInfo,
                         style: TextStyle(color: Colors.blue[800], fontSize: 13),
                       ),
                     ),
@@ -111,12 +113,12 @@ class ProgramCreatedScreen extends StatelessWidget {
               // 대시보드로 이동
               ElevatedButton(
                 onPressed: () => context.go('/leader/program/$programId/dashboard'),
-                child: const Text('대시보드로 이동'),
+                child: Text(l10n.pcGoDashboard),
               ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => context.go('/home'),
-                child: const Text('홈으로'),
+                child: Text(l10n.pcGoHome),
               ),
               const SizedBox(height: 16),
             ],

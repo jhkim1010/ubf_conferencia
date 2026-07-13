@@ -363,6 +363,280 @@ class ApiClient {
     );
     _decode(response);
   }
+
+  // ─── 편성 준비: 숙소(rooms) ───────────────────────────────
+
+  // { rooms: [...], summary: {...} }
+  static Future<Map<String, dynamic>> getRooms(String programId) async {
+    final response = await http.get(
+      _uri('/rooms/$programId'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  static Future<void> createRoom(
+    String programId,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await http.post(
+      _uri('/rooms/$programId'),
+      headers: await _headers(),
+      body: jsonEncode(data),
+    );
+    _decode(response);
+  }
+
+  // 일괄 생성: { namePattern, startNumber, count, floor, roomType, capacity, gender }
+  static Future<int> bulkCreateRooms(
+    String programId,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await http.post(
+      _uri('/rooms/$programId/bulk'),
+      headers: await _headers(),
+      body: jsonEncode(data),
+    );
+    return (_decode(response)['created'] as num).toInt();
+  }
+
+  static Future<void> updateRoom(
+    String programId,
+    String roomId,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await http.patch(
+      _uri('/rooms/$programId/$roomId'),
+      headers: await _headers(),
+      body: jsonEncode(data),
+    );
+    _decode(response);
+  }
+
+  static Future<void> deleteRoom(String programId, String roomId) async {
+    final response = await http.delete(
+      _uri('/rooms/$programId/$roomId'),
+      headers: await _headers(),
+    );
+    _decode(response);
+  }
+
+  // ─── 편성 준비: 말씀조(groups) ────────────────────────────
+
+  // { groups: [...], summary: {...} }
+  static Future<Map<String, dynamic>> getGroups(String programId) async {
+    final response = await http.get(
+      _uri('/groups/$programId'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  static Future<void> createGroup(
+    String programId,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await http.post(
+      _uri('/groups/$programId'),
+      headers: await _headers(),
+      body: jsonEncode(data),
+    );
+    _decode(response);
+  }
+
+  // 조 일괄 생성: { count, namePattern? }
+  static Future<int> generateGroups(
+    String programId,
+    int count, {
+    String? namePattern,
+  }) async {
+    final response = await http.post(
+      _uri('/groups/$programId/generate'),
+      headers: await _headers(),
+      body: jsonEncode({'count': count, 'namePattern': ?namePattern}),
+    );
+    return (_decode(response)['created'] as num).toInt();
+  }
+
+  static Future<void> updateGroup(
+    String programId,
+    String groupId,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await http.patch(
+      _uri('/groups/$programId/$groupId'),
+      headers: await _headers(),
+      body: jsonEncode(data),
+    );
+    _decode(response);
+  }
+
+  static Future<void> deleteGroup(String programId, String groupId) async {
+    final response = await http.delete(
+      _uri('/groups/$programId/$groupId'),
+      headers: await _headers(),
+    );
+    _decode(response);
+  }
+
+  // ─── 지목(buddy requests) ─────────────────────────────────
+
+  // 지목 후보(나 제외 등록자)
+  static Future<List<dynamic>> getBuddyCandidates(String programId) async {
+    final response = await http.get(
+      _uri('/buddy-requests/$programId/candidates'),
+      headers: await _headers(),
+    );
+    return _decodeList(response);
+  }
+
+  // { sent: [...], received: [...] }
+  static Future<Map<String, dynamic>> getMyBuddyRequests(String programId) async {
+    final response = await http.get(
+      _uri('/buddy-requests/$programId/me'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  // kind: 'roommate' | 'group'
+  static Future<void> sendBuddyRequest(
+    String programId,
+    String toRegistrationId,
+    String kind,
+  ) async {
+    final response = await http.post(
+      _uri('/buddy-requests/$programId'),
+      headers: await _headers(),
+      body: jsonEncode({'toRegistrationId': toRegistrationId, 'kind': kind}),
+    );
+    _decode(response);
+  }
+
+  // action: 'accept' | 'decline'
+  static Future<void> respondBuddyRequest(
+    String programId,
+    String requestId,
+    String action,
+  ) async {
+    final response = await http.patch(
+      _uri('/buddy-requests/$programId/$requestId/$action'),
+      headers: await _headers(),
+    );
+    _decode(response);
+  }
+
+  static Future<void> cancelBuddyRequest(String programId, String requestId) async {
+    final response = await http.delete(
+      _uri('/buddy-requests/$programId/$requestId'),
+      headers: await _headers(),
+    );
+    _decode(response);
+  }
+
+  // ─── 동반자(companions) ───────────────────────────────────
+
+  static Future<List<dynamic>> getMyCompanions(String programId) async {
+    final response = await http.get(
+      _uri('/companions/$programId/me'),
+      headers: await _headers(),
+    );
+    return _decodeList(response);
+  }
+
+  // companions: 각 항목 { realName, bibleName, gender, age, language, branch,
+  //                       sameFlightAsPrimary, arrivalFlight, departureFlight, needsPickup }
+  static Future<void> saveMyCompanions(
+    String programId,
+    List<Map<String, dynamic>> companions,
+  ) async {
+    final response = await http.put(
+      _uri('/companions/$programId/me'),
+      headers: await _headers(),
+      body: jsonEncode({'companions': companions}),
+    );
+    _decode(response);
+  }
+
+  // ─── 배정(assignments) — 관리자 ───────────────────────────
+
+  // { rooms: [...], unassigned: [...] }
+  static Future<Map<String, dynamic>> getRoomAssignments(String programId) async {
+    final response = await http.get(
+      _uri('/assignments/$programId/rooms'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  // { groups: [...], unassigned: [...] }
+  static Future<Map<String, dynamic>> getGroupAssignments(String programId) async {
+    final response = await http.get(
+      _uri('/assignments/$programId/groups'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  // { assigned, unplaced: [...] }
+  static Future<Map<String, dynamic>> autoAssignRooms(String programId) async {
+    final response = await http.post(
+      _uri('/assignments/$programId/rooms/auto'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  // { assigned }
+  static Future<Map<String, dynamic>> autoAssignGroups(String programId) async {
+    final response = await http.post(
+      _uri('/assignments/$programId/groups/auto'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  static Future<void> assignToRoom(
+    String programId,
+    String roomId,
+    String registrationId,
+  ) async {
+    final response = await http.post(
+      _uri('/assignments/$programId/rooms/assign'),
+      headers: await _headers(),
+      body: jsonEncode({'roomId': roomId, 'registrationId': registrationId}),
+    );
+    _decode(response);
+  }
+
+  static Future<void> unassignFromRoom(String programId, String registrationId) async {
+    final response = await http.delete(
+      _uri('/assignments/$programId/rooms/$registrationId'),
+      headers: await _headers(),
+    );
+    _decode(response);
+  }
+
+  static Future<void> assignToGroup(
+    String programId,
+    String groupId,
+    String registrationId,
+  ) async {
+    final response = await http.post(
+      _uri('/assignments/$programId/groups/assign'),
+      headers: await _headers(),
+      body: jsonEncode({'groupId': groupId, 'registrationId': registrationId}),
+    );
+    _decode(response);
+  }
+
+  static Future<void> unassignFromGroup(String programId, String registrationId) async {
+    final response = await http.delete(
+      _uri('/assignments/$programId/groups/$registrationId'),
+      headers: await _headers(),
+    );
+    _decode(response);
+  }
 }
 
 class ApiException implements Exception {

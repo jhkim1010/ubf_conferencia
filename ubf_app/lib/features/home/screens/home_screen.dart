@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/ubf_chapters.dart';
 import '../../auth/providers/auth_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -27,6 +28,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     // participant 역할이고 아직 지부장 확인을 안 했으면 이메일 매칭 실행
     if (user.role == UserRole.participant &&
@@ -41,20 +43,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('수양회 참가자 등록 시스템'),
+        title: Text(l10n.appTagline),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            tooltip: '로그아웃',
+            tooltip: l10n.actionLogout,
             onPressed: () async {
               final ok = await showDialog<bool>(
                 context: context,
                 builder: (_) => AlertDialog(
-                  title: const Text('로그아웃'),
-                  content: const Text('로그아웃하시겠습니까?\n다른 계정으로 로그인할 수 있습니다.'),
+                  title: Text(l10n.actionLogout),
+                  content: Text(l10n.homeLogoutConfirmBody),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('로그아웃')),
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.actionCancel)),
+                    TextButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.actionLogout)),
                   ],
                 ),
               );
@@ -81,20 +83,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final matches = findLeaderByEmail(data, email);
       if (matches.isEmpty || !mounted) return;
 
+      final l10n = AppLocalizations.of(context)!;
       // 매칭된 챕터 정보로 다이얼로그 표시
       final match = matches.first;
       final confirmed = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (_) => AlertDialog(
-          title: const Text('지부장 확인'),
+          title: Text(l10n.homeLeaderCheckTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '로그인하신 이메일($email)이 다음 챕터의 지부장으로 등록되어 있습니다:',
-              ),
+              Text(l10n.homeLeaderCheckBody(email)),
               const SizedBox(height: 12),
               Card(
                 color: Theme.of(context).colorScheme.primaryContainer,
@@ -103,28 +104,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('대륙: ${match.continent}',
+                      Text(l10n.homeLeaderContinent(match.continent),
                           style: const TextStyle(fontWeight: FontWeight.w500)),
-                      Text('국가: ${match.nation}',
+                      Text(l10n.homeLeaderNation(match.nation),
                           style: const TextStyle(fontWeight: FontWeight.w500)),
-                      Text('챕터: ${match.chapterName}',
+                      Text(l10n.homeLeaderChapter(match.chapterName),
                           style: const TextStyle(fontWeight: FontWeight.w500)),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              const Text('지부장(리더)으로 등록하시겠습니까?'),
+              Text(l10n.homeLeaderCheckPrompt),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('아니오, 참가자로 계속'),
+              child: Text(l10n.homeLeaderDeclineParticipant),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('예, 리더로 등록'),
+              child: Text(l10n.homeLeaderConfirmRegister),
             ),
           ],
         ),
@@ -149,6 +150,7 @@ class _DirectorHomeView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -167,7 +169,7 @@ class _DirectorHomeView extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Director 모드',
+                          l10n.homeDirectorMode,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Colors.deepPurple,
@@ -187,28 +189,28 @@ class _DirectorHomeView extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 24),
-          Text('관리 메뉴', style: theme.textTheme.titleMedium),
+          Text(l10n.homeManageMenu, style: theme.textTheme.titleMedium),
           const SizedBox(height: 12),
           _MenuTile(
             icon: Icons.add_circle_outline,
-            title: '새 프로그램 생성',
-            subtitle: 'UUID를 생성하고 프로그램을 설정합니다',
+            title: l10n.homeCreateProgram,
+            subtitle: l10n.homeCreateProgramSub,
             color: theme.colorScheme.primary,
             onTap: () => context.push('/leader/create-program'),
           ),
           const SizedBox(height: 10),
           _MenuTile(
             icon: Icons.list_alt,
-            title: '내 프로그램 목록',
-            subtitle: '생성한 프로그램을 관리합니다',
+            title: l10n.homeProgramList,
+            subtitle: l10n.homeProgramListDirectorSub,
             color: Colors.green,
             onTap: () => context.push('/leader/programs'),
           ),
           const SizedBox(height: 10),
           _MenuTile(
             icon: Icons.admin_panel_settings,
-            title: '관리자 배정',
-            subtitle: '프로그램별 admin을 지정합니다',
+            title: l10n.homeAssignAdmins,
+            subtitle: l10n.homeAssignAdminsSub,
             color: Colors.deepPurple,
             onTap: () => context.push('/director/assign-admins'),
           ),
@@ -226,7 +228,7 @@ class _DirectorHomeView extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Director는 모든 프로그램을 관리하고 admin을 지정할 수 있습니다.',
+                    l10n.homeDirectorInfo,
                     style: TextStyle(color: Colors.purple[800]),
                   ),
                 ),
@@ -248,6 +250,7 @@ class _LeaderHomeView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -266,7 +269,7 @@ class _LeaderHomeView extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '관리자(Admin) 모드',
+                          l10n.homeAdminMode,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -285,20 +288,20 @@ class _LeaderHomeView extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 24),
-          Text('관리 메뉴', style: theme.textTheme.titleMedium),
+          Text(l10n.homeManageMenu, style: theme.textTheme.titleMedium),
           const SizedBox(height: 12),
           _MenuTile(
             icon: Icons.add_circle_outline,
-            title: '새 프로그램 생성',
-            subtitle: 'UUID를 생성하고 프로그램을 설정합니다',
+            title: l10n.homeCreateProgram,
+            subtitle: l10n.homeCreateProgramSub,
             color: theme.colorScheme.primary,
             onTap: () => context.push('/leader/create-program'),
           ),
           const SizedBox(height: 10),
           _MenuTile(
             icon: Icons.list_alt,
-            title: '내 프로그램 목록',
-            subtitle: '담당 프로그램을 관리합니다',
+            title: l10n.homeProgramList,
+            subtitle: l10n.homeProgramListAdminSub,
             color: Colors.green,
             onTap: () => context.push('/leader/programs'),
           ),
@@ -316,7 +319,7 @@ class _LeaderHomeView extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '프로그램 생성 후 UUID를 참가자들에게 공유하세요.',
+                    l10n.homeAdminInfo,
                     style: TextStyle(color: Colors.blue[800]),
                   ),
                 ),
@@ -373,6 +376,7 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -381,21 +385,21 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
         children: [
           const SizedBox(height: 20),
           Text(
-            '프로그램 참가',
+            l10n.homeJoinTitle,
             style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            '리더에게 받은 UUID를 입력하여 프로그램에 참가하세요.',
+            l10n.homeJoinSub,
             style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
           ),
           const SizedBox(height: 32),
           TextField(
             controller: widget.uuidController,
-            decoration: const InputDecoration(
-              labelText: '프로그램 UUID',
+            decoration: InputDecoration(
+              labelText: l10n.homeUuidLabel,
               hintText: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-              prefixIcon: Icon(Icons.vpn_key_outlined),
+              prefixIcon: const Icon(Icons.vpn_key_outlined),
             ),
           ),
           const SizedBox(height: 16),
@@ -403,14 +407,14 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () => _join(context, widget.uuidController.text.trim()),
-              child: const Text('참가하기'),
+              child: Text(l10n.homeJoinButton),
             ),
           ),
 
           // ── 최근 참가 프로그램 ──────────────────────────
           if (_recentPrograms.isNotEmpty) ...[
             const SizedBox(height: 36),
-            Text('최근 참가한 프로그램', style: theme.textTheme.titleSmall),
+            Text(l10n.homeRecentPrograms, style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
             ...(_recentPrograms.map((prog) {
               final uuid = prog['uuid'] as String;
@@ -427,7 +431,7 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.close, size: 18),
-                    tooltip: '목록에서 제거',
+                    tooltip: l10n.homeRemoveFromList,
                     onPressed: () => _removeRecent(uuid),
                   ),
                   onTap: () => _join(context, uuid),
@@ -440,7 +444,7 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
           Center(
             child: TextButton(
               onPressed: () => context.push('/become-leader'),
-              child: const Text('리더이신가요? 리더로 전환하기'),
+              child: Text(l10n.homeBecomeLeader),
             ),
           ),
           const SizedBox(height: 16),

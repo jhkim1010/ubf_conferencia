@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/ubf_chapters.dart';
 import '../../providers/registration_provider.dart';
+import 'package:mana/l10n/app_localizations.dart';
 
 class PersonalInfoStep extends ConsumerStatefulWidget {
   final String programId;
@@ -117,6 +118,7 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -138,8 +140,8 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
         // ── 대륙 드롭다운 ──────────────────────────────
         DropdownButtonFormField<String>(
           initialValue: _continent,
-          decoration: const InputDecoration(labelText: '대륙 *'),
-          hint: const Text('대륙 선택'),
+          decoration: InputDecoration(labelText: l10n.regContinent),
+          hint: Text(l10n.regContinentHint),
           items: continents.map((c) {
             return DropdownMenuItem<String>(value: c, child: Text(c));
           }).toList(),
@@ -151,9 +153,9 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
         DropdownButtonFormField<String>(
           key: ValueKey('nation_$_continent'),
           initialValue: _nation,
-          decoration: const InputDecoration(labelText: '국가 *'),
-          hint: const Text('국가 선택'),
-          disabledHint: _continent == null ? const Text('대륙을 먼저 선택하세요') : null,
+          decoration: InputDecoration(labelText: l10n.regNation),
+          hint: Text(l10n.regNationHint),
+          disabledHint: _continent == null ? Text(l10n.regNationDisabled) : null,
           items: nations.map((n) {
             return DropdownMenuItem<String>(value: n, child: Text(n));
           }).toList(),
@@ -166,8 +168,8 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
           DropdownButtonFormField<String>(
             key: ValueKey('chapter_$_nation'),
             initialValue: _chapter,
-            decoration: const InputDecoration(labelText: '챕터 *'),
-            hint: const Text('챕터 선택'),
+            decoration: InputDecoration(labelText: l10n.regChapter),
+            hint: Text(l10n.regChapterHint),
             items: chapters.map((ch) {
               return DropdownMenuItem<String>(
                 value: ch.name,
@@ -182,8 +184,8 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
           const SizedBox(height: 4),
           Text(
             chapters.isEmpty
-                ? '해당 국가에 등록된 챕터가 없습니다. 아래에 직접 입력하세요.'
-                : '목록에 없으면 아래에 직접 입력하세요',
+                ? l10n.regChapterNoneHint
+                : l10n.regChapterManualHint,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Colors.grey[500],
             ),
@@ -194,9 +196,9 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
         // ── 지부 직접 입력 (챕터 선택 시 자동 채워짐) ───
         TextField(
           controller: _branchController,
-          decoration: const InputDecoration(
-            labelText: '지부명 *',
-            hintText: '예: Tokyo, Chicago',
+          decoration: InputDecoration(
+            labelText: l10n.regBranch,
+            hintText: l10n.regBranchHint,
           ),
           onChanged: (_) {
             setState(() => _chapter = null); // 직접 입력 시 챕터 선택 해제
@@ -208,7 +210,7 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
         // ── 본명 ───────────────────────────────────────
         TextField(
           controller: _realNameController,
-          decoration: const InputDecoration(labelText: '본명 *'),
+          decoration: InputDecoration(labelText: l10n.regRealName),
           onChanged: (_) => _save(),
         ),
         const SizedBox(height: 12),
@@ -216,21 +218,21 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
         // ── 성경 이름 ──────────────────────────────────
         TextField(
           controller: _bibleNameController,
-          decoration: const InputDecoration(
-            labelText: '성경 이름',
-            hintText: '예: 베드로, 마리아',
+          decoration: InputDecoration(
+            labelText: l10n.regBibleName,
+            hintText: l10n.regBibleNameHint,
           ),
           onChanged: (_) => _save(),
         ),
         const SizedBox(height: 16),
 
         // ── 성별 선택 ──────────────────────────────────
-        Text('성별', style: Theme.of(context).textTheme.labelLarge),
+        Text(l10n.regGender, style: Theme.of(context).textTheme.labelLarge),
         const SizedBox(height: 8),
         SegmentedButton<String>(
-          segments: const [
-            ButtonSegment(value: 'M', label: Text('남')),
-            ButtonSegment(value: 'F', label: Text('여')),
+          segments: [
+            ButtonSegment(value: 'M', label: Text(l10n.genderMale)),
+            ButtonSegment(value: 'F', label: Text(l10n.genderFemale)),
           ],
           selected: _gender != null ? {_gender!} : {},
           emptySelectionAllowed: true,
@@ -245,7 +247,7 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
         TextField(
           controller: _ageController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: '나이 *'),
+          decoration: InputDecoration(labelText: l10n.regAge),
           onChanged: (_) => _save(),
         ),
       ],
