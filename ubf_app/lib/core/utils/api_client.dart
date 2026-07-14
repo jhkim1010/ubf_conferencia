@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,7 +18,7 @@ class ApiClient {
 
   static Future<String?> getToken() async {
     if (_cachedToken != null) return _cachedToken;
-    if (Platform.isMacOS) {
+    if (kIsWeb || Platform.isMacOS) {
       final prefs = await SharedPreferences.getInstance();
       _cachedToken = prefs.getString(AppConstants.jwtTokenKey);
     } else {
@@ -28,7 +29,7 @@ class ApiClient {
 
   static Future<void> saveToken(String token) async {
     _cachedToken = token;
-    if (Platform.isMacOS) {
+    if (kIsWeb || Platform.isMacOS) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.jwtTokenKey, token);
     } else {
@@ -38,7 +39,7 @@ class ApiClient {
 
   static Future<void> clearToken() async {
     _cachedToken = null;
-    if (Platform.isMacOS) {
+    if (kIsWeb || Platform.isMacOS) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(AppConstants.jwtTokenKey);
     } else {
@@ -85,6 +86,18 @@ class ApiClient {
       _uri('/auth/google'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'idToken': idToken}),
+    );
+    final data = _decode(response);
+    await saveToken(data['token'] as String);
+    return data;
+  }
+
+  // 웹: idToken 이 없을 때 accessToken 으로 로그인 (서버가 tokeninfo 로 검증)
+  static Future<Map<String, dynamic>> loginWithGoogleAccessToken(String accessToken) async {
+    final response = await http.post(
+      _uri('/auth/google'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'accessToken': accessToken}),
     );
     final data = _decode(response);
     await saveToken(data['token'] as String);

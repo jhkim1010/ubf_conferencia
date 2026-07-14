@@ -77,8 +77,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   static final _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
-    // macOS/iOS: Google Cloud Console에서 발급한 OAuth Client ID
-    clientId: AppConstants.googleClientId.isEmpty ? null : AppConstants.googleClientId,
+    // 웹: null → web/index.html 의 <meta name="google-signin-client_id"> 를 사용
+    //      (웹은 반드시 "웹 애플리케이션" 타입 클라이언트 ID + 승인된 JS 원본 필요)
+    // 네이티브(macOS/iOS): app_constants 의 iOS/macOS 클라이언트 ID 사용
+    clientId: kIsWeb || AppConstants.googleClientId.isEmpty
+        ? null
+        : AppConstants.googleClientId,
   );
 
   // 앱 시작 시 저장된 JWT로 인증 복원
@@ -120,10 +124,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     debugPrint('[AUTH] 4. accessToken 존재: ${googleAuth.accessToken != null}');
 
     final idToken = googleAuth.idToken;
-    if (idToken == null) throw Exception('Google ID 토큰을 가져올 수 없습니다');
+    final accessToken = googleAuth.accessToken;
 
     debugPrint('[AUTH] 5. 서버 API 호출: ${AppConstants.apiBaseUrl}/auth/google');
-    final data = await ApiClient.loginWithGoogle(idToken);
+    final Map<String, dynamic> data;
+    if (idToken != null) {
+      // 네이티브: ID 토큰 사용
+      data = await ApiClient.loginWithGoogle(idToken);
+    } else if (accessToken != null) {
+      // 웹: idToken 이 없으므로 accessToken 사용
+      data = await ApiClient.loginWithGoogleAccessToken(accessToken);
+    } else {
+      throw Exception('Google 토큰을 가져올 수 없습니다');
+    }
     debugPrint('[AUTH] 6. 서버 응답: $data');
 
     final userMap = data['user'] as Map<String, dynamic>;

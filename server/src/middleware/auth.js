@@ -12,22 +12,44 @@ const allowedAudiences = [
 
 // Google ID 토큰 검증 → 자체 JWT 발급
 export async function googleLogin(req, res) {
-  const { idToken } = req.body;
+  const { idToken, accessToken } = req.body;
 
-  if (!idToken) {
-    return res.status(400).json({ error: 'idToken이 필요합니다' });
+  if (!idToken && !accessToken) {
+    return res.status(400).json({ error: 'idToken 또는 accessToken이 필요합니다' });
   }
 
   try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken,
-      audience: allowedAudiences,
-    });
+    let googleId, email, name;
 
-    const payload = ticket.getPayload();
-    const googleId = payload.sub;
-    const email = payload.email;
-    const name = payload.name;
+    if (idToken) {
+      // 네이티브(iOS/macOS/Android): ID 토큰 검증
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: allowedAudiences,
+      });
+      const payload = ticket.getPayload();
+      googleId = payload.sub;
+      email = payload.email;
+      name = payload.name;
+    } else {
+      // 웹: google_sign_in 이 idToken 을 주지 않으므로 accessToken 으로 처리
+      // 1) tokeninfo 로 토큰 검증 + audience 확인 (토큰 치환 공격 방지)
+      const tiRes = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`
+      );
+      if (!tiRes.ok) throw new Error(`tokeninfo 오류: ${tiRes.status}`);
+      const tokenInfo = await tiRes.json();
+      if (!allowedAudiences.includes(tokenInfo.aud)) {
+        throw new Error(`audience 불일치: ${tokenInfo.aud}`);
+      }
+      googleId = tokenInfo.sub;
+      email = tokenInfo.email;
+      // 2) 이름은 userinfo 로 조회 (없으면 이메일로 대체)
+      const uiRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      name = uiRes.ok ? ((await uiRes.json()).name ?? email) : email;
+    }
 
     // users 테이블에 upsert (첫 로그인 시 자동 생성)
     const [user] = await sql`
