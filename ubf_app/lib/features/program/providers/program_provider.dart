@@ -37,6 +37,7 @@ class ProgramService {
     String? contact1Phone,
     String? contact2Name,
     String? contact2Phone,
+    String? hostCountry,
   }) async {
     return ApiClient.createProgram({
       'name': name,
@@ -46,6 +47,8 @@ class ProgramService {
       'endDate': endDate?.toIso8601String().split('T').first,
       'enabledSections': enabledSections,
       'options': options,
+      if (hostCountry != null && hostCountry.isNotEmpty)
+        'hostCountry': hostCountry,
       if (nearestAirport != null && nearestAirport.isNotEmpty)
         'nearestAirport': nearestAirport,
       if (contact1Name != null && contact1Name.isNotEmpty)

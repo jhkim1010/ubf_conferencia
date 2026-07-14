@@ -29,6 +29,7 @@ class AuthState {
   final String? leaderId;
   final bool isLoading;
   final bool profileCompleted;
+  final String? country; // 거주 국가 (users.region) — 항공편 자동 생략 판단용
 
   const AuthState({
     this.userId,
@@ -39,6 +40,7 @@ class AuthState {
     this.leaderId,
     this.isLoading = true,
     this.profileCompleted = false,
+    this.country,
   });
 
   bool get isLoggedIn => userId != null;
@@ -54,6 +56,7 @@ class AuthState {
     String? leaderId,
     bool? isLoading,
     bool? profileCompleted,
+    String? country,
   }) {
     return AuthState(
       userId: userId ?? this.userId,
@@ -64,6 +67,7 @@ class AuthState {
       leaderId: leaderId ?? this.leaderId,
       isLoading: isLoading ?? this.isLoading,
       profileCompleted: profileCompleted ?? this.profileCompleted,
+      country: country ?? this.country,
     );
   }
 
@@ -100,6 +104,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           leaderId: me['leaderId'] as String?,
           isLoading: false,
           profileCompleted: me['profileCompleted'] as bool? ?? false,
+          country: me['region'] as String?,
         );
       } else {
         state = AuthState.guest;

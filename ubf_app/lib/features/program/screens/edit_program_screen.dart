@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
 import '../providers/program_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
@@ -23,9 +24,11 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
   final _contact1PhoneController = TextEditingController();
   final _contact2NameController = TextEditingController();
   final _contact2PhoneController = TextEditingController();
+  final _hostCountryController = TextEditingController();
 
   DateTime? _startDate;
   DateTime? _endDate;
+  String? _hostCountry;
   String _programType = 'international';
   bool _isLoading = false;
   bool _initialized = false;
@@ -61,6 +64,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _contact1PhoneController.dispose();
     _contact2NameController.dispose();
     _contact2PhoneController.dispose();
+    _hostCountryController.dispose();
     super.dispose();
   }
 
@@ -85,6 +89,9 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     }
 
     _programType = program['program_type'] ?? 'international';
+
+    _hostCountry = program['host_country'] as String?;
+    _hostCountryController.text = _hostCountry ?? '';
 
     final sections = Map<String, dynamic>.from(program['enabled_sections'] ?? {});
     for (final key in _enabledSections.keys) {
@@ -157,6 +164,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
         'programType': _programType,
         'startDate': _startDate?.toIso8601String().split('T').first,
         'endDate': _endDate?.toIso8601String().split('T').first,
+        'hostCountry': _programType == 'international' ? _hostCountry : null,
         'enabledSections': Map<String, bool>.from(_enabledSections),
         'options': _options,
         'nearestAirport': _airportController.text.trim(),
@@ -273,6 +281,29 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                     alignment: Alignment.centerLeft,
                   ),
                 ),
+                // 개최 국가 (국제 수양회만)
+                if (_programType == 'international') ...[
+                  const SizedBox(height: 12),
+                  DropdownMenu<String>(
+                    controller: _hostCountryController,
+                    enableFilter: true,
+                    requestFocusOnTap: true,
+                    menuHeight: 320,
+                    expandedInsets: EdgeInsets.zero,
+                    label: Text(l10n.cpHostCountry),
+                    hintText: l10n.cpHostCountryHint,
+                    leadingIcon: const Icon(Icons.flag_outlined),
+                    helperText: l10n.cpHostCountryHelp,
+                    inputDecorationTheme: const InputDecorationTheme(
+                      border: OutlineInputBorder(),
+                    ),
+                    dropdownMenuEntries: [
+                      for (final c in WorldCountries.sortedKorean)
+                        DropdownMenuEntry<String>(value: c, label: c),
+                    ],
+                    onSelected: (v) => setState(() => _hostCountry = v),
+                  ),
+                ],
                 const SizedBox(height: 28),
 
                 // 입국 안내 (국제만)

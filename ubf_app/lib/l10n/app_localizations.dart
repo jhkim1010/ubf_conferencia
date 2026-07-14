@@ -526,6 +526,30 @@ abstract class AppLocalizations {
   /// **'This section is disabled'**
   String get sectionDisabled;
 
+  /// No description provided for @flightSkipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Flight input skipped'**
+  String get flightSkipTitle;
+
+  /// No description provided for @flightSkipBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You live in the host country, so {dir} flight input is skipped. If you are flying, add it below.'**
+  String flightSkipBody(String dir);
+
+  /// No description provided for @flightSkipAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add flight info'**
+  String get flightSkipAdd;
+
+  /// No description provided for @flightSkipCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip flight'**
+  String get flightSkipCollapse;
+
   /// No description provided for @regTitle.
   ///
   /// In en, this message translates to:
@@ -1503,6 +1527,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select period (start ~ end)'**
   String get cpPeriod;
+
+  /// No description provided for @cpHostCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Host country'**
+  String get cpHostCountry;
+
+  /// No description provided for @cpHostCountryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search and select a country'**
+  String get cpHostCountryHint;
+
+  /// No description provided for @cpHostCountryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants living in the host country skip flight input'**
+  String get cpHostCountryHelp;
 
   /// No description provided for @cpImmigrationInfo.
   ///

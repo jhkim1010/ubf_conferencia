@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../program/providers/program_provider.dart';
 import '../providers/registration_provider.dart';
 import '../../sos/widgets/sos_fab.dart';
@@ -150,6 +151,14 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
           program['program_options'] as List? ?? [],
         );
 
+        // 개최 국가 == 참가자 거주 국가면 항공편 입력을 기본 생략 (필요 시 추가 가능)
+        final hostCountry = program['host_country'] as String?;
+        final userCountry = ref.watch(currentUserProvider).country;
+        final sameCountryAsHost = hostCountry != null &&
+            hostCountry.isNotEmpty &&
+            userCountry != null &&
+            userCountry == hostCountry;
+
         return Scaffold(
           floatingActionButton: SosFab(programId: widget.programId),
           appBar: AppBar(
@@ -272,11 +281,13 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                       programId: widget.programId,
                       isArrival: true,
                       enabled: enabledSections['arrival_flight'] ?? true,
+                      sameCountryAsHost: sameCountryAsHost,
                     ),
                     FlightInfoStep(
                       programId: widget.programId,
                       isArrival: false,
                       enabled: enabledSections['departure_flight'] ?? true,
+                      sameCountryAsHost: sameCountryAsHost,
                     ),
                     FoodStep(
                       programId: widget.programId,

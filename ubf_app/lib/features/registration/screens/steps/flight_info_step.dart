@@ -9,12 +9,15 @@ class FlightInfoStep extends ConsumerStatefulWidget {
   final String programId;
   final bool isArrival;
   final bool enabled;
+  // 참가자 거주 국가 == 개최 국가면 항공편 입력을 기본 생략 (필요 시 추가)
+  final bool sameCountryAsHost;
 
   const FlightInfoStep({
     super.key,
     required this.programId,
     required this.isArrival,
     this.enabled = true,
+    this.sameCountryAsHost = false,
   });
 
   @override
@@ -31,6 +34,7 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
   bool _isSearching = false;
   String? _searchError;
   FlightInfo? _flightInfo;
+  bool _addFlightAnyway = false; // 동일 국가라도 항공편을 직접 추가한 경우
 
   @override
   void initState() {
@@ -187,6 +191,42 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
     }
   }
 
+  bool get _hasFlightData =>
+      _flightNoController.text.trim().isNotEmpty ||
+      _airportController.text.trim().isNotEmpty ||
+      _selectedDate != null;
+
+  // 동일 국가 참가자용: 항공편 생략 안내 + '추가' 버튼
+  Widget _buildSkipCard(AppLocalizations l10n, String label) {
+    final theme = Theme.of(context);
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        const SizedBox(height: 32),
+        Icon(Icons.directions_car_outlined, size: 56, color: Colors.grey[400]),
+        const SizedBox(height: 16),
+        Text(
+          l10n.flightSkipTitle,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.flightSkipBody(label),
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+        ),
+        const SizedBox(height: 24),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.add),
+          label: Text(l10n.flightSkipAdd),
+          onPressed: () => setState(() => _addFlightAnyway = true),
+          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -197,6 +237,11 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
     final label = widget.isArrival ? l10n.flightArrival : l10n.flightDeparture;
     final theme = Theme.of(context);
 
+    // 동일 국가 참가자: 아직 추가 안 했고 입력값도 없으면 생략 카드 표시
+    if (widget.sameCountryAsHost && !_addFlightAnyway && !_hasFlightData) {
+      return _buildSkipCard(l10n, label);
+    }
+
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -204,6 +249,29 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
           l10n.flightInfoTitle(label),
           style: theme.textTheme.titleSmall?.copyWith(color: Colors.grey[600]),
         ),
+        // 동일 국가인데 항공편을 연 경우: 다시 생략하기 링크
+        if (widget.sameCountryAsHost) ...[
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              icon: const Icon(Icons.close, size: 16),
+              label: Text(l10n.flightSkipCollapse),
+              onPressed: () {
+                _flightNoController.clear();
+                _airportController.clear();
+                _dateLabelController.clear();
+                _timeController.clear();
+                setState(() {
+                  _selectedDate = null;
+                  _flightInfo = null;
+                  _searchError = null;
+                  _addFlightAnyway = false;
+                });
+                _saveToProvider();
+              },
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         // ── 날짜 선택 (첫 번째 필드) ──────────────────────
         TextField(

@@ -63,7 +63,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
   const {
     name, location, startDate, endDate, enabledSections, options,
     nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
-    programType,
+    programType, hostCountry,
   } = req.body;
 
   if (!name || !location) {
@@ -102,7 +102,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
       INSERT INTO programs (
         name, location, leader_id, start_date, end_date, enabled_sections,
         nearest_airport, contact1_name, contact1_phone, contact2_name, contact2_phone,
-        program_type
+        program_type, host_country
       )
       VALUES (
         ${name},
@@ -116,7 +116,8 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         ${contact1Phone ?? null},
         ${contact2Name ?? null},
         ${contact2Phone ?? null},
-        ${type}
+        ${type},
+        ${hostCountry ?? null}
       )
       RETURNING id
     `;
@@ -151,7 +152,7 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
   const {
     name, location, startDate, endDate, enabledSections,
     nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
-    programType, options,
+    programType, options, hostCountry,
   } = req.body;
 
   try {
@@ -186,7 +187,8 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
         contact1_phone   = ${contact1Phone ?? null},
         contact2_name    = ${contact2Name ?? null},
         contact2_phone   = ${contact2Phone ?? null},
-        program_type     = ${type}
+        program_type     = ${type},
+        host_country     = ${hostCountry ?? null}
       WHERE id = ${req.params.id}
     `;
 

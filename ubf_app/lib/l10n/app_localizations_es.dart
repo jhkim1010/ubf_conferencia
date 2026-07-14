@@ -247,6 +247,20 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sectionDisabled => 'Esta sección está desactivada';
 
   @override
+  String get flightSkipTitle => 'Flight input skipped';
+
+  @override
+  String flightSkipBody(String dir) {
+    return 'You live in the host country, so $dir flight input is skipped. If you are flying, add it below.';
+  }
+
+  @override
+  String get flightSkipAdd => 'Add flight info';
+
+  @override
+  String get flightSkipCollapse => 'Skip flight';
+
+  @override
   String get regTitle => 'Registro';
 
   @override
@@ -766,6 +780,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cpPeriod => 'Select period (start ~ end)';
+
+  @override
+  String get cpHostCountry => 'Host country';
+
+  @override
+  String get cpHostCountryHint => 'Search and select a country';
+
+  @override
+  String get cpHostCountryHelp =>
+      'Participants living in the host country skip flight input';
 
   @override
   String get cpImmigrationInfo => 'Información de inmigración';

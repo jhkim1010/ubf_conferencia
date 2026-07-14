@@ -240,6 +240,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sectionDisabled => '이 섹션은 비활성화되어 있습니다';
 
   @override
+  String get flightSkipTitle => '항공편 입력 생략';
+
+  @override
+  String flightSkipBody(String dir) {
+    return '개최 국가와 동일한 국가에 거주하셔서 $dir 항공편 입력이 생략됩니다. 비행기로 오시면 아래에서 추가하세요.';
+  }
+
+  @override
+  String get flightSkipAdd => '항공편 정보 추가';
+
+  @override
+  String get flightSkipCollapse => '항공편 생략';
+
+  @override
   String get regTitle => '등록';
 
   @override
@@ -745,6 +759,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get cpPeriod => '기간 선택 (시작 ~ 종료)';
+
+  @override
+  String get cpHostCountry => '개최 국가';
+
+  @override
+  String get cpHostCountryHint => '국가를 검색·선택하세요';
+
+  @override
+  String get cpHostCountryHelp => '거주 국가가 개최 국가와 같은 참가자는 항공편 입력이 생략됩니다';
 
   @override
   String get cpImmigrationInfo => '입국 안내 정보';
