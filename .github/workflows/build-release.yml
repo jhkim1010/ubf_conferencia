@@ -1,0 +1,157 @@
+name: Build & Release (all platforms)
+
+# v* 태그를 push하면 전체 OS 빌드 후 릴리스 생성
+# 예: git tag v1.0.0 && git push origin v1.0.0
+# 수동 실행(workflow_dispatch)도 가능 — 이 경우 릴리스는 만들지 않고 아티팩트만 업로드
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.44.6'
+  APP_DIR: ubf_app
+
+jobs:
+  # ---------------------------------------------------------------- Web
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - name: Build web
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          flutter pub get
+          flutter build web --release
+      - name: Zip web
+        working-directory: ${{ env.APP_DIR }}/build/web
+        run: zip -r "$GITHUB_WORKSPACE/mana-web.zip" .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mana-web
+          path: mana-web.zip
+
+  # ---------------------------------------------------------------- Android APK
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - name: Build APK
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          flutter pub get
+          flutter build apk --release
+      - name: Rename APK
+        run: cp "${{ env.APP_DIR }}/build/app/outputs/flutter-apk/app-release.apk" mana-android.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mana-android
+          path: mana-android.apk
+
+  # ---------------------------------------------------------------- Windows
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - name: Build Windows
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          flutter pub get
+          flutter build windows --release
+      - name: Zip Windows
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "${{ env.APP_DIR }}\build\windows\x64\runner\Release\*" -DestinationPath "mana-windows.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mana-windows
+          path: mana-windows.zip
+
+  # ---------------------------------------------------------------- Linux
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - name: Build Linux
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          flutter pub get
+          flutter build linux --release
+      - name: Tar Linux bundle
+        working-directory: ${{ env.APP_DIR }}/build/linux/x64/release/bundle
+        run: tar czf "$GITHUB_WORKSPACE/mana-linux.tar.gz" .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mana-linux
+          path: mana-linux.tar.gz
+
+  # ---------------------------------------------------------------- macOS DMG
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - name: Build macOS
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          flutter pub get
+          flutter build macos --release
+      - name: Create DMG
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          APP_PATH=$(find build/macos/Build/Products/Release -maxdepth 1 -name "*.app" | head -1)
+          echo "App: $APP_PATH"
+          STAGE=$(mktemp -d)
+          cp -R "$APP_PATH" "$STAGE/"
+          ln -s /Applications "$STAGE/Applications"
+          hdiutil create -volname "mana" -srcfolder "$STAGE" -ov -format UDZO "$GITHUB_WORKSPACE/mana-macos.dmg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mana-macos
+          path: mana-macos.dmg
+
+  # ---------------------------------------------------------------- Release
+  release:
+    needs: [web, android, windows, linux, macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**/*
+          generate_release_notes: true
