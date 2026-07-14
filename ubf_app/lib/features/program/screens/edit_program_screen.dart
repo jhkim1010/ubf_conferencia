@@ -107,20 +107,25 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     });
   }
 
-  Future<void> _selectDate(bool isStart) async {
-    final picked = await showDatePicker(
+  static String _fmtDate(DateTime d) =>
+      '${d.year}.${d.month.toString().padLeft(2, '0')}.${d.day.toString().padLeft(2, '0')}';
+
+  // 기간(시작~종료)을 달력 1개로 선택
+  Future<void> _selectDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
       context: context,
-      initialDate: (isStart ? _startDate : _endDate) ?? DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+      firstDate: now.subtract(const Duration(days: 365)),
+      lastDate: now.add(const Duration(days: 365 * 3)),
+      initialDateRange: (_startDate != null && _endDate != null)
+          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          : null,
+      helpText: AppLocalizations.of(context)!.cpPeriod,
     );
     if (picked != null) {
       setState(() {
-        if (isStart) {
-          _startDate = picked;
-        } else {
-          _endDate = picked;
-        }
+        _startDate = picked.start;
+        _endDate = picked.end;
       });
     }
   }
@@ -255,32 +260,18 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   validator: (v) => v?.isEmpty == true ? l10n.cpLocationRequired : null,
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.calendar_today, size: 18),
-                        label: Text(
-                          _startDate == null
-                              ? l10n.cpStartDate
-                              : '${_startDate!.year}.${_startDate!.month.toString().padLeft(2, '0')}.${_startDate!.day.toString().padLeft(2, '0')}',
-                        ),
-                        onPressed: () => _selectDate(true),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.calendar_today, size: 18),
-                        label: Text(
-                          _endDate == null
-                              ? l10n.cpEndDate
-                              : '${_endDate!.year}.${_endDate!.month.toString().padLeft(2, '0')}.${_endDate!.day.toString().padLeft(2, '0')}',
-                        ),
-                        onPressed: () => _selectDate(false),
-                      ),
-                    ),
-                  ],
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.date_range, size: 18),
+                  label: Text(
+                    (_startDate == null || _endDate == null)
+                        ? l10n.cpPeriod
+                        : '${_fmtDate(_startDate!)}  ~  ${_fmtDate(_endDate!)}',
+                  ),
+                  onPressed: _selectDateRange,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    alignment: Alignment.centerLeft,
+                  ),
                 ),
                 const SizedBox(height: 28),
 
@@ -521,14 +512,23 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
     super.dispose();
   }
 
-  Future<void> _pickDate(bool isStart) async {
-    final picked = await showDatePicker(
+  Future<void> _pickDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
       context: context,
-      initialDate: (isStart ? _startDate : _endDate) ?? DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+      firstDate: now.subtract(const Duration(days: 365)),
+      lastDate: now.add(const Duration(days: 365 * 3)),
+      initialDateRange: (_startDate != null && _endDate != null)
+          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          : null,
+      helpText: AppLocalizations.of(context)!.cpPeriod,
     );
-    if (picked != null) setState(() => isStart ? _startDate = picked : _endDate = picked);
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+    }
   }
 
   Future<void> _pickPhoto() async {
@@ -583,26 +583,20 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               ),
             ),
             const SizedBox(height: 12),
-            // 기간 선택
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _pickDate(true),
-                    child: Text(_fmt(_startDate, l10n), style: const TextStyle(fontSize: 12)),
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4),
-                  child: Text('~'),
-                ),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _pickDate(false),
-                    child: Text(_fmt(_endDate, l10n), style: const TextStyle(fontSize: 12)),
-                  ),
-                ),
-              ],
+            // 기간 선택 (시작~종료를 달력 1개로)
+            OutlinedButton.icon(
+              icon: const Icon(Icons.date_range, size: 16),
+              label: Text(
+                (_startDate == null || _endDate == null)
+                    ? l10n.epPickDate
+                    : '${_fmt(_startDate, l10n)}  ~  ${_fmt(_endDate, l10n)}',
+                style: const TextStyle(fontSize: 12),
+              ),
+              onPressed: _pickDateRange,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(44),
+                alignment: Alignment.centerLeft,
+              ),
             ),
             const SizedBox(height: 12),
             // 사진 (최대 5장)

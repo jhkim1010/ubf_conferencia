@@ -77,20 +77,25 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
     super.dispose();
   }
 
-  Future<void> _selectDate(bool isStart) async {
-    final picked = await showDatePicker(
+  static String _fmtDate(DateTime d) =>
+      '${d.year}.${d.month.toString().padLeft(2, '0')}.${d.day.toString().padLeft(2, '0')}';
+
+  // 기간(시작~종료)을 달력 1개로 선택
+  Future<void> _selectDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 30)),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+      firstDate: now.subtract(const Duration(days: 30)),
+      lastDate: now.add(const Duration(days: 365 * 2)),
+      initialDateRange: (_startDate != null && _endDate != null)
+          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          : null,
+      helpText: AppLocalizations.of(context)!.cpPeriod,
     );
     if (picked != null) {
       setState(() {
-        if (isStart) {
-          _startDate = picked;
-        } else {
-          _endDate = picked;
-        }
+        _startDate = picked.start;
+        _endDate = picked.end;
       });
     }
   }
@@ -241,33 +246,19 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
               validator: (v) => v?.isEmpty == true ? l10n.cpLocationRequired : null,
             ),
             const SizedBox(height: 12),
-            // 날짜 선택
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.calendar_today, size: 18),
-                    label: Text(
-                      _startDate == null
-                          ? l10n.cpStartDate
-                          : '${_startDate!.year}.${_startDate!.month.toString().padLeft(2, '0')}.${_startDate!.day.toString().padLeft(2, '0')}',
-                    ),
-                    onPressed: () => _selectDate(true),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.calendar_today, size: 18),
-                    label: Text(
-                      _endDate == null
-                          ? l10n.cpEndDate
-                          : '${_endDate!.year}.${_endDate!.month.toString().padLeft(2, '0')}.${_endDate!.day.toString().padLeft(2, '0')}',
-                    ),
-                    onPressed: () => _selectDate(false),
-                  ),
-                ),
-              ],
+            // 기간 선택 (시작~종료를 달력 1개로)
+            OutlinedButton.icon(
+              icon: const Icon(Icons.date_range, size: 18),
+              label: Text(
+                (_startDate == null || _endDate == null)
+                    ? l10n.cpPeriod
+                    : '${_fmtDate(_startDate!)}  ~  ${_fmtDate(_endDate!)}',
+              ),
+              onPressed: _selectDateRange,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                alignment: Alignment.centerLeft,
+              ),
             ),
             const SizedBox(height: 28),
 

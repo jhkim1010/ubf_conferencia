@@ -120,13 +120,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profileAgeInvalid => '올바른 나이를 입력하세요';
 
   @override
-  String get profileRegionLabel => '거주 지역 *';
+  String get profileRegionLabel => '거주 국가 *';
 
   @override
-  String get profileRegionHint => '예: 서울, 부산, New York, Toronto...';
+  String get profileRegionHint => '국가를 검색·선택하세요';
 
   @override
-  String get profileRegionRequired => '거주 지역을 입력하세요';
+  String get profileRegionRequired => '거주 국가를 선택하세요';
 
   @override
   String get profileSaveStart => '저장하고 시작하기';
@@ -742,6 +742,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get cpEndDate => '종료일 선택';
+
+  @override
+  String get cpPeriod => '기간 선택 (시작 ~ 종료)';
 
   @override
   String get cpImmigrationInfo => '입국 안내 정보';

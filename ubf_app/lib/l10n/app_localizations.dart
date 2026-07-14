@@ -313,19 +313,19 @@ abstract class AppLocalizations {
   /// No description provided for @profileRegionLabel.
   ///
   /// In en, this message translates to:
-  /// **'Region *'**
+  /// **'Country of residence *'**
   String get profileRegionLabel;
 
   /// No description provided for @profileRegionHint.
   ///
   /// In en, this message translates to:
-  /// **'e.g. Seoul, New York, Toronto...'**
+  /// **'Search and select a country'**
   String get profileRegionHint;
 
   /// No description provided for @profileRegionRequired.
   ///
   /// In en, this message translates to:
-  /// **'Please enter your region'**
+  /// **'Please select your country'**
   String get profileRegionRequired;
 
   /// No description provided for @profileSaveStart.
@@ -1497,6 +1497,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select end date'**
   String get cpEndDate;
+
+  /// No description provided for @cpPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Select period (start ~ end)'**
+  String get cpPeriod;
 
   /// No description provided for @cpImmigrationInfo.
   ///

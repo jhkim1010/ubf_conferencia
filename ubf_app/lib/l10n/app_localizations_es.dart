@@ -765,6 +765,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cpEndDate => 'Seleccionar fecha de fin';
 
   @override
+  String get cpPeriod => 'Select period (start ~ end)';
+
+  @override
   String get cpImmigrationInfo => 'Información de inmigración';
 
   @override

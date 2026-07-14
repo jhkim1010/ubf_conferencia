@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -15,7 +16,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
-  final _regionController = TextEditingController();
+  final _countryController = TextEditingController();
+  String? _selectedCountry;
+  String? _countryError;
   bool _isLoading = false;
 
   @override
@@ -29,12 +32,19 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   void dispose() {
     _nameController.dispose();
     _ageController.dispose();
-    _regionController.dispose();
+    _countryController.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    final formOk = _formKey.currentState!.validate();
+    // 국가 선택 검증 (DropdownMenu 는 Form validator 대상이 아니므로 수동 검증)
+    final country = _selectedCountry;
+    if (country == null || !WorldCountries.sortedKorean.contains(country)) {
+      setState(() => _countryError = AppLocalizations.of(context)!.profileRegionRequired);
+      return;
+    }
+    if (!formOk) return;
 
     final age = int.tryParse(_ageController.text.trim());
     if (age == null) return;
@@ -44,7 +54,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       await ApiClient.updateProfile(
         name: _nameController.text.trim(),
         age: age,
-        region: _regionController.text.trim(),
+        region: country,
       );
       // 상태 갱신 — profileCompleted=true로 업데이트되면 라우터가 /home으로 이동
       ref.read(authProvider.notifier).markProfileCompleted(
@@ -142,16 +152,30 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 거주 지역
-              TextFormField(
-                controller: _regionController,
-                decoration: InputDecoration(
-                  labelText: l10n.profileRegionLabel,
-                  hintText: l10n.profileRegionHint,
-                  prefixIcon: const Icon(Icons.location_on_outlined),
-                  border: const OutlineInputBorder(),
+              // 거주 국가 (전세계 국가 검색·선택)
+              DropdownMenu<String>(
+                controller: _countryController,
+                enableFilter: true,
+                requestFocusOnTap: true,
+                menuHeight: 320,
+                expandedInsets: EdgeInsets.zero,
+                label: Text(l10n.profileRegionLabel),
+                hintText: l10n.profileRegionHint,
+                leadingIcon: const Icon(Icons.public),
+                errorText: _countryError,
+                inputDecorationTheme: const InputDecorationTheme(
+                  border: OutlineInputBorder(),
                 ),
-                validator: (v) => (v == null || v.trim().isEmpty) ? l10n.profileRegionRequired : null,
+                dropdownMenuEntries: [
+                  for (final c in WorldCountries.sortedKorean)
+                    DropdownMenuEntry<String>(value: c, label: c),
+                ],
+                onSelected: (value) {
+                  setState(() {
+                    _selectedCountry = value;
+                    _countryError = null;
+                  });
+                },
               ),
               const SizedBox(height: 32),
 

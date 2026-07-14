@@ -122,13 +122,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileAgeInvalid => 'Please enter a valid age';
 
   @override
-  String get profileRegionLabel => 'Region *';
+  String get profileRegionLabel => 'Country of residence *';
 
   @override
-  String get profileRegionHint => 'e.g. Seoul, New York, Toronto...';
+  String get profileRegionHint => 'Search and select a country';
 
   @override
-  String get profileRegionRequired => 'Please enter your region';
+  String get profileRegionRequired => 'Please select your country';
 
   @override
   String get profileSaveStart => 'Save and start';
@@ -760,6 +760,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cpEndDate => 'Select end date';
+
+  @override
+  String get cpPeriod => 'Select period (start ~ end)';
 
   @override
   String get cpImmigrationInfo => 'Immigration guide info';
