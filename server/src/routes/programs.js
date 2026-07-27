@@ -18,7 +18,17 @@ router.get('/:id', requireAuth, async (req, res) => {
             'startDate', po.start_date,
             'endDate', po.end_date,
             'contactName', po.contact_name,
-            'photoUrls', po.photo_urls
+            'photoUrls', po.photo_urls,
+            'capacity', po.capacity,
+            'signupDeadline', po.signup_deadline,
+            'brochureUrl', po.brochure_url,
+            'videoUrl', po.video_url,
+            'signupCount', (
+              SELECT COUNT(*) FROM registrations r
+              WHERE r.program_id = p.id
+                AND r.submitted = true
+                AND po.id = ANY(r.selected_options)
+            )
           ) ORDER BY po.name
         ) FILTER (WHERE po.id IS NOT NULL) AS program_options
       FROM programs p
@@ -125,7 +135,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
     // 옵션 일괄 삽입
     if (Array.isArray(options) && options.length > 0) {
       await sql`
-        INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls)
+        INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url)
         SELECT
           ${program.id},
           o->>'name',
@@ -134,7 +144,11 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
           NULLIF(o->>'startDate', '')::date,
           NULLIF(o->>'endDate', '')::date,
           o->>'contactName',
-          COALESCE((SELECT array_agg(v) FROM json_array_elements_text(o->'photoUrls') AS v), '{}')
+          COALESCE((SELECT array_agg(v) FROM json_array_elements_text(o->'photoUrls') AS v), '{}'),
+          NULLIF(o->>'capacity', '')::integer,
+          NULLIF(o->>'signupDeadline', '')::timestamptz,
+          NULLIF(o->>'brochureUrl', ''),
+          NULLIF(o->>'videoUrl', '')
         FROM json_array_elements(${JSON.stringify(options)}::json) AS o
       `;
     }
@@ -197,7 +211,7 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
       await sql`UPDATE program_options SET is_active = false WHERE program_id = ${req.params.id}`;
       if (options.length > 0) {
         await sql`
-          INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls)
+          INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url)
           SELECT
             ${req.params.id},
             o->>'name',
@@ -206,7 +220,11 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
             NULLIF(o->>'startDate', '')::date,
             NULLIF(o->>'endDate', '')::date,
             o->>'contactName',
-            COALESCE((SELECT array_agg(v) FROM json_array_elements_text(o->'photoUrls') AS v), '{}')
+            COALESCE((SELECT array_agg(v) FROM json_array_elements_text(o->'photoUrls') AS v), '{}'),
+            NULLIF(o->>'capacity', '')::integer,
+            NULLIF(o->>'signupDeadline', '')::timestamptz,
+            NULLIF(o->>'brochureUrl', ''),
+            NULLIF(o->>'videoUrl', '')
           FROM json_array_elements(${JSON.stringify(options)}::json) AS o
         `;
       }

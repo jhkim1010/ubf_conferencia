@@ -75,7 +75,7 @@ jobs:
         run: |
           flutter pub get
           flutter build windows --release
-      - name: Zip Windows
+      - name: Zip Windows (portable)
         shell: pwsh
         run: |
           Compress-Archive -Path "${{ env.APP_DIR }}\build\windows\x64\runner\Release\*" -DestinationPath "mana-windows.zip"
@@ -83,6 +83,23 @@ jobs:
         with:
           name: mana-windows
           path: mana-windows.zip
+      # 설치 파일(setup.exe) — Inno Setup으로 컴파일
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+      - name: Build installer (setup.exe)
+        shell: pwsh
+        run: |
+          $ver = "1.0.0"
+          if ("${{ github.ref_name }}" -match '^v(\d+\.\d+\.\d+)') { $ver = $Matches[1] }
+          Write-Host "Installer version: $ver"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
+            "/DSourceDir=${{ github.workspace }}\${{ env.APP_DIR }}\build\windows\x64\runner\Release" `
+            "/DMyAppVersion=$ver" `
+            "${{ github.workspace }}\${{ env.APP_DIR }}\installer\mana.iss"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mana-windows-setup
+          path: ${{ env.APP_DIR }}/installer/mana-setup.exe
 
   # ---------------------------------------------------------------- Linux
   linux:

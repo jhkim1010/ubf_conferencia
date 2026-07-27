@@ -21,6 +21,8 @@ import 'features/program/screens/immigration_card_screen.dart';
 import 'features/program/screens/edit_program_screen.dart';
 import 'features/setup/screens/setup_screen.dart';
 import 'features/assignment/screens/assignment_screen.dart';
+import 'features/transport/screens/dispatch_screen.dart';
+import 'features/transport/screens/my_transport_screen.dart';
 
 class UbfApp extends ConsumerStatefulWidget {
   const UbfApp({super.key});
@@ -94,6 +96,14 @@ class _UbfAppState extends ConsumerState<UbfApp> {
         GoRoute(
           path: '/leader/program/:id/assign',
           builder: (_, s) => AssignmentScreen(programId: s.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: '/leader/program/:id/dispatch',
+          builder: (_, s) => DispatchScreen(programId: s.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: '/program/:id/my-transport',
+          builder: (_, s) => MyTransportScreen(programId: s.pathParameters['id']!),
         ),
         GoRoute(
           path: '/registration/:id',

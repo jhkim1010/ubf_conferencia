@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
 import '../providers/program_provider.dart';
@@ -513,8 +512,12 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
   final _costCtrl = TextEditingController();
   final _contactCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
+  final _capacityCtrl = TextEditingController();
+  final _brochureCtrl = TextEditingController();
+  final _videoCtrl = TextEditingController();
   DateTime? _startDate;
   DateTime? _endDate;
+  DateTime? _deadline;
   final List<String> _photoUrls = [];
 
   @override
@@ -526,8 +529,14 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
       _costCtrl.text = '${e['cost'] ?? ''}';
       _contactCtrl.text = e['contactName'] as String? ?? '';
       _descCtrl.text = e['description'] as String? ?? '';
+      if (e['capacity'] != null) _capacityCtrl.text = '${e['capacity']}';
+      _brochureCtrl.text = e['brochureUrl'] as String? ?? '';
+      _videoCtrl.text = e['videoUrl'] as String? ?? '';
       if (e['startDate'] != null) _startDate = DateTime.tryParse(e['startDate'] as String);
       if (e['endDate'] != null) _endDate = DateTime.tryParse(e['endDate'] as String);
+      if (e['signupDeadline'] != null) {
+        _deadline = DateTime.tryParse(e['signupDeadline'] as String);
+      }
       if (e['photoUrls'] is List) {
         _photoUrls.addAll((e['photoUrls'] as List).cast<String>());
       }
@@ -540,6 +549,9 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
     _costCtrl.dispose();
     _contactCtrl.dispose();
     _descCtrl.dispose();
+    _capacityCtrl.dispose();
+    _brochureCtrl.dispose();
+    _videoCtrl.dispose();
     super.dispose();
   }
 
@@ -562,13 +574,52 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
     }
   }
 
-  Future<void> _pickPhoto() async {
-    if (_photoUrls.length >= 5) return;
-    final picker = ImagePicker();
-    final xfile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-    if (xfile == null) return;
-    // TODO: 실제 서버 업로드 후 URL 저장 — 현재는 로컬 경로 임시 저장
-    setState(() => _photoUrls.add(xfile.path));
+  // 사진 URL 붙여넣기 (MVP — 실제 파일 업로드는 스토리지 도입 후)
+  Future<void> _addPhotoUrl() async {
+    if (_photoUrls.length >= 6) return;
+    final l10n = AppLocalizations.of(context)!;
+    final ctrl = TextEditingController();
+    final url = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(l10n.epPhotoUrlTitle),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          keyboardType: TextInputType.url,
+          decoration: InputDecoration(
+            labelText: l10n.epPhotoUrlLabel,
+            hintText: 'https://...',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.actionCancel)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, ctrl.text.trim()),
+            child: Text(l10n.actionAdd),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (url != null && url.isNotEmpty) {
+      setState(() => _photoUrls.add(url));
+    }
+  }
+
+  Future<void> _pickDeadline() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _deadline ?? now,
+      firstDate: now.subtract(const Duration(days: 1)),
+      lastDate: now.add(const Duration(days: 365 * 2)),
+      helpText: AppLocalizations.of(context)!.epSignupDeadline,
+    );
+    if (picked != null) {
+      // 마감일은 그날 23:59까지로 설정
+      setState(() => _deadline = DateTime(picked.year, picked.month, picked.day, 23, 59));
+    }
   }
 
   String _fmt(DateTime? d, AppLocalizations l10n) => d == null
@@ -630,17 +681,70 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               ),
             ),
             const SizedBox(height: 12),
-            // 사진 (최대 5장)
+            // 정원 + 신청 마감
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _capacityCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: l10n.epCapacity,
+                      prefixIcon: const Icon(Icons.groups_outlined),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.event_busy, size: 16),
+                    label: Text(
+                      _deadline == null ? l10n.epSignupDeadline : _fmt(_deadline, l10n),
+                      style: const TextStyle(fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onPressed: _pickDeadline,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(56),
+                      alignment: Alignment.centerLeft,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // 홍보물 링크 (브로슈어 / 영상)
+            TextField(
+              controller: _brochureCtrl,
+              keyboardType: TextInputType.url,
+              decoration: InputDecoration(
+                labelText: l10n.epBrochureUrl,
+                hintText: 'https://...',
+                prefixIcon: const Icon(Icons.description_outlined),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _videoCtrl,
+              keyboardType: TextInputType.url,
+              decoration: InputDecoration(
+                labelText: l10n.epVideoUrl,
+                hintText: 'https://...',
+                prefixIcon: const Icon(Icons.ondemand_video_outlined),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // 사진 (최대 6장 — URL 붙여넣기)
             Row(
               children: [
                 Text(l10n.epPhotos(_photoUrls.length),
                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
                 const Spacer(),
-                if (_photoUrls.length < 5)
+                if (_photoUrls.length < 6)
                   TextButton.icon(
-                    icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
+                    icon: const Icon(Icons.add_link, size: 18),
                     label: Text(l10n.actionAdd),
-                    onPressed: _pickPhoto,
+                    onPressed: _addPhotoUrl,
                   ),
               ],
             ),
@@ -655,7 +759,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
+                        child: Image.network(
                           _photoUrls[i],
                           width: 70,
                           height: 70,
@@ -664,7 +768,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
                             width: 70,
                             height: 70,
                             color: Colors.grey[200],
-                            child: const Icon(Icons.image, color: Colors.grey),
+                            child: const Icon(Icons.broken_image, color: Colors.grey),
                           ),
                         ),
                       ),
@@ -708,6 +812,10 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               'startDate': _startDate?.toIso8601String().split('T').first,
               'endDate': _endDate?.toIso8601String().split('T').first,
               'photoUrls': List<String>.from(_photoUrls),
+              'capacity': int.tryParse(_capacityCtrl.text.trim()),
+              'signupDeadline': _deadline?.toIso8601String(),
+              'brochureUrl': _brochureCtrl.text.trim(),
+              'videoUrl': _videoCtrl.text.trim(),
             });
           },
           child: Text(l10n.actionConfirm),

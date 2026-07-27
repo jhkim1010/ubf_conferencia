@@ -184,6 +184,21 @@ class SummaryScreen extends ConsumerWidget {
                   onPressed: () => context.push('/program/$programId/immigration'),
                 ),
 
+              // 내 이동(배차) 버튼 — 국제 수양회에서 항공편 있을 때
+              if (program['program_type'] != 'local')
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.directions_bus),
+                    label: Text(l10n.mtrTitle),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF0F7A6E),
+                      side: const BorderSide(color: Color(0xFF0F7A6E)),
+                    ),
+                    onPressed: () => context.push('/program/$programId/my-transport'),
+                  ),
+                ),
+
               const SizedBox(height: 24),
 
               // 제출 버튼

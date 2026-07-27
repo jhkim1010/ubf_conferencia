@@ -108,6 +108,26 @@ class DashboardScreen extends ConsumerWidget {
                 onTap: () => context.push('/leader/program/$programId/assign'),
               ),
             ),
+            const SizedBox(height: 10),
+
+            // 운행 배차 — 기사 명부·자동배차 (F5)
+            Card(
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F7A6E).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.directions_bus_outlined, color: Color(0xFF0F7A6E)),
+                ),
+                title: Text(l10n.dspTitle,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(l10n.dashDispatchSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/leader/program/$programId/dispatch'),
+              ),
+            ),
             const SizedBox(height: 20),
 
             // 입금 대기 섹션

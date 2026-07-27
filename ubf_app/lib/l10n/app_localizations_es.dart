@@ -247,18 +247,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sectionDisabled => 'Esta sección está desactivada';
 
   @override
-  String get flightSkipTitle => 'Flight input skipped';
+  String get flightSkipTitle => 'Ingreso de vuelo omitido';
 
   @override
   String flightSkipBody(String dir) {
-    return 'You live in the host country, so $dir flight input is skipped. If you are flying, add it below.';
+    return 'Vives en el país anfitrión, por lo que se omite el ingreso del vuelo de $dir. Si viajas en avión, agrégalo abajo.';
   }
 
   @override
-  String get flightSkipAdd => 'Add flight info';
+  String get flightSkipAdd => 'Agregar datos del vuelo';
 
   @override
-  String get flightSkipCollapse => 'Skip flight';
+  String get flightSkipCollapse => 'Omitir vuelo';
 
   @override
   String get regTitle => 'Registro';
@@ -779,17 +779,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cpEndDate => 'Seleccionar fecha de fin';
 
   @override
-  String get cpPeriod => 'Select period (start ~ end)';
+  String get cpPeriod => 'Seleccionar período (inicio ~ fin)';
 
   @override
-  String get cpHostCountry => 'Host country';
+  String get cpHostCountry => 'País anfitrión';
 
   @override
-  String get cpHostCountryHint => 'Search and select a country';
+  String get cpHostCountryHint => 'Busca y selecciona un país';
 
   @override
   String get cpHostCountryHelp =>
-      'Participants living in the host country skip flight input';
+      'Los participantes que viven en el país anfitrión omiten el ingreso del vuelo';
 
   @override
   String get cpImmigrationInfo => 'Información de inmigración';
@@ -915,8 +915,48 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String epPhotos(int count) {
-    return 'Fotos ($count/5)';
+    return 'Fotos ($count/6)';
   }
+
+  @override
+  String get epPhotoUrlTitle => 'Añadir URL de foto';
+
+  @override
+  String get epPhotoUrlLabel => 'URL de imagen';
+
+  @override
+  String get epCapacity => 'Cupo';
+
+  @override
+  String get epSignupDeadline => 'Cierre de inscripción';
+
+  @override
+  String get epBrochureUrl => 'Enlace del folleto';
+
+  @override
+  String get epVideoUrl => 'Enlace del video';
+
+  @override
+  String get tourCapacityLabel => 'Plazas disponibles';
+
+  @override
+  String tourRemaining(int remaining, int capacity) {
+    return '$remaining / $capacity';
+  }
+
+  @override
+  String get tourFull => 'Completo';
+
+  @override
+  String get tourClosed => 'Cerrado';
+
+  @override
+  String tourDeadline(String date) {
+    return 'Cierre: $date';
+  }
+
+  @override
+  String get linkCopied => 'Enlace copiado';
 
   @override
   String get blTitle => 'Registrarse como líder';
@@ -1497,4 +1537,118 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get dashAssignSubtitle => 'Asigna alojamiento y grupos de estudio';
+
+  @override
+  String get dashDispatchSubtitle =>
+      'Lista de conductores y asignación automática';
+
+  @override
+  String get dspTitle => 'Transporte';
+
+  @override
+  String get dspTabArrival => 'Recogida (llegada)';
+
+  @override
+  String get dspTabDeparture => 'Salida';
+
+  @override
+  String get dspAddVan => 'Agregar furgoneta';
+
+  @override
+  String get dspAutoDispatch => 'Asignación automática';
+
+  @override
+  String get dspNoRuns => 'Registra primero una furgoneta (conductor y cupo)';
+
+  @override
+  String dspAutoDone(int assigned, int unassigned) {
+    return '$assigned asignados · $unassigned sin asignar';
+  }
+
+  @override
+  String dspUnassignedCount(int count) {
+    return 'Sin asignar $count';
+  }
+
+  @override
+  String get dspAllAssigned => 'Todos asignados';
+
+  @override
+  String get dspPickVan => 'Elegir furgoneta';
+
+  @override
+  String get dspDriverUnset => 'Sin conductor';
+
+  @override
+  String get dspNewVan => 'Nueva furgoneta';
+
+  @override
+  String get dspEditVan => 'Editar furgoneta';
+
+  @override
+  String get dspAirport => 'Aeropuerto';
+
+  @override
+  String get dspVehicle => 'Vehículo';
+
+  @override
+  String get dspDriverName => 'Nombre del conductor';
+
+  @override
+  String get dspDriverPhone => 'Teléfono del conductor';
+
+  @override
+  String get dspCapacityLabel => 'Cupo';
+
+  @override
+  String get dspMeetPoint => 'Punto de encuentro';
+
+  @override
+  String get dspDeleteVan => 'Eliminar furgoneta';
+
+  @override
+  String get mtrTitle => 'Mi transporte';
+
+  @override
+  String get mtrArrival => 'Recogida (llegada)';
+
+  @override
+  String get mtrDeparture => 'Salida';
+
+  @override
+  String mtrArrivalRoute(String airport) {
+    return '$airport → Sede';
+  }
+
+  @override
+  String mtrDepartureRoute(String airport) {
+    return 'Sede → $airport';
+  }
+
+  @override
+  String get mtrPending => 'El transporte se organizará pronto';
+
+  @override
+  String get mtrAssigned => 'Asignado';
+
+  @override
+  String get mtrPendingBadge => 'Pendiente';
+
+  @override
+  String get mtrVehicle => 'Vehículo';
+
+  @override
+  String get mtrDriver => 'Conductor';
+
+  @override
+  String get mtrCoPassengers => 'Con';
+
+  @override
+  String get mtrMeetPoint => 'Punto de encuentro';
+
+  @override
+  String get mtrSelfDrive => 'Voy por mi cuenta';
+
+  @override
+  String get mtrSelfDriveDesc => 'Desactiva si no necesitas recogida';
 }

@@ -650,6 +650,107 @@ class ApiClient {
     );
     _decode(response);
   }
+
+  // ─── 운행 배차(transport) — F5 ────────────────────────────
+
+  // { direction, runs: [...], unassigned: [...] }
+  static Future<Map<String, dynamic>> getTransportRuns(
+      String programId, String direction) async {
+    final response = await http.get(
+      _uri('/transport/$programId/runs?direction=$direction'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  static Future<String> createRun(String programId, Map<String, dynamic> data) async {
+    final response = await http.post(
+      _uri('/transport/$programId/runs'),
+      headers: await _headers(),
+      body: jsonEncode(data),
+    );
+    return _decode(response)['id'] as String;
+  }
+
+  static Future<void> updateRun(
+      String programId, String runId, Map<String, dynamic> data) async {
+    final response = await http.patch(
+      _uri('/transport/$programId/runs/$runId'),
+      headers: await _headers(),
+      body: jsonEncode(data),
+    );
+    _decode(response);
+  }
+
+  static Future<void> deleteRun(String programId, String runId) async {
+    final response = await http.delete(
+      _uri('/transport/$programId/runs/$runId'),
+      headers: await _headers(),
+    );
+    _decode(response);
+  }
+
+  // { assigned, unassigned }
+  static Future<Map<String, dynamic>> autoDispatch(
+      String programId, String direction) async {
+    final response = await http.post(
+      _uri('/transport/$programId/runs/auto?direction=$direction'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  static Future<void> assignToRun(
+    String programId,
+    String runId, {
+    String? registrationId,
+    String? companionId,
+  }) async {
+    final response = await http.post(
+      _uri('/transport/$programId/runs/$runId/assign'),
+      headers: await _headers(),
+      body: jsonEncode({
+        'registrationId': ?registrationId,
+        'companionId': ?companionId,
+      }),
+    );
+    _decode(response);
+  }
+
+  static Future<void> unassignFromRun(
+    String programId,
+    String runId, {
+    String? registrationId,
+    String? companionId,
+  }) async {
+    final response = await http.delete(
+      _uri('/transport/$programId/runs/$runId/pax'),
+      headers: await _headers(),
+      body: jsonEncode({
+        'registrationId': ?registrationId,
+        'companionId': ?companionId,
+      }),
+    );
+    _decode(response);
+  }
+
+  // { needsPickup, arrival, departure }
+  static Future<Map<String, dynamic>> getMyTransport(String programId) async {
+    final response = await http.get(
+      _uri('/transport/$programId/my-transport'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  static Future<void> setMyPickup(String programId, bool needsPickup) async {
+    final response = await http.patch(
+      _uri('/transport/$programId/my-pickup'),
+      headers: await _headers(),
+      body: jsonEncode({'needsPickup': needsPickup}),
+    );
+    _decode(response);
+  }
 }
 
 class ApiException implements Exception {

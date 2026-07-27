@@ -889,8 +889,48 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String epPhotos(int count) {
-    return '사진 ($count/5)';
+    return '사진 ($count/6)';
   }
+
+  @override
+  String get epPhotoUrlTitle => '사진 URL 추가';
+
+  @override
+  String get epPhotoUrlLabel => '이미지 주소';
+
+  @override
+  String get epCapacity => '정원';
+
+  @override
+  String get epSignupDeadline => '신청 마감';
+
+  @override
+  String get epBrochureUrl => '브로슈어 링크';
+
+  @override
+  String get epVideoUrl => '소개 영상 링크';
+
+  @override
+  String get tourCapacityLabel => '잔여 정원';
+
+  @override
+  String tourRemaining(int remaining, int capacity) {
+    return '$remaining / $capacity명';
+  }
+
+  @override
+  String get tourFull => '정원 마감';
+
+  @override
+  String get tourClosed => '신청 마감';
+
+  @override
+  String tourDeadline(String date) {
+    return '마감 $date';
+  }
+
+  @override
+  String get linkCopied => '링크가 복사되었습니다';
 
   @override
   String get blTitle => '리더 등록';
@@ -1456,4 +1496,117 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get dashAssignSubtitle => '숙소·말씀조를 배정합니다';
+
+  @override
+  String get dashDispatchSubtitle => '기사 명부와 자동 배차';
+
+  @override
+  String get dspTitle => '운행 배차';
+
+  @override
+  String get dspTabArrival => '도착 픽업';
+
+  @override
+  String get dspTabDeparture => '출발 드롭';
+
+  @override
+  String get dspAddVan => '밴 추가';
+
+  @override
+  String get dspAutoDispatch => '자동 배차';
+
+  @override
+  String get dspNoRuns => '먼저 밴(기사·정원)을 등록하세요';
+
+  @override
+  String dspAutoDone(int assigned, int unassigned) {
+    return '$assigned명 배차 · $unassigned명 미배차';
+  }
+
+  @override
+  String dspUnassignedCount(int count) {
+    return '미배차 $count명';
+  }
+
+  @override
+  String get dspAllAssigned => '모두 배차되었습니다';
+
+  @override
+  String get dspPickVan => '밴 선택';
+
+  @override
+  String get dspDriverUnset => '기사 미정';
+
+  @override
+  String get dspNewVan => '새 밴 등록';
+
+  @override
+  String get dspEditVan => '밴 수정';
+
+  @override
+  String get dspAirport => '공항';
+
+  @override
+  String get dspVehicle => '차량';
+
+  @override
+  String get dspDriverName => '기사 이름';
+
+  @override
+  String get dspDriverPhone => '기사 전화';
+
+  @override
+  String get dspCapacityLabel => '정원';
+
+  @override
+  String get dspMeetPoint => '집결지';
+
+  @override
+  String get dspDeleteVan => '밴 삭제';
+
+  @override
+  String get mtrTitle => '내 이동 정보';
+
+  @override
+  String get mtrArrival => '도착 픽업';
+
+  @override
+  String get mtrDeparture => '출발 드롭';
+
+  @override
+  String mtrArrivalRoute(String airport) {
+    return '$airport → 수양회장';
+  }
+
+  @override
+  String mtrDepartureRoute(String airport) {
+    return '수양회장 → $airport';
+  }
+
+  @override
+  String get mtrPending => '곧 배차될 예정입니다';
+
+  @override
+  String get mtrAssigned => '배차 완료';
+
+  @override
+  String get mtrPendingBadge => '배차 예정';
+
+  @override
+  String get mtrVehicle => '차편';
+
+  @override
+  String get mtrDriver => '기사';
+
+  @override
+  String get mtrCoPassengers => '동승';
+
+  @override
+  String get mtrMeetPoint => '집결지';
+
+  @override
+  String get mtrSelfDrive => '자차로 이동해요';
+
+  @override
+  String get mtrSelfDriveDesc => '픽업이 필요 없으면 꺼주세요';
 }

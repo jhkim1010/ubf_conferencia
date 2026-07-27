@@ -1771,8 +1771,80 @@ abstract class AppLocalizations {
   /// No description provided for @epPhotos.
   ///
   /// In en, this message translates to:
-  /// **'Photos ({count}/5)'**
+  /// **'Photos ({count}/6)'**
   String epPhotos(int count);
+
+  /// No description provided for @epPhotoUrlTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo URL'**
+  String get epPhotoUrlTitle;
+
+  /// No description provided for @epPhotoUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Image URL'**
+  String get epPhotoUrlLabel;
+
+  /// No description provided for @epCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get epCapacity;
+
+  /// No description provided for @epSignupDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Signup deadline'**
+  String get epSignupDeadline;
+
+  /// No description provided for @epBrochureUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Brochure link'**
+  String get epBrochureUrl;
+
+  /// No description provided for @epVideoUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Intro video link'**
+  String get epVideoUrl;
+
+  /// No description provided for @tourCapacityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Spots remaining'**
+  String get tourCapacityLabel;
+
+  /// No description provided for @tourRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{remaining} / {capacity}'**
+  String tourRemaining(int remaining, int capacity);
+
+  /// No description provided for @tourFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Full'**
+  String get tourFull;
+
+  /// No description provided for @tourClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get tourClosed;
+
+  /// No description provided for @tourDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline: {date}'**
+  String tourDeadline(String date);
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get linkCopied;
 
   /// No description provided for @blTitle.
   ///
@@ -2787,6 +2859,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Assign rooms and Bible study groups'**
   String get dashAssignSubtitle;
+
+  /// No description provided for @dashDispatchSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver roster and auto van dispatch'**
+  String get dashDispatchSubtitle;
+
+  /// No description provided for @dspTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get dspTitle;
+
+  /// No description provided for @dspTabArrival.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival pickup'**
+  String get dspTabArrival;
+
+  /// No description provided for @dspTabDeparture.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure drop-off'**
+  String get dspTabDeparture;
+
+  /// No description provided for @dspAddVan.
+  ///
+  /// In en, this message translates to:
+  /// **'Add van'**
+  String get dspAddVan;
+
+  /// No description provided for @dspAutoDispatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto dispatch'**
+  String get dspAutoDispatch;
+
+  /// No description provided for @dspNoRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'Register a van (driver & capacity) first'**
+  String get dspNoRuns;
+
+  /// No description provided for @dspAutoDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{assigned} assigned · {unassigned} unassigned'**
+  String dspAutoDone(int assigned, int unassigned);
+
+  /// No description provided for @dspUnassignedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Unassigned {count}'**
+  String dspUnassignedCount(int count);
+
+  /// No description provided for @dspAllAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone is assigned'**
+  String get dspAllAssigned;
+
+  /// No description provided for @dspPickVan.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a van'**
+  String get dspPickVan;
+
+  /// No description provided for @dspDriverUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'No driver'**
+  String get dspDriverUnset;
+
+  /// No description provided for @dspNewVan.
+  ///
+  /// In en, this message translates to:
+  /// **'New van'**
+  String get dspNewVan;
+
+  /// No description provided for @dspEditVan.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit van'**
+  String get dspEditVan;
+
+  /// No description provided for @dspAirport.
+  ///
+  /// In en, this message translates to:
+  /// **'Airport'**
+  String get dspAirport;
+
+  /// No description provided for @dspVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get dspVehicle;
+
+  /// No description provided for @dspDriverName.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver name'**
+  String get dspDriverName;
+
+  /// No description provided for @dspDriverPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver phone'**
+  String get dspDriverPhone;
+
+  /// No description provided for @dspCapacityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get dspCapacityLabel;
+
+  /// No description provided for @dspMeetPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting point'**
+  String get dspMeetPoint;
+
+  /// No description provided for @dspDeleteVan.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete van'**
+  String get dspDeleteVan;
+
+  /// No description provided for @mtrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My transport'**
+  String get mtrTitle;
+
+  /// No description provided for @mtrArrival.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival pickup'**
+  String get mtrArrival;
+
+  /// No description provided for @mtrDeparture.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure drop-off'**
+  String get mtrDeparture;
+
+  /// No description provided for @mtrArrivalRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'{airport} → Venue'**
+  String mtrArrivalRoute(String airport);
+
+  /// No description provided for @mtrDepartureRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Venue → {airport}'**
+  String mtrDepartureRoute(String airport);
+
+  /// No description provided for @mtrPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport will be arranged soon'**
+  String get mtrPending;
+
+  /// No description provided for @mtrAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned'**
+  String get mtrAssigned;
+
+  /// No description provided for @mtrPendingBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get mtrPendingBadge;
+
+  /// No description provided for @mtrVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get mtrVehicle;
+
+  /// No description provided for @mtrDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver'**
+  String get mtrDriver;
+
+  /// No description provided for @mtrCoPassengers.
+  ///
+  /// In en, this message translates to:
+  /// **'With'**
+  String get mtrCoPassengers;
+
+  /// No description provided for @mtrMeetPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting point'**
+  String get mtrMeetPoint;
+
+  /// No description provided for @mtrSelfDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ll drive myself'**
+  String get mtrSelfDrive;
+
+  /// No description provided for @mtrSelfDriveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off if you don\'t need pickup'**
+  String get mtrSelfDriveDesc;
 }
 
 class _AppLocalizationsDelegate

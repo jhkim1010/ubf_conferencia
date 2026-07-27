@@ -125,6 +125,44 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
 // POST /registrations/:programId/me/submit - 최종 제출
 router.post('/:programId/me/submit', requireAuth, async (req, res) => {
   try {
+    // 이 등록이 선택한 투어 옵션의 정원·마감 검증 (F6 선착순)
+    const [me] = await sql`
+      SELECT id, selected_options FROM registrations
+      WHERE program_id = ${req.params.programId} AND user_id = ${req.user.userId}
+    `;
+    if (!me) return res.status(404).json({ error: '등록 정보가 없습니다' });
+
+    const selected = me.selected_options ?? [];
+    if (selected.length > 0) {
+      // 선택한 옵션 중 마감·정원 제약이 있는 것들 조회
+      const constrained = await sql`
+        SELECT po.id, po.name, po.capacity, po.signup_deadline,
+          (SELECT COUNT(*) FROM registrations r
+           WHERE r.program_id = ${req.params.programId}
+             AND r.submitted = true
+             AND r.id <> ${me.id}
+             AND po.id = ANY(r.selected_options)) AS signup_count
+        FROM program_options po
+        WHERE po.program_id = ${req.params.programId}
+          AND po.id = ANY(${selected})
+          AND (po.capacity IS NOT NULL OR po.signup_deadline IS NOT NULL)
+      `;
+      for (const o of constrained) {
+        if (o.signup_deadline && new Date(o.signup_deadline) < new Date()) {
+          return res.status(422).json({
+            code: 'TOUR_CLOSED', optionId: o.id, optionName: o.name,
+            error: `"${o.name}" 투어는 신청이 마감되었습니다`,
+          });
+        }
+        if (o.capacity != null && Number(o.signup_count) >= o.capacity) {
+          return res.status(422).json({
+            code: 'TOUR_FULL', optionId: o.id, optionName: o.name,
+            error: `"${o.name}" 투어는 정원이 마감되었습니다`,
+          });
+        }
+      }
+    }
+
     const result = await sql`
       UPDATE registrations
       SET submitted = true, updated_at = NOW()

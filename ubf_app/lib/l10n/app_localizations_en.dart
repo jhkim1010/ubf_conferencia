@@ -912,8 +912,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String epPhotos(int count) {
-    return 'Photos ($count/5)';
+    return 'Photos ($count/6)';
   }
+
+  @override
+  String get epPhotoUrlTitle => 'Add photo URL';
+
+  @override
+  String get epPhotoUrlLabel => 'Image URL';
+
+  @override
+  String get epCapacity => 'Capacity';
+
+  @override
+  String get epSignupDeadline => 'Signup deadline';
+
+  @override
+  String get epBrochureUrl => 'Brochure link';
+
+  @override
+  String get epVideoUrl => 'Intro video link';
+
+  @override
+  String get tourCapacityLabel => 'Spots remaining';
+
+  @override
+  String tourRemaining(int remaining, int capacity) {
+    return '$remaining / $capacity';
+  }
+
+  @override
+  String get tourFull => 'Full';
+
+  @override
+  String get tourClosed => 'Closed';
+
+  @override
+  String tourDeadline(String date) {
+    return 'Deadline: $date';
+  }
+
+  @override
+  String get linkCopied => 'Link copied';
 
   @override
   String get blTitle => 'Register as leader';
@@ -1491,4 +1531,117 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashAssignSubtitle => 'Assign rooms and Bible study groups';
+
+  @override
+  String get dashDispatchSubtitle => 'Driver roster and auto van dispatch';
+
+  @override
+  String get dspTitle => 'Transport';
+
+  @override
+  String get dspTabArrival => 'Arrival pickup';
+
+  @override
+  String get dspTabDeparture => 'Departure drop-off';
+
+  @override
+  String get dspAddVan => 'Add van';
+
+  @override
+  String get dspAutoDispatch => 'Auto dispatch';
+
+  @override
+  String get dspNoRuns => 'Register a van (driver & capacity) first';
+
+  @override
+  String dspAutoDone(int assigned, int unassigned) {
+    return '$assigned assigned · $unassigned unassigned';
+  }
+
+  @override
+  String dspUnassignedCount(int count) {
+    return 'Unassigned $count';
+  }
+
+  @override
+  String get dspAllAssigned => 'Everyone is assigned';
+
+  @override
+  String get dspPickVan => 'Choose a van';
+
+  @override
+  String get dspDriverUnset => 'No driver';
+
+  @override
+  String get dspNewVan => 'New van';
+
+  @override
+  String get dspEditVan => 'Edit van';
+
+  @override
+  String get dspAirport => 'Airport';
+
+  @override
+  String get dspVehicle => 'Vehicle';
+
+  @override
+  String get dspDriverName => 'Driver name';
+
+  @override
+  String get dspDriverPhone => 'Driver phone';
+
+  @override
+  String get dspCapacityLabel => 'Capacity';
+
+  @override
+  String get dspMeetPoint => 'Meeting point';
+
+  @override
+  String get dspDeleteVan => 'Delete van';
+
+  @override
+  String get mtrTitle => 'My transport';
+
+  @override
+  String get mtrArrival => 'Arrival pickup';
+
+  @override
+  String get mtrDeparture => 'Departure drop-off';
+
+  @override
+  String mtrArrivalRoute(String airport) {
+    return '$airport → Venue';
+  }
+
+  @override
+  String mtrDepartureRoute(String airport) {
+    return 'Venue → $airport';
+  }
+
+  @override
+  String get mtrPending => 'Transport will be arranged soon';
+
+  @override
+  String get mtrAssigned => 'Assigned';
+
+  @override
+  String get mtrPendingBadge => 'Pending';
+
+  @override
+  String get mtrVehicle => 'Vehicle';
+
+  @override
+  String get mtrDriver => 'Driver';
+
+  @override
+  String get mtrCoPassengers => 'With';
+
+  @override
+  String get mtrMeetPoint => 'Meeting point';
+
+  @override
+  String get mtrSelfDrive => 'I\'ll drive myself';
+
+  @override
+  String get mtrSelfDriveDesc => 'Turn off if you don\'t need pickup';
 }
