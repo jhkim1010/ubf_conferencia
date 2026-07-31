@@ -3081,6 +3081,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn off if you don\'t need pickup'**
   String get mtrSelfDriveDesc;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Readiness'**
+  String get rdyTitle;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'What is blocked and who to contact'**
+  String get rdySubtitle;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Readiness items'**
+  String get rdySectionItems;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Domestic and overseas attendees'**
+  String get rdySectionCohorts;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'People to contact'**
+  String get rdySectionBlocked;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Lodging'**
+  String get rdyLodging;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup vans'**
+  String get rdyTransport;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Missing flights'**
+  String get rdyFlights;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Meals'**
+  String get rdyMeals;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Fees'**
+  String get rdyPayment;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Church roles'**
+  String get rdyRoles;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Domestic'**
+  String get rdyDomestic;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Overseas'**
+  String get rdyOverseas;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get rdySkipped;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Unspecified'**
+  String get rdyUnspecified;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Personal info'**
+  String get rdyStuckPersonal;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Meals'**
+  String get rdyStuckMeals;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Flight'**
+  String get rdyStuckFlight;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Lodging'**
+  String get rdyStuckLodging;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Fees'**
+  String get rdyStuckPayment;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get rdyStatusOk;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Attention'**
+  String get rdyStatusWarn;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Short'**
+  String get rdyStatusStop;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get rdyStatusIdle;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone is on track'**
+  String get rdyNoBlocked;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'More than half have no role recorded'**
+  String get rdyRolesUnreliable;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'View readiness'**
+  String get rdyOpenCard;
+
+  /// A003 readiness screen
+  ///
+  /// In en, this message translates to:
+  /// **'Blockers and who to contact at a glance'**
+  String get rdyOpenCardSub;
 }
 
 class _AppLocalizationsDelegate

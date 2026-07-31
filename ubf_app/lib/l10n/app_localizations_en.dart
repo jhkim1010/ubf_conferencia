@@ -1650,4 +1650,88 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mtrSelfDriveDesc => 'Turn off if you don\'t need pickup';
+
+  @override
+  String get rdyTitle => 'Readiness';
+
+  @override
+  String get rdySubtitle => 'What is blocked and who to contact';
+
+  @override
+  String get rdySectionItems => 'Readiness items';
+
+  @override
+  String get rdySectionCohorts => 'Domestic and overseas attendees';
+
+  @override
+  String get rdySectionBlocked => 'People to contact';
+
+  @override
+  String get rdyLodging => 'Lodging';
+
+  @override
+  String get rdyTransport => 'Pickup vans';
+
+  @override
+  String get rdyFlights => 'Missing flights';
+
+  @override
+  String get rdyMeals => 'Meals';
+
+  @override
+  String get rdyPayment => 'Fees';
+
+  @override
+  String get rdyRoles => 'Church roles';
+
+  @override
+  String get rdyDomestic => 'Domestic';
+
+  @override
+  String get rdyOverseas => 'Overseas';
+
+  @override
+  String get rdySkipped => 'Skipped';
+
+  @override
+  String get rdyUnspecified => 'Unspecified';
+
+  @override
+  String get rdyStuckPersonal => 'Personal info';
+
+  @override
+  String get rdyStuckMeals => 'Meals';
+
+  @override
+  String get rdyStuckFlight => 'Flight';
+
+  @override
+  String get rdyStuckLodging => 'Lodging';
+
+  @override
+  String get rdyStuckPayment => 'Fees';
+
+  @override
+  String get rdyStatusOk => 'OK';
+
+  @override
+  String get rdyStatusWarn => 'Attention';
+
+  @override
+  String get rdyStatusStop => 'Short';
+
+  @override
+  String get rdyStatusIdle => 'Not set';
+
+  @override
+  String get rdyNoBlocked => 'Everyone is on track';
+
+  @override
+  String get rdyRolesUnreliable => 'More than half have no role recorded';
+
+  @override
+  String get rdyOpenCard => 'View readiness';
+
+  @override
+  String get rdyOpenCardSub => 'Blockers and who to contact at a glance';
 }

@@ -1,11 +1,8 @@
 {
   "@@locale": "es",
-
   "appTitle": "Mana",
-
   "languageTitle": "Idioma",
   "languageSystem": "Usar el idioma del dispositivo",
-
   "actionCancel": "Cancelar",
   "actionSave": "Guardar",
   "actionConfirm": "Confirmar",
@@ -17,16 +14,13 @@
   "actionRetry": "Reintentar",
   "actionClose": "Cerrar",
   "actionLogout": "Cerrar sesión",
-
   "commonLoading": "Cargando…",
   "commonError": "Algo salió mal",
   "commonRequired": "Obligatorio",
   "commonOptional": "Opcional",
-
   "setupTitle": "Preparación",
   "setupTabRooms": "Alojamiento",
   "setupTabGroups": "Grupos de estudio",
-
   "appTagline": "Sistema de registro del retiro",
   "authSignInGoogle": "Iniciar sesión con Google",
   "authSignInKakao": "Iniciar sesión con Kakao",
@@ -35,7 +29,6 @@
   "authGoogleFailed": "Error al iniciar sesión con Google: {error}",
   "authKakaoFailed": "Error al iniciar sesión con Kakao: {error}",
   "authDevFailed": "Error en el inicio de prueba: {error}",
-
   "profileTitle": "Configuración de perfil",
   "profileSubtitle": "Ingresa la información básica para el registro.\nSolo necesitas hacerlo una vez.",
   "profileNameLabel": "Nombre *",
@@ -49,7 +42,6 @@
   "profileRegionRequired": "Ingresa tu región",
   "profileSaveStart": "Guardar y comenzar",
   "profileSaveFailed": "Error al guardar: {error}",
-
   "homeLogoutConfirmBody": "¿Deseas cerrar sesión?\nPuedes iniciar sesión con otra cuenta.",
   "homeDirectorMode": "Modo director",
   "homeManageMenu": "Gestión",
@@ -78,11 +70,9 @@
   "homeLeaderCheckPrompt": "¿Deseas registrarte como líder de capítulo?",
   "homeLeaderDeclineParticipant": "No, continuar como participante",
   "homeLeaderConfirmRegister": "Sí, registrarme como líder",
-
   "commonSaved": "Guardado",
   "commonErrorDetail": "Error: {error}",
   "sectionDisabled": "Esta sección está desactivada",
-
   "regTitle": "Registro",
   "regInvalidProgram": "UUID de programa no válido",
   "regScheduleTooltip": "Horario del programa",
@@ -95,21 +85,17 @@
   "regStepOptions": "Tours / opciones",
   "regStepRoommate": "Compañero de cuarto",
   "regStepVolunteer": "Voluntariado",
-
   "roommateQuestion": "¿Hay alguien con quien te gustaría compartir habitación?",
   "roommateHelp": "Ingresa el nombre (nombre bíblico o nombre real) de la persona con quien deseas compartir habitación.\nHaremos lo posible por respetarlo.",
   "roommateFieldLabel": "Preferencia de compañero (opcional)",
   "roommateFieldHint": "ej. Pedro, Juan (misma habitación)\no escribe \"Ninguno\"",
   "roommateNotice": "La asignación de compañeros puede ajustarse a criterio del líder.",
-
   "optionsNone": "Este programa no tiene opciones especiales",
   "optionsSelectPrompt": "Selecciona los programas en los que participarás (varios permitidos)",
   "optionsFree": "Gratis",
   "optionsSelectedTotal": "Total de opciones seleccionadas",
-
   "genderMale": "Hombre",
   "genderFemale": "Mujer",
-
   "regContinent": "Continente *",
   "regContinentHint": "Selecciona un continente",
   "regNation": "País *",
@@ -126,7 +112,6 @@
   "regBibleNameHint": "ej. Pedro, María",
   "regGender": "Género",
   "regAge": "Edad *",
-
   "foodMedicalTitle": "Condiciones médicas",
   "foodMedicalHint": "Indica condiciones como diabetes, hipertensión, alergias (deja en blanco si no hay)",
   "foodRestrictionTitle": "Alimentos que no puedes comer",
@@ -144,7 +129,6 @@
   "foodBreakfastTitle": "Desayuno",
   "foodSkipBreakfast": "Normalmente no desayuno",
   "foodSkipBreakfastSub": "Se usa para estimar el número de comidas",
-
   "flightArrival": "Llegada",
   "flightDeparture": "Salida",
   "flightInfoTitle": "Información del vuelo de {dir}",
@@ -158,7 +142,6 @@
   "flightNotFound": "No se encontró información del vuelo. Ingrésala manualmente.",
   "flightStatus": "Estado: {value}",
   "flightAutoFillHint": "Se completa al buscar por número de vuelo",
-
   "volQuestion": "¿Puedes ayudar con el programa?",
   "volHelp": "Selecciona todo lo que corresponda. (Opcional)",
   "volOtherLabel": "Otras formas en que puedes ayudar (opcional)",
@@ -179,7 +162,6 @@
   "volCooking": "Cocina",
   "volDriving": "Conducción",
   "volMedical": "Médico/Primeros auxilios",
-
   "summaryTitle": "Resumen del registro",
   "summarySectionProgram": "Programa",
   "summaryName": "Nombre",
@@ -207,11 +189,9 @@
   "summarySubmitDone": "Enviado",
   "summarySubmitDoneMsg": "Tu registro se envió correctamente.\nUn organizador te contactará después de revisarlo.",
   "summarySubmitFailed": "Error al enviar: {error}",
-
   "commonNoName": "Sin nombre",
   "unitPeople": "{count} personas",
   "unitCases": "{count}",
-
   "dashTitle": "Panel",
   "dashExport": "Exportar",
   "dashExportExcel": "Exportar a Excel",
@@ -234,7 +214,6 @@
   "dashPaymentPending": "Esperando confirmación",
   "dashStatusDone": "Hecho",
   "dashStatusInProgress": "En curso",
-
   "pcTitle": "Programa creado",
   "pcHeading": "¡Tu programa ha sido creado!",
   "pcShareUuid": "Comparte el UUID de abajo con los participantes",
@@ -243,7 +222,6 @@
   "pcInfo": "Los participantes pueden registrarse ingresando este UUID en la app.",
   "pcGoDashboard": "Ir al panel",
   "pcGoHome": "Inicio",
-
   "cpProgramType": "Tipo de programa",
   "cpTypeLocal": "Retiro local",
   "cpTypeInternational": "Retiro internacional",
@@ -282,7 +260,6 @@
   "cpDupBody": "Ya existe un programa con el mismo nombre y fecha de inicio.\n¿Ir a la pantalla de UUID del programa existente?",
   "cpDupGoExisting": "Ir al programa existente",
   "cpCreateFailed": "Error al crear el programa: {error}",
-
   "epSaved": "Configuración guardada",
   "epNotFound": "Programa no encontrado",
   "epTourLocked": "El retiro ya comenzó, por lo que no se pueden editar las opciones de tour",
@@ -316,7 +293,6 @@
   "cpHostCountry": "País anfitrión",
   "cpHostCountryHint": "Busca y selecciona un país",
   "cpHostCountryHelp": "Los participantes que viven en el país anfitrión omiten el ingreso del vuelo",
-
   "blTitle": "Registrarse como líder",
   "blInfo": "Registrarte como líder te permite crear programas de retiro y gestionar participantes.",
   "blLoginAccount": "Cuenta con la que iniciaste sesión",
@@ -324,7 +300,6 @@
   "blLeaderNameHint": "Nombre que verán los participantes",
   "blRegisterButton": "Registrarme y crear un evento",
   "blLeaderRegFailed": "Error al registrar el líder: {error}",
-
   "sosTitle": "SOS de emergencia",
   "sosHealth": "🚑 Emergencia médica/de salud",
   "sosSafety": "🆘 Amenaza a la seguridad personal",
@@ -344,7 +319,6 @@
   "sosSending": "Enviando...",
   "sosSend": "Enviar SOS",
   "sosFabConfirm": "¿Enviar una alerta de emergencia a los organizadores?",
-
   "schLoadFailed": "Error al cargar el horario: {error}",
   "schAddTitle": "Añadir evento",
   "schTitleLabel": "Título *",
@@ -364,7 +338,6 @@
   "schDeleteConfirm": "¿Eliminar este evento?",
   "schDeleteFailed": "Error al eliminar: {error}",
   "schEmpty": "No hay eventos programados",
-
   "immTitle": "Tarjeta de inmigración",
   "immFullscreenTooltip": "Pantalla completa (mostrar al oficial)",
   "immNotFound": "No se encontró información del programa.",
@@ -377,7 +350,6 @@
   "immCardContact": "ON-SITE CONTACT / Contacto en el lugar",
   "immCardFooter": "I am attending the above religious conference as a participant.\nAsisto a la conferencia religiosa anterior como participante.",
   "immExitHint": "Tap anywhere to exit fullscreen\nToca en cualquier lugar para salir de pantalla completa",
-
   "setupRoomsMade": "Habitaciones creadas · {count}",
   "setupRoomsEmpty": "Aún no hay habitaciones.\nUsa el botón de abajo a la derecha para añadirlas en lote.",
   "setupBulkAddRooms": "Añadir habitaciones en lote",
@@ -430,7 +402,6 @@
   "setupLeaderPhone": "Teléfono del líder",
   "setupPassage": "Pasaje (ej. Juan 10)",
   "setupLocation": "Lugar de reunión",
-
   "expColNo": "N.º",
   "expArrFlight": "Vuelo de llegada",
   "expArrTime": "Fecha/hora de llegada",
@@ -443,10 +414,8 @@
   "expUnregistered": "No registrado",
   "expIncomplete": "Incompleto",
   "expRoster": "Lista de participantes",
-
   "regStepCompanion": "Acompañantes",
   "regStepBuddy": "Solicitudes de compañía",
-
   "buddyTitle": "Personas con quienes quieres estar",
   "buddyDesc": "Cuando eliges a alguien, se envía una solicitud. Se confirma solo cuando la acepta.",
   "buddyRoommateSection": "Solicitudes de compañero de cuarto",
@@ -468,7 +437,6 @@
   "buddyReceivedEmpty": "No hay solicitudes recibidas",
   "buddyNoCandidates": "Aún no hay otros participantes para elegir",
   "buddyRequestLine": "Solicitud de {kind}",
-
   "companionTitle": "Acompañantes (pareja/familia)",
   "companionDesc": "Si vienes con tu cónyuge o familia, agrégalos aquí. Cada uno cuenta para el aforo y el transporte.",
   "companionAdd": "Agregar acompañante",
@@ -481,7 +449,6 @@
   "companionCount": "{count} acompañante(s)",
   "companionAddTitle": "Agregar acompañante",
   "companionEditTitle": "Editar acompañante",
-
   "asnTitle": "Asignación",
   "asnAutoAssign": "Asignar automáticamente",
   "asnAutoRoomsDone": "Alojamiento asignado — {count} ubicados",
@@ -529,5 +496,33 @@
   "mtrCoPassengers": "Con",
   "mtrMeetPoint": "Punto de encuentro",
   "mtrSelfDrive": "Voy por mi cuenta",
-  "mtrSelfDriveDesc": "Desactiva si no necesitas recogida"
+  "mtrSelfDriveDesc": "Desactiva si no necesitas recogida",
+  "rdyTitle": "Estado de preparación",
+  "rdySubtitle": "Qué está bloqueado y a quién contactar",
+  "rdySectionItems": "Elementos de preparación",
+  "rdySectionCohorts": "Asistentes nacionales y del extranjero",
+  "rdySectionBlocked": "Personas a contactar",
+  "rdyLodging": "Alojamiento",
+  "rdyTransport": "Transporte de recogida",
+  "rdyFlights": "Vuelos sin registrar",
+  "rdyMeals": "Comidas",
+  "rdyPayment": "Cuotas",
+  "rdyRoles": "Cargos en la iglesia",
+  "rdyDomestic": "Nacional",
+  "rdyOverseas": "Del extranjero",
+  "rdySkipped": "Omitido",
+  "rdyUnspecified": "Sin especificar",
+  "rdyStuckPersonal": "Información personal",
+  "rdyStuckMeals": "Comidas",
+  "rdyStuckFlight": "Vuelo",
+  "rdyStuckLodging": "Alojamiento",
+  "rdyStuckPayment": "Cuotas",
+  "rdyStatusOk": "Bien",
+  "rdyStatusWarn": "Atención",
+  "rdyStatusStop": "Insuficiente",
+  "rdyStatusIdle": "Sin configurar",
+  "rdyNoBlocked": "Todos van al día",
+  "rdyRolesUnreliable": "Más de la mitad no tiene cargo registrado",
+  "rdyOpenCard": "Ver estado de preparación",
+  "rdyOpenCardSub": "Bloqueos y contactos de un vistazo"
 }

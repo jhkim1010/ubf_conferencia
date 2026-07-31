@@ -16,6 +16,7 @@ import 'features/program/screens/program_created_screen.dart';
 import 'features/registration/screens/registration_flow_screen.dart';
 import 'features/registration/screens/summary_screen.dart';
 import 'features/dashboard/screens/dashboard_screen.dart';
+import 'features/dashboard/screens/readiness_screen.dart';
 import 'features/schedule/screens/schedule_screen.dart';
 import 'features/sos/screens/sos_screen.dart';
 import 'features/program/screens/immigration_card_screen.dart';
@@ -92,6 +93,11 @@ class _UbfAppState extends ConsumerState<UbfApp> {
           path: '/leader/program/:id/dashboard',
           builder: (_, s) =>
               DashboardScreen(programId: s.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: '/leader/program/:id/readiness',
+          builder: (_, s) =>
+              ReadinessScreen(programId: s.pathParameters['id']!),
         ),
         GoRoute(
           path: '/leader/program/:id/edit',

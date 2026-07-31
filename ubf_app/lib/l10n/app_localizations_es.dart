@@ -1657,4 +1657,88 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get mtrSelfDriveDesc => 'Desactiva si no necesitas recogida';
+
+  @override
+  String get rdyTitle => 'Estado de preparación';
+
+  @override
+  String get rdySubtitle => 'Qué está bloqueado y a quién contactar';
+
+  @override
+  String get rdySectionItems => 'Elementos de preparación';
+
+  @override
+  String get rdySectionCohorts => 'Asistentes nacionales y del extranjero';
+
+  @override
+  String get rdySectionBlocked => 'Personas a contactar';
+
+  @override
+  String get rdyLodging => 'Alojamiento';
+
+  @override
+  String get rdyTransport => 'Transporte de recogida';
+
+  @override
+  String get rdyFlights => 'Vuelos sin registrar';
+
+  @override
+  String get rdyMeals => 'Comidas';
+
+  @override
+  String get rdyPayment => 'Cuotas';
+
+  @override
+  String get rdyRoles => 'Cargos en la iglesia';
+
+  @override
+  String get rdyDomestic => 'Nacional';
+
+  @override
+  String get rdyOverseas => 'Del extranjero';
+
+  @override
+  String get rdySkipped => 'Omitido';
+
+  @override
+  String get rdyUnspecified => 'Sin especificar';
+
+  @override
+  String get rdyStuckPersonal => 'Información personal';
+
+  @override
+  String get rdyStuckMeals => 'Comidas';
+
+  @override
+  String get rdyStuckFlight => 'Vuelo';
+
+  @override
+  String get rdyStuckLodging => 'Alojamiento';
+
+  @override
+  String get rdyStuckPayment => 'Cuotas';
+
+  @override
+  String get rdyStatusOk => 'Bien';
+
+  @override
+  String get rdyStatusWarn => 'Atención';
+
+  @override
+  String get rdyStatusStop => 'Insuficiente';
+
+  @override
+  String get rdyStatusIdle => 'Sin configurar';
+
+  @override
+  String get rdyNoBlocked => 'Todos van al día';
+
+  @override
+  String get rdyRolesUnreliable => 'Más de la mitad no tiene cargo registrado';
+
+  @override
+  String get rdyOpenCard => 'Ver estado de preparación';
+
+  @override
+  String get rdyOpenCardSub => 'Bloqueos y contactos de un vistazo';
 }

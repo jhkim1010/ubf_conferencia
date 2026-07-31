@@ -1615,4 +1615,88 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get mtrSelfDriveDesc => '픽업이 필요 없으면 꺼주세요';
+
+  @override
+  String get rdyTitle => '준비 현황';
+
+  @override
+  String get rdySubtitle => '무엇이 막혀 있고 누구에게 연락해야 하는지';
+
+  @override
+  String get rdySectionItems => '준비 항목';
+
+  @override
+  String get rdySectionCohorts => '국내 · 해외 참석자';
+
+  @override
+  String get rdySectionBlocked => '연락이 필요한 사람';
+
+  @override
+  String get rdyLodging => '숙소';
+
+  @override
+  String get rdyTransport => '픽업 배차';
+
+  @override
+  String get rdyFlights => '항공편 미입력';
+
+  @override
+  String get rdyMeals => '식사';
+
+  @override
+  String get rdyPayment => '참가비';
+
+  @override
+  String get rdyRoles => '직분 분포';
+
+  @override
+  String get rdyDomestic => '국내';
+
+  @override
+  String get rdyOverseas => '해외';
+
+  @override
+  String get rdySkipped => '생략';
+
+  @override
+  String get rdyUnspecified => '미입력';
+
+  @override
+  String get rdyStuckPersonal => '인적사항';
+
+  @override
+  String get rdyStuckMeals => '식사';
+
+  @override
+  String get rdyStuckFlight => '항공편';
+
+  @override
+  String get rdyStuckLodging => '숙소';
+
+  @override
+  String get rdyStuckPayment => '참가비';
+
+  @override
+  String get rdyStatusOk => '양호';
+
+  @override
+  String get rdyStatusWarn => '주의';
+
+  @override
+  String get rdyStatusStop => '부족';
+
+  @override
+  String get rdyStatusIdle => '설정 안 됨';
+
+  @override
+  String get rdyNoBlocked => '모두 순조롭게 진행 중입니다';
+
+  @override
+  String get rdyRolesUnreliable => '직분 미입력이 절반을 넘습니다';
+
+  @override
+  String get rdyOpenCard => '준비 현황 보기';
+
+  @override
+  String get rdyOpenCardSub => '막힌 지점과 연락 대상을 한눈에';
 }

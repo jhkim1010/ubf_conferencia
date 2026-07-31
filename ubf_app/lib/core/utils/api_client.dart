@@ -93,7 +93,9 @@ class ApiClient {
   }
 
   // 웹: idToken 이 없을 때 accessToken 으로 로그인 (서버가 tokeninfo 로 검증)
-  static Future<Map<String, dynamic>> loginWithGoogleAccessToken(String accessToken) async {
+  static Future<Map<String, dynamic>> loginWithGoogleAccessToken(
+    String accessToken,
+  ) async {
     final response = await http.post(
       _uri('/auth/google'),
       headers: {'Content-Type': 'application/json'},
@@ -126,7 +128,10 @@ class ApiClient {
   }
 
   // 개발용 테스트 로그인 (OAuth 생략)
-  static Future<Map<String, dynamic>> devLogin({String email = 'dev@test.com', String name = '테스트 사용자'}) async {
+  static Future<Map<String, dynamic>> devLogin({
+    String email = 'dev@test.com',
+    String name = '테스트 사용자',
+  }) async {
     final response = await http.post(
       _uri('/auth/dev-login'),
       headers: {'Content-Type': 'application/json'},
@@ -183,7 +188,10 @@ class ApiClient {
     return (_decode(response)['id'] as String);
   }
 
-  static Future<void> updateProgram(String programId, Map<String, dynamic> data) async {
+  static Future<void> updateProgram(
+    String programId,
+    Map<String, dynamic> data,
+  ) async {
     final response = await http.patch(
       _uri('/programs/$programId'),
       headers: await _headers(),
@@ -200,6 +208,17 @@ class ApiClient {
   static Future<Map<String, dynamic>?> getProgramStats(String programId) async {
     final response = await http.get(
       _uri('/programs/$programId/stats'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  // 준비 현황 (A003) — 준비 항목 + 국내/해외 코호트 + 막힌 사람을 한 번에
+  static Future<Map<String, dynamic>?> getProgramReadiness(
+    String programId,
+  ) async {
+    final response = await http.get(
+      _uri('/programs/$programId/readiness'),
       headers: await _headers(),
     );
     return _decode(response);
@@ -504,7 +523,9 @@ class ApiClient {
   }
 
   // { sent: [...], received: [...] }
-  static Future<Map<String, dynamic>> getMyBuddyRequests(String programId) async {
+  static Future<Map<String, dynamic>> getMyBuddyRequests(
+    String programId,
+  ) async {
     final response = await http.get(
       _uri('/buddy-requests/$programId/me'),
       headers: await _headers(),
@@ -539,7 +560,10 @@ class ApiClient {
     _decode(response);
   }
 
-  static Future<void> cancelBuddyRequest(String programId, String requestId) async {
+  static Future<void> cancelBuddyRequest(
+    String programId,
+    String requestId,
+  ) async {
     final response = await http.delete(
       _uri('/buddy-requests/$programId/$requestId'),
       headers: await _headers(),
@@ -574,7 +598,9 @@ class ApiClient {
   // ─── 배정(assignments) — 관리자 ───────────────────────────
 
   // { rooms: [...], unassigned: [...] }
-  static Future<Map<String, dynamic>> getRoomAssignments(String programId) async {
+  static Future<Map<String, dynamic>> getRoomAssignments(
+    String programId,
+  ) async {
     final response = await http.get(
       _uri('/assignments/$programId/rooms'),
       headers: await _headers(),
@@ -583,7 +609,9 @@ class ApiClient {
   }
 
   // { groups: [...], unassigned: [...] }
-  static Future<Map<String, dynamic>> getGroupAssignments(String programId) async {
+  static Future<Map<String, dynamic>> getGroupAssignments(
+    String programId,
+  ) async {
     final response = await http.get(
       _uri('/assignments/$programId/groups'),
       headers: await _headers(),
@@ -622,7 +650,10 @@ class ApiClient {
     _decode(response);
   }
 
-  static Future<void> unassignFromRoom(String programId, String registrationId) async {
+  static Future<void> unassignFromRoom(
+    String programId,
+    String registrationId,
+  ) async {
     final response = await http.delete(
       _uri('/assignments/$programId/rooms/$registrationId'),
       headers: await _headers(),
@@ -643,7 +674,10 @@ class ApiClient {
     _decode(response);
   }
 
-  static Future<void> unassignFromGroup(String programId, String registrationId) async {
+  static Future<void> unassignFromGroup(
+    String programId,
+    String registrationId,
+  ) async {
     final response = await http.delete(
       _uri('/assignments/$programId/groups/$registrationId'),
       headers: await _headers(),
@@ -655,7 +689,9 @@ class ApiClient {
 
   // { direction, runs: [...], unassigned: [...] }
   static Future<Map<String, dynamic>> getTransportRuns(
-      String programId, String direction) async {
+    String programId,
+    String direction,
+  ) async {
     final response = await http.get(
       _uri('/transport/$programId/runs?direction=$direction'),
       headers: await _headers(),
@@ -663,7 +699,10 @@ class ApiClient {
     return _decode(response);
   }
 
-  static Future<String> createRun(String programId, Map<String, dynamic> data) async {
+  static Future<String> createRun(
+    String programId,
+    Map<String, dynamic> data,
+  ) async {
     final response = await http.post(
       _uri('/transport/$programId/runs'),
       headers: await _headers(),
@@ -673,7 +712,10 @@ class ApiClient {
   }
 
   static Future<void> updateRun(
-      String programId, String runId, Map<String, dynamic> data) async {
+    String programId,
+    String runId,
+    Map<String, dynamic> data,
+  ) async {
     final response = await http.patch(
       _uri('/transport/$programId/runs/$runId'),
       headers: await _headers(),
@@ -692,7 +734,9 @@ class ApiClient {
 
   // { assigned, unassigned }
   static Future<Map<String, dynamic>> autoDispatch(
-      String programId, String direction) async {
+    String programId,
+    String direction,
+  ) async {
     final response = await http.post(
       _uri('/transport/$programId/runs/auto?direction=$direction'),
       headers: await _headers(),

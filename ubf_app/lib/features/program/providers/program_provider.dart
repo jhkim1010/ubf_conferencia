@@ -2,9 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/api_client.dart';
 
 // 단일 프로그램 (UUID로 조회)
-final programByIdProvider = FutureProvider.family<Map<String, dynamic>?, String>(
-  (_, programId) => ApiClient.getProgram(programId),
-);
+final programByIdProvider =
+    FutureProvider.family<Map<String, dynamic>?, String>(
+      (_, programId) => ApiClient.getProgram(programId),
+    );
 
 // 리더의 프로그램 목록
 final leaderProgramsProvider = FutureProvider<List<dynamic>>(
@@ -12,14 +13,22 @@ final leaderProgramsProvider = FutureProvider<List<dynamic>>(
 );
 
 // 대시보드 통계
-final programStatsProvider = FutureProvider.family<Map<String, dynamic>?, String>(
-  (_, programId) => ApiClient.getProgramStats(programId),
-);
+final programStatsProvider =
+    FutureProvider.family<Map<String, dynamic>?, String>(
+      (_, programId) => ApiClient.getProgramStats(programId),
+    );
+
+// 준비 현황 (A003) — 준비 항목 + 국내/해외 코호트 + 막힌 사람
+final programReadinessProvider =
+    FutureProvider.family<Map<String, dynamic>?, String>(
+      (_, programId) => ApiClient.getProgramReadiness(programId),
+    );
 
 // 참가자 전체 목록
-final programRegistrationsProvider = FutureProvider.family<List<dynamic>, String>(
-  (_, programId) => ApiClient.getProgramRegistrations(programId),
-);
+final programRegistrationsProvider =
+    FutureProvider.family<List<dynamic>, String>(
+      (_, programId) => ApiClient.getProgramRegistrations(programId),
+    );
 
 // 프로그램 서비스
 class ProgramService {

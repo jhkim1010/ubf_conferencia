@@ -15,7 +15,9 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final programAsync = ref.watch(programByIdProvider(programId));
     final statsAsync = ref.watch(programStatsProvider(programId));
-    final registrationsAsync = ref.watch(programRegistrationsProvider(programId));
+    final registrationsAsync = ref.watch(
+      programRegistrationsProvider(programId),
+    );
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -41,9 +43,17 @@ class DashboardScreen extends ConsumerWidget {
               final programName =
                   (programAsync.valueOrNull?['name'] as String?) ?? 'program';
               if (val == 'csv') {
-                await ExportService.exportToCsv(registrations, programName, l10n);
+                await ExportService.exportToCsv(
+                  registrations,
+                  programName,
+                  l10n,
+                );
               } else {
-                await ExportService.exportToExcel(registrations, programName, l10n);
+                await ExportService.exportToExcel(
+                  registrations,
+                  programName,
+                  l10n,
+                );
               }
             },
             itemBuilder: (_) => [
@@ -70,6 +80,34 @@ class DashboardScreen extends ConsumerWidget {
             const SizedBox(height: 20),
 
             // 편성 준비 — 방·조 정의 (배정 전 단계)
+            // 준비 현황 — 막힌 지점과 연락 대상 (A003)
+            Card(
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.fact_check_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                title: Text(
+                  l10n.rdyOpenCard,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(l10n.rdyOpenCardSub),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () =>
+                    context.push('/leader/program/$programId/readiness'),
+              ),
+            ),
+            const SizedBox(height: 10),
+
             Card(
               child: ListTile(
                 leading: Container(
@@ -78,11 +116,15 @@ class DashboardScreen extends ConsumerWidget {
                     color: Colors.indigo.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.dashboard_customize_outlined,
-                      color: Colors.indigo),
+                  child: const Icon(
+                    Icons.dashboard_customize_outlined,
+                    color: Colors.indigo,
+                  ),
                 ),
-                title: Text(l10n.setupTitle,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                title: Text(
+                  l10n.setupTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
                 subtitle: Text(l10n.dashSetupSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/leader/program/$programId/setup'),
@@ -99,10 +141,15 @@ class DashboardScreen extends ConsumerWidget {
                     color: Colors.teal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.assignment_ind_outlined, color: Colors.teal),
+                  child: const Icon(
+                    Icons.assignment_ind_outlined,
+                    color: Colors.teal,
+                  ),
                 ),
-                title: Text(l10n.asnTitle,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                title: Text(
+                  l10n.asnTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
                 subtitle: Text(l10n.dashAssignSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/leader/program/$programId/assign'),
@@ -119,13 +166,19 @@ class DashboardScreen extends ConsumerWidget {
                     color: const Color(0xFF0F7A6E).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.directions_bus_outlined, color: Color(0xFF0F7A6E)),
+                  child: const Icon(
+                    Icons.directions_bus_outlined,
+                    color: Color(0xFF0F7A6E),
+                  ),
                 ),
-                title: Text(l10n.dspTitle,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                title: Text(
+                  l10n.dspTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
                 subtitle: Text(l10n.dashDispatchSubtitle),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/leader/program/$programId/dispatch'),
+                onTap: () =>
+                    context.push('/leader/program/$programId/dispatch'),
               ),
             ),
             const SizedBox(height: 20),
@@ -135,19 +188,18 @@ class DashboardScreen extends ConsumerWidget {
               title: l10n.dashPendingPayments,
               icon: Icons.payment,
               actionLabel: l10n.dashViewAll,
-              onAction: () => context.push('/leader/program/$programId/payments'),
+              onAction: () =>
+                  context.push('/leader/program/$programId/payments'),
             ),
             const SizedBox(height: 8),
             registrationsAsync.when(
               loading: () => const LinearProgressIndicator(),
               error: (e, _) => Text(l10n.commonErrorDetail('$e')),
               data: (registrations) {
-                final pendingPayments = registrations
-                    .where((r) {
-                      final payments = r['payments'] as List?;
-                      return payments?.any((p) => p['status'] == 'pending') == true;
-                    })
-                    .toList();
+                final pendingPayments = registrations.where((r) {
+                  final payments = r['payments'] as List?;
+                  return payments?.any((p) => p['status'] == 'pending') == true;
+                }).toList();
 
                 if (pendingPayments.isEmpty) {
                   return _EmptyState(message: l10n.dashNoPendingPayments);
@@ -157,7 +209,8 @@ class DashboardScreen extends ConsumerWidget {
                   children: pendingPayments.take(3).map((r) {
                     return _PaymentTile(
                       registration: r,
-                      onTap: () => context.push('/leader/program/$programId/payments'),
+                      onTap: () =>
+                          context.push('/leader/program/$programId/payments'),
                     );
                   }).toList(),
                 );
@@ -170,7 +223,8 @@ class DashboardScreen extends ConsumerWidget {
               title: l10n.dashAttendeeList,
               icon: Icons.people,
               actionLabel: l10n.dashViewAll,
-              onAction: () => context.push('/leader/program/$programId/attendees'),
+              onAction: () =>
+                  context.push('/leader/program/$programId/attendees'),
             ),
             const SizedBox(height: 8),
             registrationsAsync.when(
@@ -194,7 +248,8 @@ class DashboardScreen extends ConsumerWidget {
             OutlinedButton.icon(
               icon: const Icon(Icons.notifications_outlined),
               label: Text(l10n.dashSendNotice),
-              onPressed: () => context.push('/leader/program/$programId/notify'),
+              onPressed: () =>
+                  context.push('/leader/program/$programId/notify'),
             ),
           ],
         ),
@@ -334,9 +389,9 @@ class _SectionHeader extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const Spacer(),
         if (actionLabel != null && onAction != null)
@@ -393,9 +448,7 @@ class _AttendeeListTile extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: submitted
-              ? Colors.green[100]
-              : Colors.grey[200],
+          backgroundColor: submitted ? Colors.green[100] : Colors.grey[200],
           child: Icon(
             Icons.person,
             color: submitted ? Colors.green : Colors.grey,
@@ -437,10 +490,7 @@ class _EmptyState extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Center(
-        child: Text(
-          message,
-          style: TextStyle(color: Colors.grey[500]),
-        ),
+        child: Text(message, style: TextStyle(color: Colors.grey[500])),
       ),
     );
   }
