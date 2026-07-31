@@ -1,0 +1,74 @@
+name: Verify
+
+# 머지 전 게이트. 태그 빌드(build-release.yml)와 달리 push/PR 마다 돌린다.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.44.6'
+
+# 같은 브랜치에서 연속 push 시 이전 실행을 취소한다.
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # DB·SDK 가 필요 없는 정합성 검사. 수 초 안에 끝나므로 가장 먼저 실패를 알린다.
+  consistency:
+    name: 정합성 (ARB·라우터·마이그레이션·비밀정보)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # verify.sh 의 변경 파일 비교에 필요
+      - name: 검사 실행
+        run: |
+          ./verify.sh arb-parity route-parity migration-numbers \
+                      migration-safety secrets artifacts
+
+  server:
+    name: 서버 (구문 + 기동 스모크)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+        working-directory: server
+      - name: 구문 검사
+        run: ./verify.sh server-syntax
+      # 기동 스모크는 DATABASE_URL 이 있을 때만 의미가 있다.
+      # 시크릿이 설정되어 있지 않으면 verify.sh 가 SKIP 으로 처리하고 통과한다.
+      - name: 기동 스모크
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_CI }}
+          JWT_SECRET: ci-dummy-secret
+        run: ./verify.sh server-smoke
+
+  flutter:
+    name: Flutter (analyze + format)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+        working-directory: ubf_app
+      - name: analyze
+        run: ./verify.sh flutter-analyze
+      # 변경된 파일만 검사한다. 저장소 전체는 아직 dart format 기준을 만족하지 않는다.
+      # VERIFY_BASE 를 주지 않으면 CI 의 깨끗한 워킹트리에서 항상 SKIP 되어 무의미해진다.
+      - name: format (변경분)
+        env:
+          VERIFY_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || format('{0}~1', github.sha) }}
+        run: ./verify.sh dart-format

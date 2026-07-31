@@ -71,20 +71,21 @@ SQL 파일 위치는 **`ubf_app/supabase/migrations/`** 입니다. `server/` 아
 (Supabase는 쓰지 않습니다. Neon Postgres를 씁니다. 경로만 초기 흔적으로 남아 있습니다.)
 
 `server/src/db/migrate.js`에는 **적용 이력 추적 테이블이 없습니다.** 실행할 때마다 파일명
-정렬 순으로 **전체를 매번 재실행**하고, 실패한 구문은 `✗`로 로그만 남기고 넘어갑니다.
+정렬 순으로 **전체를 매번 재실행**합니다. 실패한 구문은 `✗`로 기록하되 중단하지 않고
+끝까지 진행한 뒤(모든 문제를 한 번에 보기 위함), **실패가 하나라도 있으면 exit 1**로 끝납니다.
 
 따라서:
 
 - **모든 마이그레이션은 멱등이어야 합니다.** `CREATE TABLE IF NOT EXISTS`,
   `ADD COLUMN IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`, `DROP ... IF EXISTS`.
   기존 파일들이 이 규칙을 따르고 있으니 그대로 맞추십시오.
-- `npm run migrate` 출력에 `✗`가 있으면 성공이 아닙니다. 반드시 읽고 판단하십시오.
+- `npm run migrate`는 실패 시 exit 1입니다. 종료 코드를 확인하십시오.
 - 파괴적 구문(`DROP COLUMN`, `DELETE`, `UPDATE` 전체 갱신)은 재실행 시 데이터가 날아갑니다.
   넣지 마십시오.
 
-**알려진 문제**: `012_program_host_country.sql`과 `012_transport.sql`이 번호가 겹칩니다.
-정렬은 파일명 기준이라 현재는 결정적으로 동작하지만, 새 파일은 `014_`부터 시작하고
-번호를 재사용하지 마십시오.
+번호는 재사용하지 마십시오. `verify.sh migration-numbers`가 중복을 잡습니다.
+(과거 `012_`가 중복되어 `012_transport.sql` → `014_transport.sql`로 정리했습니다.
+이력 추적이 없어 파일명이 어디에도 기록되지 않고 모든 구문이 멱등이라 DB에는 무영향이었습니다.)
 
 ---
 
@@ -153,27 +154,65 @@ UI 문자열을 Dart 코드에 하드코딩하지 마십시오.
 
 ---
 
-## 테스트 현실
+## 검증 — `./verify.sh`
 
-**실질적인 테스트가 없습니다.** `ubf_app/test/widget_test.dart`와
+**변경 후에는 `./verify.sh`를 통과시키십시오.** 이것이 이 저장소의 단일 검증 진입점입니다.
+
+```bash
+./verify.sh                  # 전체 (실패가 있어도 끝까지 돌고 요약)
+./verify.sh --changed        # 변경된 파일에 해당하는 검사만 — 작업 중 빠른 확인용
+./verify.sh --list           # 검사 목록
+./verify.sh arb-parity       # 특정 검사만
+```
+
+검사는 잘게 나뉘어 있고 각각 독립 실행 가능합니다. 훅에서 필요한 것만 골라 걸 수 있게 한 설계입니다.
+
+| 검사 | 잡는 것 |
+|---|---|
+| `flutter-analyze` | Dart 정적 분석 경고 |
+| `dart-format` | 변경된 dart 파일의 포맷 (전체가 아닌 변경분만) |
+| `server-syntax` | 서버 JS 파싱 오류 |
+| `arb-parity` | `en`/`ko`/`es` ARB 키 집합 불일치 |
+| `route-parity` | `routes/*.js` ↔ `index.js` 등록 누락 (조용한 404) |
+| `migration-numbers` | 마이그레이션 번호 중복 |
+| `migration-safety` | 비멱등·파괴적 SQL (`IF NOT EXISTS` 누락, `WHERE` 없는 `DELETE`/`UPDATE`) |
+| `secrets` | 추적 파일 내 커넥션 문자열·`.env` |
+| `artifacts` | 빌드 산출물 추적, ARB 없이 생성물만 손편집 |
+| `server-smoke` | 서버 기동 + `/health` 응답 |
+
+종료 코드는 0(전부 통과) / 1(하나 이상 실패)입니다. 전제가 없어 건너뛴 검사(SKIP)는
+실패로 치지 않지만 요약에 별도로 표시되므로, **SKIP이 많으면 통과를 신뢰하지 마십시오.**
+
+`VERIFY_BASE`를 주면 워킹트리 대신 해당 커밋 대비 diff로 변경 파일을 판정합니다
+(CI에서 사용). 예: `VERIFY_BASE=origin/main ./verify.sh dart-format`
+
+### 테스트 현실
+
+**실질적인 테스트 스위트가 없습니다.** `ubf_app/test/widget_test.dart`와
 `ubf_watch/test/widget_test.dart` 둘 다 `expect(true, isTrue)` 플레이스홀더이고,
 서버에는 테스트 러너 자체가 없습니다.
 
-그러므로 "테스트가 통과했다"를 검증 근거로 삼을 수 없습니다. 변경 후 최소 확인선:
+그러므로 **"테스트가 통과했다"를 완료 근거로 삼을 수 없습니다.** 현재 유효한 근거는
+`./verify.sh` 결과입니다. 테스트를 새로 추가하는 것은 환영하며, 특히
+`server/src/services/`의 두 엔진은 DB 없이 검증 가능하므로 `node --test` 대상으로 적합합니다.
 
-- Flutter: `flutter analyze` 무경고
-- 서버: `node --check <파일>` + 실제 엔드포인트 호출 (`curl`)
-- DB가 걸린 변경: 마이그레이션을 실제로 적용해 보고 `✗`가 없는지 확인
-
-테스트를 새로 추가하는 것은 환영하지만, 있지도 않은 스위트를 근거로 완료를 보고하지 마십시오.
+`dart-format`은 변경된 파일만 봅니다. 저장소 전체는 아직 `dart format` 기준을 만족하지
+않으므로(47개 중 40개), 손대는 파일부터 기준을 맞춰 점진적으로 수렴시키는 방식입니다.
+기존 파일을 수정하면 그 파일의 포맷도 함께 맞춰야 합니다.
 
 ---
 
 ## CI
 
-`.github/workflows/build-release.yml` — **태그 푸시에서만** 동작합니다. PR/푸시 CI는 없습니다.
-Flutter 3.44.6 고정, web/android(APK)/windows/linux/macos 6개 잡. 앱 버전이나 Flutter
-버전을 올릴 때 이 워크플로의 `FLUTTER_VERSION`을 함께 맞추십시오.
+- **`verify.yml`** — push(main) / PR / 수동. `./verify.sh`의 검사들을 3개 잡
+  (정합성 · 서버 · Flutter)으로 나눠 돌리는 머지 전 게이트입니다.
+  `server-smoke`는 `DATABASE_URL_CI` 시크릿이 설정된 경우에만 실제로 동작하고,
+  없으면 SKIP됩니다.
+- **`build-release.yml`** — `v*` 태그 푸시에서만 동작하는 릴리스 빌드.
+  web/android(APK)/windows/linux/macos.
+
+두 워크플로 모두 Flutter 3.44.6으로 고정돼 있습니다. 버전을 올릴 때 양쪽의
+`FLUTTER_VERSION`을 함께 맞추십시오.
 
 Windows 인스톨러 등 산출물은 `~/Dropbox/Personal de m. Marcos`에 복사하는 것이 관례입니다.
 

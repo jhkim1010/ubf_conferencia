@@ -36,15 +36,28 @@ SharedPreferences, iOS·Android는 FlutterSecureStorage)를 제거하지 마십�
 
 주석·문서는 한국어로 씁니다 (기존 코드 관례).
 
-## 검증 수단 — 테스트 스위트가 없습니다
+## 검증 — `./verify.sh` 를 통과시킬 것
 
-`ubf_app/test/widget_test.dart`와 `ubf_watch/test/widget_test.dart`는 `expect(true, isTrue)`
-플레이스홀더이고, 서버에는 테스트 러너 자체가 없습니다.
+저장소 루트의 `./verify.sh` 가 단일 검증 진입점입니다. 작업을 마치기 전에 통과시키십시오.
 
-**"테스트 통과"를 완료 근거로 삼을 수 없습니다.** 실제로 쓸 수 있는 확인선:
-- Flutter: `flutter analyze` 무경고
-- 서버: `node --check <파일>` + 실제 엔드포인트 `curl` 호출
-- DB 변경: 마이그레이션을 실제 적용하고 `✗` 없음 확인
+```bash
+./verify.sh --changed     # 변경 파일에 해당하는 검사만 — 작업 중 반복 실행용
+./verify.sh               # 전체 — 완료 보고 전 최종 확인
+./verify.sh --list        # 검사 목록
+```
+
+종료 코드 0=통과, 1=실패. **SKIP(전제 미충족)은 통과가 아닙니다** — 요약에 건너뜀 건수가
+있으면 무엇이 왜 건너뛰어졌는지 확인하고 보고에 적으십시오.
+
+검사 항목: `flutter-analyze` `dart-format` `server-syntax` `arb-parity` `route-parity`
+`migration-numbers` `migration-safety` `secrets` `artifacts` `server-smoke`
+
+**테스트 스위트는 없습니다.** `widget_test.dart` 는 플레이스홀더이고 서버에는 러너가
+없습니다. "테스트 통과"를 완료 근거로 쓰지 마십시오 — 근거는 `./verify.sh` 출력입니다.
+새 테스트 추가는 환영하며, `server/src/services/` 의 두 엔진은 DB 없이 검증 가능하므로
+`node --test` 대상으로 적합합니다.
+
+`dart-format` 은 변경된 파일만 봅니다. 기존 파일을 수정하면 그 파일의 포맷도 맞추십시오.
 
 `node`/`flutter`/`dart`는 `/opt/homebrew/bin`에 있습니다. 비로그인 셸에서는 PATH에 없으므로
 `export PATH="/opt/homebrew/bin:$PATH";`를 붙이거나 `zsh -lc '...'`로 실행하십시오.
