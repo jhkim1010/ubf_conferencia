@@ -29,6 +29,7 @@ case "$rel" in
   ubf_app/lib/l10n/app_localizations*.dart) checks+=(artifacts) ;;
   *.dart)                          checks+=(dart-format) ;;
   server/src/routes/*.js|server/src/index.js) checks+=(server-syntax route-parity) ;;
+  server/src/services/*.js|server/test/*.js) checks+=(server-syntax unit-tests) ;;
   server/src/*.js|server/src/**/*.js) checks+=(server-syntax) ;;
   ubf_app/supabase/migrations/*.sql) checks+=(migration-numbers migration-safety) ;;
 esac

@@ -61,10 +61,12 @@ SharedPreferences, iOS·Android는 FlutterSecureStorage)를 제거하지 마십�
 검사 항목: `flutter-analyze` `dart-format` `server-syntax` `arb-parity` `route-parity`
 `migration-numbers` `migration-safety` `secrets` `artifacts` `server-smoke`
 
-**테스트 스위트는 없습니다.** `widget_test.dart` 는 플레이스홀더이고 서버에는 러너가
-없습니다. "테스트 통과"를 완료 근거로 쓰지 마십시오 — 근거는 `./verify.sh` 출력입니다.
-새 테스트 추가는 환영하며, `server/src/services/` 의 두 엔진은 DB 없이 검증 가능하므로
-`node --test` 대상으로 적합합니다.
+**서버에는 단위 테스트가 있습니다** — `cd server && npm test` (Node 내장 러너).
+`src/services/` 의 배정·배차 엔진 46개. 이 엔진을 수정하면 테스트도 함께 갱신하십시오.
+DB·HTTP 가 필요 없는 로직을 새로 만들면 `server/test/*.test.js` 에 테스트를 추가하십시오.
+
+**Flutter 쪽은 테스트가 없습니다.** `widget_test.dart` 는 플레이스홀더입니다.
+Flutter 변경에 대해 "테스트 통과"를 근거로 쓰지 마십시오 — `flutter analyze` 와 실제 실행입니다.
 
 `dart-format` 은 변경된 파일만 봅니다. 기존 파일을 수정하면 그 파일의 포맷도 맞추십시오.
 

@@ -22,6 +22,19 @@
         ]
       }
     ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'D=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}\"; exec \"$D/.claude/hooks/stop-verify.sh\"'",
+            "timeout": 120,
+            "statusMessage": "변경분 최종 검증..."
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",

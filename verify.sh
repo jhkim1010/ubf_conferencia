@@ -13,6 +13,10 @@
 # 종료 코드: 0=전부 통과, 1=하나 이상 실패
 # SKIP(전제 미충족)은 실패로 치지 않지만 요약에 별도 표시한다.
 
+# 주의: macOS 기본 bash 는 3.2 이고 shebang 은 보통 그쪽을 고른다.
+# bash 4+ 전용 구문(mapfile / readarray / declare -A / ${v^^})을 쓰지 말 것.
+# 조용히 실패해 검사를 통째로 건너뛰는 사고로 이어진다.
+
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -79,6 +83,20 @@ check_server_syntax() {
     pass server-syntax
   else
     fail server-syntax "$(printf '%s' "$bad" | head -5)"
+  fi
+}
+
+# 서버 단위 테스트 (node 내장 러너). 현재는 순수 로직 엔진만 대상이다.
+# DB 가 필요 없으므로 CI 에서도 항상 돈다.
+check_unit_tests() {
+  command -v node >/dev/null || { skip unit-tests "node 없음"; return 0; }
+  [ -d "$SRV/test" ] || { skip unit-tests "server/test 없음"; return 0; }
+  local out
+  out="$(cd "$SRV" && node --test 2>&1)"
+  if [ $? -eq 0 ]; then
+    pass "unit-tests ($(printf '%s' "$out" | grep -oE '^# pass [0-9]+|^ℹ pass [0-9]+' | grep -oE '[0-9]+' | head -1) 통과)"
+  else
+    fail unit-tests "$(printf '%s' "$out" | grep -E '✖|not ok|AssertionError' | head -5)"
   fi
 }
 
@@ -241,6 +259,7 @@ ALL_CHECKS=(
   flutter-analyze
   dart-format
   server-syntax
+  unit-tests
   arb-parity
   route-parity
   migration-numbers
@@ -274,7 +293,7 @@ select_by_changes() {
   [ -z "$files" ] && return 0
   grep -qE '^ubf_app/.*\.dart$'            <<<"$files" && sel+=(flutter-analyze dart-format)
   grep -qE '^ubf_app/lib/l10n/.*\.arb$'    <<<"$files" && sel+=(arb-parity)
-  grep -qE '^server/src/.*\.js$'           <<<"$files" && sel+=(server-syntax route-parity server-smoke)
+  grep -qE '^server/(src|test)/.*\.js$'     <<<"$files" && sel+=(server-syntax unit-tests route-parity server-smoke)
   grep -qE '^ubf_app/supabase/migrations/' <<<"$files" && sel+=(migration-numbers migration-safety)
   sel+=(secrets artifacts)
   printf '%s\n' "${sel[@]}" | awk '!seen[$0]++'
@@ -292,7 +311,13 @@ main() {
   case "${1:-}" in
     --list) printf '%s\n' "${ALL_CHECKS[@]}"; return 0 ;;
     --changed)
-      mapfile -t targets < <(select_by_changes)
+      # mapfile/readarray 는 bash 4+ 전용이다. macOS 기본 bash 는 3.2 라
+      # 여기서 mapfile 을 쓰면 "command not found" 후 빈 배열이 되어
+      # 아무 검사도 하지 않고 통과한다(조용한 거짓 통과). read 루프로 처리한다.
+      targets=()
+      while IFS= read -r line; do
+        [ -n "$line" ] && targets+=("$line")
+      done < <(select_by_changes)
       [ ${#targets[@]} -eq 0 ] && { echo "변경 없음 — 검사 생략"; return 0; }
       ;;
     "") targets=("${ALL_CHECKS[@]}") ;;

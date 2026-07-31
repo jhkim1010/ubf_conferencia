@@ -1,0 +1,302 @@
+// 배정 엔진 테스트 — DB 비의존 순수 함수
+// 실행: cd server && npm test
+//
+// 핵심 불변식: 지목으로 묶인 사람은 절대 쪼개지지 않는다, 성별 방침을 넘지 않는다,
+// 정원을 넘지 않는다. 이 셋이 깨지면 현장에서 사람이 다시 배정해야 한다.
+
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  connectedComponents,
+  assignRooms,
+  assignGroups,
+} from '../src/services/assignment_engine.js';
+
+// 묶음 배열을 비교 가능한 정규형으로 (내부 정렬 + 사전순 정렬)
+const norm = (groups) =>
+  groups.map((g) => [...g].sort()).sort((a, b) => a[0].localeCompare(b[0]));
+
+// registrationId → roomId / groupId
+const byPerson = (assignments, key) =>
+  Object.fromEntries(assignments.map((a) => [a.registrationId, a[key]]));
+
+describe('connectedComponents', () => {
+  test('간선이 없으면 각자 하나의 묶음', () => {
+    assert.deepEqual(norm(connectedComponents(['a', 'b', 'c'], [])), [['a'], ['b'], ['c']]);
+  });
+
+  test('사슬로 이어지면 하나의 묶음이 된다', () => {
+    assert.deepEqual(norm(connectedComponents(['a', 'b', 'c'], [['a', 'b'], ['b', 'c']])), [
+      ['a', 'b', 'c'],
+    ]);
+  });
+
+  test('분리된 묶음을 각각 인식한다', () => {
+    const r = connectedComponents(['a', 'b', 'c', 'd'], [['a', 'b'], ['c', 'd']]);
+    assert.deepEqual(norm(r), [['a', 'b'], ['c', 'd']]);
+  });
+
+  test('양방향 중복 간선을 견딘다', () => {
+    const r = connectedComponents(['a', 'b'], [['a', 'b'], ['b', 'a'], ['a', 'b']]);
+    assert.deepEqual(norm(r), [['a', 'b']]);
+  });
+
+  test('자기 자신을 향한 간선을 견딘다', () => {
+    assert.deepEqual(norm(connectedComponents(['a'], [['a', 'a']])), [['a']]);
+  });
+
+  test('알 수 없는 노드가 포함된 간선은 무시된다', () => {
+    const r = connectedComponents(['a', 'b'], [['a', 'ghost'], ['a', 'b']]);
+    assert.deepEqual(norm(r), [['a', 'b']]);
+  });
+
+  test('빈 입력에서 빈 결과', () => {
+    assert.deepEqual(connectedComponents([], []), []);
+  });
+
+  test('모든 노드가 정확히 한 번씩 나타난다', () => {
+    const ids = ['a', 'b', 'c', 'd', 'e'];
+    const r = connectedComponents(ids, [['a', 'b'], ['d', 'e']]);
+    assert.deepEqual(r.flat().sort(), [...ids].sort());
+  });
+});
+
+describe('assignRooms', () => {
+  const dorm = (id, capacity, gender) => ({ id, capacity, gender, roomType: 'dorm' });
+
+  test('성별에 맞는 방에만 배정한다', () => {
+    const { assignments } = assignRooms({
+      rooms: [dorm('m1', 4, 'M'), dorm('f1', 4, 'F')],
+      people: [
+        { id: 'm', gender: 'M' },
+        { id: 'f', gender: 'F' },
+      ],
+      roommateEdges: [],
+    });
+    assert.deepEqual(byPerson(assignments, 'roomId'), { m: 'm1', f: 'f1' });
+  });
+
+  test('dorm 이 아닌 방에는 배정하지 않는다', () => {
+    const { assignments, unplaced } = assignRooms({
+      rooms: [{ id: 'suite', capacity: 4, gender: 'M', roomType: 'private' }],
+      people: [{ id: 'm', gender: 'M' }],
+      roommateEdges: [],
+    });
+    assert.deepEqual(assignments, []);
+    assert.equal(unplaced[0].registrationId, 'm');
+  });
+
+  test('mixed 방은 자동 배정 대상이 아니다', () => {
+    const { assignments } = assignRooms({
+      rooms: [dorm('x', 4, 'mixed')],
+      people: [{ id: 'm', gender: 'M' }],
+      roommateEdges: [],
+    });
+    assert.deepEqual(assignments, [], '혼숙 방은 사람이 판단해야 한다');
+  });
+
+  test('지목으로 묶인 사람은 같은 방에 들어간다', () => {
+    const { assignments } = assignRooms({
+      rooms: [dorm('r1', 2, 'M'), dorm('r2', 2, 'M')],
+      people: [
+        { id: 'a', gender: 'M' },
+        { id: 'b', gender: 'M' },
+        { id: 'c', gender: 'M' },
+        { id: 'd', gender: 'M' },
+      ],
+      roommateEdges: [['a', 'b']],
+    });
+    const m = byPerson(assignments, 'roomId');
+    assert.equal(m.a, m.b, '묶음은 절대 쪼개지지 않아야 한다');
+  });
+
+  test('묶음이 어떤 방에도 안 들어가면 통째로 미배정된다', () => {
+    const { assignments, unplaced } = assignRooms({
+      rooms: [dorm('r1', 2, 'M')],
+      people: [
+        { id: 'a', gender: 'M' },
+        { id: 'b', gender: 'M' },
+        { id: 'c', gender: 'M' },
+      ],
+      roommateEdges: [['a', 'b'], ['b', 'c']], // 3인 묶음, 정원 2
+    });
+    assert.deepEqual(assignments, [], '쪼개서 밀어넣지 않아야 한다');
+    assert.equal(unplaced.length, 3);
+    for (const u of unplaced) assert.equal(u.reason, 'unit_too_large_or_full');
+  });
+
+  test('정원을 넘겨 배정하지 않는다', () => {
+    const { assignments, unplaced } = assignRooms({
+      rooms: [dorm('r1', 2, 'M')],
+      people: [
+        { id: 'a', gender: 'M' },
+        { id: 'b', gender: 'M' },
+        { id: 'c', gender: 'M' },
+      ],
+      roommateEdges: [],
+    });
+    assert.equal(assignments.length, 2);
+    assert.deepEqual(unplaced.map((u) => u.reason), ['no_space']);
+  });
+
+  test('큰 묶음을 먼저 배치한다 (first-fit decreasing)', () => {
+    // 3인 묶음이 먼저 r1(정원 3)을 차지하고, 단독 1인은 r2 로 간다.
+    const { assignments } = assignRooms({
+      rooms: [dorm('r1', 3, 'M'), dorm('r2', 3, 'M')],
+      people: ['a', 'b', 'c', 'z'].map((id) => ({ id, gender: 'M' })),
+      roommateEdges: [['a', 'b'], ['b', 'c']],
+    });
+    const m = byPerson(assignments, 'roomId');
+    assert.equal(m.a, m.b);
+    assert.equal(m.b, m.c);
+    assert.notEqual(m.z, m.a, '큰 묶음이 방 하나를 온전히 차지해야 한다');
+  });
+
+  test('성별을 넘는 지목은 무시된다', () => {
+    const { assignments } = assignRooms({
+      rooms: [dorm('m1', 4, 'M'), dorm('f1', 4, 'F')],
+      people: [
+        { id: 'm', gender: 'M' },
+        { id: 'f', gender: 'F' },
+      ],
+      roommateEdges: [['m', 'f']],
+    });
+    const map = byPerson(assignments, 'roomId');
+    assert.equal(map.m, 'm1');
+    assert.equal(map.f, 'f1');
+  });
+
+  test('성별 미기입자는 no_gender 로 제외된다', () => {
+    const { assignments, unplaced } = assignRooms({
+      rooms: [dorm('m1', 4, 'M')],
+      people: [
+        { id: 'ok', gender: 'M' },
+        { id: 'none', gender: null },
+        { id: 'other', gender: 'X' },
+      ],
+      roommateEdges: [],
+    });
+    assert.deepEqual(byPerson(assignments, 'roomId'), { ok: 'm1' });
+    const r = Object.fromEntries(unplaced.map((u) => [u.registrationId, u.reason]));
+    assert.deepEqual(r, { none: 'no_gender', other: 'no_gender' });
+  });
+
+  test('누구도 두 번 배정되지 않는다', () => {
+    const { assignments } = assignRooms({
+      rooms: [dorm('r1', 5, 'M'), dorm('r2', 5, 'M')],
+      people: ['a', 'b', 'c', 'd'].map((id) => ({ id, gender: 'M' })),
+      roommateEdges: [['a', 'b']],
+    });
+    const ids = assignments.map((a) => a.registrationId);
+    assert.equal(new Set(ids).size, ids.length);
+  });
+
+  test('빈 입력에서 안전하게 동작한다', () => {
+    assert.deepEqual(assignRooms({ rooms: [], people: [], roommateEdges: [] }), {
+      assignments: [],
+      unplaced: [],
+    });
+  });
+});
+
+describe('assignGroups', () => {
+  const people = (n, opts = {}) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `p${i}`,
+      gender: opts.gender ?? (i % 2 === 0 ? 'M' : 'F'),
+      age: opts.age ?? 20 + i,
+    }));
+
+  test('조가 없으면 배정도 없다', () => {
+    const r = assignGroups({ groups: [], people: people(4), groupEdges: [] });
+    assert.deepEqual(r.assignments, []);
+  });
+
+  test('모든 사람이 정확히 한 조에 배정된다', () => {
+    const ppl = people(9);
+    const { assignments } = assignGroups({
+      groups: [{ id: 'g1' }, { id: 'g2' }, { id: 'g3' }],
+      people: ppl,
+      groupEdges: [],
+    });
+    assert.equal(assignments.length, 9);
+    const ids = assignments.map((a) => a.registrationId);
+    assert.equal(new Set(ids).size, 9);
+    assert.deepEqual(ids.sort(), ppl.map((p) => p.id).sort());
+  });
+
+  test('인원을 조마다 고르게 나눈다', () => {
+    const { assignments } = assignGroups({
+      groups: [{ id: 'g1' }, { id: 'g2' }, { id: 'g3' }],
+      people: people(9),
+      groupEdges: [],
+    });
+    const counts = {};
+    for (const a of assignments) counts[a.groupId] = (counts[a.groupId] ?? 0) + 1;
+    assert.deepEqual(Object.values(counts).sort(), [3, 3, 3]);
+  });
+
+  test('묶음은 같은 조를 유지한다', () => {
+    const { assignments } = assignGroups({
+      groups: [{ id: 'g1' }, { id: 'g2' }],
+      people: people(6),
+      groupEdges: [['p0', 'p1'], ['p1', 'p2']],
+    });
+    const m = byPerson(assignments, 'groupId');
+    assert.equal(m.p0, m.p1);
+    assert.equal(m.p1, m.p2);
+  });
+
+  test('조가 하나면 전원이 그 조로 간다', () => {
+    const { assignments } = assignGroups({
+      groups: [{ id: 'only' }],
+      people: people(5),
+      groupEdges: [],
+    });
+    assert.ok(assignments.every((a) => a.groupId === 'only'));
+  });
+
+  test('사람이 없으면 배정도 없다', () => {
+    const r = assignGroups({ groups: [{ id: 'g1' }], people: [], groupEdges: [] });
+    assert.deepEqual(r.assignments, []);
+  });
+
+  // typeof NaN === 'number' 이라 나이 필터를 통과해 평균 연령이 NaN 이 된다.
+  // 그 결과 정렬 순서는 임의가 되지만 인원이 누락되어서는 안 된다.
+  test('나이가 NaN 이어도 아무도 누락되지 않는다', () => {
+    const { assignments } = assignGroups({
+      groups: [{ id: 'g1' }, { id: 'g2' }],
+      people: [
+        { id: 'a', gender: 'M', age: NaN },
+        { id: 'b', gender: 'F', age: 30 },
+        { id: 'c', gender: 'M', age: 25 },
+      ],
+      groupEdges: [],
+    });
+    assert.equal(assignments.length, 3);
+    assert.deepEqual(assignments.map((a) => a.registrationId).sort(), ['a', 'b', 'c']);
+  });
+
+  test('나이가 없어도 배정된다', () => {
+    const { assignments } = assignGroups({
+      groups: [{ id: 'g1' }, { id: 'g2' }],
+      people: [
+        { id: 'a', gender: 'M' },
+        { id: 'b', gender: 'F' },
+      ],
+      groupEdges: [],
+    });
+    assert.equal(assignments.length, 2);
+  });
+
+  test('큰 묶음이 있어도 전원이 배정된다', () => {
+    const { assignments } = assignGroups({
+      groups: [{ id: 'g1' }, { id: 'g2' }],
+      people: people(6),
+      groupEdges: [['p0', 'p1'], ['p1', 'p2'], ['p2', 'p3'], ['p3', 'p4'], ['p4', 'p5']],
+    });
+    assert.equal(assignments.length, 6);
+    const m = byPerson(assignments, 'groupId');
+    assert.equal(new Set(Object.values(m)).size, 1, '전원이 한 묶음이면 한 조로 간다');
+  });
+});

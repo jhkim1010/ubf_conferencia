@@ -172,6 +172,7 @@ UI 문자열을 Dart 코드에 하드코딩하지 마십시오.
 | `flutter-analyze` | Dart 정적 분석 경고 |
 | `dart-format` | 변경된 dart 파일의 포맷 (전체가 아닌 변경분만) |
 | `server-syntax` | 서버 JS 파싱 오류 |
+| `unit-tests` | `server/test/` 단위 테스트 (`node --test`) |
 | `arb-parity` | `en`/`ko`/`es` ARB 키 집합 불일치 |
 | `route-parity` | `routes/*.js` ↔ `index.js` 등록 누락 (조용한 404) |
 | `migration-numbers` | 마이그레이션 번호 중복 |
@@ -195,6 +196,17 @@ UI 문자열을 Dart 코드에 하드코딩하지 마십시오.
 | 파일 편집 직후 | 편집한 파일 종류에 맞는 빠른 검사 | 블로킹 (~1초 이내) | 실패 시 편집이 차단되고 원인이 전달됨 |
 | `.dart` 편집 직후 | `flutter analyze` | 비동기 (~3초) | 실패할 때만 알림 |
 | `git commit` 직전 | `secrets` `artifacts` | 블로킹 | 비밀정보·산출물이 있으면 커밋 차단 |
+| 턴 종료 직전 | `./verify.sh --changed` | 블로킹 | 실패 시 종료가 차단됨 |
+
+턴 종료 훅이 따로 있는 이유는, 편집 직후 훅이 "방금 건드린 파일"만 보기 때문입니다.
+여러 파일에 걸친 변경은 개별 시점에는 정합했다가 최종 상태에서 깨질 수 있습니다
+(라우터 파일을 만들고 `index.js` 등록을 잊은 채 다른 작업으로 넘어가는 경우 등).
+
+**cmux-team이 관리하는 세션(`CMUX_SURFACE` 설정됨)에서는 종료를 차단하지 않고 보고만
+합니다.** cmux-team은 Agent의 Stop 훅에서 완료를 daemon에 보고하고 daemon이 done-marker를
+쓰는데, 여기서 종료를 막으면 Conductor가 "완료"로 알고 결과를 통합하는 동안 Agent는 계속
+작업하는 경쟁 상태가 생기기 때문입니다. 그 경로는 Inspection 단계가 대신 잡습니다.
+해제하려면 `UBF_STOP_HOOK=off`.
 
 편집 직후 훅은 파일 종류로 검사를 고릅니다 — `.arb`→`arb-parity`,
 `server/src/routes/*.js`→`server-syntax`+`route-parity`, `migrations/*.sql`→
@@ -208,13 +220,18 @@ UI 문자열을 Dart 코드에 하드코딩하지 마십시오.
 
 ### 테스트 현실
 
-**실질적인 테스트 스위트가 없습니다.** `ubf_app/test/widget_test.dart`와
-`ubf_watch/test/widget_test.dart` 둘 다 `expect(true, isTrue)` 플레이스홀더이고,
-서버에는 테스트 러너 자체가 없습니다.
+**서버**에는 단위 테스트가 있습니다 — `cd server && npm test` (Node 내장 러너, 의존성 없음).
+현재 대상은 `src/services/`의 순수 로직 엔진 두 개(배정·배차) 46개이며 `./verify.sh unit-tests`
+로도 돕니다. **이 엔진들을 수정하면 테스트도 함께 갱신하십시오.** DB나 HTTP가 필요 없는
+로직을 새로 만들면 `server/test/*.test.js`에 추가하십시오.
 
-그러므로 **"테스트가 통과했다"를 완료 근거로 삼을 수 없습니다.** 현재 유효한 근거는
-`./verify.sh` 결과입니다. 테스트를 새로 추가하는 것은 환영하며, 특히
-`server/src/services/`의 두 엔진은 DB 없이 검증 가능하므로 `node --test` 대상으로 적합합니다.
+**Flutter**는 여전히 실질적인 테스트가 없습니다. `ubf_app/test/widget_test.dart`와
+`ubf_watch/test/widget_test.dart` 둘 다 `expect(true, isTrue)` 플레이스홀더입니다.
+Flutter 쪽 변경에 대해 "테스트가 통과했다"를 완료 근거로 삼지 마십시오 — 근거는
+`flutter analyze`와 실제 실행입니다.
+
+라우트·화면처럼 테스트가 어려운 영역은 실행 검증으로 대체하고, 무엇을 어떻게 확인했는지
+명령과 출력으로 남기십시오.
 
 `dart-format`은 변경된 파일만 봅니다. 저장소 전체는 아직 `dart format` 기준을 만족하지
 않으므로(47개 중 40개), 손대는 파일부터 기준을 맞춰 점진적으로 수렴시키는 방식입니다.
