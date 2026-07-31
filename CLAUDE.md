@@ -22,7 +22,23 @@ flutter analyze
 flutter run -d chrome
 
 ./flutter_run.sh -d chrome   # 루트에서 실행. 로그를 logs/flutter_<ts>.log 로 저장
+
+# 웹으로 실제 확인할 때 (루트에서)
+./serve-web.sh               # 빌드 + API(:3000, stage DB) + 웹(:8080) 기동
+./serve-web.sh --no-build    # 이미 빌드돼 있으면
 ```
+
+**웹 검증은 `./serve-web.sh` 를 쓰십시오.** `flutter build web` 을 직접 돌리지 마십시오 —
+기본 빌드는 서비스 워커를 등록해 예전 번들을 캐시합니다. 코드를 고쳐 다시 빌드해도
+브라우저가 옛 화면을 계속 보여주며, 이 함정에 실제로 빠진 적이 있습니다.
+스크립트는 `--pwa-strategy=none` 으로 빌드해 서비스 워커를 만들지 않습니다.
+
+**포트 8080 을 바꾸지 마십시오.** 구글 OAuth 는 승인된 JavaScript 원본을 origin(포트 포함)
+단위로 검사합니다. Google Cloud Console 에 `http://localhost:8080` 만 등록돼 있어
+다른 포트로 띄우면 로그인이 `400 origin_mismatch` 로 막힙니다.
+
+릴리스 빌드는 `.github/workflows/build-release.yml` 이 담당하며 서비스 워커를 그대로 둡니다.
+`serve-web.sh` 는 로컬 검증 전용입니다.
 
 `node`/`flutter`/`dart`는 `/opt/homebrew/bin`에 있습니다. 비로그인 셸에서는 PATH에 없으므로
 `export PATH="/opt/homebrew/bin:$PATH";`를 앞에 붙이거나 `zsh -lc '...'`로 실행하십시오.
