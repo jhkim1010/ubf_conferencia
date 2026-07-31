@@ -6,6 +6,8 @@
 # 자격 3조건(개최국/선교사/5년이상목자)과 픽업 면허 제한이 서버에서 실제로
 # 강제되는지 확인한다. 통과뿐 아니라 **차단되어야 할 때 차단되는지**를 본다.
 
+# 이 스크립트는 /auth/dev-login 을 쓴다. 서버가 ENABLE_DEV_LOGIN=1 로 떠 있어야 한다
+# (기본은 비활성 — 설정을 빠뜨리면 닫히는 fail-closed 구조다).
 set -uo pipefail
 API="${API:-http://localhost:3000}"
 PROG="${PROG:?PROG 필요}"

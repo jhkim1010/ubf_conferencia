@@ -60,6 +60,7 @@ DB_URL="$(grep '^DATABASE_URL=' "$SRV/$DB_FILE" | cut -d= -f2-)"
     DATABASE_URL="$DB_URL" \
     PORT="$API_PORT" \
     NODE_ENV=development \
+    ENABLE_DEV_LOGIN=1 \
     ALLOWED_ORIGINS="http://localhost:$WEB_PORT,http://127.0.0.1:$WEB_PORT" \
     node src/index.js > /tmp/ubf-api.log 2>&1 ) </dev/null >/dev/null 2>&1 &
 sleep 4

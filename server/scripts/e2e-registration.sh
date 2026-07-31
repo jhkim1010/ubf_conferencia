@@ -6,6 +6,8 @@
 # UI 렌더링(항공편 생략 카드)은 확인하지 못한다. 그 전제가 되는 데이터 경로
 # — 개최국 판정에 쓰이는 host_country / users.region, 항공편 유무 저장 — 을 검증한다.
 
+# 이 스크립트는 /auth/dev-login 을 쓴다. 서버가 ENABLE_DEV_LOGIN=1 로 떠 있어야 한다
+# (기본은 비활성 — 설정을 빠뜨리면 닫히는 fail-closed 구조다).
 set -uo pipefail
 API="${API:-http://localhost:3000}"
 PROG="${PROG:?PROG(programId) 가 필요합니다}"
