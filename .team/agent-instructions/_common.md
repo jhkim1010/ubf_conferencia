@@ -49,6 +49,15 @@ SharedPreferences, iOS·Android는 FlutterSecureStorage)를 제거하지 마십�
 종료 코드 0=통과, 1=실패. **SKIP(전제 미충족)은 통과가 아닙니다** — 요약에 건너뜀 건수가
 있으면 무엇이 왜 건너뛰어졌는지 확인하고 보고에 적으십시오.
 
+**일부 검사는 훅으로 자동 실행됩니다.** 파일을 편집하면 해당 종류에 맞는 빠른 검사가
+즉시 돌고, 실패하면 편집이 차단되며 원인이 전달됩니다. `.dart` 편집 시 `flutter analyze`
+가 비동기로 돌고 실패할 때만 알려옵니다. `git commit` 직전에는 `secrets`/`artifacts` 가
+돌아 비밀정보·산출물 커밋을 차단합니다.
+
+훅이 실패를 알려오면 **고친 뒤 진행하십시오.** 우회하지 마십시오 — 검사를 비활성화하거나,
+검사를 통과시키기 위해 검사 자체를 수정하거나, 다른 도구로 우회 편집하지 마십시오.
+오탐이라고 판단되면 그 근거와 함께 사용자에게 확인을 요청하십시오.
+
 검사 항목: `flutter-analyze` `dart-format` `server-syntax` `arb-parity` `route-parity`
 `migration-numbers` `migration-safety` `secrets` `artifacts` `server-smoke`
 

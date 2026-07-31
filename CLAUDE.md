@@ -186,6 +186,26 @@ UI 문자열을 Dart 코드에 하드코딩하지 마십시오.
 `VERIFY_BASE`를 주면 워킹트리 대신 해당 커밋 대비 diff로 변경 파일을 판정합니다
 (CI에서 사용). 예: `VERIFY_BASE=origin/main ./verify.sh dart-format`
 
+### 자동 실행되는 훅
+
+`.claude/settings.json`에 훅이 걸려 있어 **아래는 직접 실행하지 않아도 자동으로 돕니다.**
+
+| 시점 | 대상 | 실행 | 동작 |
+|---|---|---|---|
+| 파일 편집 직후 | 편집한 파일 종류에 맞는 빠른 검사 | 블로킹 (~1초 이내) | 실패 시 편집이 차단되고 원인이 전달됨 |
+| `.dart` 편집 직후 | `flutter analyze` | 비동기 (~3초) | 실패할 때만 알림 |
+| `git commit` 직전 | `secrets` `artifacts` | 블로킹 | 비밀정보·산출물이 있으면 커밋 차단 |
+
+편집 직후 훅은 파일 종류로 검사를 고릅니다 — `.arb`→`arb-parity`,
+`server/src/routes/*.js`→`server-syntax`+`route-parity`, `migrations/*.sql`→
+`migration-numbers`+`migration-safety`, `.dart`→`dart-format`. `secrets`는 항상 돕니다.
+
+훅이 실패를 알려오면 고친 뒤 진행하십시오. 훅을 우회하려 하지 말고, 오탐이라고 판단되면
+사용자에게 확인을 요청하십시오. 훅 구현은 `.claude/hooks/`에 있습니다.
+
+**훅이 자동으로 잡아주므로 같은 검사를 손으로 반복할 필요는 없습니다.** 다만 훅은 편집한
+파일에 해당하는 것만 돌리므로, 작업을 마칠 때 `./verify.sh` 전체를 한 번 통과시키십시오.
+
 ### 테스트 현실
 
 **실질적인 테스트 스위트가 없습니다.** `ubf_app/test/widget_test.dart`와
