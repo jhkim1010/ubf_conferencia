@@ -32,7 +32,18 @@
 SharedPreferences, iOS·Android는 FlutterSecureStorage)를 제거하지 마십시오.
 
 **UI 문자열은 3개 ARB 전부에 추가** — `lib/l10n/app_en.arb`(템플릿) / `app_ko.arb` / `app_es.arb`.
-하나라도 빠지면 그 로케일에서 누락됩니다. `app_localizations*.dart`는 생성물이므로 직접 편집 금지.
+하나라도 빠지면 그 로케일에서 누락됩니다.
+
+**`app_localizations*.dart` 는 편집도 읽지도 마십시오.** 생성물이며 매우 큽니다 —
+`app_localizations.dart` 3100줄/83KB, 로케일별 파일 각 35KB. 전부 읽으면 컨텍스트가
+소진되어 작업이 중단됩니다(실제로 발생한 적 있습니다). 훅이 전체 읽기를 차단합니다.
+
+- 키 존재 확인 → `grep -n '키이름' ubf_app/lib/l10n/app_en.arb`
+- 문자열 추가·수정 → `.arb` 3개를 고치고 `flutter gen-l10n`
+- 꼭 일부를 봐야 하면 → `Read` 에 `offset`/`limit` 지정
+
+같은 이유로 **큰 파일을 통째로 읽지 마십시오.** 필요한 부분만 `grep` 으로 찾아
+좁혀 읽습니다. 컨텍스트가 가득 차면 압축이 반복되며 작업이 멈춥니다.
 
 주석·문서는 한국어로 씁니다 (기존 코드 관례).
 

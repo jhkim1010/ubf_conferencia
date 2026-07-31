@@ -37,6 +37,16 @@
     ],
     "PreToolUse": [
       {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'D=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}\"; exec \"$D/.claude/hooks/block-huge-generated.sh\"'",
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
