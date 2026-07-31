@@ -158,12 +158,24 @@ CREATE INDEX IF NOT EXISTS idx_service_signups_reg ON service_signups(registrati
 "운전면허 필요" 배지, 미보유 시 비활성.
 
 `requires_approval: true` 인 항목(기본값: 그룹공부 리더)에는 **"승인 필요" 배지**를 붙이고,
-선택하면 카드 아래에 안내를 펼친다:
+카드 **바로 아래**에 안내를 둔다:
 
-> 지부장의 동의가 필요합니다. 신청하셔도 배정까지 기다리셔야 할 수 있습니다.
+> 지부장과 코디네이터의 동의하에 확정될 것입니다.
 
-문구 톤: 거절이 아니라 **대기 가능성을 미리 알리는** 것이다. 신청 자체를 막지 않는다.
-ARB 키 예: `svcApprovalNotice`. 3개 언어 모두 작성한다.
+문구 톤: 거절이 아니라 **확정 절차가 남아 있음**을 미리 알리는 것이다.
+신청 자체를 막지 않는다.
+
+ARB 키: `svcApprovalNotice`. 3개 언어 모두 작성한다.
+
+| 언어 | 문구 |
+|---|---|
+| ko | 지부장과 코디네이터의 동의하에 확정될 것입니다. |
+| es | Se confirmará con el acuerdo del director de capítulo y el coordinador. |
+| en | This will be confirmed with the agreement of the chapter director and the coordinator. |
+
+승인 주체가 두 명(지부장·코디네이터)이라는 점은 D4 의 `status` 흐름과도 맞물린다 —
+`awaiting_approval` 상태에서 두 사람의 확인을 거쳐 `confirmed` 로 넘어간다.
+승인 UI 자체는 이번 범위 밖이다.
 
 **③ 픽업 조건부 확장** — 픽업 선택 시 카드 아래로 펼쳐진다.
 면허 보유 확인 · 면허 발급 국가 · 차량 제공 가능 · 탑승 가능 인원.
