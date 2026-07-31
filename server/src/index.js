@@ -20,6 +20,7 @@ import buddyRequestsRouter from './routes/buddy_requests.js';
 import companionsRouter from './routes/companions.js';
 import assignmentsRouter from './routes/assignments.js';
 import transportRouter from './routes/transport.js';
+import serviceSignupsRouter from './routes/service_signups.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -137,6 +138,7 @@ app.use('/buddy-requests', buddyRequestsRouter);
 app.use('/companions', companionsRouter);
 app.use('/assignments', assignmentsRouter);
 app.use('/transport', transportRouter);
+app.use('/service-signups', serviceSignupsRouter);
 
 // 에러 핸들러
 app.use((err, req, res, _next) => {
@@ -159,10 +161,12 @@ cron.schedule('* * * * *', async () => {
     `;
 
     for (const schedule of due) {
-      const title = `📅 [${schedule.program_name}] ${schedule.title}`;
+      // 손목(Wear OS) 가독성: 행사명이 제목에 먼저, 본문은 "5분 후 시작"이 앞쪽.
+      // (프로그램명은 제목 공간을 차지하므로 본문 끝으로)
+      const title = `📅 ${schedule.title}`;
       const body  = schedule.description
-        ? `5분 후 시작 • ${schedule.description}`
-        : '5분 후 시작됩니다';
+        ? `5분 후 시작 · ${schedule.description} · ${schedule.program_name}`
+        : `5분 후 시작 · ${schedule.program_name}`;
 
       // FCM으로 참가자 전체에게 알림
       await notifyProgramParticipants(sql, schedule.program_id, title, body, {
