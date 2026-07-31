@@ -85,7 +85,12 @@ ALTER TABLE programs
     "transport": { "status": "warn", "needed": 41,  "available": 32  },
     "flights":   { "status": "warn", "missing": 9,  "overseas_total": 38 },
     "meals":     { "status": "ok",   "restricted": 17 },
-    "payment":   { "status": "warn", "confirmed": 63, "total": 86 }
+    "payment":   { "status": "warn", "confirmed": 63, "total": 86 },
+    "roles":     { "status": "ok", "total": 86,
+                   "breakdown": { "hermano": 41, "maestro_biblico": 28,
+                                  "misionero": 8, "pastor_senior": 3,
+                                  "pastor_junior": 2, "coordinator": 2,
+                                  "unspecified": 2 } }
   },
 
   // 국내/해외 코호트별 단계 진척
@@ -119,6 +124,16 @@ ALTER TABLE programs
 | `submitted` | `submitted = true` |
 
 **`stalled_days`** = `NOW() - registrations.updated_at`.
+
+**직분 집계(`roles`)** — `registrations.church_role`(등록 시점 스냅샷)을 센다.
+`users` 를 보면 이후 직분이 바뀌었을 때 과거 명부가 흔들린다. 직분은 선택
+항목이므로 미입력은 `unspecified` 로 따로 센다.
+
+| status | 조건 |
+|---|---|
+| `idle` | 등록 0건 |
+| `warn` | 미입력이 절반 초과 — 집계를 신뢰하기 어렵다는 뜻이다 |
+| `ok` | 그 외 |
 
 `server/src/index.js` 의 `app.use` 목록 등록을 잊지 말 것 —
 `verify.sh route-parity` 가 잡는다.

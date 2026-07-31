@@ -367,6 +367,17 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
       WHERE r.program_id = ${programId}
     `;
 
+    // 직분 분포. registrations.church_role(등록 시점 스냅샷)을 센다 —
+    // users 를 보면 이후 직분이 바뀌었을 때 과거 명부가 흔들린다.
+    // 미입력(NULL)은 선택 항목이므로 별도로 센다.
+    const roleRows = await sql`
+      SELECT COALESCE(r.church_role, 'unspecified') AS role, COUNT(*)::int AS count
+      FROM registrations r
+      WHERE r.program_id = ${programId}
+      GROUP BY 1
+      ORDER BY 2 DESC
+    `;
+
     // 단계 완료는 기존 컬럼의 채움 여부로 유추한다(A003 D3). 스텝별 완료
     // 플래그를 새로 저장하면 등록 플로우가 바뀔 때마다 동기화 부담이 생긴다.
     const cohortRows = await sql`
@@ -453,6 +464,17 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
           overseas_total: counts.overseas,
         },
         meals: { status: 'ok', restricted: counts.meals_restricted, total: counts.total },
+        roles: {
+          // 미입력이 절반을 넘으면 집계를 신뢰하기 어렵다 — 화면에서 그 점을 알린다.
+          status:
+            counts.total === 0
+              ? 'idle'
+              : (roleRows.find((r) => r.role === 'unspecified')?.count ?? 0) > counts.total / 2
+                ? 'warn'
+                : 'ok',
+          total: counts.total,
+          breakdown: Object.fromEntries(roleRows.map((r) => [r.role, r.count])),
+        },
         payment: {
           status: payment.pending > 0 ? 'warn' : 'ok',
           confirmed: payment.confirmed,
