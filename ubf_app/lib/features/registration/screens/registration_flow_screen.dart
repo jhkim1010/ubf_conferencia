@@ -45,6 +45,10 @@ class _RegistrationFlowScreenState
   final Set<int> _visitedPages = {0}; // 방문한 스텝 추적
   bool _savedToRecents = false; // 최근 목록 저장 중복 방지
 
+  // 개최국 참석자는 항공편 스텝을 아예 건너뛴다. 다만 국토가 넓은 나라는
+  // 국내에서도 비행기로 오는 경우가 있어 되살릴 수 있게 둔다.
+  bool _domesticWantsFlight = false;
+
   @override
   void initState() {
     super.initState();
@@ -158,6 +162,10 @@ class _RegistrationFlowScreenState
             userCountry != null &&
             userCountry == hostCountry;
 
+        // 개최국 참석자는 항공편 스텝을 아예 만들지 않는다.
+        // 되살리면(_domesticWantsFlight) 다시 들어온다.
+        final skipFlightSteps = sameCountryAsHost && !_domesticWantsFlight;
+
         // 스텝 조립. 조건부 스텝은 맨 뒤에 붙인다(인덱스가 밀리지 않게).
         final steps = <_Step>[
           (
@@ -168,24 +176,27 @@ class _RegistrationFlowScreenState
             title: l10n.regStepCompanion,
             widget: CompanionStep(programId: widget.programId),
           ),
-          (
-            title: l10n.regStepArrival,
-            widget: FlightInfoStep(
-              programId: widget.programId,
-              isArrival: true,
-              enabled: enabledSections['arrival_flight'] ?? true,
-              sameCountryAsHost: sameCountryAsHost,
+          // 개최국 참석자는 항공편 스텝 자체를 넣지 않는다. 배너에서 되살릴 수 있다.
+          if (!skipFlightSteps) ...[
+            (
+              title: l10n.regStepArrival,
+              widget: FlightInfoStep(
+                programId: widget.programId,
+                isArrival: true,
+                enabled: enabledSections['arrival_flight'] ?? true,
+                sameCountryAsHost: false,
+              ),
             ),
-          ),
-          (
-            title: l10n.regStepDeparture,
-            widget: FlightInfoStep(
-              programId: widget.programId,
-              isArrival: false,
-              enabled: enabledSections['departure_flight'] ?? true,
-              sameCountryAsHost: sameCountryAsHost,
+            (
+              title: l10n.regStepDeparture,
+              widget: FlightInfoStep(
+                programId: widget.programId,
+                isArrival: false,
+                enabled: enabledSections['departure_flight'] ?? true,
+                sameCountryAsHost: false,
+              ),
             ),
-          ),
+          ],
           (
             title: l10n.regStepFood,
             widget: FoodStep(
@@ -240,6 +251,54 @@ class _RegistrationFlowScreenState
           ),
           body: Column(
             children: [
+              // 항공편 스텝을 건너뛴 국내 참석자에게만 보이는 되살리기 배너.
+              // 국토가 넓은 나라는 국내에서도 비행기로 오는 경우가 있다.
+              if (skipFlightSteps)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.blue[100]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.flight_takeoff,
+                        size: 18,
+                        color: Colors.blue[700],
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.flightSkipTitle,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue[900],
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () =>
+                            setState(() => _domesticWantsFlight = true),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          l10n.flightSkipAdd,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               // 스텝 인디케이터 (가로 스크롤, 완료 스텝 탭으로 이동 가능)
               SizedBox(
                 height: 52,
