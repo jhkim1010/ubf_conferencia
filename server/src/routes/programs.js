@@ -300,4 +300,181 @@ router.get('/:id/registrations', requireAuth, requireLeader, async (req, res) =>
   }
 });
 
+// ── 준비 현황 (A003) ──────────────────────────────────────────
+// /stats 는 숫자만 준다. 준비하는 사람에게 필요한 것은 "지금 무엇이 막혀 있고
+// 누구에게 연락해야 하는가"다. 준비 항목 + 국내/해외 진척 + 막힌 사람을
+// 한 응답으로 묶는다(A003 D2 — 화면이 여러 엔드포인트를 조합하지 않게 한다).
+
+// 준비 항목 상태. 화면은 색이 아니라 이 값으로 배지 문구를 고른다.
+function readinessStatus(needed, available) {
+  if (available === null || available === undefined) return 'idle';
+  if (needed > available) return 'stop';
+  if (available > 0 && needed > available * 0.8) return 'warn';
+  return 'ok';
+}
+
+function daysBetween(from, to) {
+  if (!from || !to) return null;
+  return Math.floor((new Date(to) - new Date(from)) / 86400000);
+}
+
+router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
+  const programId = req.params.id;
+  try {
+    const [program] = await sql`
+      SELECT id, name, location, start_date, end_date, host_country,
+             registration_deadline, capacity, base_fee
+      FROM programs
+      WHERE id = ${programId} AND leader_id = ${req.user.leaderId}
+    `;
+    if (!program) return res.status(403).json({ error: '권한 없음' });
+
+    const host = program.host_country;
+
+    // 국내/해외 판정은 registrations.country 를 쓴다. 등록 화면에서 직접 고른
+    // 값이라 users.region 보다 정확하다.
+    const [counts] = await sql`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE r.country IS DISTINCT FROM ${host})::int AS overseas,
+        COUNT(*) FILTER (
+          WHERE r.country IS DISTINCT FROM ${host} AND r.arrival_flight IS NULL
+        )::int AS flights_missing,
+        COUNT(*) FILTER (
+          WHERE r.food_requirements IS NOT NULL
+            AND r.food_requirements <> ''
+            AND r.food_requirements <> '없음'
+        )::int AS meals_restricted,
+        COUNT(*) FILTER (WHERE r.needs_pickup IS NOT FALSE)::int AS pickup_needed
+      FROM registrations r
+      WHERE r.program_id = ${programId}
+    `;
+
+    const [lodging] = await sql`
+      SELECT COALESCE(SUM(capacity), 0)::int AS seats
+      FROM rooms WHERE program_id = ${programId}
+    `;
+    const [transport] = await sql`
+      SELECT COALESCE(SUM(capacity), 0)::int AS seats
+      FROM transport_runs WHERE program_id = ${programId}
+    `;
+    const [payment] = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE pay.status = 'confirmed')::int AS confirmed,
+        COUNT(*) FILTER (WHERE pay.status = 'pending')::int AS pending
+      FROM payments pay
+      JOIN registrations r ON r.id = pay.registration_id
+      WHERE r.program_id = ${programId}
+    `;
+
+    // 단계 완료는 기존 컬럼의 채움 여부로 유추한다(A003 D3). 스텝별 완료
+    // 플래그를 새로 저장하면 등록 플로우가 바뀔 때마다 동기화 부담이 생긴다.
+    const cohortRows = await sql`
+      SELECT
+        (r.country IS NOT DISTINCT FROM ${host}) AS is_domestic,
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE r.real_name IS NOT NULL AND r.real_name <> '')::int AS personal,
+        COUNT(*) FILTER (WHERE r.food_requirements IS NOT NULL)::int AS meals,
+        COUNT(*) FILTER (WHERE r.arrival_flight IS NOT NULL)::int AS flight,
+        COUNT(*) FILTER (WHERE ra.id IS NOT NULL)::int AS lodging,
+        COUNT(*) FILTER (WHERE r.submitted)::int AS submitted,
+        COUNT(DISTINCT r.country)::int AS countries
+      FROM registrations r
+      LEFT JOIN room_assignments ra ON ra.registration_id = r.id
+      WHERE r.program_id = ${programId}
+      GROUP BY 1
+    `;
+
+    const cohorts = cohortRows.map((c) => ({
+      kind: c.is_domestic ? 'domestic' : 'overseas',
+      country: c.is_domestic ? host : null,
+      countries: c.is_domestic ? null : c.countries,
+      total: c.total,
+      steps: {
+        personal: c.personal,
+        meals: c.meals,
+        // 개최국 참석자는 항공편 단계를 건너뛴다 — null 은 "해당 없음"이다
+        flight: c.is_domestic ? null : c.flight,
+        lodging: c.lodging,
+        submitted: c.submitted,
+      },
+    }));
+
+    // 앞 단계부터 보고 처음 비는 곳을 stuck_at 으로 준다.
+    const blocked = await sql`
+      SELECT
+        r.id AS registration_id, r.real_name AS name, r.country, r.branch,
+        (r.country IS NOT DISTINCT FROM ${host}) AS is_domestic,
+        r.updated_at,
+        CASE
+          WHEN r.real_name IS NULL OR r.real_name = '' THEN 'personal'
+          WHEN r.food_requirements IS NULL THEN 'meals'
+          WHEN r.country IS DISTINCT FROM ${host} AND r.arrival_flight IS NULL THEN 'flight'
+          WHEN ra.id IS NULL THEN 'lodging'
+          ELSE 'payment'
+        END AS stuck_at
+      FROM registrations r
+      LEFT JOIN room_assignments ra ON ra.registration_id = r.id
+      WHERE r.program_id = ${programId} AND r.submitted = false
+      ORDER BY r.updated_at ASC
+      LIMIT 100
+    `;
+
+    const now = new Date();
+
+    res.json({
+      program: {
+        id: program.id,
+        name: program.name,
+        location: program.location,
+        start_date: program.start_date,
+        end_date: program.end_date,
+        host_country: host,
+        registration_deadline: program.registration_deadline,
+        capacity: program.capacity,
+        base_fee: program.base_fee,
+        // 마감일이 없으면 시작일 기준. 둘 다 없으면 null.
+        d_day: daysBetween(now, program.registration_deadline ?? program.start_date),
+      },
+      readiness: {
+        lodging: {
+          status: readinessStatus(counts.total, lodging.seats),
+          needed: counts.total,
+          available: lodging.seats,
+        },
+        transport: {
+          status: readinessStatus(counts.pickup_needed, transport.seats),
+          needed: counts.pickup_needed,
+          available: transport.seats,
+        },
+        flights: {
+          status: counts.flights_missing === 0 ? 'ok' : 'warn',
+          missing: counts.flights_missing,
+          overseas_total: counts.overseas,
+        },
+        meals: { status: 'ok', restricted: counts.meals_restricted, total: counts.total },
+        payment: {
+          status: payment.pending > 0 ? 'warn' : 'ok',
+          confirmed: payment.confirmed,
+          pending: payment.pending,
+          total: counts.total,
+        },
+      },
+      cohorts,
+      blocked: blocked.map((b) => ({
+        registration_id: b.registration_id,
+        name: b.name,
+        country: b.country,
+        branch: b.branch,
+        kind: b.is_domestic ? 'domestic' : 'overseas',
+        stuck_at: b.stuck_at,
+        stalled_days: daysBetween(b.updated_at, now),
+      })),
+    });
+  } catch (err) {
+    console.error('준비 현황 조회 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
 export default router;
