@@ -38,6 +38,7 @@
 | D4 | 신청과 확정 구분 | **`status` 로 구분** (`applied` / `confirmed` / `rejected`). 담당자 확정 화면은 후속 작업 |
 | D5 | 운전면허 입력 위치 | **프로필 속성으로 한 번만 받는다** (`users.has_driver_license`). 재능 칩의 `driving` 은 그대로 두되 픽업 자격 판정에 쓰지 않는다 |
 | D6 | 거절자 재노출 | **거절도 기록하고 스텝은 계속 접근 가능.** 마음이 바뀌는 경우가 많다 |
+| D7 | 승인이 필요한 항목 | **항목별 속성으로 둔다** (`requires_approval`). 그룹공부 리더는 기본 `true` — 지부장 동의가 필요하고 대기가 생길 수 있음을 신청 시점에 알린다 |
 
 ---
 
@@ -84,9 +85,17 @@ ALTER TABLE programs
   ADD COLUMN IF NOT EXISTS service_options JSONB DEFAULT '[]'::jsonb;
 ```
 
-항목 배열. 각 원소는 `{ "key": "special_song", "enabled": true }` 형태.
-기본 항목 키: `special_song`(특송) · `mc`(사회자) · `pickup`(픽업) · `cleaning`(청소) ·
-`group_study_leader`(그룹공부 리더) · `other`(그 밖에).
+항목 배열. 각 원소는 `{ "key": "special_song", "enabled": true, "requires_approval": false }` 형태.
+
+| key | 항목 | `requires_approval` 기본값 |
+|---|---|---|
+| `special_song` | 특송 | false |
+| `mc` | 사회자 | false |
+| `pickup` | 픽업 | false (대신 운전면허 조건) |
+| `cleaning` | 청소 | false |
+| `group_study_leader` | 그룹공부 리더 | **true** — D7 |
+| `other` | 그 밖에 | false |
+
 라벨은 DB에 넣지 않는다 — ARB 로 3개 언어를 관리한다.
 
 ### service_signups (신규)
@@ -96,7 +105,7 @@ CREATE TABLE IF NOT EXISTS service_signups (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   registration_id UUID NOT NULL REFERENCES registrations(id) ON DELETE CASCADE,
   service_key     TEXT NOT NULL,
-  status          TEXT NOT NULL DEFAULT 'applied',   -- D4: applied|confirmed|rejected
+  status          TEXT NOT NULL DEFAULT 'applied',   -- D4/D7: applied|awaiting_approval|confirmed|rejected
   note            TEXT,                              -- 'other' 항목의 자유 입력
   -- 픽업 상세 (service_key='pickup' 일 때만 의미 있음)
   can_provide_vehicle BOOLEAN,
@@ -125,6 +134,14 @@ CREATE INDEX IF NOT EXISTS idx_service_signups_reg ON service_signups(registrati
 **② 봉사 선택** — 프로그램에 설정된 항목만 카드 목록으로. 복수 선택.
 각 카드는 아이콘 없이 제목 + 한 줄 설명 + 체크박스. 픽업 카드에는
 "운전면허 필요" 배지, 미보유 시 비활성.
+
+`requires_approval: true` 인 항목(기본값: 그룹공부 리더)에는 **"승인 필요" 배지**를 붙이고,
+선택하면 카드 아래에 안내를 펼친다:
+
+> 지부장의 동의가 필요합니다. 신청하셔도 배정까지 기다리셔야 할 수 있습니다.
+
+문구 톤: 거절이 아니라 **대기 가능성을 미리 알리는** 것이다. 신청 자체를 막지 않는다.
+ARB 키 예: `svcApprovalNotice`. 3개 언어 모두 작성한다.
 
 **③ 픽업 조건부 확장** — 픽업 선택 시 카드 아래로 펼쳐진다.
 면허 보유 확인 · 면허 발급 국가 · 차량 제공 가능 · 탑승 가능 인원.
