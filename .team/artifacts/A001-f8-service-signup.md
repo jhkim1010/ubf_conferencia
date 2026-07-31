@@ -49,9 +49,31 @@
 
 | 조건 | 판정 | 현재 상태 |
 |---|---|---|
-| 개최국 참석자 | `users.region == programs.host_country` | **이미 있음** — `registration_flow_screen.dart` 에 동일 판정이 있다(항공편 생략용). 재사용할 것 |
-| 선교사 | `users.is_missionary == true` | 신규 컬럼 |
-| 5년 이상 목자 | `users.shepherd_since` 가 있고 `현재연도 - shepherd_since >= 5` | 신규 컬럼 |
+| 개최국 참석자 | `registrations.country == programs.host_country` | **이미 있음** — `registration_flow_screen.dart` 에 동일 판정이 있다(항공편 생략용). 재사용할 것 |
+| 선교사 | `users.church_role = 'misionero'` | 015 |
+| 5년 이상 목자 | `users.church_role = 'maestro_biblico'` 이고 `현재연도 - users.shepherd_since >= 5` | 015 |
+
+### 교회 직분 (`church_role`)
+
+`users.role`(director/admin/participant)은 **시스템 권한**이므로 별개다. 교회 직분은
+아래 6개이며 **선택 항목**이다(NULL 허용 — 기존 사용자가 있고 직분을 모를 수도 있다).
+
+| 값 | 표기 |
+|---|---|
+| `hermano` | hermanos (invitado) |
+| `maestro_biblico` | maestro bíblico |
+| `pastor_junior` | pastor junior |
+| `pastor_senior` | pastor senior |
+| `misionero` | misionero |
+| `coordinator` | co-ordinator |
+
+**선교사 여부를 불리언으로 따로 두지 않는다.** `misionero` 는 이 목록의 한 값이며,
+두 곳에 두면 "misionero 이면서 pastor_senior" 같은 모순된 상태가 가능해지고
+동기화 부담이 생긴다.
+
+`users.church_role` 은 자격 판정에 쓰고, `registrations.church_role`(017)은 등록
+시점의 스냅샷으로 수양회 명부·집계에 쓴다. 나중에 직분이 바뀌어도 과거 명부가
+흔들리지 않는다.
 
 **픽업 항목만 추가 조건**: `users.has_driver_license == true` 여야 선택 가능.
 미보유 시 카드는 보이되 비활성 + 사유 표시.
@@ -70,8 +92,8 @@
 
 ```sql
 ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS is_missionary       BOOLEAN NOT NULL DEFAULT FALSE,
-  ADD COLUMN IF NOT EXISTS is_missionary_verified BOOLEAN NOT NULL DEFAULT FALSE,  -- D1 관리자 확인
+  ADD COLUMN IF NOT EXISTS church_role         TEXT,                               -- 6개 직분, NULL 허용
+  ADD COLUMN IF NOT EXISTS church_role_verified BOOLEAN NOT NULL DEFAULT FALSE,    -- D1 관리자 확인
   ADD COLUMN IF NOT EXISTS shepherd_since      INTEGER,                            -- D2 시작 연도
   ADD COLUMN IF NOT EXISTS shepherd_verified   BOOLEAN NOT NULL DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS has_driver_license  BOOLEAN NOT NULL DEFAULT FALSE,

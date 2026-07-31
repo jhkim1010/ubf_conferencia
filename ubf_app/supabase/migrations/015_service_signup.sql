@@ -9,13 +9,38 @@
 -- D2: 목자 연차는 저장하지 않는다. 시작 연도를 두고 앱에서 계산한다
 --     (연차를 저장하면 매년 낡는다).
 -- D5: 운전면허는 프로필 속성으로 한 번만 받는다. 재능 칩의 driving 과는 별개다.
+--
+-- church_role 은 교회 직분이다. users.role(director/admin/participant)은
+-- 시스템 권한이므로 별개다. 선교사 여부를 불리언으로 따로 두지 않는다 —
+-- misionero 는 이 목록의 한 값이며, 두 곳에 두면 모순된 상태가 가능해진다.
 ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS is_missionary          BOOLEAN NOT NULL DEFAULT FALSE,
-  ADD COLUMN IF NOT EXISTS is_missionary_verified BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS church_role            TEXT,
+  ADD COLUMN IF NOT EXISTS church_role_verified   BOOLEAN NOT NULL DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS shepherd_since         INTEGER,
   ADD COLUMN IF NOT EXISTS shepherd_verified      BOOLEAN NOT NULL DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS has_driver_license     BOOLEAN NOT NULL DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS driver_license_country TEXT;
+
+-- 직분 허용값. 선택 항목이므로 NULL 을 허용한다 — 기존 사용자가 있고
+-- 직분을 모를 수도 있다.
+-- ADD CONSTRAINT 에는 IF NOT EXISTS 가 없으므로 존재 여부를 먼저 확인한다.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'users_church_role_check'
+  ) THEN
+    ALTER TABLE users
+      ADD CONSTRAINT users_church_role_check
+      CHECK (church_role IS NULL OR church_role IN (
+        'hermano',          -- hermanos (invitado)
+        'maestro_biblico',
+        'pastor_junior',
+        'pastor_senior',
+        'misionero',
+        'coordinator'
+      ));
+  END IF;
+END $$;
 
 -- ── 프로그램별 봉사 항목 구성 ──────────────────────────────────
 -- D3: 수양회 성격에 따라 필요한 섬김이 다르므로 코드에 고정하지 않는다.
