@@ -17,7 +17,16 @@ import 'steps/companion_step.dart';
 import 'steps/volunteer_resources_step.dart';
 import 'package:mana/l10n/app_localizations.dart';
 
-// 6단계 등록 폼 - PageView 기반
+// 등록 폼 - PageView 기반
+//
+// 스텝은 고정 목록이 아니라 build 시점에 조립한다. 조건부 스텝(자격이 있을 때만
+// 나타나는 봉사 신청 등)을 넣기 위해서다. 제목과 위젯을 한 쌍으로 묶어 두면
+// 인디케이터·진행바·페이지가 어긋날 수 없다.
+//
+// 조건부 스텝은 **맨 뒤에** 붙인다. 중간에 끼우면 이미 방문한 스텝의 인덱스가
+// 밀려 _visitedPages 와 _currentPage 가 엉킨다.
+typedef _Step = ({String title, Widget widget});
+
 class RegistrationFlowScreen extends ConsumerStatefulWidget {
   final String programId;
 
@@ -28,19 +37,8 @@ class RegistrationFlowScreen extends ConsumerStatefulWidget {
       _RegistrationFlowScreenState();
 }
 
-// 각 스텝의 제목 (현재 언어로 반환)
-List<String> _stepTitles(AppLocalizations l10n) => [
-      l10n.regStepPersonal,
-      l10n.regStepCompanion,
-      l10n.regStepArrival,
-      l10n.regStepDeparture,
-      l10n.regStepFood,
-      l10n.regStepOptions,
-      l10n.regStepBuddy,
-      l10n.regStepVolunteer,
-    ];
-
-class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen> {
+class _RegistrationFlowScreenState
+    extends ConsumerState<RegistrationFlowScreen> {
   late final PageController _pageController;
   late final ScrollController _stepScrollController;
   int _currentPage = 0;
@@ -79,7 +77,9 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
   }
 
   Future<void> _loadExistingData() async {
-    final notifier = ref.read(registrationFormProvider(widget.programId).notifier);
+    final notifier = ref.read(
+      registrationFormProvider(widget.programId).notifier,
+    );
 
     // 1순위: 로컬 draft (앱 종료 전 마지막 상태)
     final draft = await RegistrationFormNotifier.loadDraft(widget.programId);
@@ -89,14 +89,18 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
     }
 
     // 2순위: 서버 DB (임시저장 버튼으로 저장한 데이터)
-    final existing = await ref.read(registrationProvider(widget.programId).future);
+    final existing = await ref.read(
+      registrationProvider(widget.programId).future,
+    );
     if (existing != null && mounted) {
       notifier.loadFromDb(existing);
     }
   }
 
-  void _nextPage() {
-    if (_currentPage < _totalPages - 1) {
+  // 스텝 수는 build 시점에 정해지므로 인자로 받는다.
+  // 상태 필드로 캐시하면 build 와 어긋난 값으로 이동할 수 있다.
+  void _nextPage(int total) {
+    if (_currentPage < total - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -113,8 +117,6 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
     }
   }
 
-  int get _totalPages => 8;
-
   void _jumpToPage(int page) {
     _pageController.animateToPage(
       page,
@@ -129,17 +131,13 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
     final l10n = AppLocalizations.of(context)!;
 
     return programAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (e, _) => Scaffold(
-        body: Center(child: Text(l10n.commonErrorDetail('$e'))),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, _) =>
+          Scaffold(body: Center(child: Text(l10n.commonErrorDetail('$e')))),
       data: (program) {
         if (program == null) {
-          return Scaffold(
-            body: Center(child: Text(l10n.regInvalidProgram)),
-          );
+          return Scaffold(body: Center(child: Text(l10n.regInvalidProgram)));
         }
         // 프로그램 로드 성공 시 장치에 저장
         _saveToRecents(program['name'] as String? ?? widget.programId);
@@ -154,10 +152,71 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
         // 개최 국가 == 참가자 거주 국가면 항공편 입력을 기본 생략 (필요 시 추가 가능)
         final hostCountry = program['host_country'] as String?;
         final userCountry = ref.watch(currentUserProvider).country;
-        final sameCountryAsHost = hostCountry != null &&
+        final sameCountryAsHost =
+            hostCountry != null &&
             hostCountry.isNotEmpty &&
             userCountry != null &&
             userCountry == hostCountry;
+
+        // 스텝 조립. 조건부 스텝은 맨 뒤에 붙인다(인덱스가 밀리지 않게).
+        final steps = <_Step>[
+          (
+            title: l10n.regStepPersonal,
+            widget: PersonalInfoStep(programId: widget.programId),
+          ),
+          (
+            title: l10n.regStepCompanion,
+            widget: CompanionStep(programId: widget.programId),
+          ),
+          (
+            title: l10n.regStepArrival,
+            widget: FlightInfoStep(
+              programId: widget.programId,
+              isArrival: true,
+              enabled: enabledSections['arrival_flight'] ?? true,
+              sameCountryAsHost: sameCountryAsHost,
+            ),
+          ),
+          (
+            title: l10n.regStepDeparture,
+            widget: FlightInfoStep(
+              programId: widget.programId,
+              isArrival: false,
+              enabled: enabledSections['departure_flight'] ?? true,
+              sameCountryAsHost: sameCountryAsHost,
+            ),
+          ),
+          (
+            title: l10n.regStepFood,
+            widget: FoodStep(
+              programId: widget.programId,
+              enabled: enabledSections['food_requirements'] ?? true,
+            ),
+          ),
+          (
+            title: l10n.regStepOptions,
+            widget: OptionsStep(
+              programId: widget.programId,
+              options: options,
+              enabled: enabledSections['special_programs'] ?? true,
+            ),
+          ),
+          (
+            title: l10n.regStepBuddy,
+            widget: BuddyStep(
+              programId: widget.programId,
+              enabled: enabledSections['roommate'] ?? true,
+            ),
+          ),
+          (
+            title: l10n.regStepVolunteer,
+            widget: VolunteerResourcesStep(
+              programId: widget.programId,
+              enabled: enabledSections['volunteer_resources'] ?? true,
+            ),
+          ),
+        ];
+        final total = steps.length;
 
         return Scaffold(
           floatingActionButton: SosFab(programId: widget.programId),
@@ -167,13 +226,14 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
               IconButton(
                 icon: const Icon(Icons.event_note_outlined),
                 tooltip: l10n.regScheduleTooltip,
-                onPressed: () => context.push('/program/${widget.programId}/schedule'),
+                onPressed: () =>
+                    context.push('/program/${widget.programId}/schedule'),
               ),
             ],
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(6),
               child: LinearProgressIndicator(
-                value: (_currentPage + 1) / _totalPages,
+                value: (_currentPage + 1) / total,
                 backgroundColor: Colors.grey[200],
               ),
             ),
@@ -186,8 +246,11 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                 child: ListView.separated(
                   controller: _stepScrollController,
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  itemCount: _totalPages,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  itemCount: total,
                   separatorBuilder: (_, _) => const SizedBox(width: 6),
                   itemBuilder: (context, i) {
                     final isVisited = _visitedPages.contains(i);
@@ -195,36 +258,48 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                     final color = isCurrent
                         ? Theme.of(context).colorScheme.primary
                         : isVisited
-                            ? Colors.green
-                            : Colors.grey[400]!;
+                        ? Colors.green
+                        : Colors.grey[400]!;
                     return GestureDetector(
                       onTap: isVisited ? () => _jumpToPage(i) : null,
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: isCurrent
-                              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.12)
                               : isVisited
-                                  ? Colors.green.withValues(alpha: 0.1)
-                                  : Colors.grey[100],
+                              ? Colors.green.withValues(alpha: 0.1)
+                              : Colors.grey[100],
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: color, width: isCurrent ? 2 : 1),
+                          border: Border.all(
+                            color: color,
+                            width: isCurrent ? 2 : 1,
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              isVisited && !isCurrent ? Icons.check_circle : Icons.circle,
+                              isVisited && !isCurrent
+                                  ? Icons.check_circle
+                                  : Icons.circle,
                               size: 12,
                               color: color,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${i + 1}. ${_stepTitles(l10n)[i]}',
+                              '${i + 1}. ${steps[i].title}',
                               style: TextStyle(
                                 fontSize: 12,
-                                fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                                fontWeight: isCurrent
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                                 color: color,
                               ),
                             ),
@@ -241,7 +316,7 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                 child: Row(
                   children: [
                     Text(
-                      _stepTitles(l10n)[_currentPage],
+                      steps[_currentPage].title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -254,7 +329,11 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                         // async 전에 미리 참조 확보
                         final messenger = ScaffoldMessenger.of(context);
                         await ref
-                            .read(registrationFormProvider(widget.programId).notifier)
+                            .read(
+                              registrationFormProvider(
+                                widget.programId,
+                              ).notifier,
+                            )
                             .saveProgress(options);
                         if (!mounted) return;
                         messenger.showSnackBar(
@@ -274,39 +353,7 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                     _currentPage = page;
                     _visitedPages.add(page);
                   }),
-                  children: [
-                    PersonalInfoStep(programId: widget.programId),
-                    CompanionStep(programId: widget.programId),
-                    FlightInfoStep(
-                      programId: widget.programId,
-                      isArrival: true,
-                      enabled: enabledSections['arrival_flight'] ?? true,
-                      sameCountryAsHost: sameCountryAsHost,
-                    ),
-                    FlightInfoStep(
-                      programId: widget.programId,
-                      isArrival: false,
-                      enabled: enabledSections['departure_flight'] ?? true,
-                      sameCountryAsHost: sameCountryAsHost,
-                    ),
-                    FoodStep(
-                      programId: widget.programId,
-                      enabled: enabledSections['food_requirements'] ?? true,
-                    ),
-                    OptionsStep(
-                      programId: widget.programId,
-                      options: options,
-                      enabled: enabledSections['special_programs'] ?? true,
-                    ),
-                    BuddyStep(
-                      programId: widget.programId,
-                      enabled: enabledSections['roommate'] ?? true,
-                    ),
-                    VolunteerResourcesStep(
-                      programId: widget.programId,
-                      enabled: enabledSections['volunteer_resources'] ?? true,
-                    ),
-                  ],
+                  children: [for (final s in steps) s.widget],
                 ),
               ),
               // 이전/다음 버튼
@@ -325,13 +372,15 @@ class _RegistrationFlowScreenState extends ConsumerState<RegistrationFlowScreen>
                     Expanded(
                       flex: 2,
                       child: ElevatedButton(
-                        onPressed: _currentPage < _totalPages - 1
-                            ? _nextPage
+                        onPressed: _currentPage < total - 1
+                            ? () => _nextPage(total)
                             : () => context.push(
                                 '/registration/${widget.programId}/summary',
                               ),
                         child: Text(
-                          _currentPage < _totalPages - 1 ? l10n.actionNext : l10n.regReviewSummary,
+                          _currentPage < total - 1
+                              ? l10n.actionNext
+                              : l10n.regReviewSummary,
                         ),
                       ),
                     ),
