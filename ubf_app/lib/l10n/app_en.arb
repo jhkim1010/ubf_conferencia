@@ -1081,5 +1081,73 @@
   "rdyOpenCardSub": "Blockers and who to contact at a glance",
   "@rdyOpenCardSub": {
     "description": "A003 readiness screen"
+  },
+  "privacyTitle": "How your information is used",
+  "@privacyTitle": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacySummary": "What you enter here is used only to run the conference.",
+  "@privacySummary": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyWhatTitle": "What we collect",
+  "@privacyWhatTitle": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyWhat": "Name, Bible name, gender, age, country of residence and chapter; flight details; dietary restrictions; medical conditions; roommate preference; payment status. If you use SOS, your location at that moment is sent as well.",
+  "@privacyWhat": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyWhyTitle": "Why",
+  "@privacyWhyTitle": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyWhy": "To assign rooms and groups, arrange airport pickup, prepare meals, and respond to emergencies. Nothing else.",
+  "@privacyWhy": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyWhoTitle": "Who can see it",
+  "@privacyWhoTitle": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyWho": "Only the conference organizers. Medical information is not shown in lists; an organizer opens it per person when needed, and that access is logged.",
+  "@privacyWho": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyWhereTitle": "Where it is stored",
+  "@privacyWhereTitle": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyWhere": "Data is stored in a cloud database located in the United States. This means it leaves your country of residence.",
+  "@privacyWhere": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyKeepTitle": "How long",
+  "@privacyKeepTitle": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyKeep": "Kept for up to one year after the conference ends, then deleted.",
+  "@privacyKeep": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyRightsTitle": "Your choices",
+  "@privacyRightsTitle": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyRights": "You can change what you entered at any time. To have it deleted, ask an organizer.",
+  "@privacyRights": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyAgree": "I have read this",
+  "@privacyAgree": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyMore": "Read more",
+  "@privacyMore": {
+    "description": "Privacy notice on the registration flow"
+  },
+  "privacyLess": "Show less",
+  "@privacyLess": {
+    "description": "Privacy notice on the registration flow"
   }
 }

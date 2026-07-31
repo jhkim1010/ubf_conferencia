@@ -1699,4 +1699,60 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get rdyOpenCardSub => '막힌 지점과 연락 대상을 한눈에';
+
+  @override
+  String get privacyTitle => '개인정보 수집·이용 안내';
+
+  @override
+  String get privacySummary => '등록에 입력하신 정보는 수양회 운영에만 사용됩니다.';
+
+  @override
+  String get privacyWhatTitle => '수집하는 정보';
+
+  @override
+  String get privacyWhat =>
+      '이름·성경이름·성별·나이·거주 국가·지부, 항공편 정보, 식사 제한, 질병 유무, 룸메이트 희망, 참가비 납부 상태. SOS 기능을 사용하시면 그 시점의 위치가 함께 전송됩니다.';
+
+  @override
+  String get privacyWhyTitle => '이용 목적';
+
+  @override
+  String get privacyWhy =>
+      '숙소·조 편성, 공항 픽업 배차, 식사 준비, 안전 대응에 사용합니다. 다른 목적으로 쓰지 않습니다.';
+
+  @override
+  String get privacyWhoTitle => '열람 범위';
+
+  @override
+  String get privacyWho =>
+      '수양회 담당자만 볼 수 있습니다. 질병 정보는 목록에 표시되지 않으며, 필요한 경우 담당자가 개인별로 확인하고 그 기록이 남습니다.';
+
+  @override
+  String get privacyWhereTitle => '보관 위치';
+
+  @override
+  String get privacyWhere =>
+      '데이터는 외부 클라우드 데이터베이스(미국)에 저장됩니다. 거주 국가 밖으로 이전됨을 알려드립니다.';
+
+  @override
+  String get privacyKeepTitle => '보관 기간';
+
+  @override
+  String get privacyKeep => '수양회 종료 후 1년까지 보관하며 이후 삭제합니다.';
+
+  @override
+  String get privacyRightsTitle => '권리';
+
+  @override
+  String get privacyRights =>
+      '입력하신 내용은 언제든 수정할 수 있습니다. 삭제를 원하시면 담당자에게 요청해 주세요.';
+
+  @override
+  String get privacyAgree => '위 내용을 확인했습니다';
+
+  @override
+  String get privacyMore => '자세히 보기';
+
+  @override
+  String get privacyLess => '접기';
 }

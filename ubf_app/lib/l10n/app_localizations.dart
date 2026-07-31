@@ -3249,6 +3249,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Blockers and who to contact at a glance'**
   String get rdyOpenCardSub;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'How your information is used'**
+  String get privacyTitle;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'What you enter here is used only to run the conference.'**
+  String get privacySummary;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'What we collect'**
+  String get privacyWhatTitle;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'Name, Bible name, gender, age, country of residence and chapter; flight details; dietary restrictions; medical conditions; roommate preference; payment status. If you use SOS, your location at that moment is sent as well.'**
+  String get privacyWhat;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'Why'**
+  String get privacyWhyTitle;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'To assign rooms and groups, arrange airport pickup, prepare meals, and respond to emergencies. Nothing else.'**
+  String get privacyWhy;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'Who can see it'**
+  String get privacyWhoTitle;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'Only the conference organizers. Medical information is not shown in lists; an organizer opens it per person when needed, and that access is logged.'**
+  String get privacyWho;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'Where it is stored'**
+  String get privacyWhereTitle;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'Data is stored in a cloud database located in the United States. This means it leaves your country of residence.'**
+  String get privacyWhere;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'How long'**
+  String get privacyKeepTitle;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'Kept for up to one year after the conference ends, then deleted.'**
+  String get privacyKeep;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'Your choices'**
+  String get privacyRightsTitle;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'You can change what you entered at any time. To have it deleted, ask an organizer.'**
+  String get privacyRights;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'I have read this'**
+  String get privacyAgree;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'Read more'**
+  String get privacyMore;
+
+  /// Privacy notice on the registration flow
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get privacyLess;
 }
 
 class _AppLocalizationsDelegate

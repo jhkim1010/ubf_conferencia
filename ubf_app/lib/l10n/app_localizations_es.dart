@@ -1741,4 +1741,62 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get rdyOpenCardSub => 'Bloqueos y contactos de un vistazo';
+
+  @override
+  String get privacyTitle => 'Cómo se usa su información';
+
+  @override
+  String get privacySummary =>
+      'Lo que registre aquí se usa únicamente para organizar el retiro.';
+
+  @override
+  String get privacyWhatTitle => 'Qué recogemos';
+
+  @override
+  String get privacyWhat =>
+      'Nombre, nombre bíblico, sexo, edad, país de residencia y sede; datos de vuelo; restricciones alimentarias; condiciones de salud; preferencia de compañero de cuarto; estado del pago. Si usa SOS, también se envía su ubicación en ese momento.';
+
+  @override
+  String get privacyWhyTitle => 'Para qué';
+
+  @override
+  String get privacyWhy =>
+      'Para asignar habitaciones y grupos, organizar la recogida en el aeropuerto, preparar las comidas y atender emergencias. Nada más.';
+
+  @override
+  String get privacyWhoTitle => 'Quién puede verlo';
+
+  @override
+  String get privacyWho =>
+      'Solo los organizadores del retiro. La información de salud no aparece en las listas; un organizador la abre por persona cuando hace falta, y ese acceso queda registrado.';
+
+  @override
+  String get privacyWhereTitle => 'Dónde se guarda';
+
+  @override
+  String get privacyWhere =>
+      'Los datos se guardan en una base de datos en la nube ubicada en Estados Unidos. Esto significa que salen de su país de residencia.';
+
+  @override
+  String get privacyKeepTitle => 'Por cuánto tiempo';
+
+  @override
+  String get privacyKeep =>
+      'Se conservan hasta un año después del retiro y luego se eliminan.';
+
+  @override
+  String get privacyRightsTitle => 'Sus opciones';
+
+  @override
+  String get privacyRights =>
+      'Puede modificar lo que registró en cualquier momento. Para eliminarlo, pídalo a un organizador.';
+
+  @override
+  String get privacyAgree => 'He leído esta información';
+
+  @override
+  String get privacyMore => 'Ver más';
+
+  @override
+  String get privacyLess => 'Ver menos';
 }

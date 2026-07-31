@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/ubf_chapters.dart';
 import '../../providers/registration_provider.dart';
+import '../../widgets/privacy_notice.dart';
 import 'package:mana/l10n/app_localizations.dart';
 
 class PersonalInfoStep extends ConsumerStatefulWidget {
@@ -15,8 +16,8 @@ class PersonalInfoStep extends ConsumerStatefulWidget {
 
 class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
   String? _continent; // 대륙
-  String? _nation;    // 국가
-  String? _chapter;   // 챕터 이름 → branch 필드로 저장
+  String? _nation; // 국가
+  String? _chapter; // 챕터 이름 → branch 필드로 저장
   late final TextEditingController _branchController;
   late final TextEditingController _realNameController;
   late final TextEditingController _bibleNameController;
@@ -76,14 +77,16 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
   }
 
   void _save() {
-    ref.read(registrationFormProvider(widget.programId).notifier).updatePersonalInfo(
-      country: _nation,
-      branch: _branchController.text.trim(),
-      realName: _realNameController.text.trim(),
-      bibleName: _bibleNameController.text.trim(),
-      gender: _gender,
-      age: int.tryParse(_ageController.text.trim()),
-    );
+    ref
+        .read(registrationFormProvider(widget.programId).notifier)
+        .updatePersonalInfo(
+          country: _nation,
+          branch: _branchController.text.trim(),
+          realName: _realNameController.text.trim(),
+          bibleName: _bibleNameController.text.trim(),
+          gender: _gender,
+          age: int.tryParse(_ageController.text.trim()),
+        );
   }
 
   // 대륙 변경 시 국가/챕터 초기화
@@ -137,6 +140,10 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        // 등록의 첫 화면에서 무엇을 왜 받는지 먼저 알린다.
+        // 질병 정보와 SOS 위치를 다루고 데이터가 국외에 저장되므로,
+        // 알리지 않고 받는 것은 옳지 않다.
+        const PrivacyNotice(),
         // ── 대륙 드롭다운 ──────────────────────────────
         DropdownButtonFormField<String>(
           initialValue: _continent,
@@ -155,7 +162,9 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
           initialValue: _nation,
           decoration: InputDecoration(labelText: l10n.regNation),
           hint: Text(l10n.regNationHint),
-          disabledHint: _continent == null ? Text(l10n.regNationDisabled) : null,
+          disabledHint: _continent == null
+              ? Text(l10n.regNationDisabled)
+              : null,
           items: nations.map((n) {
             return DropdownMenuItem<String>(value: n, child: Text(n));
           }).toList(),
@@ -186,9 +195,9 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
             chapters.isEmpty
                 ? l10n.regChapterNoneHint
                 : l10n.regChapterManualHint,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[500],
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
           ),
         ],
         const SizedBox(height: 12),

@@ -280,8 +280,27 @@ router.get('/:id/registrations', requireAuth, requireLeader, async (req, res) =>
     `;
     if (!program) return res.status(403).json({ error: '권한 없음' });
 
+    // 질병 정보(medical_conditions)는 목록에 싣지 않는다.
+    //
+    // 화면에 표시하지 않더라도 SELECT r.* 로 보내면 브라우저까지 전달되어
+    // 개발자도구·네트워크 로그에 그대로 남는다. 건강 정보는 가장 민감한 항목이므로
+    // "필요한 사람이 필요할 때만" 원칙을 적용한다.
+    //
+    // 대신 has_medical_note 로 존재 여부만 알린다 — 담당자가 누구를 확인해야
+    // 하는지는 알 수 있어야 하고, 상세는 아래 전용 엔드포인트로 따로 조회한다.
     const registrations = await sql`
-      SELECT r.*,
+      SELECT
+        r.id, r.program_id, r.user_id, r.country, r.branch,
+        r.real_name, r.bible_name, r.gender, r.age,
+        r.arrival_flight, r.departure_flight,
+        r.food_requirements, r.skips_breakfast,
+        r.selected_options, r.roommate_preference,
+        r.volunteer_resources, r.volunteer_note,
+        r.church_since, r.church_role,
+        r.needs_pickup, r.service_declined,
+        r.total_cost, r.submitted, r.created_at, r.updated_at,
+        (r.medical_conditions IS NOT NULL AND r.medical_conditions <> '')
+          AS has_medical_note,
         json_build_object(
           'status', pay.status,
           'amount', pay.amount,
@@ -299,6 +318,45 @@ router.get('/:id/registrations', requireAuth, requireLeader, async (req, res) =>
     res.status(500).json({ error: '서버 오류' });
   }
 });
+
+// GET /programs/:id/registrations/:registrationId/medical
+// 질병 정보 상세. 목록에서 빼둔 것을 한 사람 단위로만 조회한다.
+//
+// 안전상 담당자가 알아야 하는 정보이므로 막지는 않되, 목록으로 한꺼번에
+// 흘러나가지 않게 한다. 누가 언제 열람했는지 로그로 남긴다.
+router.get(
+  '/:id/registrations/:registrationId/medical',
+  requireAuth,
+  requireLeader,
+  async (req, res) => {
+    try {
+      const [program] = await sql`
+        SELECT id FROM programs
+        WHERE id = ${req.params.id} AND leader_id = ${req.user.leaderId}
+      `;
+      if (!program) return res.status(403).json({ error: '권한 없음' });
+
+      const [row] = await sql`
+        SELECT id, real_name, medical_conditions
+        FROM registrations
+        WHERE id = ${req.params.registrationId} AND program_id = ${req.params.id}
+      `;
+      if (!row) return res.status(404).json({ error: '등록을 찾을 수 없습니다' });
+
+      console.log(
+        `[MEDICAL-ACCESS] leader=${req.user.userId} program=${req.params.id} registration=${row.id}`,
+      );
+      res.json({
+        registration_id: row.id,
+        real_name: row.real_name,
+        medical_conditions: row.medical_conditions,
+      });
+    } catch (err) {
+      console.error('질병 정보 조회 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
 
 // ── 준비 현황 (A003) ──────────────────────────────────────────
 // /stats 는 숫자만 준다. 준비하는 사람에게 필요한 것은 "지금 무엇이 막혀 있고

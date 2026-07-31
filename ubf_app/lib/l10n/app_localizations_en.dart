@@ -1734,4 +1734,62 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rdyOpenCardSub => 'Blockers and who to contact at a glance';
+
+  @override
+  String get privacyTitle => 'How your information is used';
+
+  @override
+  String get privacySummary =>
+      'What you enter here is used only to run the conference.';
+
+  @override
+  String get privacyWhatTitle => 'What we collect';
+
+  @override
+  String get privacyWhat =>
+      'Name, Bible name, gender, age, country of residence and chapter; flight details; dietary restrictions; medical conditions; roommate preference; payment status. If you use SOS, your location at that moment is sent as well.';
+
+  @override
+  String get privacyWhyTitle => 'Why';
+
+  @override
+  String get privacyWhy =>
+      'To assign rooms and groups, arrange airport pickup, prepare meals, and respond to emergencies. Nothing else.';
+
+  @override
+  String get privacyWhoTitle => 'Who can see it';
+
+  @override
+  String get privacyWho =>
+      'Only the conference organizers. Medical information is not shown in lists; an organizer opens it per person when needed, and that access is logged.';
+
+  @override
+  String get privacyWhereTitle => 'Where it is stored';
+
+  @override
+  String get privacyWhere =>
+      'Data is stored in a cloud database located in the United States. This means it leaves your country of residence.';
+
+  @override
+  String get privacyKeepTitle => 'How long';
+
+  @override
+  String get privacyKeep =>
+      'Kept for up to one year after the conference ends, then deleted.';
+
+  @override
+  String get privacyRightsTitle => 'Your choices';
+
+  @override
+  String get privacyRights =>
+      'You can change what you entered at any time. To have it deleted, ask an organizer.';
+
+  @override
+  String get privacyAgree => 'I have read this';
+
+  @override
+  String get privacyMore => 'Read more';
+
+  @override
+  String get privacyLess => 'Show less';
 }

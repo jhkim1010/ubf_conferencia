@@ -524,5 +524,22 @@
   "rdyNoBlocked": "Todos van al día",
   "rdyRolesUnreliable": "Más de la mitad no tiene cargo registrado",
   "rdyOpenCard": "Ver estado de preparación",
-  "rdyOpenCardSub": "Bloqueos y contactos de un vistazo"
+  "rdyOpenCardSub": "Bloqueos y contactos de un vistazo",
+  "privacyTitle": "Cómo se usa su información",
+  "privacySummary": "Lo que registre aquí se usa únicamente para organizar el retiro.",
+  "privacyWhatTitle": "Qué recogemos",
+  "privacyWhat": "Nombre, nombre bíblico, sexo, edad, país de residencia y sede; datos de vuelo; restricciones alimentarias; condiciones de salud; preferencia de compañero de cuarto; estado del pago. Si usa SOS, también se envía su ubicación en ese momento.",
+  "privacyWhyTitle": "Para qué",
+  "privacyWhy": "Para asignar habitaciones y grupos, organizar la recogida en el aeropuerto, preparar las comidas y atender emergencias. Nada más.",
+  "privacyWhoTitle": "Quién puede verlo",
+  "privacyWho": "Solo los organizadores del retiro. La información de salud no aparece en las listas; un organizador la abre por persona cuando hace falta, y ese acceso queda registrado.",
+  "privacyWhereTitle": "Dónde se guarda",
+  "privacyWhere": "Los datos se guardan en una base de datos en la nube ubicada en Estados Unidos. Esto significa que salen de su país de residencia.",
+  "privacyKeepTitle": "Por cuánto tiempo",
+  "privacyKeep": "Se conservan hasta un año después del retiro y luego se eliminan.",
+  "privacyRightsTitle": "Sus opciones",
+  "privacyRights": "Puede modificar lo que registró en cualquier momento. Para eliminarlo, pídalo a un organizador.",
+  "privacyAgree": "He leído esta información",
+  "privacyMore": "Ver más",
+  "privacyLess": "Ver menos"
 }
