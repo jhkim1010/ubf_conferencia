@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/registration_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import '../../../../core/utils/money.dart';
 
 class OptionsStep extends ConsumerWidget {
   final String programId;
@@ -44,16 +45,18 @@ class OptionsStep extends ConsumerWidget {
       children: [
         Text(
           l10n.optionsSelectPrompt,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.grey[600],
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
         ),
         const SizedBox(height: 16),
-        ...options.map((option) => _TourCard(
-              programId: programId,
-              option: option,
-              isSelected: selectedOptions.contains(option['id'] as String),
-            )),
+        ...options.map(
+          (option) => _TourCard(
+            programId: programId,
+            option: option,
+            isSelected: selectedOptions.contains(option['id'] as String),
+          ),
+        ),
         if (selectedOptions.isNotEmpty) ...[
           const SizedBox(height: 16),
           Container(
@@ -70,7 +73,7 @@ class OptionsStep extends ConsumerWidget {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '₩${totalCost.toStringAsFixed(0)}',
+                  Money.format(totalCost),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -159,7 +162,10 @@ class _TourCard extends ConsumerWidget {
                       errorBuilder: (_, _, _) => Container(
                         width: 200,
                         color: Colors.grey[200],
-                        child: const Icon(Icons.broken_image, color: Colors.grey),
+                        child: const Icon(
+                          Icons.broken_image,
+                          color: Colors.grey,
+                        ),
                       ),
                     ),
                   ),
@@ -176,7 +182,10 @@ class _TourCard extends ConsumerWidget {
                   ? Text(l10n.epOptionContact(contactName))
                   : null,
               secondary: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: cost == 0
                       ? Colors.green[50]
@@ -184,10 +193,12 @@ class _TourCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  cost == 0 ? l10n.optionsFree : '₩${cost.toStringAsFixed(0)}',
+                  cost == 0 ? l10n.optionsFree : Money.format(cost),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: cost == 0 ? Colors.green[700] : theme.colorScheme.primary,
+                    color: cost == 0
+                        ? Colors.green[700]
+                        : theme.colorScheme.primary,
                   ),
                 ),
               ),
@@ -200,8 +211,10 @@ class _TourCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (description != null && description.isNotEmpty) ...[
-                    Text(description,
-                        style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+                    Text(
+                      description,
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    ),
                     const SizedBox(height: 10),
                   ],
                   // 홍보물 링크
@@ -223,16 +236,24 @@ class _TourCard extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(l10n.tourCapacityLabel,
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w600)),
+                        Text(
+                          l10n.tourCapacityLabel,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         Text(
                           l10n.tourRemaining(
-                              (capacity - signupCount).clamp(0, capacity), capacity),
+                            (capacity - signupCount).clamp(0, capacity),
+                            capacity,
+                          ),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isFull ? theme.colorScheme.error : theme.colorScheme.primary,
+                            color: isFull
+                                ? theme.colorScheme.error
+                                : theme.colorScheme.primary,
                           ),
                         ),
                       ],
@@ -246,7 +267,9 @@ class _TourCard extends ConsumerWidget {
                             : (signupCount / capacity).clamp(0.0, 1.0),
                         minHeight: 6,
                         backgroundColor: Colors.grey[200],
-                        color: isFull ? theme.colorScheme.error : theme.colorScheme.primary,
+                        color: isFull
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.primary,
                       ),
                     ),
                   ],
@@ -256,13 +279,22 @@ class _TourCard extends ConsumerWidget {
                     Row(
                       children: [
                         if (isFull)
-                          _StatusChip(text: l10n.tourFull, color: theme.colorScheme.error)
+                          _StatusChip(
+                            text: l10n.tourFull,
+                            color: theme.colorScheme.error,
+                          )
                         else if (isClosed)
-                          _StatusChip(text: l10n.tourClosed, color: theme.colorScheme.error)
+                          _StatusChip(
+                            text: l10n.tourClosed,
+                            color: theme.colorScheme.error,
+                          )
                         else if (deadline != null)
                           Text(
                             l10n.tourDeadline(_fmtDeadline(deadline)),
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
                           ),
                       ],
                     ),
@@ -295,7 +327,10 @@ class _LinkRow extends StatelessWidget {
         await Clipboard.setData(ClipboardData(text: url));
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.linkCopied), duration: const Duration(seconds: 2)),
+            SnackBar(
+              content: Text(l10n.linkCopied),
+              duration: const Duration(seconds: 2),
+            ),
           );
         }
       },
@@ -339,7 +374,11 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
       ),
     );
   }

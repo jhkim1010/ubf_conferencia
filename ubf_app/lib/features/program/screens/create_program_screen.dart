@@ -5,12 +5,14 @@ import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
 import '../providers/program_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 
 class CreateProgramScreen extends ConsumerStatefulWidget {
   const CreateProgramScreen({super.key});
 
   @override
-  ConsumerState<CreateProgramScreen> createState() => _CreateProgramScreenState();
+  ConsumerState<CreateProgramScreen> createState() =>
+      _CreateProgramScreenState();
 }
 
 class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
@@ -52,14 +54,14 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
   }
 
   Map<String, String> _sectionLabels(AppLocalizations l10n) => {
-        'personal_info': l10n.regStepPersonal,
-        'arrival_flight': l10n.flightInfoTitle(l10n.flightArrival),
-        'departure_flight': l10n.flightInfoTitle(l10n.flightDeparture),
-        'food_requirements': l10n.summarySectionFood,
-        'special_programs': l10n.cpSpecialOptions,
-        'roommate': l10n.summarySectionRoommate,
-        'volunteer_resources': l10n.cpSecVolunteer,
-      };
+    'personal_info': l10n.regStepPersonal,
+    'arrival_flight': l10n.flightInfoTitle(l10n.flightArrival),
+    'departure_flight': l10n.flightInfoTitle(l10n.flightDeparture),
+    'food_requirements': l10n.summarySectionFood,
+    'special_programs': l10n.cpSpecialOptions,
+    'roommate': l10n.summarySectionRoommate,
+    'volunteer_resources': l10n.cpSecVolunteer,
+  };
 
   // 특별 옵션 (투어, 특별프로그램 등)
   final List<Map<String, dynamic>> _options = [];
@@ -166,9 +168,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.cpCreateFailed('$e'))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.cpCreateFailed('$e'))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -248,7 +250,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                 labelText: l10n.cpLocationLabel,
                 hintText: l10n.cpLocationHint,
               ),
-              validator: (v) => v?.isEmpty == true ? l10n.cpLocationRequired : null,
+              validator: (v) =>
+                  v?.isEmpty == true ? l10n.cpLocationRequired : null,
             ),
             const SizedBox(height: 12),
             // 기간 선택 (시작~종료를 달력 1개로)
@@ -296,7 +299,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
               const SizedBox(height: 4),
               Text(
                 l10n.cpImmigrationDesc,
-                style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                ),
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -310,7 +315,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
               const SizedBox(height: 16),
               Text(
                 l10n.cpContacts,
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 8),
               Row(
@@ -319,7 +326,10 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     flex: 2,
                     child: TextFormField(
                       controller: _contact1NameController,
-                      decoration: InputDecoration(labelText: l10n.cpName1, hintText: l10n.cpName1Hint),
+                      decoration: InputDecoration(
+                        labelText: l10n.cpName1,
+                        hintText: l10n.cpName1Hint,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -343,7 +353,10 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     flex: 2,
                     child: TextFormField(
                       controller: _contact2NameController,
-                      decoration: InputDecoration(labelText: l10n.cpName2, hintText: l10n.cpName2Hint),
+                      decoration: InputDecoration(
+                        labelText: l10n.cpName2,
+                        hintText: l10n.cpName2Hint,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -368,7 +381,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
             const SizedBox(height: 4),
             Text(
               l10n.cpSectionsDesc,
-              style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: Colors.grey[600],
+              ),
             ),
             const SizedBox(height: 8),
             Card(
@@ -379,7 +394,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     value: _enabledSections[entry.key] ?? true,
                     onChanged: entry.key == 'personal_info'
                         ? null // 개인 정보는 항상 필수
-                        : (val) => setState(() => _enabledSections[entry.key] = val),
+                        : (val) =>
+                              setState(() => _enabledSections[entry.key] = val),
                   );
                 }).toList(),
               ),
@@ -392,7 +408,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
               const SizedBox(height: 4),
               Text(
                 l10n.cpOptionsDesc,
-                style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                ),
               ),
               const SizedBox(height: 8),
               ..._options.asMap().entries.map((entry) {
@@ -401,7 +419,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                 return Card(
                   child: ListTile(
                     title: Text(option['name']),
-                    subtitle: Text(l10n.cpOptionCost('${option['cost']}')),
+                    subtitle: Text(
+                      l10n.cpOptionCost(Money.format(option['cost'] as num?)),
+                    ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
                       onPressed: () => setState(() => _options.removeAt(i)),
@@ -428,7 +448,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     child: TextField(
                       controller: _optionCostController,
                       keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: l10n.cpOptionCostLabel),
+                      decoration: InputDecoration(
+                        labelText: l10n.cpOptionCostLabel,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),

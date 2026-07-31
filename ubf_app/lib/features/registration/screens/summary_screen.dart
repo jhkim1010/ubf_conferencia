@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../program/providers/program_provider.dart';
 import '../providers/registration_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 
 // 등록 요약 화면 - 모든 정보 확인 + 총 비용 표시
 class SummaryScreen extends ConsumerWidget {
@@ -31,7 +32,9 @@ class SummaryScreen extends ConsumerWidget {
 
           // 선택된 옵션 목록 및 비용 계산
           final selectedOptionDetails = options
-              .where((o) => formState.selectedOptions.contains(o['id'] as String))
+              .where(
+                (o) => formState.selectedOptions.contains(o['id'] as String),
+              )
               .toList();
 
           double totalCost = selectedOptionDetails.fold(
@@ -50,7 +53,10 @@ class SummaryScreen extends ConsumerWidget {
                   _InfoRow(l10n.summaryName, program['name'] ?? ''),
                   _InfoRow(l10n.summaryLocation, program['location'] ?? ''),
                   if (program['start_date'] != null)
-                    _InfoRow(l10n.summaryPeriod, '${program['start_date']} ~ ${program['end_date'] ?? ''}'),
+                    _InfoRow(
+                      l10n.summaryPeriod,
+                      '${program['start_date']} ~ ${program['end_date'] ?? ''}',
+                    ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -65,7 +71,14 @@ class SummaryScreen extends ConsumerWidget {
                   _InfoRow(l10n.summaryBranch, formState.branch ?? '-'),
                   _InfoRow(l10n.summaryRealName, formState.realName ?? '-'),
                   _InfoRow(l10n.summaryBibleName, formState.bibleName ?? '-'),
-                  _InfoRow(l10n.regGender, formState.gender == 'M' ? l10n.genderMale : formState.gender == 'F' ? l10n.genderFemale : '-'),
+                  _InfoRow(
+                    l10n.regGender,
+                    formState.gender == 'M'
+                        ? l10n.genderMale
+                        : formState.gender == 'F'
+                        ? l10n.genderFemale
+                        : '-',
+                  ),
                   _InfoRow(l10n.summaryAge, formState.age?.toString() ?? '-'),
                 ],
               ),
@@ -78,9 +91,18 @@ class SummaryScreen extends ConsumerWidget {
                   icon: Icons.flight_land,
                   onEdit: () => context.go('/registration/$programId'),
                   children: [
-                    _InfoRow(l10n.summaryFlightNo, formState.arrivalFlight!['flight_no'] ?? '-'),
-                    _InfoRow(l10n.summaryArrAirport, formState.arrivalFlight!['arrival_airport'] ?? '-'),
-                    _InfoRow(l10n.summaryArrTime, formState.arrivalFlight!['scheduled_arrival'] ?? '-'),
+                    _InfoRow(
+                      l10n.summaryFlightNo,
+                      formState.arrivalFlight!['flight_no'] ?? '-',
+                    ),
+                    _InfoRow(
+                      l10n.summaryArrAirport,
+                      formState.arrivalFlight!['arrival_airport'] ?? '-',
+                    ),
+                    _InfoRow(
+                      l10n.summaryArrTime,
+                      formState.arrivalFlight!['scheduled_arrival'] ?? '-',
+                    ),
                   ],
                 ),
               if (formState.arrivalFlight != null) const SizedBox(height: 12),
@@ -92,9 +114,18 @@ class SummaryScreen extends ConsumerWidget {
                   icon: Icons.flight_takeoff,
                   onEdit: () => context.go('/registration/$programId'),
                   children: [
-                    _InfoRow(l10n.summaryFlightNo, formState.departureFlight!['flight_no'] ?? '-'),
-                    _InfoRow(l10n.summaryDepAirport, formState.departureFlight!['departure_airport'] ?? '-'),
-                    _InfoRow(l10n.summaryDepTime, formState.departureFlight!['scheduled_departure'] ?? '-'),
+                    _InfoRow(
+                      l10n.summaryFlightNo,
+                      formState.departureFlight!['flight_no'] ?? '-',
+                    ),
+                    _InfoRow(
+                      l10n.summaryDepAirport,
+                      formState.departureFlight!['departure_airport'] ?? '-',
+                    ),
+                    _InfoRow(
+                      l10n.summaryDepTime,
+                      formState.departureFlight!['scheduled_departure'] ?? '-',
+                    ),
                   ],
                 ),
               if (formState.departureFlight != null) const SizedBox(height: 12),
@@ -105,11 +136,10 @@ class SummaryScreen extends ConsumerWidget {
                   title: l10n.summarySectionFood,
                   icon: Icons.restaurant,
                   onEdit: () => context.go('/registration/$programId'),
-                  children: [
-                    _InfoRow('', formState.foodRequirements ?? '-'),
-                  ],
+                  children: [_InfoRow('', formState.foodRequirements ?? '-')],
                 ),
-              if (formState.foodRequirements?.isNotEmpty == true) const SizedBox(height: 12),
+              if (formState.foodRequirements?.isNotEmpty == true)
+                const SizedBox(height: 12),
 
               // 선택 옵션
               if (selectedOptionDetails.isNotEmpty)
@@ -117,10 +147,14 @@ class SummaryScreen extends ConsumerWidget {
                   title: l10n.summarySectionOptions,
                   icon: Icons.checklist,
                   onEdit: () => context.go('/registration/$programId'),
-                  children: selectedOptionDetails.map((o) => _InfoRow(
-                    o['name'] ?? '',
-                    '₩${(o['cost'] as num).toStringAsFixed(0)}',
-                  )).toList(),
+                  children: selectedOptionDetails
+                      .map(
+                        (o) => _InfoRow(
+                          o['name'] ?? '',
+                          Money.format(o['cost'] as num),
+                        ),
+                      )
+                      .toList(),
                 ),
               if (selectedOptionDetails.isNotEmpty) const SizedBox(height: 12),
 
@@ -130,9 +164,7 @@ class SummaryScreen extends ConsumerWidget {
                   title: l10n.summarySectionRoommate,
                   icon: Icons.hotel,
                   onEdit: () => context.go('/registration/$programId'),
-                  children: [
-                    _InfoRow('', formState.roommatePreference ?? '-'),
-                  ],
+                  children: [_InfoRow('', formState.roommatePreference ?? '-')],
                 ),
 
               const SizedBox(height: 20),
@@ -152,11 +184,12 @@ class SummaryScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '₩${totalCost.toStringAsFixed(0)}',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                      Money.format(totalCost),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                     ),
                     if (totalCost == 0)
                       Text(
@@ -181,7 +214,8 @@ class SummaryScreen extends ConsumerWidget {
                     foregroundColor: const Color(0xFF1A3A6B),
                     side: const BorderSide(color: Color(0xFF1A3A6B)),
                   ),
-                  onPressed: () => context.push('/program/$programId/immigration'),
+                  onPressed: () =>
+                      context.push('/program/$programId/immigration'),
                 ),
 
               // 내 이동(배차) 버튼 — 국제 수양회에서 항공편 있을 때
@@ -195,7 +229,8 @@ class SummaryScreen extends ConsumerWidget {
                       foregroundColor: const Color(0xFF0F7A6E),
                       side: const BorderSide(color: Color(0xFF0F7A6E)),
                     ),
-                    onPressed: () => context.push('/program/$programId/my-transport'),
+                    onPressed: () =>
+                        context.push('/program/$programId/my-transport'),
                   ),
                 ),
 
@@ -317,7 +352,11 @@ class _SectionCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+                Icon(
+                  icon,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   title,

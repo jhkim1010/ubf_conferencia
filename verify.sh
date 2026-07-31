@@ -100,6 +100,22 @@ check_unit_tests() {
   fi
 }
 
+# Flutter 단위 테스트. 오래 걸리는 위젯 테스트는 아직 없고 순수 로직만 있다.
+check_flutter_tests() {
+  command -v flutter >/dev/null || { skip flutter-tests "flutter 없음"; return 0; }
+  # widget_test.dart 는 플레이스홀더라 제외하고 실제 테스트만 돌린다
+  local files
+  files="$(ls "$APP"/test/*_test.dart 2>/dev/null | grep -v 'widget_test.dart' || true)"
+  [ -z "$files" ] && { skip flutter-tests "실제 테스트 없음"; return 0; }
+  local out
+  out="$(cd "$APP" && flutter test $(basename -a $files | sed 's|^|test/|') 2>&1)"
+  if [ $? -eq 0 ]; then
+    pass "flutter-tests ($(printf '%s' "$out" | grep -oE '\+[0-9]+' | tail -1 | tr -d '+') 통과)"
+  else
+    fail flutter-tests "$(printf '%s' "$out" | grep -E 'Expected|Actual|failed' | head -4)"
+  fi
+}
+
 # ARB 3개 파일의 키 집합 일치 검사.
 # @-접두 키(메타데이터·@@locale)는 로케일마다 다르므로 비교 대상에서 제외한다.
 check_arb_parity() {
@@ -260,6 +276,7 @@ ALL_CHECKS=(
   dart-format
   server-syntax
   unit-tests
+  flutter-tests
   arb-parity
   route-parity
   migration-numbers
@@ -291,7 +308,7 @@ select_by_changes() {
   local files sel=()
   files="$(changed_files)"
   [ -z "$files" ] && return 0
-  grep -qE '^ubf_app/.*\.dart$'            <<<"$files" && sel+=(flutter-analyze dart-format)
+  grep -qE '^ubf_app/.*\.dart$'            <<<"$files" && sel+=(flutter-analyze dart-format flutter-tests)
   grep -qE '^ubf_app/lib/l10n/.*\.arb$'    <<<"$files" && sel+=(arb-parity)
   grep -qE '^server/(src|test)/.*\.js$'     <<<"$files" && sel+=(server-syntax unit-tests route-parity server-smoke)
   grep -qE '^ubf_app/supabase/migrations/' <<<"$files" && sel+=(migration-numbers migration-safety)

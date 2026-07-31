@@ -4,6 +4,7 @@ import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
 import '../providers/program_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 
 class EditProgramScreen extends ConsumerStatefulWidget {
   final String programId;
@@ -43,14 +44,14 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
   };
 
   Map<String, String> _sectionLabels(AppLocalizations l10n) => {
-        'personal_info': l10n.regStepPersonal,
-        'arrival_flight': l10n.flightInfoTitle(l10n.flightArrival),
-        'departure_flight': l10n.flightInfoTitle(l10n.flightDeparture),
-        'food_requirements': l10n.summarySectionFood,
-        'special_programs': l10n.cpSpecialOptions,
-        'roommate': l10n.summarySectionRoommate,
-        'volunteer_resources': l10n.cpSecVolunteer,
-      };
+    'personal_info': l10n.regStepPersonal,
+    'arrival_flight': l10n.flightInfoTitle(l10n.flightArrival),
+    'departure_flight': l10n.flightInfoTitle(l10n.flightDeparture),
+    'food_requirements': l10n.summarySectionFood,
+    'special_programs': l10n.cpSpecialOptions,
+    'roommate': l10n.summarySectionRoommate,
+    'volunteer_resources': l10n.cpSecVolunteer,
+  };
 
   List<Map<String, dynamic>> _options = [];
 
@@ -92,14 +93,18 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _hostCountry = program['host_country'] as String?;
     _hostCountryController.text = _hostCountry ?? '';
 
-    final sections = Map<String, dynamic>.from(program['enabled_sections'] ?? {});
+    final sections = Map<String, dynamic>.from(
+      program['enabled_sections'] ?? {},
+    );
     for (final key in _enabledSections.keys) {
       _enabledSections[key] = sections[key] as bool? ?? true;
     }
 
     final rawOptions = program['program_options'];
     if (rawOptions is List) {
-      _options = rawOptions.map((o) => Map<String, dynamic>.from(o as Map)).toList();
+      _options = rawOptions
+          .map((o) => Map<String, dynamic>.from(o as Map))
+          .toList();
     }
   }
 
@@ -136,7 +141,10 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     }
   }
 
-  Future<void> _showOptionDialog({Map<String, dynamic>? existing, int? index}) async {
+  Future<void> _showOptionDialog({
+    Map<String, dynamic>? existing,
+    int? index,
+  }) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (_) => _OptionDetailDialog(existing: existing),
@@ -176,15 +184,15 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
       if (!mounted) return;
       // 캐시 무효화 후 대시보드로 복귀
       ref.invalidate(programByIdProvider(widget.programId));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.epSaved)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.epSaved)));
       Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.profileSaveFailed('$e'))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.profileSaveFailed('$e'))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -198,8 +206,10 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return programAsync.when(
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text(l10n.commonErrorDetail('$e')))),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, _) =>
+          Scaffold(body: Center(child: Text(l10n.commonErrorDetail('$e')))),
       data: (program) {
         if (program == null) {
           return Scaffold(body: Center(child: Text(l10n.epNotFound)));
@@ -219,10 +229,14 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                 onPressed: _isLoading ? null : _save,
                 child: _isLoading
                     ? const SizedBox(
-                        width: 18, height: 18,
+                        width: 18,
+                        height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(l10n.actionSave, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    : Text(
+                        l10n.actionSave,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
               ),
             ],
           ),
@@ -258,13 +272,15 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                 TextFormField(
                   controller: _nameController,
                   decoration: InputDecoration(labelText: l10n.cpNameLabel),
-                  validator: (v) => v?.isEmpty == true ? l10n.cpNameRequired : null,
+                  validator: (v) =>
+                      v?.isEmpty == true ? l10n.cpNameRequired : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _locationController,
                   decoration: InputDecoration(labelText: l10n.cpLocationLabel),
-                  validator: (v) => v?.isEmpty == true ? l10n.cpLocationRequired : null,
+                  validator: (v) =>
+                      v?.isEmpty == true ? l10n.cpLocationRequired : null,
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
@@ -307,11 +323,16 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
 
                 // 입국 안내 (국제만)
                 if (_programType == 'international') ...[
-                  Text(l10n.cpImmigrationInfo, style: theme.textTheme.titleMedium),
+                  Text(
+                    l10n.cpImmigrationInfo,
+                    style: theme.textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     l10n.cpImmigrationDesc,
-                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -325,7 +346,9 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   const SizedBox(height: 16),
                   Text(
                     l10n.cpContacts,
-                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -377,7 +400,9 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                 const SizedBox(height: 4),
                 Text(
                   l10n.cpSectionsDesc,
-                  style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Card(
@@ -388,7 +413,9 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                         value: _enabledSections[entry.key] ?? true,
                         onChanged: entry.key == 'personal_info'
                             ? null
-                            : (val) => setState(() => _enabledSections[entry.key] = val),
+                            : (val) => setState(
+                                () => _enabledSections[entry.key] = val,
+                              ),
                       );
                     }).toList(),
                   ),
@@ -399,16 +426,25 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                 if (_programType == 'international') ...[
                   Row(
                     children: [
-                      Text(l10n.cpSpecialOptions, style: theme.textTheme.titleMedium),
-                      if (_startDate != null && !_startDate!.isAfter(DateTime.now())) ...[
+                      Text(
+                        l10n.cpSpecialOptions,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      if (_startDate != null &&
+                          !_startDate!.isAfter(DateTime.now())) ...[
                         const SizedBox(width: 8),
-                        const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
+                        const Icon(
+                          Icons.lock_outline,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
                       ],
                     ],
                   ),
                   const SizedBox(height: 4),
                   // 시작일이 지났으면 잠금 안내
-                  if (_startDate != null && !_startDate!.isAfter(DateTime.now()))
+                  if (_startDate != null &&
+                      !_startDate!.isAfter(DateTime.now()))
                     Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(10),
@@ -419,12 +455,19 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.info_outline, size: 16, color: Colors.orange[700]),
+                          Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: Colors.orange[700],
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               l10n.epTourLocked,
-                              style: TextStyle(fontSize: 12, color: Colors.orange[800]),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.orange[800],
+                              ),
                             ),
                           ),
                         ],
@@ -433,13 +476,17 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   else
                     Text(
                       l10n.cpOptionsDesc,
-                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
                     ),
                   const SizedBox(height: 8),
                   ..._options.asMap().entries.map((entry) {
                     final i = entry.key;
                     final option = entry.value;
-                    final locked = _startDate != null && !_startDate!.isAfter(DateTime.now());
+                    final locked =
+                        _startDate != null &&
+                        !_startDate!.isAfter(DateTime.now());
                     final dates = [
                       if (option['startDate'] != null) option['startDate'],
                       if (option['endDate'] != null) option['endDate'],
@@ -447,23 +494,34 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                     return Card(
                       child: ListTile(
                         title: Text(option['name'] as String? ?? ''),
-                        subtitle: Text([
-                          l10n.cpOptionCost('${option['cost']}'),
-                          if (dates.isNotEmpty) dates,
-                          if ((option['contactName'] as String?)?.isNotEmpty == true)
-                            l10n.epOptionContact('${option['contactName']}'),
-                        ].join('  |  ')),
+                        subtitle: Text(
+                          [
+                            l10n.cpOptionCost(
+                              Money.format(option['cost'] as num?),
+                            ),
+                            if (dates.isNotEmpty) dates,
+                            if ((option['contactName'] as String?)
+                                    ?.isNotEmpty ==
+                                true)
+                              l10n.epOptionContact('${option['contactName']}'),
+                          ].join('  |  '),
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
                               icon: const Icon(Icons.edit_outlined),
-                              onPressed: () => _showOptionDialog(existing: option, index: i),
+                              onPressed: () =>
+                                  _showOptionDialog(existing: option, index: i),
                             ),
                             if (!locked)
                               IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                onPressed: () => setState(() => _options.removeAt(i)),
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () =>
+                                    setState(() => _options.removeAt(i)),
                               ),
                           ],
                         ),
@@ -532,8 +590,12 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
       if (e['capacity'] != null) _capacityCtrl.text = '${e['capacity']}';
       _brochureCtrl.text = e['brochureUrl'] as String? ?? '';
       _videoCtrl.text = e['videoUrl'] as String? ?? '';
-      if (e['startDate'] != null) _startDate = DateTime.tryParse(e['startDate'] as String);
-      if (e['endDate'] != null) _endDate = DateTime.tryParse(e['endDate'] as String);
+      if (e['startDate'] != null) {
+        _startDate = DateTime.tryParse(e['startDate'] as String);
+      }
+      if (e['endDate'] != null) {
+        _endDate = DateTime.tryParse(e['endDate'] as String);
+      }
       if (e['signupDeadline'] != null) {
         _deadline = DateTime.tryParse(e['signupDeadline'] as String);
       }
@@ -593,7 +655,10 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.actionCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.actionCancel),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, ctrl.text.trim()),
             child: Text(l10n.actionAdd),
@@ -618,7 +683,10 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
     );
     if (picked != null) {
       // 마감일은 그날 23:59까지로 설정
-      setState(() => _deadline = DateTime(picked.year, picked.month, picked.day, 23, 59));
+      setState(
+        () =>
+            _deadline = DateTime(picked.year, picked.month, picked.day, 23, 59),
+      );
     }
   }
 
@@ -630,7 +698,9 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: Text(widget.existing == null ? l10n.epAddOption : l10n.epEditOption),
+      title: Text(
+        widget.existing == null ? l10n.epAddOption : l10n.epEditOption,
+      ),
       contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       content: SingleChildScrollView(
         child: Column(
@@ -639,7 +709,10 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
           children: [
             TextField(
               controller: _nameCtrl,
-              decoration: InputDecoration(labelText: l10n.epOptionNameReq, hintText: l10n.cpOptionNameHint),
+              decoration: InputDecoration(
+                labelText: l10n.epOptionNameReq,
+                hintText: l10n.cpOptionNameHint,
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -699,7 +772,9 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.event_busy, size: 16),
                     label: Text(
-                      _deadline == null ? l10n.epSignupDeadline : _fmt(_deadline, l10n),
+                      _deadline == null
+                          ? l10n.epSignupDeadline
+                          : _fmt(_deadline, l10n),
                       style: const TextStyle(fontSize: 12),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -737,8 +812,13 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
             // 사진 (최대 6장 — URL 붙여넣기)
             Row(
               children: [
-                Text(l10n.epPhotos(_photoUrls.length),
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                Text(
+                  l10n.epPhotos(_photoUrls.length),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 const Spacer(),
                 if (_photoUrls.length < 6)
                   TextButton.icon(
@@ -768,7 +848,10 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
                             width: 70,
                             height: 70,
                             color: Colors.grey[200],
-                            child: const Icon(Icons.broken_image, color: Colors.grey),
+                            child: const Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
                       ),
@@ -783,7 +866,11 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
                               color: Colors.black54,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.close, size: 12, color: Colors.white),
+                            child: const Icon(
+                              Icons.close,
+                              size: 12,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
