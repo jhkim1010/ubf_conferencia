@@ -12,6 +12,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTitle => 'Mana';
 
   @override
+  String get languageTitle => 'Idioma';
+
+  @override
+  String get languageSystem => 'Usar el idioma del dispositivo';
+
+  @override
   String get actionCancel => 'Cancelar';
 
   @override

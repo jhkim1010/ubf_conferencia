@@ -2,6 +2,15 @@
   "@@locale": "en",
 
   "appTitle": "Mana",
+
+  "languageTitle": "Language",
+  "@languageTitle": {
+    "description": "Title of the language selection sheet"
+  },
+  "languageSystem": "Use device language",
+  "@languageSystem": {
+    "description": "Option to clear the explicit language choice and follow the device setting"
+  },
   "@appTitle": {
     "description": "Application title, shown in the app switcher"
   },

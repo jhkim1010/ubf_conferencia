@@ -7,6 +7,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/ubf_chapters.dart';
 import '../../auth/providers/auth_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import '../../settings/widgets/language_picker.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -45,6 +46,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         title: Text(l10n.appTagline),
         actions: [
+          const LanguageButton(),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: l10n.actionLogout,
@@ -55,8 +57,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   title: Text(l10n.actionLogout),
                   content: Text(l10n.homeLogoutConfirmBody),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.actionCancel)),
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.actionLogout)),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(l10n.actionCancel),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text(l10n.actionLogout),
+                    ),
                   ],
                 ),
               );
@@ -70,8 +78,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       body: switch (user.role) {
         UserRole.director => _DirectorHomeView(userEmail: user.email ?? ''),
-        UserRole.admin    => _LeaderHomeView(userEmail: user.email ?? ''),
-        UserRole.participant => _AttendeeHomeView(uuidController: _uuidController),
+        UserRole.admin => _LeaderHomeView(userEmail: user.email ?? ''),
+        UserRole.participant => _AttendeeHomeView(
+          uuidController: _uuidController,
+        ),
       },
     );
   }
@@ -104,12 +114,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(l10n.homeLeaderContinent(match.continent),
-                          style: const TextStyle(fontWeight: FontWeight.w500)),
-                      Text(l10n.homeLeaderNation(match.nation),
-                          style: const TextStyle(fontWeight: FontWeight.w500)),
-                      Text(l10n.homeLeaderChapter(match.chapterName),
-                          style: const TextStyle(fontWeight: FontWeight.w500)),
+                      Text(
+                        l10n.homeLeaderContinent(match.continent),
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      Text(
+                        l10n.homeLeaderNation(match.nation),
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      Text(
+                        l10n.homeLeaderChapter(match.chapterName),
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
                     ],
                   ),
                 ),
@@ -356,7 +372,8 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
     final raw = prefs.getString(AppConstants.recentProgramsKey);
     if (raw != null && mounted) {
       setState(() {
-        _recentPrograms = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
+        _recentPrograms = (jsonDecode(raw) as List)
+            .cast<Map<String, dynamic>>();
       });
     }
   }
@@ -364,7 +381,10 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
   Future<void> _removeRecent(String uuid) async {
     final prefs = await SharedPreferences.getInstance();
     _recentPrograms.removeWhere((e) => e['uuid'] == uuid);
-    await prefs.setString(AppConstants.recentProgramsKey, jsonEncode(_recentPrograms));
+    await prefs.setString(
+      AppConstants.recentProgramsKey,
+      jsonEncode(_recentPrograms),
+    );
     setState(() {});
   }
 
@@ -386,12 +406,16 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
           const SizedBox(height: 20),
           Text(
             l10n.homeJoinTitle,
-            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             l10n.homeJoinSub,
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.grey[600],
+            ),
           ),
           const SizedBox(height: 32),
           TextField(
@@ -406,7 +430,8 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => _join(context, widget.uuidController.text.trim()),
+              onPressed: () =>
+                  _join(context, widget.uuidController.text.trim()),
               child: Text(l10n.homeJoinButton),
             ),
           ),
@@ -423,7 +448,10 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
                   leading: const Icon(Icons.history),
-                  title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  title: Text(
+                    name,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   subtitle: Text(
                     uuid,
                     style: const TextStyle(fontSize: 11),

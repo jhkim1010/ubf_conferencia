@@ -3,6 +3,9 @@
 
   "appTitle": "Mana",
 
+  "languageTitle": "언어",
+  "languageSystem": "기기 언어 따르기",
+
   "actionCancel": "취소",
   "actionSave": "저장",
   "actionConfirm": "확인",

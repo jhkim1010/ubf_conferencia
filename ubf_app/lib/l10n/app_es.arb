@@ -3,6 +3,9 @@
 
   "appTitle": "Mana",
 
+  "languageTitle": "Idioma",
+  "languageSystem": "Usar el idioma del dispositivo",
+
   "actionCancel": "Cancelar",
   "actionSave": "Guardar",
   "actionConfirm": "Confirmar",

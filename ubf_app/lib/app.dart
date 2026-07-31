@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/providers/locale_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/screens/login_screen.dart';
@@ -65,13 +66,18 @@ class _UbfAppState extends ConsumerState<UbfApp> {
       routes: [
         GoRoute(
           path: '/loading',
-          builder: (_, _) => const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          ),
+          builder: (_, _) =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
         ),
         GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
-        GoRoute(path: '/profile-setup', builder: (_, _) => const ProfileSetupScreen()),
-        GoRoute(path: '/become-leader', builder: (_, _) => const BecomeLeaderScreen()),
+        GoRoute(
+          path: '/profile-setup',
+          builder: (_, _) => const ProfileSetupScreen(),
+        ),
+        GoRoute(
+          path: '/become-leader',
+          builder: (_, _) => const BecomeLeaderScreen(),
+        ),
         GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
         GoRoute(
           path: '/leader/create-program',
@@ -79,15 +85,18 @@ class _UbfAppState extends ConsumerState<UbfApp> {
         ),
         GoRoute(
           path: '/leader/program/:id/created',
-          builder: (_, s) => ProgramCreatedScreen(programId: s.pathParameters['id']!),
+          builder: (_, s) =>
+              ProgramCreatedScreen(programId: s.pathParameters['id']!),
         ),
         GoRoute(
           path: '/leader/program/:id/dashboard',
-          builder: (_, s) => DashboardScreen(programId: s.pathParameters['id']!),
+          builder: (_, s) =>
+              DashboardScreen(programId: s.pathParameters['id']!),
         ),
         GoRoute(
           path: '/leader/program/:id/edit',
-          builder: (_, s) => EditProgramScreen(programId: s.pathParameters['id']!),
+          builder: (_, s) =>
+              EditProgramScreen(programId: s.pathParameters['id']!),
         ),
         GoRoute(
           path: '/leader/program/:id/setup',
@@ -95,7 +104,8 @@ class _UbfAppState extends ConsumerState<UbfApp> {
         ),
         GoRoute(
           path: '/leader/program/:id/assign',
-          builder: (_, s) => AssignmentScreen(programId: s.pathParameters['id']!),
+          builder: (_, s) =>
+              AssignmentScreen(programId: s.pathParameters['id']!),
         ),
         GoRoute(
           path: '/leader/program/:id/dispatch',
@@ -103,11 +113,13 @@ class _UbfAppState extends ConsumerState<UbfApp> {
         ),
         GoRoute(
           path: '/program/:id/my-transport',
-          builder: (_, s) => MyTransportScreen(programId: s.pathParameters['id']!),
+          builder: (_, s) =>
+              MyTransportScreen(programId: s.pathParameters['id']!),
         ),
         GoRoute(
           path: '/registration/:id',
-          builder: (_, s) => RegistrationFlowScreen(programId: s.pathParameters['id']!),
+          builder: (_, s) =>
+              RegistrationFlowScreen(programId: s.pathParameters['id']!),
         ),
         GoRoute(
           path: '/registration/:id/summary',
@@ -119,11 +131,13 @@ class _UbfAppState extends ConsumerState<UbfApp> {
         ),
         GoRoute(
           path: '/sos/:programId',
-          builder: (_, s) => SosScreen(programId: s.pathParameters['programId']!),
+          builder: (_, s) =>
+              SosScreen(programId: s.pathParameters['programId']!),
         ),
         GoRoute(
           path: '/program/:id/immigration',
-          builder: (_, s) => ImmigrationCardScreen(programId: s.pathParameters['id']!),
+          builder: (_, s) =>
+              ImmigrationCardScreen(programId: s.pathParameters['id']!),
         ),
       ],
     );
@@ -145,6 +159,9 @@ class _UbfAppState extends ConsumerState<UbfApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
+      // 앱 안에서 고른 언어(A002). null 이면 아래 localeResolutionCallback 이
+      // 기존대로 기기 언어를 따른다 — 한 번도 고르지 않은 사용자는 종전과 동일하다.
+      locale: ref.watch(localeProvider),
       // locale 미지정 → 기기 언어를 따른다. 지원(ko/en/es) 언어면 그 언어,
       // 그 외에는 영어로 폴백.
       localeResolutionCallback: (deviceLocale, supported) {

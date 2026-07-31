@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../settings/widgets/language_picker.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -41,7 +42,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.authDevFailed('$e'))),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.authDevFailed('$e')),
+          ),
         );
       }
     } finally {
@@ -79,13 +82,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Column(
             children: [
+              // 로그인 전에도 언어를 바꿀 수 있어야 한다 — 읽을 수 없는 언어로
+              // 이 화면이 떠 있으면 진입 자체가 막힌다.
+              const Align(
+                alignment: Alignment.centerRight,
+                child: LanguageButton(),
+              ),
               const Spacer(flex: 2),
               // 로고 영역 (5번 탭하면 테스트 로그인 표시)
               GestureDetector(
                 onTap: () {
                   final next = _logoTapCount + 1;
                   if (next >= 5) {
-                    setState(() { _logoTapCount = 0; _showDevLogin = true; });
+                    setState(() {
+                      _logoTapCount = 0;
+                      _showDevLogin = true;
+                    });
                   } else {
                     setState(() => _logoTapCount = next);
                   }
@@ -97,7 +109,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     color: theme.colorScheme.primary,
                     borderRadius: BorderRadius.circular(24),
                   ),
-                  child: const Icon(Icons.church, color: Colors.white, size: 60),
+                  child: const Icon(
+                    Icons.church,
+                    color: Colors.white,
+                    size: 60,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -125,7 +141,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         'https://www.google.com/favicon.ico',
                         width: 24,
                         height: 24,
-                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.login),
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.login),
                       ),
                       label: Text(
                         l10n.authSignInGoogle,

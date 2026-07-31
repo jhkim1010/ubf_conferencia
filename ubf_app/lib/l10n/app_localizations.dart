@@ -106,6 +106,18 @@ abstract class AppLocalizations {
   /// **'Mana'**
   String get appTitle;
 
+  /// Title of the language selection sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get languageTitle;
+
+  /// Option to clear the explicit language choice and follow the device setting
+  ///
+  /// In en, this message translates to:
+  /// **'Use device language'**
+  String get languageSystem;
+
   /// Generic cancel button
   ///
   /// In en, this message translates to:

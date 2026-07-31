@@ -12,6 +12,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appTitle => 'Mana';
 
   @override
+  String get languageTitle => '언어';
+
+  @override
+  String get languageSystem => '기기 언어 따르기';
+
+  @override
   String get actionCancel => '취소';
 
   @override
