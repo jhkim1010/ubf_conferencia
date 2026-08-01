@@ -1955,6 +1955,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'Todos los asistentes de esta conferencia verán los importes en esta moneda. No se aplica conversión de tipo de cambio.';
 
   @override
+  String cpCurrencyFixed(String code) {
+    return 'Las conferencias internacionales se cobran en $code. Los asistentes vienen de muchos países, así que la moneda es la misma para todos.';
+  }
+
+  @override
   String get flightNotBookedYet => 'Todavía no he comprado mi vuelo';
 
   @override

@@ -149,10 +149,13 @@ class _ProgramCard extends ConsumerWidget {
     final start = (program['start_date'] as String?)?.split('T').first;
     final end = (program['end_date'] as String?)?.split('T').first;
     final count = Money.parse(program['registration_count'])?.toInt() ?? 0;
-    final fees = [
-      program['fee_basic'],
-      program['fee_premium'],
-    ].whereType<Object>().map((v) => Money.format(Money.parse(v))).join(' / ');
+    // 금액은 그 수양회의 통화로 찍는다. 인자를 빼면 Money.format 이 USD 로
+    // 떨어져, ARS 로 만든 지역 수양회가 목록에서만 U$ 로 보인다.
+    final currency = Currency.of(program['currency'] as String?);
+    final fees = [program['fee_basic'], program['fee_premium']]
+        .whereType<Object>()
+        .map((v) => currency.format(Money.parse(v)))
+        .join(' / ');
 
     // 부제는 있는 것만 붙인다. 빈 값을 ' · ' 로 이어 붙이면 구분자만 남는다.
     final meta = [

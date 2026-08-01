@@ -4,6 +4,20 @@ import { sql } from '../db.js';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+// 이 사용자의 실제 역할. director > admin(leaders 행이 있으면) > participant.
+//
+// 예전에는 로그인 경로마다 `user.role ?? (leader ? 'admin' : 'participant')`
+// 로 적혀 있었는데, users.role 은 NOT NULL 에 기본값이 'participant' 라
+// `??` 분기가 한 번도 실행되지 않았다. 그래서 인앱으로 리더가 된 사람이
+// 앱을 다시 켜면 참가자 화면으로 떨어지고 자기 수양회에 못 들어갔다.
+// 에뮬레이터로 흐름을 따라가다 실제로 이 상태에 빠졌다.
+//
+// 네 곳(구글·카카오·dev-login·/auth/me)이 같은 판단을 하므로 여기 하나만 둔다.
+export function effectiveRole(storedRole, hasLeaderRow) {
+  if (storedRole === 'director' || storedRole === 'admin') return storedRole;
+  return hasLeaderRow ? 'admin' : 'participant';
+}
+
 // 허용할 Client ID 목록 (Web + iOS/macOS)
 const allowedAudiences = [
   process.env.GOOGLE_CLIENT_ID,         // Web Client ID
@@ -65,8 +79,7 @@ export async function googleLogin(req, res) {
       SELECT id FROM leaders WHERE user_id = ${user.id}
     `;
 
-    // role: director > admin (leaders 테이블에 있으면 admin 이상) > participant
-    const role = user.role ?? (leader ? 'admin' : 'participant');
+    const role = effectiveRole(user.role, !!leader);
     const isLeader = role === 'director' || role === 'admin';
 
     const token = jwt.sign(
@@ -130,7 +143,7 @@ export async function kakaoLogin(req, res) {
       SELECT id FROM leaders WHERE user_id = ${user.id}
     `;
 
-    const role     = user.role ?? (leader ? 'admin' : 'participant');
+    const role     = effectiveRole(user.role, !!leader);
     const isLeader = role === 'director' || role === 'admin';
 
     const token = jwt.sign(

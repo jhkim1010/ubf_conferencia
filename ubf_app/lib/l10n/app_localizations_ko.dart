@@ -1904,6 +1904,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cpCurrencyHint => '이 수양회 등록자 전원이 이 통화로 금액을 봅니다. 환율 변환은 하지 않습니다.';
 
   @override
+  String cpCurrencyFixed(String code) {
+    return '국제 수양회의 금액은 $code 로 적습니다. 여러 나라에서 오므로 통화를 통일합니다.';
+  }
+
+  @override
   String get flightNotBookedYet => '아직 항공권을 예매하지 않았습니다';
 
   @override

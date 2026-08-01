@@ -23,6 +23,19 @@ function normalizeCurrency(v) {
   return /^[A-Z]{3}$/.test(c) ? c : NaN; // 호출부에서 400 처리
 }
 
+// 이 프로그램이 실제로 쓸 통화.
+//
+// **국제 수양회는 항상 USD 다.** 여러 나라에서 오는 참가자가 한 화면에서
+// 서로 다른 통화를 보면 자기가 얼마를 내는지 비교할 수 없다. 지역 수양회는
+// 참가자가 모두 같은 나라 사람이므로 그 나라 통화를 쓰는 편이 낫다.
+//
+// 클라이언트가 국제 수양회에 다른 통화를 보내와도 여기서 USD 로 돌린다 —
+// 화면에서 막는 것만으로는 예전 앱이나 직접 호출을 막지 못한다.
+function currencyFor(type, requested, current) {
+  if (type === 'international') return 'USD';
+  return requested ?? current ?? 'USD';
+}
+
 // 할인 항목 정리. 관리자가 "1일 참석 / 2일 참석 …" 처럼 정의한다.
 // key 는 등록 레코드가 참조하므로 한 번 정해지면 바뀌면 안 된다.
 // 클라이언트가 준 key 를 그대로 쓰고, 없을 때만 위치 기반으로 채운다.
@@ -203,7 +216,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         ${feeBasicDesc ?? null},
         ${feePremiumDesc ?? null},
         ${JSON.stringify(discounts)},
-        ${cur ?? 'USD'}
+        ${currencyFor(type, cur, null)}
       )
       RETURNING id
     `;
@@ -304,7 +317,7 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
         fee_basic_desc   = ${has('feeBasicDesc') ? (feeBasicDesc ?? null) : program.fee_basic_desc},
         fee_premium_desc = ${has('feePremiumDesc') ? (feePremiumDesc ?? null) : program.fee_premium_desc},
         discount_options = ${JSON.stringify(discounts ?? program.discount_options ?? [])}::jsonb,
-        currency         = ${patchCurrency ?? program.currency ?? 'USD'}
+        currency         = ${currencyFor(type, patchCurrency, program.currency)}
       WHERE id = ${req.params.id}
     `;
 

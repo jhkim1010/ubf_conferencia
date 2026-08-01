@@ -77,24 +77,32 @@ eq "할인 항목 3개"          '3'   "$(echo "$P" | jqf 'r.discount_options.le
 eq "할인 항목 문구 보존"     '"1일만 참석"' "$(echo "$P" | jqf 'r.discount_options[0].label')"
 
 echo
-echo "── 통화 (수양회가 정한다) ──"
+echo "── 통화 (지역 수양회가 정한다) ──"
 # 환율 변환은 하지 않는다. 저장은 ISO 4217 코드이고 표시 기호는 앱이 만든다.
-eq "기본은 USD"            '"USD"' "$(echo "$P" | jqf 'r.currency')"
+#
+# 이 수양회는 국제(기본값)라 통화가 USD 로 고정된다. 통화를 **고를 수 있는지**
+# 보려면 지역 수양회여야 한다 — 국제로 두면 무엇을 보내든 USD 라서, 아래
+# 검사들이 "고정돼서" 통과하는지 "제대로 저장돼서" 통과하는지 구별되지 않는다.
+# 국제 고정 규칙 자체는 e2e-currency-rule.sh 가 따로 본다.
+eq "국제는 USD 고정"        '"USD"' "$(echo "$P" | jqf 'r.currency')"
 curl -s -X PATCH "$API/programs/$PROG" -H "Authorization: Bearer $LT" \
-  -H 'Content-Type: application/json' -d '{"currency":"KRW"}' >/dev/null
-eq "통화 변경"             '"KRW"' "$(curl -s "$API/programs/$PROG" -H "Authorization: Bearer $T" | jqf 'r.currency')"
+  -H 'Content-Type: application/json' -d '{"programType":"local","currency":"KRW"}' >/dev/null
+eq "지역으로 바꾸면 통화 변경" '"KRW"' "$(curl -s "$API/programs/$PROG" -H "Authorization: Bearer $T" | jqf 'r.currency')"
 eq "소문자도 받아 대문자로" '"ARS"' "$(curl -s -X PATCH "$API/programs/$PROG" -H "Authorization: Bearer $LT" \
-      -H 'Content-Type: application/json' -d '{"currency":"ars"}' >/dev/null; \
+      -H 'Content-Type: application/json' -d '{"programType":"local","currency":"ars"}' >/dev/null; \
       curl -s "$API/programs/$PROG" -H "Authorization: Bearer $T" | jqf 'r.currency')"
 eq "두 글자 거부"          '400' "$(curl -s -o /dev/null -w '%{http_code}' -X PATCH "$API/programs/$PROG" \
       -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' -d '{"currency":"US"}')"
 eq "숫자 섞인 코드 거부"    '400' "$(curl -s -o /dev/null -w '%{http_code}' -X PATCH "$API/programs/$PROG" \
       -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' -d '{"currency":"U5D"}')"
-# 등록자는 통화를 바꿀 수 없다 — 저장 본문에 넣어도 무시돼야 한다
+# 등록자는 통화를 바꿀 수 없다 — 저장 본문에 넣어도 무시돼야 한다.
+# 지역 수양회(ARS)에서 확인한다. 국제였다면 어차피 USD 라 권한 검사가 통과한
+# 것인지 고정 규칙이 막은 것인지 알 수 없다.
 save '{"realName":"참가비테스트","country":"PE","currency":"JPY"}' >/dev/null
 eq "등록자는 통화를 못 바꾼다" '"ARS"' "$(curl -s "$API/programs/$PROG" -H "Authorization: Bearer $T" | jqf 'r.currency')"
+# 뒤 검사들은 이 수양회를 국제 기준으로 계속 쓴다. 원래대로 되돌린다.
 curl -s -X PATCH "$API/programs/$PROG" -H "Authorization: Bearer $LT" \
-  -H 'Content-Type: application/json' -d '{"currency":"USD"}' >/dev/null
+  -H 'Content-Type: application/json' -d '{"programType":"international"}' >/dev/null
 
 echo
 echo "── 할인 문구 3개 언어 ──"

@@ -1945,6 +1945,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'All attendees of this conference see amounts in this currency. No exchange-rate conversion is applied.';
 
   @override
+  String cpCurrencyFixed(String code) {
+    return 'International conferences are priced in $code. Attendees come from many countries, so the currency is the same for everyone.';
+  }
+
+  @override
   String get flightNotBookedYet => 'I haven\'t booked my flight yet';
 
   @override

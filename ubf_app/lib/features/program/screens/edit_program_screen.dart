@@ -145,7 +145,13 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _feeBasicDescController.text = program['fee_basic_desc'] ?? '';
     _feePremiumDescController.text = program['fee_premium_desc'] ?? '';
 
-    _currency = Currency.of(program['currency'] as String?);
+    // 국제 수양회는 저장된 값이 무엇이든 USD 다. 규칙이 생기기 전에 만들어진
+    // 수양회에는 다른 통화가 남아 있는데, 그 값을 그대로 보여주면 잠금 안내가
+    // "국제 수양회의 금액은 ARS 로 적습니다" 처럼 스스로를 반박한다.
+    // 저장하면 서버가 USD 로 돌리므로, 화면도 저장될 값을 보여준다.
+    _currency = _programType == 'international'
+        ? Currency.usd
+        : Currency.of(program['currency'] as String?);
 
     final rawDiscounts = program['discount_options'];
     if (rawDiscounts is List) {
@@ -162,6 +168,9 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
       _enabledSections['arrival_flight'] = isInternational;
       _enabledSections['departure_flight'] = isInternational;
       _enabledSections['special_programs'] = isInternational;
+      // 국제로 바꾸면 통화도 USD 로 되돌린다. 서버가 어차피 USD 로 강제하므로,
+      // 여기서 안 되돌리면 금액 칸 접두사만 예전 통화로 남아 거짓말을 한다.
+      if (isInternational) _currency = Currency.usd;
     });
   }
 
@@ -487,6 +496,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   onDiscountsChanged: () => setState(() {}),
                   currency: _currency,
                   onCurrencyChanged: (c) => setState(() => _currency = c),
+                  canChooseCurrency: _programType == 'local',
                 ),
                 const SizedBox(height: 28),
 
@@ -565,7 +575,10 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                         subtitle: Text(
                           [
                             l10n.cpOptionCost(
-                              Money.format(Money.parse(option['cost'])),
+                              // 이 수양회의 통화로. 투어 옵션은 지금 국제
+                              // 전용이라 늘 USD 지만, 기본값에 기대면
+                              // 나중에 조용히 틀린다.
+                              _currency.format(Money.parse(option['cost'])),
                             ),
                             if (dates.isNotEmpty) dates,
                             if ((option['contactName'] as String?)

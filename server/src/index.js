@@ -6,7 +6,7 @@ import rateLimit from 'express-rate-limit';
 import cron from 'node-cron';
 import { sql } from './db.js';
 import jwt from 'jsonwebtoken';
-import { googleLogin, kakaoLogin, requireAuth } from './middleware/auth.js';
+import { googleLogin, kakaoLogin, requireAuth, effectiveRole } from './middleware/auth.js';
 import { sendDailySummary } from './services/telegram.js';
 import { notifyProgramParticipants } from './services/fcm.js';
 import programsRouter from './routes/programs.js';
@@ -123,8 +123,8 @@ app.post('/auth/dev-login', authLimiter, async (req, res) => {
     `;
 
     const [leader] = await sql`SELECT id FROM leaders WHERE user_id = ${user.id}`;
-    const role     = user.role ?? (leader ? 'admin' : 'participant');
-    const isLeader = role === 'director' || role === 'admin' || !!leader;
+    const role     = effectiveRole(user.role, !!leader);
+    const isLeader = role === 'director' || role === 'admin';
 
     const token = jwt.sign(
       { userId: user.id, email: user.email, name: user.name, role, isLeader, leaderId: leader?.id ?? null },
@@ -150,9 +150,13 @@ app.get('/auth/me', requireAuth, async (req, res) => {
     if (!user) return res.status(401).json({ error: '사용자 없음' });
 
     const [leader] = await sql`SELECT id FROM leaders WHERE user_id = ${req.user.userId}`;
+    // 화면은 role 로 분기한다(홈이 리더용인지 참가자용인지). isLeader 만
+    // 맞춰 두고 role 을 그대로 돌려주면 리더가 참가자 홈을 보게 된다.
+    const role = effectiveRole(user.role, !!leader);
     res.json({
       ...user,
-      isLeader: user.role === 'director' || user.role === 'admin' || !!leader,
+      role,
+      isLeader: role === 'director' || role === 'admin',
       leaderId: leader?.id ?? null,
     });
   } catch (err) {

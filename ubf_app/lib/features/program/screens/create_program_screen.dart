@@ -51,6 +51,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
       _enabledSections['arrival_flight'] = isInternational;
       _enabledSections['departure_flight'] = isInternational;
       _enabledSections['special_programs'] = isInternational;
+      // 국제로 바꾸면 통화도 USD 로 되돌린다. 서버가 어차피 USD 로 강제하므로,
+      // 여기서 안 되돌리면 금액 칸 접두사만 예전 통화로 남아 거짓말을 한다.
+      if (isInternational) _currency = Currency.usd;
     });
   }
 
@@ -448,6 +451,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
               onDiscountsChanged: () => setState(() {}),
               currency: _currency,
               onCurrencyChanged: (c) => setState(() => _currency = c),
+              canChooseCurrency: _programType == 'local',
             ),
             const SizedBox(height: 28),
 
@@ -470,7 +474,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                     title: Text(option['name']),
                     subtitle: Text(
                       l10n.cpOptionCost(
-                        Money.format(Money.parse(option['cost'])),
+                        // 이 수양회의 통화로. 투어 옵션은 지금 국제 전용이라
+                        // 늘 USD 지만, 기본값에 기대면 나중에 조용히 틀린다.
+                        _currency.format(Money.parse(option['cost'])),
                       ),
                     ),
                     trailing: IconButton(

@@ -589,6 +589,10 @@
   "myProgramsRegistered": "{count} inscritos",
   "cpCurrency": "Moneda",
   "cpCurrencyHint": "Todos los asistentes de esta conferencia verán los importes en esta moneda. No se aplica conversión de tipo de cambio.",
+  "cpCurrencyFixed": "Las conferencias internacionales se cobran en {code}. Los asistentes vienen de muchos países, así que la moneda es la misma para todos.",
+  "@cpCurrencyFixed": {
+    "placeholders": { "code": { "type": "String" } }
+  },
   "flightNotBookedYet": "Todavía no he comprado mi vuelo",
   "flightNotBookedYetHint": "Indica solo la fecha prevista. Puedes añadir el vuelo más adelante.",
   "flightEstimatedNotice": "Se guarda como estimación, no como vuelo confirmado. Vuelve a añadir el vuelo cuando lo compres.",

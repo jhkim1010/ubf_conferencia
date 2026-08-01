@@ -3634,6 +3634,12 @@ abstract class AppLocalizations {
   /// **'All attendees of this conference see amounts in this currency. No exchange-rate conversion is applied.'**
   String get cpCurrencyHint;
 
+  /// No description provided for @cpCurrencyFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'International conferences are priced in {code}. Attendees come from many countries, so the currency is the same for everyone.'**
+  String cpCurrencyFixed(String code);
+
   /// No description provided for @flightNotBookedYet.
   ///
   /// In en, this message translates to:

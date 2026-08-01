@@ -26,6 +26,12 @@ class FeeSection extends StatefulWidget {
   /// 통화를 바꿨을 때. 부모가 상태를 들고 저장 시점에 서버로 보낸다.
   final ValueChanged<Currency> onCurrencyChanged;
 
+  /// 통화를 고를 수 있는지. 국제 수양회는 USD 로 고정이므로 false 다.
+  ///
+  /// 고를 수 없을 때는 드롭다운을 비활성으로 두지 않고 아예 안 보여준다 —
+  /// 눌러도 아무 일도 없는 컨트롤은 고장난 것으로 읽힌다.
+  final bool canChooseCurrency;
+
   const FeeSection({
     super.key,
     required this.basicController,
@@ -36,6 +42,7 @@ class FeeSection extends StatefulWidget {
     required this.onDiscountsChanged,
     required this.currency,
     required this.onCurrencyChanged,
+    required this.canChooseCurrency,
   });
 
   @override
@@ -120,25 +127,43 @@ class _FeeSectionState extends State<FeeSection> {
 
         // 통화를 먼저 고르게 한다. 금액을 입력한 뒤에 단위를 정하면 이미 적은
         // 숫자가 어느 통화였는지 헷갈린다.
-        DropdownButtonFormField<String>(
-          initialValue: widget.currency.code,
-          decoration: InputDecoration(
-            labelText: l10n.cpCurrency,
-            helperText: l10n.cpCurrencyHint,
-            border: const OutlineInputBorder(),
-            isDense: true,
-          ),
-          items: [
-            for (final c in Currency.all)
-              DropdownMenuItem(
-                value: c.code,
-                child: Text('${c.symbol}  ${c.code}'),
+        if (widget.canChooseCurrency)
+          DropdownButtonFormField<String>(
+            initialValue: widget.currency.code,
+            decoration: InputDecoration(
+              labelText: l10n.cpCurrency,
+              helperText: l10n.cpCurrencyHint,
+              border: const OutlineInputBorder(),
+              isDense: true,
+            ),
+            items: [
+              for (final c in Currency.all)
+                DropdownMenuItem(
+                  value: c.code,
+                  child: Text('${c.symbol}  ${c.code}'),
+                ),
+            ],
+            onChanged: (v) {
+              if (v != null) widget.onCurrencyChanged(Currency.of(v));
+            },
+          )
+        else
+          // 고를 수 없어도 무엇으로 적히는지는 보여야 한다. 금액 칸의 접두사만
+          // 보고 "왜 U$ 인가"를 유추하게 두지 않는다.
+          Row(
+            children: [
+              Icon(Icons.lock_outline, size: 16, color: Colors.grey[600]),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  l10n.cpCurrencyFixed(widget.currency.code),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[700],
+                  ),
+                ),
               ),
-          ],
-          onChanged: (v) {
-            if (v != null) widget.onCurrencyChanged(Currency.of(v));
-          },
-        ),
+            ],
+          ),
         const SizedBox(height: 16),
 
         _FeeRow(

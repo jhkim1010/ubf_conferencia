@@ -32,6 +32,14 @@ router.post('/register', requireAuth, async (req, res) => {
       RETURNING id
     `;
 
+    // 역할을 DB 에도 남긴다. leaders 행만 만들고 users.role 을 그대로 두면
+    // 다음 로그인 때 역할을 매번 다시 유추해야 하고, 한 경로라도 빠뜨리면
+    // 리더가 참가자로 보인다. director 는 강등하지 않는다.
+    await sql`
+      UPDATE users SET role = 'admin', updated_at = NOW()
+      WHERE id = ${req.user.userId} AND role = 'participant'
+    `;
+
     // 리더 권한이 포함된 새 JWT 발급
     const newToken = jwt.sign(
       {
@@ -48,6 +56,14 @@ router.post('/register', requireAuth, async (req, res) => {
     console.log(`[LEADER] 등록 | userId=${req.user.userId} email=${req.user.email} leaderId=${leader.id} name=${name ?? 'default'}`);
     res.json({ token: newToken, leaderId: leader.id });
   } catch (err) {
+    // leaders.gmail 은 users.email 의 복사본인데 동기화되지 않는다. 위의
+    // user_id 검사는 이 제약을 잡지 못하므로(다른 열이다), 그대로 두면
+    // 유니크 위반이 500 "서버 오류" 로 새어 나가 화면에는 원인이 안 보인다.
+    // 실제로 에뮬레이터 점검 중 이 화면이 500 으로 막혔다.
+    if (err?.code === '23505') {
+      console.warn(`[LEADER] 중복 등록 | userId=${req.user.userId} constraint=${err.constraint}`);
+      return res.status(409).json({ error: '이 이메일은 이미 다른 리더 계정에 등록되어 있습니다' });
+    }
     console.error('리더 등록 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
