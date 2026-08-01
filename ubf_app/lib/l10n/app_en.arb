@@ -833,7 +833,7 @@
   "buddyKindRoommate": "Roommate",
   "buddyKindGroup": "Group",
   "buddyReqSent": "Request sent",
-  "buddyRoommateSameGenderNote": "Roommate requests can only be sent to the same gender.",
+  "buddyRoommateSameGenderNote": "Roommate requests can only be sent to the same gender, or to family travelling with you.",
   "buddyReceivedEmpty": "No requests received",
   "buddyNoCandidates": "No other participants to pick yet",
   "buddyRequestLine": "{kind} request",

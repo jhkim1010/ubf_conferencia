@@ -1405,7 +1405,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get buddyReqSent => '요청을 보냈습니다';
 
   @override
-  String get buddyRoommateSameGenderNote => '룸메이트는 같은 성별에게만 요청할 수 있어요.';
+  String get buddyRoommateSameGenderNote =>
+      '룸메이트는 같은 성별 혹은 동반 가족에게만 요청할 수 있어요.';
 
   @override
   String get buddyReceivedEmpty => '받은 요청이 없습니다';

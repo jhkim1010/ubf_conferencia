@@ -2701,7 +2701,7 @@ abstract class AppLocalizations {
   /// No description provided for @buddyRoommateSameGenderNote.
   ///
   /// In en, this message translates to:
-  /// **'Roommate requests can only be sent to the same gender.'**
+  /// **'Roommate requests can only be sent to the same gender, or to family travelling with you.'**
   String get buddyRoommateSameGenderNote;
 
   /// No description provided for @buddyReceivedEmpty.

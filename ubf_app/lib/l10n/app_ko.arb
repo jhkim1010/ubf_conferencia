@@ -433,7 +433,7 @@
   "buddyKindRoommate": "룸메이트",
   "buddyKindGroup": "말씀조",
   "buddyReqSent": "요청을 보냈습니다",
-  "buddyRoommateSameGenderNote": "룸메이트는 같은 성별에게만 요청할 수 있어요.",
+  "buddyRoommateSameGenderNote": "룸메이트는 같은 성별 혹은 동반 가족에게만 요청할 수 있어요.",
   "buddyReceivedEmpty": "받은 요청이 없습니다",
   "buddyNoCandidates": "아직 지목할 다른 참가자가 없습니다",
   "buddyRequestLine": "{kind} 요청",

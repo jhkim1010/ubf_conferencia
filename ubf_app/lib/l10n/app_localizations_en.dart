@@ -1439,7 +1439,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get buddyRoommateSameGenderNote =>
-      'Roommate requests can only be sent to the same gender.';
+      'Roommate requests can only be sent to the same gender, or to family travelling with you.';
 
   @override
   String get buddyReceivedEmpty => 'No requests received';

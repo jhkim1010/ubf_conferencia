@@ -433,7 +433,7 @@
   "buddyKindRoommate": "Compañero de cuarto",
   "buddyKindGroup": "Grupo",
   "buddyReqSent": "Solicitud enviada",
-  "buddyRoommateSameGenderNote": "Las solicitudes de compañero de cuarto solo pueden enviarse al mismo género.",
+  "buddyRoommateSameGenderNote": "Las solicitudes de compañero de cuarto solo pueden enviarse al mismo género o a la familia que viaja contigo.",
   "buddyReceivedEmpty": "No hay solicitudes recibidas",
   "buddyNoCandidates": "Aún no hay otros participantes para elegir",
   "buddyRequestLine": "Solicitud de {kind}",
