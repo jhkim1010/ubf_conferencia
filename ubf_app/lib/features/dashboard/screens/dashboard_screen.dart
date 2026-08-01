@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../program/providers/program_provider.dart';
 import '../../../core/utils/export_service.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import '../../../core/constants/world_countries.dart';
 
 // 리더용 대시보드 - 통계 + 참가자 관리
 class DashboardScreen extends ConsumerWidget {
@@ -415,7 +416,9 @@ class _PaymentTile extends StatelessWidget {
       child: ListTile(
         leading: const CircleAvatar(child: Icon(Icons.person)),
         title: Text(registration['real_name'] ?? l10n.commonNoName),
-        subtitle: Text(registration['country'] ?? ''),
+        subtitle: Text(
+          WorldCountries.display(registration['country'] as String?) ?? '',
+        ),
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
@@ -459,7 +462,8 @@ class _AttendeeListTile extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          '${registration['country'] ?? ''} / ${registration['branch'] ?? ''}',
+          '${WorldCountries.display(registration['country'] as String?) ?? ''}'
+          ' / ${registration['branch'] ?? ''}',
         ),
         trailing: Chip(
           label: Text(

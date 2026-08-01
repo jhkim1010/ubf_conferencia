@@ -4,32 +4,36 @@ import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../l10n/app_localizations.dart';
+import '../constants/world_countries.dart';
 
 // 참가자 데이터 내보내기 서비스
 // 헤더·값은 관리자(호출자)의 현재 언어로 출력된다.
 class ExportService {
   // 공통 헤더 (현재 언어)
-  static List<String> _headers(AppLocalizations l10n, {required bool withOptions}) => [
-        l10n.expColNo,
-        l10n.summaryRealName,
-        l10n.summaryBibleName,
-        l10n.summaryCountry,
-        l10n.summaryBranch,
-        l10n.regGender,
-        l10n.summaryAge,
-        l10n.expArrFlight,
-        l10n.expArrTime,
-        l10n.summaryArrAirport,
-        l10n.expDepFlight,
-        l10n.expDepTime,
-        l10n.summaryDepAirport,
-        l10n.summarySectionFood,
-        if (withOptions) l10n.expOptions,
-        l10n.summarySectionRoommate,
-        l10n.expTotalCost,
-        l10n.expPaymentStatus,
-        l10n.expSubmittedCol,
-      ];
+  static List<String> _headers(
+    AppLocalizations l10n, {
+    required bool withOptions,
+  }) => [
+    l10n.expColNo,
+    l10n.summaryRealName,
+    l10n.summaryBibleName,
+    l10n.summaryCountry,
+    l10n.summaryBranch,
+    l10n.regGender,
+    l10n.summaryAge,
+    l10n.expArrFlight,
+    l10n.expArrTime,
+    l10n.summaryArrAirport,
+    l10n.expDepFlight,
+    l10n.expDepTime,
+    l10n.summaryDepAirport,
+    l10n.summarySectionFood,
+    if (withOptions) l10n.expOptions,
+    l10n.summarySectionRoommate,
+    l10n.expTotalCost,
+    l10n.expPaymentStatus,
+    l10n.expSubmittedCol,
+  ];
 
   // 한 참가자의 값 목록 (현재 언어)
   static List<dynamic> _row(
@@ -47,7 +51,7 @@ class ExportService {
       index + 1,
       r['real_name'] ?? '',
       r['bible_name'] ?? '',
-      r['country'] ?? '',
+      WorldCountries.display(r['country'] as String?) ?? '',
       r['branch'] ?? '',
       gender,
       r['age'] ?? '',
@@ -82,10 +86,9 @@ class ExportService {
     final file = File('${dir.path}/${programName}_${l10n.expRoster}.csv');
     await file.writeAsString(csv);
 
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      subject: '$programName ${l10n.expRoster}',
-    );
+    await Share.shareXFiles([
+      XFile(file.path),
+    ], subject: '$programName ${l10n.expRoster}');
   }
 
   // Excel 내보내기
@@ -116,7 +119,12 @@ class ExportService {
 
     // 데이터 작성
     for (var rowIdx = 0; rowIdx < registrations.length; rowIdx++) {
-      final rowData = _row(l10n, rowIdx, registrations[rowIdx], withOptions: false);
+      final rowData = _row(
+        l10n,
+        rowIdx,
+        registrations[rowIdx],
+        withOptions: false,
+      );
       for (var colIdx = 0; colIdx < rowData.length; colIdx++) {
         final cell = sheet.cell(
           CellIndex.indexByColumnRow(columnIndex: colIdx, rowIndex: rowIdx + 1),
@@ -143,9 +151,8 @@ class ExportService {
     final file = File('${dir.path}/${programName}_${l10n.expRoster}.xlsx');
     await file.writeAsBytes(fileBytes);
 
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      subject: '$programName ${l10n.expRoster}',
-    );
+    await Share.shareXFiles([
+      XFile(file.path),
+    ], subject: '$programName ${l10n.expRoster}');
   }
 }

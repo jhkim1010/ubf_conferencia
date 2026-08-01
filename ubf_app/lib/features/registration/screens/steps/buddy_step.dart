@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/api_client.dart';
 import '../../providers/buddy_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import '../../../../core/constants/world_countries.dart';
 
 // PRD F3 — 룸메이트·말씀조 지목(요청) + 받은 요청 수락/거절
 class BuddyStep extends ConsumerStatefulWidget {
@@ -29,9 +30,9 @@ class _BuddyStepState extends ConsumerState<BuddyStep> {
       await ApiClient.sendBuddyRequest(widget.programId, toId, kind);
       _refresh();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.buddyReqSent)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.buddyReqSent)));
       }
     } on ApiException catch (e) {
       if (mounted) {
@@ -62,19 +63,27 @@ class _BuddyStepState extends ConsumerState<BuddyStep> {
       return Center(child: Text(l10n.sectionDisabled));
     }
 
-    final candidatesAsync = ref.watch(buddyCandidatesProvider(widget.programId));
+    final candidatesAsync = ref.watch(
+      buddyCandidatesProvider(widget.programId),
+    );
     final requestsAsync = ref.watch(myBuddyRequestsProvider(widget.programId));
 
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        Text(l10n.buddyTitle,
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.center),
+        Text(
+          l10n.buddyTitle,
+          style: Theme.of(context).textTheme.titleMedium,
+          textAlign: TextAlign.center,
+        ),
         const SizedBox(height: 6),
-        Text(l10n.buddyDesc,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-            textAlign: TextAlign.center),
+        Text(
+          l10n.buddyDesc,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          textAlign: TextAlign.center,
+        ),
         const SizedBox(height: 16),
 
         // ── 받은 요청 (수락/거절) ─────────────────────────────
@@ -90,11 +99,13 @@ class _BuddyStepState extends ConsumerState<BuddyStep> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _sectionLabel(l10n.buddyReceivedSection),
-                ...received.map((r) => _ReceivedCard(
-                      req: r,
-                      onAccept: () => _respond(r['id'] as String, 'accept'),
-                      onDecline: () => _respond(r['id'] as String, 'decline'),
-                    )),
+                ...received.map(
+                  (r) => _ReceivedCard(
+                    req: r,
+                    onAccept: () => _respond(r['id'] as String, 'accept'),
+                    onDecline: () => _respond(r['id'] as String, 'decline'),
+                  ),
+                ),
                 const SizedBox(height: 12),
               ],
             );
@@ -139,36 +150,51 @@ class _BuddyStepState extends ConsumerState<BuddyStep> {
               Icon(Icons.info_outline, size: 16, color: Colors.amber[800]),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(l10n.buddyRoommateSameGenderNote,
-                    style: TextStyle(fontSize: 12, color: Colors.amber[900])),
+                child: Text(
+                  l10n.buddyRoommateSameGenderNote,
+                  style: TextStyle(fontSize: 12, color: Colors.amber[900]),
+                ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 8),
         candidatesAsync.when(
-          loading: () => const Center(child: Padding(
-            padding: EdgeInsets.all(20), child: CircularProgressIndicator())),
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(),
+            ),
+          ),
           error: (e, _) => Text(l10n.commonErrorDetail('$e')),
           data: (candidates) {
             final filtered = candidates.where((c) {
               if (_query.isEmpty) return true;
-              final name = ('${c['real_name'] ?? ''} ${c['bible_name'] ?? ''}').toLowerCase();
+              final name = ('${c['real_name'] ?? ''} ${c['bible_name'] ?? ''}')
+                  .toLowerCase();
               return name.contains(_query);
             }).toList();
             if (filtered.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Center(child: Text(l10n.buddyNoCandidates,
-                    style: TextStyle(color: Colors.grey[500]))),
+                child: Center(
+                  child: Text(
+                    l10n.buddyNoCandidates,
+                    style: TextStyle(color: Colors.grey[500]),
+                  ),
+                ),
               );
             }
             return Column(
-              children: filtered.map((c) => _CandidateTile(
-                    candidate: c,
-                    onRoommate: () => _send(c['id'] as String, 'roommate'),
-                    onGroup: () => _send(c['id'] as String, 'group'),
-                  )).toList(),
+              children: filtered
+                  .map(
+                    (c) => _CandidateTile(
+                      candidate: c,
+                      onRoommate: () => _send(c['id'] as String, 'roommate'),
+                      onGroup: () => _send(c['id'] as String, 'group'),
+                    ),
+                  )
+                  .toList(),
             );
           },
         ),
@@ -177,11 +203,16 @@ class _BuddyStepState extends ConsumerState<BuddyStep> {
   }
 
   Widget _sectionLabel(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 6, top: 2),
-        child: Text(text,
-            style: const TextStyle(
-                fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
-      );
+    padding: const EdgeInsets.only(bottom: 6, top: 2),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.5,
+      ),
+    ),
+  );
 }
 
 String _kindLabel(String kind, AppLocalizations l10n) =>
@@ -192,13 +223,17 @@ Color _genderColor(String? g) => g == 'M'
     : (g == 'F' ? const Color(0xFFB0547E) : Colors.grey);
 
 Widget _avatar(String? name, String? gender) => CircleAvatar(
-      radius: 16,
-      backgroundColor: _genderColor(gender),
-      child: Text(
-        (name != null && name.isNotEmpty) ? name.characters.first : '?',
-        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-      ),
-    );
+  radius: 16,
+  backgroundColor: _genderColor(gender),
+  child: Text(
+    (name != null && name.isNotEmpty) ? name.characters.first : '?',
+    style: const TextStyle(
+      color: Colors.white,
+      fontSize: 13,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+);
 
 class _CandidateTile extends StatelessWidget {
   final Map<String, dynamic> candidate;
@@ -214,8 +249,10 @@ class _CandidateTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final name = candidate['real_name'] as String? ?? '';
-    final sub = [candidate['branch'], candidate['country']]
-        .where((e) => e != null && '$e'.isNotEmpty).join(' · ');
+    final sub = [
+      candidate['branch'],
+      WorldCountries.display(candidate['country'] as String?),
+    ].where((e) => e != null && '$e'.isNotEmpty).join(' · ');
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -228,9 +265,15 @@ class _CandidateTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(
+                    name,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   if (sub.isNotEmpty)
-                    Text(sub, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                    Text(
+                      sub,
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    ),
                 ],
               ),
             ),
@@ -268,10 +311,15 @@ class _SentTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 6),
       child: ListTile(
         dense: true,
-        leading: _avatar(req['otherName'] as String?, req['otherGender'] as String?),
+        leading: _avatar(
+          req['otherName'] as String?,
+          req['otherGender'] as String?,
+        ),
         title: Text(req['otherName'] as String? ?? ''),
-        subtitle: Text(l10n.buddyRequestLine(_kindLabel(req['kind'] as String, l10n)),
-            style: const TextStyle(fontSize: 11)),
+        subtitle: Text(
+          l10n.buddyRequestLine(_kindLabel(req['kind'] as String, l10n)),
+          style: const TextStyle(fontSize: 11),
+        ),
         trailing: Chip(
           label: Text(label, style: TextStyle(fontSize: 11, color: color)),
           backgroundColor: color.withValues(alpha: 0.1),
@@ -298,7 +346,9 @@ class _ReceivedCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+      color: Theme.of(
+        context,
+      ).colorScheme.primaryContainer.withValues(alpha: 0.4),
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Row(
@@ -309,10 +359,16 @@ class _ReceivedCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(req['otherName'] as String? ?? '',
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text(l10n.buddyRequestLine(_kindLabel(req['kind'] as String, l10n)),
-                      style: const TextStyle(fontSize: 11)),
+                  Text(
+                    req['otherName'] as String? ?? '',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    l10n.buddyRequestLine(
+                      _kindLabel(req['kind'] as String, l10n),
+                    ),
+                    style: const TextStyle(fontSize: 11),
+                  ),
                 ],
               ),
             ),

@@ -315,8 +315,10 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                   border: OutlineInputBorder(),
                 ),
                 dropdownMenuEntries: [
-                  for (final c in WorldCountries.sortedKorean)
-                    DropdownMenuEntry<String>(value: c, label: c),
+                  // 값은 ISO 코드, 표시는 영문명. 표시명을 저장하면 참가자의
+                  // 거주 국가와 문자열 비교가 성립하지 않는다.
+                  for (final c in WorldCountries.all)
+                    DropdownMenuEntry<String>(value: c.iso, label: c.name),
                 ],
                 onSelected: (v) => setState(() => _hostCountry = v),
               ),

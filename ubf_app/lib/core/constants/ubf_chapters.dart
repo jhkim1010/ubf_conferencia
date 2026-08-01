@@ -3,6 +3,7 @@
 
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'world_countries.dart';
 
 /// 챕터 데이터 모델
 class UbfChapter {
@@ -70,12 +71,31 @@ List<String> getContinents(List<UbfNationData> data) {
 }
 
 /// 특정 대륙의 국가 목록 (알파벳순)
-List<String> getNationsForContinent(List<UbfNationData> data, String continent) {
+List<String> getNationsForContinent(
+  List<UbfNationData> data,
+  String continent,
+) {
   return data
       .where((e) => e.continent == continent)
       .map((e) => e.nation)
       .toList()
     ..sort();
+}
+
+/// UBF 국가 표기를 ISO 코드로. 저장은 항상 ISO 로 한다.
+///
+/// 이 목록의 표기는 'BRASIL', 'U. S. A.', 'Sri-Lanka' 처럼 흔들려서
+/// 그대로 저장하면 개최국(programs.host_country)과 비교할 수 없다.
+String? isoForUbfNation(String? nation) => WorldCountries.isoForLegacy(nation);
+
+/// ISO 코드에 해당하는 UBF 국가 표기를 찾는다.
+/// 저장된 ISO 로 화면의 국가 선택을 복원할 때 쓴다.
+String? ubfNationForIso(List<UbfNationData> data, String? iso) {
+  if (iso == null || iso.isEmpty) return null;
+  for (final e in data) {
+    if (isoForUbfNation(e.nation) == iso) return e.nation;
+  }
+  return null;
 }
 
 /// 특정 국가의 챕터 목록
@@ -98,11 +118,13 @@ List<ChapterLeaderMatch> findLeaderByEmail(
     for (final chapter in nation.chapters) {
       for (final e in chapter.emails) {
         if (e.toLowerCase().trim() == lowerEmail) {
-          matches.add(ChapterLeaderMatch(
-            continent: nation.continent,
-            nation: nation.nation,
-            chapterName: chapter.name,
-          ));
+          matches.add(
+            ChapterLeaderMatch(
+              continent: nation.continent,
+              nation: nation.nation,
+              chapterName: chapter.name,
+            ),
+          );
         }
       }
     }

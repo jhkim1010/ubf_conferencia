@@ -136,6 +136,22 @@ check_arb_parity() {
   fi
 }
 
+# 국가 ISO 매핑 정합성.
+#
+# 저장값은 ISO 코드이고 표시명은 영어다. 매핑이 어긋나면 아무 오류 없이
+# "국내 참석자 0명"이 되어 항공편 생략·코호트 집계·봉사 자격이 조용히 틀린다.
+# 실제로 그 상태로 한동안 돌았다 — 그래서 검사로 고정한다.
+check_country_mapping() {
+  command -v python3 >/dev/null || { skip country-mapping "python3 없음"; return 0; }
+  local out
+  out="$( cd "$APP" && python3 scripts/check_countries.py 2>&1 )"
+  if [ $? -eq 0 ]; then
+    pass country-mapping
+  else
+    fail country-mapping "$(printf '%s' "$out" | grep '✗' | head -4)"
+  fi
+}
+
 # routes/*.js 와 index.js 의 app.use 등록 정합성.
 # 등록을 빠뜨리면 서버는 정상 기동하고 해당 경로만 조용히 404 가 된다.
 check_route_parity() {
@@ -278,6 +294,7 @@ ALL_CHECKS=(
   unit-tests
   flutter-tests
   arb-parity
+  country-mapping
   route-parity
   migration-numbers
   migration-safety
@@ -310,6 +327,8 @@ select_by_changes() {
   [ -z "$files" ] && return 0
   grep -qE '^ubf_app/.*\.dart$'            <<<"$files" && sel+=(flutter-analyze dart-format flutter-tests)
   grep -qE '^ubf_app/lib/l10n/.*\.arb$'    <<<"$files" && sel+=(arb-parity)
+  grep -qE '^ubf_app/(scripts/(countries_table|gen_countries|check_countries)\.py|assets/ubf_chapters\.json|lib/core/constants/world_countries\.dart)$' \
+                                           <<<"$files" && sel+=(country-mapping)
   grep -qE '^server/(src|test)/.*\.js$'     <<<"$files" && sel+=(server-syntax unit-tests route-parity server-smoke)
   grep -qE '^ubf_app/supabase/migrations/' <<<"$files" && sel+=(migration-numbers migration-safety)
   sel+=(secrets artifacts)

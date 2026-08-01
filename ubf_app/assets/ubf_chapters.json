@@ -1654,7 +1654,7 @@
     "nation": "ARGENTINA",
     "chapters": [
       {
-        "name": "Buenos AiresⅠ",
+        "name": "Buenos Aires",
         "emails": [
           "junghokim10@gmail.com",
           "ruthkim0212@gmail.com",
@@ -1665,14 +1665,6 @@
         ]
       },
       {
-        "name": "Buenos Aires Ⅱ (Paternal)",
-        "emails": [
-          "782moon@gmail.com",
-          "782moon@daum.net",
-          "Josephmoon08@gmail.com"
-        ]
-      },
-      {
         "name": "La Plata",
         "emails": [
           "juancho_176@hotmail.com",
@@ -1680,13 +1672,6 @@
           "argentinaisaac@gmail.com",
           "misionera_mary@hotmail.com",
           "biohazardm@hotmail.com"
-        ]
-      },
-      {
-        "name": "Rosario",
-        "emails": [
-          "anibaljoseortega@gmail.com",
-          "yessikaaloyo@gmail.com"
         ]
       }
     ]

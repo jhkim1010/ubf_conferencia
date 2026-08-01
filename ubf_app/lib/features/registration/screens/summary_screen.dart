@@ -5,6 +5,7 @@ import '../../program/providers/program_provider.dart';
 import '../providers/registration_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/constants/world_countries.dart';
 
 // 등록 요약 화면 - 모든 정보 확인 + 총 비용 표시
 class SummaryScreen extends ConsumerWidget {
@@ -87,7 +88,10 @@ class SummaryScreen extends ConsumerWidget {
                 icon: Icons.person,
                 onEdit: () => context.go('/registration/$programId'),
                 children: [
-                  _InfoRow(l10n.summaryCountry, formState.country ?? '-'),
+                  _InfoRow(
+                    l10n.summaryCountry,
+                    WorldCountries.display(formState.country) ?? '-',
+                  ),
                   _InfoRow(l10n.summaryBranch, formState.branch ?? '-'),
                   _InfoRow(l10n.summaryRealName, formState.realName ?? '-'),
                   _InfoRow(l10n.summaryBibleName, formState.bibleName ?? '-'),

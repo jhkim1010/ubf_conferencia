@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/constants/world_countries.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../program/providers/program_provider.dart';
 import '../providers/registration_provider.dart';
@@ -155,11 +156,19 @@ class _RegistrationFlowScreenState
         );
 
         // 개최 국가 == 참가자 거주 국가면 항공편 입력을 기본 생략 (필요 시 추가 가능)
-        final hostCountry = program['host_country'] as String?;
-        final userCountry = ref.watch(currentUserProvider).country;
+        //
+        // 양쪽을 ISO 로 정규화한 뒤에 비교한다. 019 마이그레이션이 기존 값을
+        // 코드로 바꿨지만, 매핑에 없어 남은 값과 예전 버전 앱이 저장한 값이
+        // 섞여 있을 수 있다. 정규화 없이 문자열을 그대로 비교했던 것이
+        // 이 기능이 한 번도 동작하지 않은 원인이었다.
+        final hostCountry = WorldCountries.isoForLegacy(
+          program['host_country'] as String?,
+        );
+        final userCountry = WorldCountries.isoForLegacy(
+          ref.watch(currentUserProvider).country,
+        );
         final sameCountryAsHost =
             hostCountry != null &&
-            hostCountry.isNotEmpty &&
             userCountry != null &&
             userCountry == hostCountry;
 

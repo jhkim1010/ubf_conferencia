@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/ubf_chapters.dart';
+import '../../../../../core/constants/world_countries.dart';
 import '../../providers/registration_provider.dart';
 import '../../widgets/privacy_notice.dart';
 import 'package:mana/l10n/app_localizations.dart';
@@ -26,13 +27,16 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
 
   // JSON에서 로드된 챕터 데이터
   List<UbfNationData> _chaptersData = [];
+  String? _savedIso;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     final state = ref.read(registrationFormProvider(widget.programId));
-    _nation = state.country;
+    // 폼에는 ISO 코드가 들어 있다. 화면에서 쓰는 _nation 은 UBF 지부 목록의
+    // 표기라서(챕터 조회에 필요하다) 데이터 로드 후 변환한다.
+    _savedIso = WorldCountries.isoForLegacy(state.country);
     _branchController = TextEditingController(text: state.branch ?? '');
     _realNameController = TextEditingController(text: state.realName ?? '');
     _bibleNameController = TextEditingController(text: state.bibleName ?? '');
@@ -47,6 +51,9 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
     setState(() {
       _chaptersData = data;
       _isLoading = false;
+
+      // 저장된 ISO 로 UBF 국가 표기를 되찾는다
+      _nation = ubfNationForIso(data, _savedIso);
 
       // 저장된 국가로 대륙 복원
       if (_nation != null) {
@@ -80,7 +87,9 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
     ref
         .read(registrationFormProvider(widget.programId).notifier)
         .updatePersonalInfo(
-          country: _nation,
+          // 저장은 ISO 코드로. UBF 목록의 표기('BRASIL', 'U. S. A.')를 그대로
+          // 넣으면 개최국(programs.host_country)과 절대 일치하지 않는다.
+          country: isoForUbfNation(_nation),
           branch: _branchController.text.trim(),
           realName: _realNameController.text.trim(),
           bibleName: _bibleNameController.text.trim(),

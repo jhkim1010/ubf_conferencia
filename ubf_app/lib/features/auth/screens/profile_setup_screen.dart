@@ -39,9 +39,14 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   Future<void> _save() async {
     final formOk = _formKey.currentState!.validate();
     // 국가 선택 검증 (DropdownMenu 는 Form validator 대상이 아니므로 수동 검증)
+    // 저장하는 값은 ISO 코드다. 표시명을 저장하면 언어마다 다른 문자열이 되어
+    // 개최국 비교가 깨진다 (019 마이그레이션이 정리한 문제다).
     final country = _selectedCountry;
-    if (country == null || !WorldCountries.sortedKorean.contains(country)) {
-      setState(() => _countryError = AppLocalizations.of(context)!.profileRegionRequired);
+    if (country == null || !WorldCountries.isKnown(country)) {
+      setState(
+        () =>
+            _countryError = AppLocalizations.of(context)!.profileRegionRequired,
+      );
       return;
     }
     if (!formOk) return;
@@ -57,13 +62,17 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         region: country,
       );
       // 상태 갱신 — profileCompleted=true로 업데이트되면 라우터가 /home으로 이동
-      ref.read(authProvider.notifier).markProfileCompleted(
-        name: _nameController.text.trim(),
-      );
+      ref
+          .read(authProvider.notifier)
+          .markProfileCompleted(name: _nameController.text.trim());
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.profileSaveFailed('$e'))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.profileSaveFailed('$e'),
+            ),
+          ),
         );
       }
     } finally {
@@ -86,17 +95,25 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             children: [
               const SizedBox(height: 16),
               // 헤더
-              Icon(Icons.person_pin, size: 64, color: theme.colorScheme.primary),
+              Icon(
+                Icons.person_pin,
+                size: 64,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(height: 16),
               Text(
                 l10n.profileTitle,
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 l10n.profileSubtitle,
-                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[600],
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -110,11 +127,17 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.email_outlined, size: 18, color: Colors.grey),
+                    const Icon(
+                      Icons.email_outlined,
+                      size: 18,
+                      color: Colors.grey,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       user.email ?? '',
-                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[700],
+                      ),
                     ),
                   ],
                 ),
@@ -130,7 +153,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   prefixIcon: const Icon(Icons.person_outline),
                   border: const OutlineInputBorder(),
                 ),
-                validator: (v) => (v == null || v.trim().isEmpty) ? l10n.profileNameRequired : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? l10n.profileNameRequired
+                    : null,
               ),
               const SizedBox(height: 16),
 
@@ -146,7 +171,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 ),
                 validator: (v) {
                   final n = int.tryParse(v ?? '');
-                  if (n == null || n < 1 || n > 120) return l10n.profileAgeInvalid;
+                  if (n == null || n < 1 || n > 120) {
+                    return l10n.profileAgeInvalid;
+                  }
                   return null;
                 },
               ),
@@ -167,8 +194,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   border: OutlineInputBorder(),
                 ),
                 dropdownMenuEntries: [
-                  for (final c in WorldCountries.sortedKorean)
-                    DropdownMenuEntry<String>(value: c, label: c),
+                  for (final c in WorldCountries.all)
+                    DropdownMenuEntry<String>(value: c.iso, label: c.name),
                 ],
                 onSelected: (value) {
                   setState(() {
@@ -185,10 +212,17 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   onPressed: _isLoading ? null : _save,
                   child: _isLoading
                       ? const SizedBox(
-                          width: 20, height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
-                      : Text(l10n.profileSaveStart, style: const TextStyle(fontSize: 16)),
+                      : Text(
+                          l10n.profileSaveStart,
+                          style: const TextStyle(fontSize: 16),
+                        ),
                 ),
               ),
             ],

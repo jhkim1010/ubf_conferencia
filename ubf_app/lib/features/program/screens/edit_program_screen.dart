@@ -115,8 +115,12 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
 
     _programType = program['program_type'] ?? 'international';
 
-    _hostCountry = program['host_country'] as String?;
-    _hostCountryController.text = _hostCountry ?? '';
+    // 019 이전에 저장된 표시명이 남아 있을 수 있다. ISO 로 되돌린 뒤 영문명을
+    // 보여준다. 코드를 그대로 칸에 넣으면 관리자에게 'AR' 만 보인다.
+    _hostCountry = WorldCountries.isoForLegacy(
+      program['host_country'] as String?,
+    );
+    _hostCountryController.text = WorldCountries.nameOf(_hostCountry) ?? '';
 
     final sections = Map<String, dynamic>.from(
       program['enabled_sections'] ?? {},
@@ -356,8 +360,10 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                       border: OutlineInputBorder(),
                     ),
                     dropdownMenuEntries: [
-                      for (final c in WorldCountries.sortedKorean)
-                        DropdownMenuEntry<String>(value: c, label: c),
+                      // 값은 ISO 코드, 표시는 영문명. 표시명을 저장하면 참가자의
+                      // 거주 국가와 문자열 비교가 성립하지 않는다.
+                      for (final c in WorldCountries.all)
+                        DropdownMenuEntry<String>(value: c.iso, label: c.name),
                     ],
                     onSelected: (v) => setState(() => _hostCountry = v),
                   ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../program/providers/program_provider.dart';
+import '../../../core/constants/world_countries.dart';
 
 // 준비 현황 화면 (A003)
 //
@@ -132,7 +133,7 @@ class _Header extends StatelessWidget {
                     [
                       p['location'],
                       p['start_date']?.toString().split('T').first,
-                      p['host_country'],
+                      WorldCountries.display(p['host_country'] as String?),
                     ].where((e) => e != null && '$e'.isNotEmpty).join(' · '),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.grey[600],
@@ -502,7 +503,7 @@ class _CohortCard extends StatelessWidget {
                   ),
                   child: Text(
                     domestic
-                        ? '${l10n.rdyDomestic} · ${data['country'] ?? ''}'
+                        ? '${l10n.rdyDomestic} · ${WorldCountries.display(data['country'] as String?) ?? ''}'
                         : '${l10n.rdyOverseas} · ${data['countries'] ?? 0}',
                     style: TextStyle(
                       fontSize: 11,
@@ -644,7 +645,7 @@ class _Blocked extends StatelessWidget {
                   ),
                   subtitle: Text(
                     [
-                      r['country'],
+                      WorldCountries.display(r['country'] as String?),
                       r['branch'],
                     ].where((e) => e != null && '$e'.isNotEmpty).join(' · '),
                   ),

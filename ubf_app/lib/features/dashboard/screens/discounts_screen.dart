@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/api_client.dart';
 import '../../../core/utils/money.dart';
 import '../../program/providers/program_provider.dart';
+import '../../../core/constants/world_countries.dart';
 
 // 할인 신청 검토 (담당자)
 //
@@ -152,7 +153,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
             if (r['branch'] != null || r['country'] != null)
               Text(
                 [
-                  r['country'],
+                  WorldCountries.display(r['country'] as String?),
                   r['branch'],
                 ].where((v) => v != null && '$v'.isNotEmpty).join(' / '),
                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
