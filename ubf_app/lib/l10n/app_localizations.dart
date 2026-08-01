@@ -3597,6 +3597,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rejected'**
   String get adDiscountRejected;
+
+  /// No description provided for @myProgramsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My programs'**
+  String get myProgramsTitle;
+
+  /// No description provided for @myProgramsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not created any conference yet.\nTap the button below to create one.'**
+  String get myProgramsEmpty;
+
+  /// No description provided for @myProgramsEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get myProgramsEdit;
+
+  /// No description provided for @myProgramsRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} registered'**
+  String myProgramsRegistered(int count);
 }
 
 class _AppLocalizationsDelegate

@@ -34,9 +34,9 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
     final l10n = AppLocalizations.of(context)!;
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.profileNameRequired)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.profileNameRequired)));
       return;
     }
 
@@ -51,7 +51,11 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.blLeaderRegFailed('$e'))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.blLeaderRegFailed('$e'),
+            ),
+          ),
         );
       }
     } finally {
@@ -84,7 +88,9 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
                     Expanded(
                       child: Text(
                         l10n.blInfo,
-                        style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
                       ),
                     ),
                   ],
@@ -93,11 +99,18 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
             ),
             const SizedBox(height: 32),
             // 로그인 정보 표시
-            Text(l10n.blLoginAccount, style: theme.textTheme.labelLarge?.copyWith(color: Colors.grey[600])),
+            Text(
+              l10n.blLoginAccount,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: Colors.grey[600],
+              ),
+            ),
             const SizedBox(height: 4),
             Text(
               user.email ?? '-',
-              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 24),
             // 리더 이름 입력
@@ -120,8 +133,12 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
                 onPressed: _isLoading ? null : _register,
                 icon: _isLoading
                     ? const SizedBox(
-                        width: 18, height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Icon(Icons.arrow_forward),
                 label: Text(l10n.blRegisterButton),

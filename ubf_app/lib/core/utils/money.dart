@@ -21,4 +21,21 @@ class Money {
     final hasCents = v % 1 != 0;
     return '$symbol ${v.toStringAsFixed(hasCents ? 2 : 0)}';
   }
+
+  /// API 가 준 금액을 숫자로. 숫자가 아니면 null.
+  ///
+  /// `as num?` 로 캐스팅하지 말 것. Postgres 의 NUMERIC/BIGINT 는 드라이버가
+  /// 문자열로 돌려주는 것이 기본이라 캐스팅이 예외로 죽는다. 서버에서
+  /// 파서를 설정해 두었지만(server/src/db.js), 새 컬럼이나 다른 경로로
+  /// 문자열이 다시 들어와도 화면이 통째로 죽지는 않게 한다.
+  ///
+  ///   parse(180)      → 180
+  ///   parse('180.00') → 180.0
+  ///   parse(null)     → null
+  ///   parse('없음')   → null
+  static num? parse(Object? value) {
+    if (value == null) return null;
+    if (value is num) return value;
+    return num.tryParse(value.toString());
+  }
 }

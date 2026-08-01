@@ -107,12 +107,12 @@ class FeeStep extends ConsumerWidget {
             child: Column(
               children: [
                 ...discountOptions.map((o) {
-                  final amount = o['amount'];
+                  final amount = Money.parse(o['amount']);
                   return RadioListTile<String>(
                     contentPadding: EdgeInsets.zero,
                     value: o['key'] as String? ?? '',
                     title: Text(o['label'] as String? ?? ''),
-                    subtitle: amount is num
+                    subtitle: amount != null
                         ? Text(
                             '- ${Money.format(amount)}',
                             style: TextStyle(color: theme.colorScheme.primary),
@@ -263,7 +263,7 @@ class _DecisionBanner extends StatelessWidget {
     late final IconData icon;
     switch (status) {
       case 'approved':
-        final v = amount is num ? amount as num : 0;
+        final v = Money.parse(amount) ?? 0;
         text = l10n.discountStatusApproved(Money.format(v));
         color = Colors.green[700]!;
         icon = Icons.check_circle_outline;

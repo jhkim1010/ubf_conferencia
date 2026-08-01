@@ -463,7 +463,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                   child: ListTile(
                     title: Text(option['name']),
                     subtitle: Text(
-                      l10n.cpOptionCost(Money.format(option['cost'] as num?)),
+                      l10n.cpOptionCost(
+                        Money.format(Money.parse(option['cost'])),
+                      ),
                     ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -493,6 +495,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: l10n.cpOptionCostLabel,
+                        prefixText: '${Money.symbol} ',
                       ),
                     ),
                   ),

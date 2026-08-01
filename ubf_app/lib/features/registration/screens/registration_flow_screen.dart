@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/world_countries.dart';
+import '../../../../core/utils/money.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../program/providers/program_provider.dart';
 import '../providers/registration_provider.dart';
@@ -243,8 +244,8 @@ class _RegistrationFlowScreenState
               title: l10n.regStepFee,
               widget: FeeStep(
                 programId: widget.programId,
-                feeBasic: program['fee_basic'] as num?,
-                feePremium: program['fee_premium'] as num?,
+                feeBasic: Money.parse(program['fee_basic']),
+                feePremium: Money.parse(program['fee_premium']),
                 feeBasicDesc: program['fee_basic_desc'] as String?,
                 feePremiumDesc: program['fee_premium_desc'] as String?,
                 discountOptions: List<Map<String, dynamic>>.from(

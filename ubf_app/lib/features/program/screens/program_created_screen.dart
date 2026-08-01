@@ -31,7 +31,11 @@ class ProgramCreatedScreen extends StatelessWidget {
                   color: Colors.green[50],
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.check_circle, color: Colors.green[600], size: 60),
+                child: Icon(
+                  Icons.check_circle,
+                  color: Colors.green[600],
+                  size: 60,
+                ),
               ),
               const SizedBox(height: 24),
               Text(
@@ -44,7 +48,9 @@ class ProgramCreatedScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 l10n.pcShareUuid,
-                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[600],
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -81,9 +87,9 @@ class ProgramCreatedScreen extends StatelessWidget {
                       label: Text(l10n.pcCopy),
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: programId));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l10n.pcCopied)),
-                        );
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text(l10n.pcCopied)));
                       },
                     ),
                   ],
@@ -112,7 +118,8 @@ class ProgramCreatedScreen extends StatelessWidget {
               const SizedBox(height: 40),
               // 대시보드로 이동
               ElevatedButton(
-                onPressed: () => context.go('/leader/program/$programId/dashboard'),
+                onPressed: () =>
+                    context.go('/leader/program/$programId/dashboard'),
                 child: Text(l10n.pcGoDashboard),
               ),
               const SizedBox(height: 12),

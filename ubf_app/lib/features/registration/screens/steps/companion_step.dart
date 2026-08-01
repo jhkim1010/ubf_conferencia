@@ -28,7 +28,9 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
       final rows = await ApiClient.getMyCompanions(widget.programId);
       if (!mounted) return;
       setState(() {
-        _companions = rows.map((r) => _fromServer(r as Map<String, dynamic>)).toList();
+        _companions = rows
+            .map((r) => _fromServer(r as Map<String, dynamic>))
+            .toList();
         _loading = false;
       });
     } catch (_) {
@@ -37,38 +39,38 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
   }
 
   Map<String, dynamic> _fromServer(Map<String, dynamic> r) => {
-        'realName': r['real_name'] ?? '',
-        'bibleName': r['bible_name'] ?? '',
-        'gender': r['gender'],
-        'age': r['age'],
-        'language': r['language'] ?? '',
-        'branch': r['branch'] ?? '',
-        'sameFlightAsPrimary': r['same_flight_as_primary'] ?? true,
-        'arrivalFlightNo': (r['arrival_flight'] as Map?)?['flight_no'] ?? '',
-        'departureFlightNo': (r['departure_flight'] as Map?)?['flight_no'] ?? '',
-        'needsPickup': r['needs_pickup'] ?? true,
-      };
+    'realName': r['real_name'] ?? '',
+    'bibleName': r['bible_name'] ?? '',
+    'gender': r['gender'],
+    'age': r['age'],
+    'language': r['language'] ?? '',
+    'branch': r['branch'] ?? '',
+    'sameFlightAsPrimary': r['same_flight_as_primary'] ?? true,
+    'arrivalFlightNo': (r['arrival_flight'] as Map?)?['flight_no'] ?? '',
+    'departureFlightNo': (r['departure_flight'] as Map?)?['flight_no'] ?? '',
+    'needsPickup': r['needs_pickup'] ?? true,
+  };
 
   // 로컬 → 서버 payload
   List<Map<String, dynamic>> _toPayload() => _companions.map((c) {
-        final same = c['sameFlightAsPrimary'] == true;
-        return {
-          'realName': c['realName'],
-          'bibleName': c['bibleName'],
-          'gender': c['gender'],
-          'age': c['age'],
-          'language': c['language'],
-          'branch': c['branch'],
-          'sameFlightAsPrimary': same,
-          'arrivalFlight': (!same && '${c['arrivalFlightNo']}'.isNotEmpty)
-              ? {'flight_no': c['arrivalFlightNo']}
-              : null,
-          'departureFlight': (!same && '${c['departureFlightNo']}'.isNotEmpty)
-              ? {'flight_no': c['departureFlightNo']}
-              : null,
-          'needsPickup': c['needsPickup'] ?? true,
-        };
-      }).toList();
+    final same = c['sameFlightAsPrimary'] == true;
+    return {
+      'realName': c['realName'],
+      'bibleName': c['bibleName'],
+      'gender': c['gender'],
+      'age': c['age'],
+      'language': c['language'],
+      'branch': c['branch'],
+      'sameFlightAsPrimary': same,
+      'arrivalFlight': (!same && '${c['arrivalFlightNo']}'.isNotEmpty)
+          ? {'flight_no': c['arrivalFlightNo']}
+          : null,
+      'departureFlight': (!same && '${c['departureFlightNo']}'.isNotEmpty)
+          ? {'flight_no': c['departureFlightNo']}
+          : null,
+      'needsPickup': c['needsPickup'] ?? true,
+    };
+  }).toList();
 
   Future<void> _persist() async {
     try {
@@ -86,7 +88,8 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _CompanionSheet(existing: index != null ? _companions[index] : null),
+      builder: (_) =>
+          _CompanionSheet(existing: index != null ? _companions[index] : null),
     );
     if (result == null) return;
     setState(() {
@@ -116,30 +119,52 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
         ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 90),
           children: [
-            const Icon(Icons.family_restroom, size: 48, color: Color(0xFF7A6BB5)),
+            const Icon(
+              Icons.family_restroom,
+              size: 48,
+              color: Color(0xFF7A6BB5),
+            ),
             const SizedBox(height: 12),
-            Text(l10n.companionTitle,
-                style: Theme.of(context).textTheme.titleMedium,
-                textAlign: TextAlign.center),
+            Text(
+              l10n.companionTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 6),
-            Text(l10n.companionDesc,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-                textAlign: TextAlign.center),
+            Text(
+              l10n.companionDesc,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 20),
             if (_companions.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: Text(l10n.companionEmpty,
-                    style: TextStyle(color: Colors.grey[500]))),
+                child: Center(
+                  child: Text(
+                    l10n.companionEmpty,
+                    style: TextStyle(color: Colors.grey[500]),
+                  ),
+                ),
               )
             else ...[
-              Text(l10n.companionCount(_companions.length),
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+              Text(
+                l10n.companionCount(_companions.length),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 8),
               ..._companions.asMap().entries.map((e) {
                 final c = e.value;
                 final sub = [
-                  if (c['gender'] == 'M') l10n.genderMale else if (c['gender'] == 'F') l10n.genderFemale,
+                  if (c['gender'] == 'M')
+                    l10n.genderMale
+                  else if (c['gender'] == 'F')
+                    l10n.genderFemale,
                   if (c['age'] != null) '${c['age']}',
                   if ('${c['branch']}'.isNotEmpty) c['branch'],
                 ].where((x) => x != null && '$x'.isNotEmpty).join(' · ');
@@ -150,8 +175,10 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
                       backgroundColor: Color(0xFF7A6BB5),
                       child: Icon(Icons.person, color: Colors.white, size: 20),
                     ),
-                    title: Text(c['realName'] as String? ?? '',
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    title: Text(
+                      c['realName'] as String? ?? '',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     subtitle: Text(sub),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -161,7 +188,11 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
                           onPressed: () => _addOrEdit(index: e.key),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            size: 20,
+                            color: Colors.red,
+                          ),
                           onPressed: () => _remove(e.key),
                         ),
                       ],
@@ -173,7 +204,9 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
           ],
         ),
         Positioned(
-          left: 20, right: 20, bottom: 16,
+          left: 20,
+          right: 20,
+          bottom: 16,
           child: FilledButton.icon(
             onPressed: () => _addOrEdit(),
             icon: const Icon(Icons.person_add_alt),
@@ -223,9 +256,13 @@ class _CompanionSheetState extends State<_CompanionSheet> {
 
   @override
   void dispose() {
-    _name.dispose(); _bible.dispose(); _age.dispose();
-    _language.dispose(); _branch.dispose();
-    _arrFlight.dispose(); _depFlight.dispose();
+    _name.dispose();
+    _bible.dispose();
+    _age.dispose();
+    _language.dispose();
+    _branch.dispose();
+    _arrFlight.dispose();
+    _depFlight.dispose();
     super.dispose();
   }
 
@@ -256,23 +293,43 @@ class _CompanionSheetState extends State<_CompanionSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.existing == null ? l10n.companionAddTitle : l10n.companionEditTitle,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              widget.existing == null
+                  ? l10n.companionAddTitle
+                  : l10n.companionEditTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
-            TextField(controller: _name,
-                decoration: InputDecoration(labelText: l10n.profileNameLabel)),
+            TextField(
+              controller: _name,
+              decoration: InputDecoration(labelText: l10n.profileNameLabel),
+            ),
             const SizedBox(height: 10),
-            Row(children: [
-              Expanded(child: TextField(controller: _bible,
-                  decoration: InputDecoration(labelText: l10n.regBibleName))),
-              const SizedBox(width: 10),
-              SizedBox(width: 90, child: TextField(controller: _age,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(labelText: l10n.summaryAge))),
-            ]),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _bible,
+                    decoration: InputDecoration(labelText: l10n.regBibleName),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: 90,
+                  child: TextField(
+                    controller: _age,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(labelText: l10n.summaryAge),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
-            Text(l10n.regGender, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(
+              l10n.regGender,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
             const SizedBox(height: 4),
             SegmentedButton<String>(
               segments: [
@@ -281,16 +338,29 @@ class _CompanionSheetState extends State<_CompanionSheet> {
               ],
               selected: _gender != null ? {_gender!} : {},
               emptySelectionAllowed: true,
-              onSelectionChanged: (s) => setState(() => _gender = s.isEmpty ? null : s.first),
+              onSelectionChanged: (s) =>
+                  setState(() => _gender = s.isEmpty ? null : s.first),
             ),
             const SizedBox(height: 12),
-            Row(children: [
-              Expanded(child: TextField(controller: _language,
-                  decoration: InputDecoration(labelText: l10n.companionLanguage))),
-              const SizedBox(width: 10),
-              Expanded(child: TextField(controller: _branch,
-                  decoration: InputDecoration(labelText: l10n.summaryBranch))),
-            ]),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _language,
+                    decoration: InputDecoration(
+                      labelText: l10n.companionLanguage,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _branch,
+                    decoration: InputDecoration(labelText: l10n.summaryBranch),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
@@ -299,13 +369,23 @@ class _CompanionSheetState extends State<_CompanionSheet> {
               onChanged: (v) => setState(() => _sameFlight = v),
             ),
             if (!_sameFlight) ...[
-              TextField(controller: _arrFlight,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: InputDecoration(labelText: l10n.companionArrivalFlightNo, hintText: 'KE123')),
+              TextField(
+                controller: _arrFlight,
+                textCapitalization: TextCapitalization.characters,
+                decoration: InputDecoration(
+                  labelText: l10n.companionArrivalFlightNo,
+                  hintText: 'KE123',
+                ),
+              ),
               const SizedBox(height: 8),
-              TextField(controller: _depFlight,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: InputDecoration(labelText: l10n.companionDepartureFlightNo, hintText: 'KE124')),
+              TextField(
+                controller: _depFlight,
+                textCapitalization: TextCapitalization.characters,
+                decoration: InputDecoration(
+                  labelText: l10n.companionDepartureFlightNo,
+                  hintText: 'KE124',
+                ),
+              ),
               const SizedBox(height: 8),
             ],
             SwitchListTile(
@@ -317,7 +397,10 @@ class _CompanionSheetState extends State<_CompanionSheet> {
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(onPressed: _submit, child: Text(l10n.actionSave)),
+              child: ElevatedButton(
+                onPressed: _submit,
+                child: Text(l10n.actionSave),
+              ),
             ),
           ],
         ),

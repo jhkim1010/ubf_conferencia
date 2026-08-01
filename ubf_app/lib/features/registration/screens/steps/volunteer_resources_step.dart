@@ -5,23 +5,23 @@ import 'package:mana/l10n/app_localizations.dart';
 
 // 자원 유형 목록 (현재 언어의 라벨로 반환)
 List<(String, IconData, String)> _resourceOptions(AppLocalizations l10n) => [
-      ('piano',        Icons.piano,            l10n.volPiano),
-      ('guitar',       Icons.music_note,       l10n.volGuitar),
-      ('bass',         Icons.queue_music,      l10n.volBass),
-      ('drums',        Icons.library_music,    l10n.volDrums),
-      ('violin',       Icons.music_note,       l10n.volViolin),
-      ('worship_lead', Icons.mic,              l10n.volWorshipLead),
-      ('vocals',       Icons.mic_none,         l10n.volVocals),
-      ('translation',  Icons.translate,        l10n.volTranslation),
-      ('photography',  Icons.photo_camera,     l10n.volPhotography),
-      ('sound',        Icons.speaker,          l10n.volSound),
-      ('design',       Icons.brush,            l10n.volDesign),
-      ('it',           Icons.computer,         l10n.volIt),
-      ('childcare',    Icons.child_care,       l10n.volChildcare),
-      ('cooking',      Icons.restaurant,       l10n.volCooking),
-      ('driving',      Icons.directions_car,   l10n.volDriving),
-      ('medical',      Icons.medical_services, l10n.volMedical),
-    ];
+  ('piano', Icons.piano, l10n.volPiano),
+  ('guitar', Icons.music_note, l10n.volGuitar),
+  ('bass', Icons.queue_music, l10n.volBass),
+  ('drums', Icons.library_music, l10n.volDrums),
+  ('violin', Icons.music_note, l10n.volViolin),
+  ('worship_lead', Icons.mic, l10n.volWorshipLead),
+  ('vocals', Icons.mic_none, l10n.volVocals),
+  ('translation', Icons.translate, l10n.volTranslation),
+  ('photography', Icons.photo_camera, l10n.volPhotography),
+  ('sound', Icons.speaker, l10n.volSound),
+  ('design', Icons.brush, l10n.volDesign),
+  ('it', Icons.computer, l10n.volIt),
+  ('childcare', Icons.child_care, l10n.volChildcare),
+  ('cooking', Icons.restaurant, l10n.volCooking),
+  ('driving', Icons.directions_car, l10n.volDriving),
+  ('medical', Icons.medical_services, l10n.volMedical),
+];
 
 class VolunteerResourcesStep extends ConsumerWidget {
   final String programId;
@@ -70,7 +70,9 @@ class VolunteerResourcesStep extends ConsumerWidget {
             final (key, icon, label) = item;
             final isSelected = selected.contains(key);
             return FilterChip(
-              avatar: Icon(icon, size: 18,
+              avatar: Icon(
+                icon,
+                size: 18,
                 color: isSelected ? Colors.white : Colors.teal,
               ),
               label: Text(label),

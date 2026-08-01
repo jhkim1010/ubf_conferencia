@@ -92,6 +92,18 @@ curl -s -X PATCH "$API/programs/$PROG" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' -d '{"feePremium":250}' >/dev/null
 
 echo
+echo "── 합계는 서버가 계산한다 ──"
+# 클라이언트가 보낸 totalCost 를 그대로 믿으면 낼 금액을 등록자가 정하게 된다.
+# 실제로 앱은 투어 비용만 더하고 참가비 등급을 빼먹어 DB 에 0 이 저장됐었다.
+save '{"realName":"참가비테스트","country":"PE","branch":"리마","feeTier":"premium","totalCost":99999}' >/dev/null
+eq "등급 참가비가 합계에 반영"   '250' "$(mine 'Number(r.total_cost)')"
+eq "클라이언트 totalCost 무시"   'true' "$(mine 'Number(r.total_cost) !== 99999')"
+save '{"realName":"참가비테스트","country":"PE","branch":"리마","feeTier":"basic"}' >/dev/null
+eq "등급을 바꾸면 합계도 바뀐다" '150' "$(mine 'Number(r.total_cost)')"
+save '{"realName":"참가비테스트","country":"PE","branch":"리마"}' >/dev/null
+eq "등급 미선택이면 0"          '0'   "$(mine 'Number(r.total_cost)')"
+
+echo
 echo "── 할인 신청 (등록자) ──"
 save '{"realName":"참가비테스트","country":"PE","branch":"리마","feeTier":"basic",
        "discountRequested":true,"discountOptionKey":"d1","discountReason":"토요일만 참석 가능"}' >/dev/null

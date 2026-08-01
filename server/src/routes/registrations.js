@@ -36,7 +36,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     foodRequirements, medicalConditions, skipsBreakfast,
     selectedOptions, roommatePreference,
     volunteerResources, volunteerNote,
-    totalCost, fcmToken,
+    fcmToken,
     feeTier, discountRequested, discountOptionKey, discountReason,
   } = req.body;
 
@@ -86,6 +86,34 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
       }
     }
 
+    // 합계는 **서버가 계산한다.** 클라이언트가 보낸 totalCost 는 쓰지 않는다.
+    //
+    // 두 가지 이유다. 첫째, 앱이 보내던 값은 투어 옵션만 더하고 참가비 등급을
+    // 빼먹어서 요약 화면은 U$320 인데 DB 에는 0 이 저장됐다 — 관리자 대시보드와
+    // CSV 가 0 으로 나갔다. 둘째, 낼 금액을 클라이언트가 정하게 두면 안 된다.
+    //
+    // 승인된 할인만 뺀다. 신청 중인 금액을 미리 빼면 아직 결정되지 않은 감액이
+    // 확정된 것처럼 장부에 남는다.
+    const tierFee =
+      tier === 'basic' ? Number(program.fee_basic ?? 0)
+      : tier === 'premium' ? Number(program.fee_premium ?? 0)
+      : 0;
+
+    const picked_ids = Array.isArray(selectedOptions) ? selectedOptions : [];
+    const optionRows = picked_ids.length
+      ? await sql`
+          SELECT COALESCE(SUM(cost), 0)::numeric AS sum
+            FROM program_options
+           WHERE program_id = ${req.params.programId}
+             AND id = ANY(${picked_ids})`
+      : [{ sum: 0 }];
+    const optionsCost = Number(optionRows[0]?.sum ?? 0);
+
+    const approvedDiscount =
+      discountStatus === 'approved' ? Number(discountAmount ?? 0) : 0;
+
+    const computedTotal = Math.max(0, tierFee + optionsCost - approvedDiscount);
+
     const [registration] = await sql`
       INSERT INTO registrations (
         program_id, user_id, country, branch, real_name, bible_name,
@@ -112,7 +140,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         ${roommatePreference ?? null},
         ${volunteerResources ?? []},
         ${volunteerNote ?? null},
-        ${totalCost ?? 0},
+        ${computedTotal},
         ${fcmToken ?? null},
         ${tier},
         ${wantsDiscount},

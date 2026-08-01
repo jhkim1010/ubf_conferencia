@@ -582,5 +582,9 @@
   "adDiscountSaved": "저장되었습니다.",
   "adDiscountPending": "대기",
   "adDiscountApproved": "승인",
-  "adDiscountRejected": "반려"
+  "adDiscountRejected": "반려",
+  "myProgramsTitle": "내 프로그램 관리",
+  "myProgramsEmpty": "아직 만든 수양회가 없습니다.\n아래 버튼으로 새로 만드십시오.",
+  "myProgramsEdit": "수정",
+  "myProgramsRegistered": "등록 {count}명"
 }

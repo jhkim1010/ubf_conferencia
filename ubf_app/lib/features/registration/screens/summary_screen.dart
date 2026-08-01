@@ -8,6 +8,24 @@ import '../../../core/utils/money.dart';
 import '../../../core/constants/world_countries.dart';
 
 // 등록 요약 화면 - 모든 정보 확인 + 총 비용 표시
+// 날짜만 보여준다. 서버가 주는 값은 '2027-02-10T03:00:00.000Z' 같은 타임스탬프라
+// 그대로 붙이면 시각과 UTC 표시까지 화면에 나온다. 실제로 그렇게 나오고 있었다.
+//
+// 문자열 앞부분을 자르기만 한다. DateTime 으로 파싱하면 UTC → 로컬 변환이 일어나
+// 시차에 따라 날짜가 하루 밀린다 (수양회 시작일이 하루 당겨져 보이게 된다).
+String _ymd(Object? raw) {
+  if (raw == null) return '';
+  final s = raw.toString();
+  return s.length >= 10 ? s.substring(0, 10) : s;
+}
+
+String _period(Object? start, Object? end) {
+  final a = _ymd(start);
+  final b = _ymd(end);
+  if (b.isEmpty || b == a) return a;
+  return '$a ~ $b';
+}
+
 class SummaryScreen extends ConsumerWidget {
   final String programId;
 
@@ -46,8 +64,8 @@ class SummaryScreen extends ConsumerWidget {
           // 참가비 등급과 확정된 할인을 합계에 반영한다. 투어 비용만 더하면
           // 참가자가 실제로 내야 할 금액과 다른 숫자를 보게 된다.
           final tierFee = switch (formState.feeTier) {
-            'basic' => program['fee_basic'] as num?,
-            'premium' => program['fee_premium'] as num?,
+            'basic' => Money.parse(program['fee_basic']),
+            'premium' => Money.parse(program['fee_premium']),
             _ => null,
           };
           totalCost += (tierFee ?? 0).toDouble();
@@ -56,7 +74,7 @@ class SummaryScreen extends ConsumerWidget {
           // 감액을 확정된 것처럼 보여주게 된다.
           final saved = ref.watch(registrationProvider(programId)).valueOrNull;
           final approvedDiscount = saved?['discount_status'] == 'approved'
-              ? (saved?['discount_amount'] as num?)?.toDouble() ?? 0
+              ? Money.parse(saved?['discount_amount'])?.toDouble() ?? 0
               : 0.0;
           totalCost = (totalCost - approvedDiscount).clamp(
             0.0,
@@ -76,7 +94,7 @@ class SummaryScreen extends ConsumerWidget {
                   if (program['start_date'] != null)
                     _InfoRow(
                       l10n.summaryPeriod,
-                      '${program['start_date']} ~ ${program['end_date'] ?? ''}',
+                      _period(program['start_date'], program['end_date']),
                     ),
                 ],
               ),

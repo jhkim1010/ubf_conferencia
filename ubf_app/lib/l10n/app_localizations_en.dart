@@ -1921,4 +1921,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adDiscountRejected => 'Rejected';
+
+  @override
+  String get myProgramsTitle => 'My programs';
+
+  @override
+  String get myProgramsEmpty =>
+      'You have not created any conference yet.\nTap the button below to create one.';
+
+  @override
+  String get myProgramsEdit => 'Edit';
+
+  @override
+  String myProgramsRegistered(int count) {
+    return '$count registered';
+  }
 }

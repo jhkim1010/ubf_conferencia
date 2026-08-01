@@ -17,8 +17,7 @@ class ImmigrationCardScreen extends ConsumerStatefulWidget {
       _ImmigrationCardScreenState();
 }
 
-class _ImmigrationCardScreenState
-    extends ConsumerState<ImmigrationCardScreen> {
+class _ImmigrationCardScreenState extends ConsumerState<ImmigrationCardScreen> {
   bool _isFullscreen = false;
 
   void _toggleFullscreen() {
@@ -59,17 +58,21 @@ class _ImmigrationCardScreenState
               ],
             ),
       body: programAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+        loading: () =>
+            const Center(child: CircularProgressIndicator(color: Colors.white)),
         error: (e, _) => Center(
-          child: Text(l10n.commonErrorDetail('$e'), style: const TextStyle(color: Colors.white)),
+          child: Text(
+            l10n.commonErrorDetail('$e'),
+            style: const TextStyle(color: Colors.white),
+          ),
         ),
         data: (program) {
           if (program == null) {
             return Center(
-              child: Text(l10n.immNotFound,
-                  style: const TextStyle(color: Colors.white)),
+              child: Text(
+                l10n.immNotFound,
+                style: const TextStyle(color: Colors.white),
+              ),
             );
           }
           return _CardBody(
@@ -117,12 +120,12 @@ class _CardBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final contact1Name  = program['contact1_name']  as String?;
+    final contact1Name = program['contact1_name'] as String?;
     final contact1Phone = program['contact1_phone'] as String?;
-    final contact2Name  = program['contact2_name']  as String?;
+    final contact2Name = program['contact2_name'] as String?;
     final contact2Phone = program['contact2_phone'] as String?;
-    final hasContacts   = contact1Name != null || contact2Name != null;
-    final hasAirport    = (program['nearest_airport'] as String?) != null;
+    final hasContacts = contact1Name != null || contact2Name != null;
+    final hasAirport = (program['nearest_airport'] as String?) != null;
 
     return GestureDetector(
       // 전체화면 상태에서 탭하면 해제
@@ -139,19 +142,29 @@ class _CardBody extends StatelessWidget {
               // 전체화면 안내 텍스트
               if (!isFullscreen) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, color: Colors.white70, size: 18),
+                      const Icon(
+                        Icons.info_outline,
+                        color: Colors.white70,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           l10n.immBanner,
-                          style: const TextStyle(color: Colors.white70, fontSize: 13),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -178,10 +191,15 @@ class _CardBody extends StatelessWidget {
                   children: [
                     // 카드 헤더
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 20,
+                      ),
                       decoration: const BoxDecoration(
                         color: Color(0xFF1A3A6B),
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,10 +290,15 @@ class _CardBody extends StatelessWidget {
 
                     // 카드 푸터
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
                       decoration: const BoxDecoration(
                         color: Color(0xFFF5F7FA),
-                        borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+                        borderRadius: BorderRadius.vertical(
+                          bottom: Radius.circular(16),
+                        ),
                       ),
                       child: Text(
                         l10n.immCardFooter,
@@ -313,7 +336,11 @@ class _CardRow extends StatelessWidget {
   final String value;
   final IconData icon;
 
-  const _CardRow({required this.label, required this.value, required this.icon});
+  const _CardRow({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {

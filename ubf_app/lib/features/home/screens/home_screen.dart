@@ -216,8 +216,8 @@ class _DirectorHomeView extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           _MenuTile(
-            icon: Icons.list_alt,
-            title: l10n.homeProgramList,
+            icon: Icons.folder_open,
+            title: l10n.myProgramsTitle,
             subtitle: l10n.homeProgramListDirectorSub,
             color: Colors.green,
             onTap: () => context.push('/leader/programs'),
@@ -315,8 +315,8 @@ class _LeaderHomeView extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           _MenuTile(
-            icon: Icons.list_alt,
-            title: l10n.homeProgramList,
+            icon: Icons.folder_open,
+            title: l10n.myProgramsTitle,
             subtitle: l10n.homeProgramListAdminSub,
             color: Colors.green,
             onTap: () => context.push('/leader/programs'),

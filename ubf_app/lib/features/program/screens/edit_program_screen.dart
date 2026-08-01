@@ -557,7 +557,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                         subtitle: Text(
                           [
                             l10n.cpOptionCost(
-                              Money.format(option['cost'] as num?),
+                              Money.format(Money.parse(option['cost'])),
                             ),
                             if (dates.isNotEmpty) dates,
                             if ((option['contactName'] as String?)
@@ -778,7 +778,12 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
             TextField(
               controller: _costCtrl,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: l10n.epOptionCostNum),
+              decoration: InputDecoration(
+                labelText: l10n.epOptionCostNum,
+                // 만드는 사람도 입력하는 순간 통화를 알아야 한다. 단위 없이
+                // 숫자만 적게 하면 현지 통화로 착각해 자릿수를 틀리게 넣는다.
+                prefixText: '${Money.symbol} ',
+              ),
             ),
             const SizedBox(height: 12),
             TextField(

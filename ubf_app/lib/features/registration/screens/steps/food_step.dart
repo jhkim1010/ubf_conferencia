@@ -19,23 +19,27 @@ class _FoodStepState extends ConsumerState<FoodStep> {
   bool _skipsBreakfast = false;
 
   List<String> _commonRestrictions(AppLocalizations l10n) => [
-        l10n.foodVegetarian,
-        l10n.foodVegan,
-        l10n.foodHalal,
-        l10n.foodKosher,
-        l10n.foodGluten,
-        l10n.foodPeanut,
-        l10n.foodDairy,
-        l10n.foodSeafood,
-        l10n.foodNone,
-      ];
+    l10n.foodVegetarian,
+    l10n.foodVegan,
+    l10n.foodHalal,
+    l10n.foodKosher,
+    l10n.foodGluten,
+    l10n.foodPeanut,
+    l10n.foodDairy,
+    l10n.foodSeafood,
+    l10n.foodNone,
+  ];
 
   @override
   void initState() {
     super.initState();
     final state = ref.read(registrationFormProvider(widget.programId));
-    _cannotEatController = TextEditingController(text: state.foodRequirements ?? '');
-    _medicalController = TextEditingController(text: state.medicalConditions ?? '');
+    _cannotEatController = TextEditingController(
+      text: state.foodRequirements ?? '',
+    );
+    _medicalController = TextEditingController(
+      text: state.medicalConditions ?? '',
+    );
     _skipsBreakfast = state.skipsBreakfast;
   }
 
@@ -47,11 +51,13 @@ class _FoodStepState extends ConsumerState<FoodStep> {
   }
 
   void _save() {
-    ref.read(registrationFormProvider(widget.programId).notifier).updateFood(
-      foodRequirements: _cannotEatController.text.trim(),
-      medicalConditions: _medicalController.text.trim(),
-      skipsBreakfast: _skipsBreakfast,
-    );
+    ref
+        .read(registrationFormProvider(widget.programId).notifier)
+        .updateFood(
+          foodRequirements: _cannotEatController.text.trim(),
+          medicalConditions: _medicalController.text.trim(),
+          skipsBreakfast: _skipsBreakfast,
+        );
   }
 
   @override

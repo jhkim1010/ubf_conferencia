@@ -582,5 +582,9 @@
   "adDiscountSaved": "Guardado.",
   "adDiscountPending": "Pendiente",
   "adDiscountApproved": "Aprobado",
-  "adDiscountRejected": "Rechazado"
+  "adDiscountRejected": "Rechazado",
+  "myProgramsTitle": "Mis conferencias",
+  "myProgramsEmpty": "Aún no has creado ninguna conferencia.\nUsa el botón de abajo para crear una.",
+  "myProgramsEdit": "Editar",
+  "myProgramsRegistered": "{count} inscritos"
 }

@@ -50,7 +50,9 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
       _selectedDate = DateTime.tryParse(savedDateStr);
     }
 
-    _dateLabelController = TextEditingController(text: _formatDate(_selectedDate));
+    _dateLabelController = TextEditingController(
+      text: _formatDate(_selectedDate),
+    );
     _flightNoController = TextEditingController(text: data?['flight_no'] ?? '');
     _airportController = TextEditingController(
       text: widget.isArrival
@@ -84,9 +86,11 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
     DateTime initialDate = _selectedDate ?? DateTime.now();
 
     if (!widget.isArrival) {
-      final arrivalStr = ref
-          .read(registrationFormProvider(widget.programId))
-          .arrivalFlight?['scheduled_arrival'] as String?;
+      final arrivalStr =
+          ref
+                  .read(registrationFormProvider(widget.programId))
+                  .arrivalFlight?['scheduled_arrival']
+              as String?;
       if (arrivalStr != null && arrivalStr.isNotEmpty) {
         final arrivalDate = DateTime.tryParse(arrivalStr);
         if (arrivalDate != null) {
@@ -179,11 +183,14 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
           : (_flightInfo?.scheduledArrival?.toIso8601String()),
       'scheduled_departure': widget.isArrival
           ? (_flightInfo?.scheduledDeparture?.toIso8601String())
-          : (_flightInfo?.scheduledDeparture?.toIso8601String() ?? manualDateStr),
+          : (_flightInfo?.scheduledDeparture?.toIso8601String() ??
+                manualDateStr),
       'terminal': _flightInfo?.terminal,
     };
 
-    final notifier = ref.read(registrationFormProvider(widget.programId).notifier);
+    final notifier = ref.read(
+      registrationFormProvider(widget.programId).notifier,
+    );
     if (widget.isArrival) {
       notifier.updateArrivalFlight(flightData);
     } else {
@@ -208,7 +215,9 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
         Text(
           l10n.flightSkipTitle,
           textAlign: TextAlign.center,
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
@@ -221,7 +230,9 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
           icon: const Icon(Icons.add),
           label: Text(l10n.flightSkipAdd),
           onPressed: () => setState(() => _addFlightAnyway = true),
-          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(48),
+          ),
         ),
       ],
     );

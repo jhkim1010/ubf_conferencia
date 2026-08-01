@@ -1882,4 +1882,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adDiscountRejected => '반려';
+
+  @override
+  String get myProgramsTitle => '내 프로그램 관리';
+
+  @override
+  String get myProgramsEmpty => '아직 만든 수양회가 없습니다.\n아래 버튼으로 새로 만드십시오.';
+
+  @override
+  String get myProgramsEdit => '수정';
+
+  @override
+  String myProgramsRegistered(int count) {
+    return '등록 $count명';
+  }
 }

@@ -1204,5 +1204,16 @@
   "adDiscountSaved": "Saved.",
   "adDiscountPending": "Pending",
   "adDiscountApproved": "Approved",
-  "adDiscountRejected": "Rejected"
+  "adDiscountRejected": "Rejected",
+  "myProgramsTitle": "My programs",
+  "myProgramsEmpty": "You have not created any conference yet.\nTap the button below to create one.",
+  "myProgramsEdit": "Edit",
+  "myProgramsRegistered": "{count} registered",
+  "@myProgramsRegistered": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

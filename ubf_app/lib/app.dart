@@ -22,6 +22,7 @@ import 'features/schedule/screens/schedule_screen.dart';
 import 'features/sos/screens/sos_screen.dart';
 import 'features/program/screens/immigration_card_screen.dart';
 import 'features/program/screens/edit_program_screen.dart';
+import 'features/program/screens/my_programs_screen.dart';
 import 'features/setup/screens/setup_screen.dart';
 import 'features/assignment/screens/assignment_screen.dart';
 import 'features/transport/screens/dispatch_screen.dart';
@@ -84,6 +85,10 @@ class _UbfAppState extends ConsumerState<UbfApp> {
         GoRoute(
           path: '/leader/create-program',
           builder: (_, _) => const CreateProgramScreen(),
+        ),
+        GoRoute(
+          path: '/leader/programs',
+          builder: (_, _) => const MyProgramsScreen(),
         ),
         GoRoute(
           path: '/leader/program/:id/created',
