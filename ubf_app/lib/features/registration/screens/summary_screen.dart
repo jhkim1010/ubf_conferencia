@@ -19,6 +19,57 @@ String _ymd(Object? raw) {
   return s.length >= 10 ? s.substring(0, 10) : s;
 }
 
+// 항공편 카드의 줄들.
+//
+// 예매 전이면 항공편 번호·공항 줄을 빼고 날짜에 "(예상 — 미예매)" 를 붙인다.
+// 빈 칸으로 남겨 두면 "아직 안 적은 사람"과 "아직 안 산 사람"이 구별되지
+// 않는다 — 담당자가 배차를 짤 때 이 둘을 다르게 다뤄야 한다.
+List<Widget> _flightRows(
+  AppLocalizations l10n,
+  Map<String, dynamic> flight, {
+  required String airportLabel,
+  required String airportKey,
+  required String whenLabel,
+  required String whenKey,
+}) {
+  final when = _flightWhen(flight[whenKey]);
+  if (flight['estimated'] == true) {
+    return [
+      _InfoRow(
+        whenLabel,
+        when.isEmpty
+            ? l10n.expFlightEstimated
+            : '$when ${l10n.expFlightEstimated}',
+      ),
+    ];
+  }
+
+  String orDash(Object? v) {
+    final s = v?.toString().trim() ?? '';
+    return s.isEmpty ? '-' : s;
+  }
+
+  return [
+    _InfoRow(l10n.summaryFlightNo, orDash(flight['flight_no'])),
+    _InfoRow(airportLabel, orDash(flight[airportKey])),
+    _InfoRow(whenLabel, when.isEmpty ? '-' : when),
+  ];
+}
+
+// 항공편 시각. 날짜 + (있으면) 시:분.
+//
+// 여기도 자르기만 한다 — _ymd 와 같은 이유다. 자정(00:00)은 시각을 붙이지
+// 않는다. 예매 전 예상 날짜는 시각 없이 자정으로 저장되므로, 그대로 붙이면
+// "새벽 0시 도착"이라는 없는 정보를 만들어 낸다.
+String _flightWhen(Object? raw) {
+  final s = raw?.toString() ?? '';
+  if (s.length < 10) return s;
+  final date = s.substring(0, 10);
+  if (s.length < 16 || s[10] != 'T') return date;
+  final time = s.substring(11, 16);
+  return time == '00:00' ? date : '$date $time';
+}
+
 String _period(Object? start, Object? end) {
   final a = _ymd(start);
   final b = _ymd(end);
@@ -134,20 +185,14 @@ class SummaryScreen extends ConsumerWidget {
                   title: l10n.regStepArrival,
                   icon: Icons.flight_land,
                   onEdit: () => context.go('/registration/$programId'),
-                  children: [
-                    _InfoRow(
-                      l10n.summaryFlightNo,
-                      formState.arrivalFlight!['flight_no'] ?? '-',
-                    ),
-                    _InfoRow(
-                      l10n.summaryArrAirport,
-                      formState.arrivalFlight!['arrival_airport'] ?? '-',
-                    ),
-                    _InfoRow(
-                      l10n.summaryArrTime,
-                      formState.arrivalFlight!['scheduled_arrival'] ?? '-',
-                    ),
-                  ],
+                  children: _flightRows(
+                    l10n,
+                    formState.arrivalFlight!,
+                    airportLabel: l10n.summaryArrAirport,
+                    airportKey: 'arrival_airport',
+                    whenLabel: l10n.summaryArrTime,
+                    whenKey: 'scheduled_arrival',
+                  ),
                 ),
               if (formState.arrivalFlight != null) const SizedBox(height: 12),
 
@@ -157,20 +202,14 @@ class SummaryScreen extends ConsumerWidget {
                   title: l10n.regStepDeparture,
                   icon: Icons.flight_takeoff,
                   onEdit: () => context.go('/registration/$programId'),
-                  children: [
-                    _InfoRow(
-                      l10n.summaryFlightNo,
-                      formState.departureFlight!['flight_no'] ?? '-',
-                    ),
-                    _InfoRow(
-                      l10n.summaryDepAirport,
-                      formState.departureFlight!['departure_airport'] ?? '-',
-                    ),
-                    _InfoRow(
-                      l10n.summaryDepTime,
-                      formState.departureFlight!['scheduled_departure'] ?? '-',
-                    ),
-                  ],
+                  children: _flightRows(
+                    l10n,
+                    formState.departureFlight!,
+                    airportLabel: l10n.summaryDepAirport,
+                    airportKey: 'departure_airport',
+                    whenLabel: l10n.summaryDepTime,
+                    whenKey: 'scheduled_departure',
+                  ),
                 ),
               if (formState.departureFlight != null) const SizedBox(height: 12),
 
