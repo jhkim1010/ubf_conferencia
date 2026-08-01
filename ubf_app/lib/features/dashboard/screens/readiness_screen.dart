@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../program/providers/program_provider.dart';
@@ -22,7 +23,17 @@ class ReadinessScreen extends ConsumerWidget {
     final async = ref.watch(programReadinessProvider(programId));
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.rdyTitle)),
+      appBar: AppBar(
+        title: Text(l10n.rdyTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.local_offer_outlined),
+            tooltip: l10n.adDiscountTitle,
+            onPressed: () =>
+                context.push('/leader/program/$programId/discounts'),
+          ),
+        ],
+      ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(l10n.commonErrorDetail('$e'))),

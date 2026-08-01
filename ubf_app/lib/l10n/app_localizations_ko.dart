@@ -1755,4 +1755,131 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get privacyLess => '접기';
+
+  @override
+  String get regStepFee => '참가비';
+
+  @override
+  String get feePrompt => '참가비 등급을 선택하세요.';
+
+  @override
+  String get feeTierBasic => '기본';
+
+  @override
+  String get feeTierPremium => '프리미엄';
+
+  @override
+  String get feeNotSet => '참가비가 아직 정해지지 않았습니다.';
+
+  @override
+  String get discountTitle => '할인 신청';
+
+  @override
+  String get discountPrompt => '해당되는 경우 선택하세요.';
+
+  @override
+  String get discountNone => '할인 신청 안 함';
+
+  @override
+  String get discountReasonLabel => '보충 설명 (선택)';
+
+  @override
+  String get discountReasonHint => '담당자가 알아야 할 내용';
+
+  @override
+  String get discountStatusPending => '담당자 확인을 기다리는 중입니다.';
+
+  @override
+  String discountStatusApproved(String amount) {
+    return '승인됨 — $amount 할인';
+  }
+
+  @override
+  String get discountStatusRejected => '승인되지 않았습니다.';
+
+  @override
+  String discountAdminNote(String note) {
+    return '담당자 메모: $note';
+  }
+
+  @override
+  String get discountNoOptions => '이 수양회는 할인 신청을 받지 않습니다.';
+
+  @override
+  String get cpFeeSection => '참가비';
+
+  @override
+  String get cpFeeBasic => '기본 참가비';
+
+  @override
+  String get cpFeePremium => '프리미엄 참가비';
+
+  @override
+  String get cpFeeBasicDesc => '기본 등급에 포함되는 것';
+
+  @override
+  String get cpFeePremiumDesc => '프리미엄 등급에 포함되는 것';
+
+  @override
+  String get cpFeeHint => '비워 두면 그 등급을 제공하지 않습니다.';
+
+  @override
+  String get cpFeeInvalid => '0 이상의 숫자를 입력하세요.';
+
+  @override
+  String get cpDiscountSection => '할인 항목';
+
+  @override
+  String get cpDiscountHint => '등록자가 할인을 신청할 때 고를 수 있는 사유입니다. 예: \"1일만 참석\"';
+
+  @override
+  String get cpDiscountLabel => '등록자에게 보일 문구';
+
+  @override
+  String get cpDiscountAmount => '할인 금액 (선택)';
+
+  @override
+  String get cpDiscountAmountHint => '비워 두면 건마다 담당자가 정합니다.';
+
+  @override
+  String get cpDiscountAdd => '할인 항목 추가';
+
+  @override
+  String get cpDiscountRemove => '삭제';
+
+  @override
+  String get cpDiscountEmpty => '할인 항목이 없습니다.';
+
+  @override
+  String get adDiscountTitle => '할인 신청';
+
+  @override
+  String get adDiscountNone => '할인 신청이 없습니다.';
+
+  @override
+  String get adDiscountApprove => '승인';
+
+  @override
+  String get adDiscountReject => '반려';
+
+  @override
+  String get adDiscountAmount => '할인 금액';
+
+  @override
+  String get adDiscountNote => '메모 (선택)';
+
+  @override
+  String get adDiscountAmountReq => '승인하려면 금액이 필요합니다.';
+
+  @override
+  String get adDiscountSaved => '저장되었습니다.';
+
+  @override
+  String get adDiscountPending => '대기';
+
+  @override
+  String get adDiscountApproved => '승인';
+
+  @override
+  String get adDiscountRejected => '반려';
 }

@@ -1792,4 +1792,133 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyLess => 'Show less';
+
+  @override
+  String get regStepFee => 'Fee';
+
+  @override
+  String get feePrompt => 'Choose a fee tier.';
+
+  @override
+  String get feeTierBasic => 'Standard';
+
+  @override
+  String get feeTierPremium => 'Premium';
+
+  @override
+  String get feeNotSet => 'The fee has not been set yet.';
+
+  @override
+  String get discountTitle => 'Discount request';
+
+  @override
+  String get discountPrompt => 'If one of these applies to you, choose it.';
+
+  @override
+  String get discountNone => 'No discount request';
+
+  @override
+  String get discountReasonLabel => 'Additional note (optional)';
+
+  @override
+  String get discountReasonHint => 'Anything the organizers should know';
+
+  @override
+  String get discountStatusPending => 'Waiting for the organizers to review.';
+
+  @override
+  String discountStatusApproved(String amount) {
+    return 'Approved — $amount off';
+  }
+
+  @override
+  String get discountStatusRejected => 'Not approved.';
+
+  @override
+  String discountAdminNote(String note) {
+    return 'Organizer note: $note';
+  }
+
+  @override
+  String get discountNoOptions =>
+      'This conference does not offer discount requests.';
+
+  @override
+  String get cpFeeSection => 'Fee';
+
+  @override
+  String get cpFeeBasic => 'Standard fee';
+
+  @override
+  String get cpFeePremium => 'Premium fee';
+
+  @override
+  String get cpFeeBasicDesc => 'What the standard fee covers';
+
+  @override
+  String get cpFeePremiumDesc => 'What the premium fee covers';
+
+  @override
+  String get cpFeeHint => 'Leave empty if you do not offer that tier.';
+
+  @override
+  String get cpFeeInvalid => 'Enter a number of 0 or more.';
+
+  @override
+  String get cpDiscountSection => 'Discount options';
+
+  @override
+  String get cpDiscountHint =>
+      'Reasons attendees can pick when asking for a discount — for example \"Attending one day only\".';
+
+  @override
+  String get cpDiscountLabel => 'Wording shown to attendees';
+
+  @override
+  String get cpDiscountAmount => 'Discount amount (optional)';
+
+  @override
+  String get cpDiscountAmountHint => 'Leave empty to decide case by case.';
+
+  @override
+  String get cpDiscountAdd => 'Add discount option';
+
+  @override
+  String get cpDiscountRemove => 'Remove';
+
+  @override
+  String get cpDiscountEmpty => 'No discount options yet.';
+
+  @override
+  String get adDiscountTitle => 'Discount requests';
+
+  @override
+  String get adDiscountNone => 'No discount requests.';
+
+  @override
+  String get adDiscountApprove => 'Approve';
+
+  @override
+  String get adDiscountReject => 'Reject';
+
+  @override
+  String get adDiscountAmount => 'Discount amount';
+
+  @override
+  String get adDiscountNote => 'Note (optional)';
+
+  @override
+  String get adDiscountAmountReq => 'An amount is required to approve.';
+
+  @override
+  String get adDiscountSaved => 'Saved.';
+
+  @override
+  String get adDiscountPending => 'Pending';
+
+  @override
+  String get adDiscountApproved => 'Approved';
+
+  @override
+  String get adDiscountRejected => 'Rejected';
 }

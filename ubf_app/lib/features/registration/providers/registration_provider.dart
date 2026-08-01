@@ -4,9 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/utils/api_client.dart';
 
 // 내 등록 정보 조회
-final registrationProvider = FutureProvider.family<Map<String, dynamic>?, String>(
-  (_, programId) => ApiClient.getMyRegistration(programId),
-);
+final registrationProvider =
+    FutureProvider.family<Map<String, dynamic>?, String>(
+      (_, programId) => ApiClient.getMyRegistration(programId),
+    );
 
 // ─── 등록 폼 상태 ────────────────────────────────────────────
 
@@ -20,13 +21,17 @@ class RegistrationFormState {
   final int? age;
   final Map<String, dynamic>? arrivalFlight;
   final Map<String, dynamic>? departureFlight;
-  final String? foodRequirements;  // 섭취 불가능한 음식 / 식이 제한
+  final String? foodRequirements; // 섭취 불가능한 음식 / 식이 제한
   final String? medicalConditions; // 질병 유무
-  final bool skipsBreakfast;       // 아침 식사 주로 안 함
+  final bool skipsBreakfast; // 아침 식사 주로 안 함
   final List<String> selectedOptions;
   final String? roommatePreference;
   final List<String> volunteerResources;
   final String? volunteerNote;
+  final String? feeTier; // 'basic' | 'premium' | null(미선택)
+  final bool discountRequested; // 할인 신청 여부
+  final String? discountOptionKey; // programs.discount_options[].key
+  final String? discountReason; // 보충 설명(선택)
 
   const RegistrationFormState({
     required this.programId,
@@ -45,6 +50,10 @@ class RegistrationFormState {
     this.roommatePreference,
     this.volunteerResources = const [],
     this.volunteerNote,
+    this.feeTier,
+    this.discountRequested = false,
+    this.discountOptionKey,
+    this.discountReason,
   });
 
   RegistrationFormState copyWith({
@@ -63,6 +72,13 @@ class RegistrationFormState {
     String? roommatePreference,
     List<String>? volunteerResources,
     String? volunteerNote,
+    String? feeTier,
+    bool? discountRequested,
+    String? discountOptionKey,
+    String? discountReason,
+    // copyWith 는 `??` 로 병합하므로 null 을 넘겨 값을 지울 수 없다.
+    // 할인 신청 철회는 "지우는" 동작이라 별도 플래그가 필요하다.
+    bool clearDiscount = false,
   }) {
     return RegistrationFormState(
       programId: programId,
@@ -81,27 +97,41 @@ class RegistrationFormState {
       roommatePreference: roommatePreference ?? this.roommatePreference,
       volunteerResources: volunteerResources ?? this.volunteerResources,
       volunteerNote: volunteerNote ?? this.volunteerNote,
+      feeTier: feeTier ?? this.feeTier,
+      discountRequested: clearDiscount
+          ? false
+          : (discountRequested ?? this.discountRequested),
+      discountOptionKey: clearDiscount
+          ? null
+          : (discountOptionKey ?? this.discountOptionKey),
+      discountReason: clearDiscount
+          ? null
+          : (discountReason ?? this.discountReason),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'programId': programId,
-        'country': country,
-        'branch': branch,
-        'realName': realName,
-        'bibleName': bibleName,
-        'gender': gender,
-        'age': age,
-        'arrivalFlight': arrivalFlight,
-        'departureFlight': departureFlight,
-        'foodRequirements': foodRequirements,
-        'medicalConditions': medicalConditions,
-        'skipsBreakfast': skipsBreakfast,
-        'selectedOptions': selectedOptions,
-        'roommatePreference': roommatePreference,
-        'volunteerResources': volunteerResources,
-        'volunteerNote': volunteerNote,
-      };
+    'programId': programId,
+    'country': country,
+    'branch': branch,
+    'realName': realName,
+    'bibleName': bibleName,
+    'gender': gender,
+    'age': age,
+    'arrivalFlight': arrivalFlight,
+    'departureFlight': departureFlight,
+    'foodRequirements': foodRequirements,
+    'medicalConditions': medicalConditions,
+    'skipsBreakfast': skipsBreakfast,
+    'selectedOptions': selectedOptions,
+    'roommatePreference': roommatePreference,
+    'volunteerResources': volunteerResources,
+    'volunteerNote': volunteerNote,
+    'feeTier': feeTier,
+    'discountRequested': discountRequested,
+    'discountOptionKey': discountOptionKey,
+    'discountReason': discountReason,
+  };
 
   factory RegistrationFormState.fromJson(Map<String, dynamic> json) =>
       RegistrationFormState(
@@ -121,6 +151,10 @@ class RegistrationFormState {
         roommatePreference: json['roommatePreference'] as String?,
         volunteerResources: List<String>.from(json['volunteerResources'] ?? []),
         volunteerNote: json['volunteerNote'] as String?,
+        feeTier: json['feeTier'] as String?,
+        discountRequested: json['discountRequested'] as bool? ?? false,
+        discountOptionKey: json['discountOptionKey'] as String?,
+        discountReason: json['discountReason'] as String?,
       );
 }
 
@@ -128,7 +162,7 @@ class RegistrationFormState {
 
 class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
   RegistrationFormNotifier(String programId)
-      : super(RegistrationFormState(programId: programId));
+    : super(RegistrationFormState(programId: programId));
 
   static String _draftKey(String programId) => 'ubf_draft_$programId';
 
@@ -140,7 +174,10 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
 
   Future<void> _persistDraft() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_draftKey(state.programId), jsonEncode(state.toJson()));
+    await prefs.setString(
+      _draftKey(state.programId),
+      jsonEncode(state.toJson()),
+    );
   }
 
   // 앱 재시작 시 로컬 draft 복원 (없으면 null 반환)
@@ -173,14 +210,16 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
     String? gender,
     int? age,
   }) {
-    _update(state.copyWith(
-      country: country,
-      branch: branch,
-      realName: realName,
-      bibleName: bibleName,
-      gender: gender,
-      age: age,
-    ));
+    _update(
+      state.copyWith(
+        country: country,
+        branch: branch,
+        realName: realName,
+        bibleName: bibleName,
+        gender: gender,
+        age: age,
+      ),
+    );
   }
 
   void updateArrivalFlight(Map<String, dynamic> flight) =>
@@ -193,12 +232,13 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
     String? foodRequirements,
     String? medicalConditions,
     bool? skipsBreakfast,
-  }) =>
-      _update(state.copyWith(
-        foodRequirements: foodRequirements,
-        medicalConditions: medicalConditions,
-        skipsBreakfast: skipsBreakfast,
-      ));
+  }) => _update(
+    state.copyWith(
+      foodRequirements: foodRequirements,
+      medicalConditions: medicalConditions,
+      skipsBreakfast: skipsBreakfast,
+    ),
+  );
 
   void toggleOption(String optionId) {
     final current = List<String>.from(state.selectedOptions);
@@ -225,6 +265,20 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
 
   void updateVolunteerNote(String note) =>
       _update(state.copyWith(volunteerNote: note));
+
+  // ─── 참가비 등급 / 할인 신청 ────────────────────────────────
+
+  void selectFeeTier(String tier) => _update(state.copyWith(feeTier: tier));
+
+  // 할인 항목을 고르면 신청한 것으로 본다. 별도의 "신청" 스위치를 두면
+  // 항목만 고르고 스위치를 켜지 않아 신청이 사라지는 일이 생긴다.
+  void selectDiscountOption(String key) =>
+      _update(state.copyWith(discountRequested: true, discountOptionKey: key));
+
+  void updateDiscountReason(String reason) =>
+      _update(state.copyWith(discountReason: reason));
+
+  void clearDiscountRequest() => _update(state.copyWith(clearDiscount: true));
 
   // ─── 서버 저장 (임시저장 버튼) ─────────────────────────────
 
@@ -253,6 +307,10 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       'volunteerResources': state.volunteerResources,
       'volunteerNote': state.volunteerNote,
       'totalCost': totalCost,
+      'feeTier': state.feeTier,
+      'discountRequested': state.discountRequested,
+      'discountOptionKey': state.discountOptionKey,
+      'discountReason': state.discountReason,
     });
   }
 
@@ -289,6 +347,10 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       roommatePreference: data['roommate_preference'],
       volunteerResources: List<String>.from(data['volunteer_resources'] ?? []),
       volunteerNote: data['volunteer_note'],
+      feeTier: data['fee_tier'],
+      discountRequested: data['discount_requested'] as bool? ?? false,
+      discountOptionKey: data['discount_option_key'],
+      discountReason: data['discount_reason'],
     );
     state = loaded;
     // DB에서 불러온 내용도 바로 draft로 저장
@@ -296,7 +358,9 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
   }
 }
 
-final registrationFormProvider = StateNotifierProvider.family<
-    RegistrationFormNotifier, RegistrationFormState, String>(
-  (_, programId) => RegistrationFormNotifier(programId),
-);
+final registrationFormProvider =
+    StateNotifierProvider.family<
+      RegistrationFormNotifier,
+      RegistrationFormState,
+      String
+    >((_, programId) => RegistrationFormNotifier(programId));

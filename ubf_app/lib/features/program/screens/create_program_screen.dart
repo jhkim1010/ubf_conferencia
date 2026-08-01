@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
 import '../providers/program_provider.dart';
+import '../widgets/fee_section.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 
@@ -68,6 +69,26 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
   final _optionNameController = TextEditingController();
   final _optionCostController = TextEditingController();
 
+  // 참가비 등급 + 할인 항목
+  final _feeBasicController = TextEditingController();
+  final _feePremiumController = TextEditingController();
+  final _feeBasicDescController = TextEditingController();
+  final _feePremiumDescController = TextEditingController();
+  final List<Map<String, dynamic>> _discountOptions = [];
+
+  // 빈 칸은 0 이 아니라 "그 등급 없음"이다. 0 으로 보내면 무료 등급이 된다.
+  num? _fee(TextEditingController c) {
+    final t = c.text.trim();
+    if (t.isEmpty) return null;
+    final n = num.tryParse(t);
+    return (n != null && n >= 0) ? n : null;
+  }
+
+  String? _text(TextEditingController c) {
+    final t = c.text.trim();
+    return t.isEmpty ? null : t;
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -80,6 +101,10 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
     _hostCountryController.dispose();
     _optionNameController.dispose();
     _optionCostController.dispose();
+    _feeBasicController.dispose();
+    _feePremiumController.dispose();
+    _feeBasicDescController.dispose();
+    _feePremiumDescController.dispose();
     super.dispose();
   }
 
@@ -139,6 +164,11 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
         contact1Phone: _contact1PhoneController.text.trim(),
         contact2Name: _contact2NameController.text.trim(),
         contact2Phone: _contact2PhoneController.text.trim(),
+        feeBasic: _fee(_feeBasicController),
+        feePremium: _fee(_feePremiumController),
+        feeBasicDesc: _text(_feeBasicDescController),
+        feePremiumDesc: _text(_feePremiumDescController),
+        discountOptions: _discountOptions,
       );
 
       if (!mounted) return;
@@ -399,6 +429,17 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
                   );
                 }).toList(),
               ),
+            ),
+            const SizedBox(height: 28),
+
+            // 참가비 등급 + 할인 항목
+            FeeSection(
+              basicController: _feeBasicController,
+              premiumController: _feePremiumController,
+              basicDescController: _feeBasicDescController,
+              premiumDescController: _feePremiumDescController,
+              discountOptions: _discountOptions,
+              onDiscountsChanged: () => setState(() {}),
             ),
             const SizedBox(height: 28),
 

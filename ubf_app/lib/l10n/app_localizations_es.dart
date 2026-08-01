@@ -1799,4 +1799,136 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get privacyLess => 'Ver menos';
+
+  @override
+  String get regStepFee => 'Cuota';
+
+  @override
+  String get feePrompt => 'Elige un nivel de cuota.';
+
+  @override
+  String get feeTierBasic => 'Estándar';
+
+  @override
+  String get feeTierPremium => 'Premium';
+
+  @override
+  String get feeNotSet => 'Aún no se ha fijado la cuota.';
+
+  @override
+  String get discountTitle => 'Solicitud de descuento';
+
+  @override
+  String get discountPrompt =>
+      'Si alguna de estas opciones aplica, selecciónala.';
+
+  @override
+  String get discountNone => 'Sin solicitud de descuento';
+
+  @override
+  String get discountReasonLabel => 'Nota adicional (opcional)';
+
+  @override
+  String get discountReasonHint => 'Algo que los organizadores deban saber';
+
+  @override
+  String get discountStatusPending =>
+      'Esperando la revisión de los organizadores.';
+
+  @override
+  String discountStatusApproved(String amount) {
+    return 'Aprobado — $amount de descuento';
+  }
+
+  @override
+  String get discountStatusRejected => 'No aprobado.';
+
+  @override
+  String discountAdminNote(String note) {
+    return 'Nota del organizador: $note';
+  }
+
+  @override
+  String get discountNoOptions =>
+      'Esta conferencia no admite solicitudes de descuento.';
+
+  @override
+  String get cpFeeSection => 'Cuota';
+
+  @override
+  String get cpFeeBasic => 'Cuota estándar';
+
+  @override
+  String get cpFeePremium => 'Cuota premium';
+
+  @override
+  String get cpFeeBasicDesc => 'Qué incluye la cuota estándar';
+
+  @override
+  String get cpFeePremiumDesc => 'Qué incluye la cuota premium';
+
+  @override
+  String get cpFeeHint => 'Déjalo vacío si no ofreces ese nivel.';
+
+  @override
+  String get cpFeeInvalid => 'Introduce un número igual o mayor que 0.';
+
+  @override
+  String get cpDiscountSection => 'Opciones de descuento';
+
+  @override
+  String get cpDiscountHint =>
+      'Motivos que los asistentes pueden elegir al pedir un descuento; por ejemplo, «Asisto solo un día».';
+
+  @override
+  String get cpDiscountLabel => 'Texto que verán los asistentes';
+
+  @override
+  String get cpDiscountAmount => 'Importe del descuento (opcional)';
+
+  @override
+  String get cpDiscountAmountHint =>
+      'Déjalo vacío para decidirlo caso por caso.';
+
+  @override
+  String get cpDiscountAdd => 'Añadir opción de descuento';
+
+  @override
+  String get cpDiscountRemove => 'Eliminar';
+
+  @override
+  String get cpDiscountEmpty => 'Aún no hay opciones de descuento.';
+
+  @override
+  String get adDiscountTitle => 'Solicitudes de descuento';
+
+  @override
+  String get adDiscountNone => 'No hay solicitudes de descuento.';
+
+  @override
+  String get adDiscountApprove => 'Aprobar';
+
+  @override
+  String get adDiscountReject => 'Rechazar';
+
+  @override
+  String get adDiscountAmount => 'Importe del descuento';
+
+  @override
+  String get adDiscountNote => 'Nota (opcional)';
+
+  @override
+  String get adDiscountAmountReq => 'Se necesita un importe para aprobar.';
+
+  @override
+  String get adDiscountSaved => 'Guardado.';
+
+  @override
+  String get adDiscountPending => 'Pendiente';
+
+  @override
+  String get adDiscountApproved => 'Aprobado';
+
+  @override
+  String get adDiscountRejected => 'Rechazado';
 }

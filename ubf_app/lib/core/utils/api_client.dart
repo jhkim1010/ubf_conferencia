@@ -205,6 +205,23 @@ class ApiClient {
     _decode(response);
   }
 
+  // 할인 신청 판단 (리더 전용). 승인 금액은 여기서만 정해진다 —
+  // 등록자가 보내는 저장 요청에는 금액도 상태도 담기지 않는다.
+  static Future<void> decideDiscount(
+    String programId,
+    String registrationId, {
+    required String status, // approved | rejected | requested
+    num? amount,
+    String? note,
+  }) async {
+    final response = await http.patch(
+      _uri('/programs/$programId/registrations/$registrationId/discount'),
+      headers: await _headers(),
+      body: jsonEncode({'status': status, 'amount': amount, 'note': note}),
+    );
+    _decode(response);
+  }
+
   static Future<Map<String, dynamic>?> getProgramStats(String programId) async {
     final response = await http.get(
       _uri('/programs/$programId/stats'),

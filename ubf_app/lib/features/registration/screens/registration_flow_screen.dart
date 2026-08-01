@@ -12,6 +12,7 @@ import 'steps/personal_info_step.dart';
 import 'steps/flight_info_step.dart';
 import 'steps/food_step.dart';
 import 'steps/options_step.dart';
+import 'steps/fee_step.dart';
 import 'steps/buddy_step.dart';
 import 'steps/companion_step.dart';
 import 'steps/volunteer_resources_step.dart';
@@ -226,6 +227,22 @@ class _RegistrationFlowScreenState
               enabled: enabledSections['volunteer_resources'] ?? true,
             ),
           ),
+          // 참가비는 등급을 하나라도 정해 둔 수양회에서만 묻는다.
+          // 참가비가 없는 행사에 빈 화면을 하나 더 보여줄 이유는 없다.
+          if (program['fee_basic'] != null || program['fee_premium'] != null)
+            (
+              title: l10n.regStepFee,
+              widget: FeeStep(
+                programId: widget.programId,
+                feeBasic: program['fee_basic'] as num?,
+                feePremium: program['fee_premium'] as num?,
+                feeBasicDesc: program['fee_basic_desc'] as String?,
+                feePremiumDesc: program['fee_premium_desc'] as String?,
+                discountOptions: List<Map<String, dynamic>>.from(
+                  program['discount_options'] as List? ?? const [],
+                ),
+              ),
+            ),
         ];
         final total = steps.length;
 

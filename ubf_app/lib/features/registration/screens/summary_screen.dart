@@ -42,6 +42,26 @@ class SummaryScreen extends ConsumerWidget {
             (sum, o) => sum + (o['cost'] as num).toDouble(),
           );
 
+          // 참가비 등급과 확정된 할인을 합계에 반영한다. 투어 비용만 더하면
+          // 참가자가 실제로 내야 할 금액과 다른 숫자를 보게 된다.
+          final tierFee = switch (formState.feeTier) {
+            'basic' => program['fee_basic'] as num?,
+            'premium' => program['fee_premium'] as num?,
+            _ => null,
+          };
+          totalCost += (tierFee ?? 0).toDouble();
+
+          // 승인된 할인만 뺀다. 신청 중인 금액을 미리 빼면 아직 결정되지도 않은
+          // 감액을 확정된 것처럼 보여주게 된다.
+          final saved = ref.watch(registrationProvider(programId)).valueOrNull;
+          final approvedDiscount = saved?['discount_status'] == 'approved'
+              ? (saved?['discount_amount'] as num?)?.toDouble() ?? 0
+              : 0.0;
+          totalCost = (totalCost - approvedDiscount).clamp(
+            0.0,
+            double.infinity,
+          );
+
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
@@ -166,6 +186,35 @@ class SummaryScreen extends ConsumerWidget {
                   onEdit: () => context.go('/registration/$programId'),
                   children: [_InfoRow('', formState.roommatePreference ?? '-')],
                 ),
+
+              // 참가비 등급 + 할인
+              if (tierFee != null || formState.discountRequested) ...[
+                const SizedBox(height: 12),
+                _SectionCard(
+                  title: l10n.regStepFee,
+                  icon: Icons.payments_outlined,
+                  onEdit: () => context.go('/registration/$programId'),
+                  children: [
+                    if (tierFee != null)
+                      _InfoRow(
+                        formState.feeTier == 'premium'
+                            ? l10n.feeTierPremium
+                            : l10n.feeTierBasic,
+                        Money.format(tierFee),
+                      ),
+                    if (formState.discountRequested)
+                      _InfoRow(
+                        l10n.discountTitle,
+                        // 승인 전에는 금액이 아니라 상태를 보여준다.
+                        approvedDiscount > 0
+                            ? '- ${Money.format(approvedDiscount)}'
+                            : saved?['discount_status'] == 'rejected'
+                            ? l10n.discountStatusRejected
+                            : l10n.discountStatusPending,
+                      ),
+                  ],
+                ),
+              ],
 
               const SizedBox(height: 20),
 

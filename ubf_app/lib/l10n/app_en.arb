@@ -1149,5 +1149,60 @@
   "privacyLess": "Show less",
   "@privacyLess": {
     "description": "Privacy notice on the registration flow"
-  }
+  },
+  "regStepFee": "Fee",
+  "feePrompt": "Choose a fee tier.",
+  "feeTierBasic": "Standard",
+  "feeTierPremium": "Premium",
+  "feeNotSet": "The fee has not been set yet.",
+  "discountTitle": "Discount request",
+  "discountPrompt": "If one of these applies to you, choose it.",
+  "discountNone": "No discount request",
+  "discountReasonLabel": "Additional note (optional)",
+  "discountReasonHint": "Anything the organizers should know",
+  "discountStatusPending": "Waiting for the organizers to review.",
+  "discountStatusApproved": "Approved — {amount} off",
+  "@discountStatusApproved": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "discountStatusRejected": "Not approved.",
+  "discountAdminNote": "Organizer note: {note}",
+  "@discountAdminNote": {
+    "placeholders": {
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "discountNoOptions": "This conference does not offer discount requests.",
+  "cpFeeSection": "Fee",
+  "cpFeeBasic": "Standard fee",
+  "cpFeePremium": "Premium fee",
+  "cpFeeBasicDesc": "What the standard fee covers",
+  "cpFeePremiumDesc": "What the premium fee covers",
+  "cpFeeHint": "Leave empty if you do not offer that tier.",
+  "cpFeeInvalid": "Enter a number of 0 or more.",
+  "cpDiscountSection": "Discount options",
+  "cpDiscountHint": "Reasons attendees can pick when asking for a discount — for example \"Attending one day only\".",
+  "cpDiscountLabel": "Wording shown to attendees",
+  "cpDiscountAmount": "Discount amount (optional)",
+  "cpDiscountAmountHint": "Leave empty to decide case by case.",
+  "cpDiscountAdd": "Add discount option",
+  "cpDiscountRemove": "Remove",
+  "cpDiscountEmpty": "No discount options yet.",
+  "adDiscountTitle": "Discount requests",
+  "adDiscountNone": "No discount requests.",
+  "adDiscountApprove": "Approve",
+  "adDiscountReject": "Reject",
+  "adDiscountAmount": "Discount amount",
+  "adDiscountNote": "Note (optional)",
+  "adDiscountAmountReq": "An amount is required to approve.",
+  "adDiscountSaved": "Saved.",
+  "adDiscountPending": "Pending",
+  "adDiscountApproved": "Approved",
+  "adDiscountRejected": "Rejected"
 }

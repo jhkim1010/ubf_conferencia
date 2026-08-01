@@ -3351,6 +3351,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show less'**
   String get privacyLess;
+
+  /// No description provided for @regStepFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Fee'**
+  String get regStepFee;
+
+  /// No description provided for @feePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a fee tier.'**
+  String get feePrompt;
+
+  /// No description provided for @feeTierBasic.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get feeTierBasic;
+
+  /// No description provided for @feeTierPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium'**
+  String get feeTierPremium;
+
+  /// No description provided for @feeNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'The fee has not been set yet.'**
+  String get feeNotSet;
+
+  /// No description provided for @discountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount request'**
+  String get discountTitle;
+
+  /// No description provided for @discountPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'If one of these applies to you, choose it.'**
+  String get discountPrompt;
+
+  /// No description provided for @discountNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No discount request'**
+  String get discountNone;
+
+  /// No description provided for @discountReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional note (optional)'**
+  String get discountReasonLabel;
+
+  /// No description provided for @discountReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything the organizers should know'**
+  String get discountReasonHint;
+
+  /// No description provided for @discountStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the organizers to review.'**
+  String get discountStatusPending;
+
+  /// No description provided for @discountStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved — {amount} off'**
+  String discountStatusApproved(String amount);
+
+  /// No description provided for @discountStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not approved.'**
+  String get discountStatusRejected;
+
+  /// No description provided for @discountAdminNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizer note: {note}'**
+  String discountAdminNote(String note);
+
+  /// No description provided for @discountNoOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'This conference does not offer discount requests.'**
+  String get discountNoOptions;
+
+  /// No description provided for @cpFeeSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Fee'**
+  String get cpFeeSection;
+
+  /// No description provided for @cpFeeBasic.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard fee'**
+  String get cpFeeBasic;
+
+  /// No description provided for @cpFeePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium fee'**
+  String get cpFeePremium;
+
+  /// No description provided for @cpFeeBasicDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'What the standard fee covers'**
+  String get cpFeeBasicDesc;
+
+  /// No description provided for @cpFeePremiumDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'What the premium fee covers'**
+  String get cpFeePremiumDesc;
+
+  /// No description provided for @cpFeeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty if you do not offer that tier.'**
+  String get cpFeeHint;
+
+  /// No description provided for @cpFeeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number of 0 or more.'**
+  String get cpFeeInvalid;
+
+  /// No description provided for @cpDiscountSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount options'**
+  String get cpDiscountSection;
+
+  /// No description provided for @cpDiscountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reasons attendees can pick when asking for a discount — for example \"Attending one day only\".'**
+  String get cpDiscountHint;
+
+  /// No description provided for @cpDiscountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Wording shown to attendees'**
+  String get cpDiscountLabel;
+
+  /// No description provided for @cpDiscountAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount amount (optional)'**
+  String get cpDiscountAmount;
+
+  /// No description provided for @cpDiscountAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to decide case by case.'**
+  String get cpDiscountAmountHint;
+
+  /// No description provided for @cpDiscountAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add discount option'**
+  String get cpDiscountAdd;
+
+  /// No description provided for @cpDiscountRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get cpDiscountRemove;
+
+  /// No description provided for @cpDiscountEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No discount options yet.'**
+  String get cpDiscountEmpty;
+
+  /// No description provided for @adDiscountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount requests'**
+  String get adDiscountTitle;
+
+  /// No description provided for @adDiscountNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No discount requests.'**
+  String get adDiscountNone;
+
+  /// No description provided for @adDiscountApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get adDiscountApprove;
+
+  /// No description provided for @adDiscountReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get adDiscountReject;
+
+  /// No description provided for @adDiscountAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount amount'**
+  String get adDiscountAmount;
+
+  /// No description provided for @adDiscountNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get adDiscountNote;
+
+  /// No description provided for @adDiscountAmountReq.
+  ///
+  /// In en, this message translates to:
+  /// **'An amount is required to approve.'**
+  String get adDiscountAmountReq;
+
+  /// No description provided for @adDiscountSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved.'**
+  String get adDiscountSaved;
+
+  /// No description provided for @adDiscountPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get adDiscountPending;
+
+  /// No description provided for @adDiscountApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get adDiscountApproved;
+
+  /// No description provided for @adDiscountRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get adDiscountRejected;
 }
 
 class _AppLocalizationsDelegate

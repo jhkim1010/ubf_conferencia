@@ -47,6 +47,11 @@ class ProgramService {
     String? contact2Name,
     String? contact2Phone,
     String? hostCountry,
+    num? feeBasic,
+    num? feePremium,
+    String? feeBasicDesc,
+    String? feePremiumDesc,
+    List<Map<String, dynamic>>? discountOptions,
   }) async {
     return ApiClient.createProgram({
       'name': name,
@@ -68,6 +73,13 @@ class ProgramService {
         'contact2Name': contact2Name,
       if (contact2Phone != null && contact2Phone.isNotEmpty)
         'contact2Phone': contact2Phone,
+      // 참가비는 null 도 의미가 있다("그 등급을 제공하지 않는다"). 다른 필드처럼
+      // 비었을 때 키를 빼면 서버가 값을 지울 방법이 없어진다.
+      'feeBasic': feeBasic,
+      'feePremium': feePremium,
+      'feeBasicDesc': feeBasicDesc,
+      'feePremiumDesc': feePremiumDesc,
+      'discountOptions': discountOptions ?? const [],
     });
   }
 
