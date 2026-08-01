@@ -1217,5 +1217,9 @@
     }
   },
   "cpCurrency": "Currency",
-  "cpCurrencyHint": "All attendees of this conference see amounts in this currency. No exchange-rate conversion is applied."
+  "cpCurrencyHint": "All attendees of this conference see amounts in this currency. No exchange-rate conversion is applied.",
+  "flightNotBookedYet": "I haven't booked my flight yet",
+  "flightNotBookedYetHint": "Just put the date you expect. You can add the flight later.",
+  "flightEstimatedNotice": "This is recorded as an estimate, not a confirmed flight. Please come back and add the flight once you book it.",
+  "expFlightEstimated": "(estimate — not booked)"
 }

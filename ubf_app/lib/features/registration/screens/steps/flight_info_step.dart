@@ -36,6 +36,12 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
   FlightInfo? _flightInfo;
   bool _addFlightAnyway = false; // 동일 국가라도 항공편을 직접 추가한 경우
 
+  // 아직 항공권을 사지 않은 경우. 날짜만 남기고 항공편 항목은 감춘다.
+  //
+  // 이 값이 참이면 준비 현황에서 "항공편 확정"으로 세지 않는다 — 예상 날짜가
+  // 확정 항공편처럼 집계되면 담당자는 다 모였다고 믿게 된다.
+  bool _estimated = false;
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +55,8 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
     if (savedDateStr != null && savedDateStr.isNotEmpty) {
       _selectedDate = DateTime.tryParse(savedDateStr);
     }
+
+    _estimated = data?['estimated'] == true;
 
     _dateLabelController = TextEditingController(
       text: _formatDate(_selectedDate),
@@ -186,6 +194,9 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
           : (_flightInfo?.scheduledDeparture?.toIso8601String() ??
                 manualDateStr),
       'terminal': _flightInfo?.terminal,
+      // 예매 전이면 이 값이 참이다. 서버의 flight_confirmed() 가 이 값을 보고
+      // 확정 항공편에서 제외한다(021).
+      'estimated': _estimated,
     };
 
     final notifier = ref.read(
@@ -201,7 +212,8 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
   bool get _hasFlightData =>
       _flightNoController.text.trim().isNotEmpty ||
       _airportController.text.trim().isNotEmpty ||
-      _selectedDate != null;
+      _selectedDate != null ||
+      _estimated;
 
   // 동일 국가 참가자용: 항공편 생략 안내 + '추가' 버튼
   Widget _buildSkipCard(AppLocalizations l10n, String label) {
@@ -276,6 +288,7 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
                   _selectedDate = null;
                   _flightInfo = null;
                   _searchError = null;
+                  _estimated = false;
                   _addFlightAnyway = false;
                 });
                 _saveToProvider();
@@ -298,87 +311,141 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
           ),
           onTap: _pickDate,
         ),
-        const SizedBox(height: 12),
-        // ── 항공편 번호 + 자동 조회 ───────────────────────
-        TextField(
-          controller: _flightNoController,
-          textCapitalization: TextCapitalization.characters,
-          decoration: InputDecoration(
-            labelText: l10n.flightNumber,
-            hintText: l10n.flightNumberHint,
-            suffixIcon: _isSearching
-                ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                : IconButton(
-                    icon: const Icon(Icons.search),
-                    tooltip: l10n.flightAutoSearch,
-                    onPressed: _searchFlight,
-                  ),
+
+        // ── 아직 예매 전 ─────────────────────────────────
+        // 날짜만 받는다. 항공권을 사기 전에도 대략의 일정을 남길 수 있어야
+        // 주최 측이 픽업 규모와 숙박 일수를 가늠한다.
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          controlAffinity: ListTileControlAffinity.leading,
+          value: _estimated,
+          onChanged: (v) {
+            setState(() {
+              _estimated = v ?? false;
+              if (_estimated) {
+                // 예매 전으로 바꾸면 조회 결과와 항공편 정보를 지운다.
+                // 남겨 두면 "예상"이라면서 편명이 붙어 있는 상태가 된다.
+                _flightNoController.clear();
+                _airportController.clear();
+                _timeController.clear();
+                _flightInfo = null;
+                _searchError = null;
+              }
+            });
+            _saveToProvider();
+          },
+          title: Text(l10n.flightNotBookedYet),
+          subtitle: Text(
+            l10n.flightNotBookedYetHint,
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
           ),
-          onChanged: (_) => _saveToProvider(),
         ),
-        if (_searchError != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            _searchError!,
-            style: TextStyle(color: Colors.orange[700], fontSize: 12),
-          ),
-        ],
-        if (_flightInfo != null) ...[
-          const SizedBox(height: 8),
+
+        if (_estimated) ...[
+          const SizedBox(height: 4),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.green[50],
+              color: Colors.orange[50],
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.green[200]!),
+              border: Border.all(color: Colors.orange[200]!),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  '${_flightInfo!.airline} (${_flightInfo!.flightNo})',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '${_flightInfo!.departureAirport} → ${_flightInfo!.arrivalAirport}',
-                  style: const TextStyle(fontSize: 13),
-                ),
-                if (_flightInfo!.status != null)
-                  Text(
-                    l10n.flightStatus('${_flightInfo!.status}'),
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                Icon(Icons.info_outline, size: 18, color: Colors.orange[800]),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.flightEstimatedNotice,
+                    style: TextStyle(fontSize: 12, color: Colors.orange[900]),
                   ),
+                ),
               ],
             ),
           ),
+        ] else ...[
+          const SizedBox(height: 12),
+          // ── 항공편 번호 + 자동 조회 ───────────────────────
+          TextField(
+            controller: _flightNoController,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              labelText: l10n.flightNumber,
+              hintText: l10n.flightNumberHint,
+              suffixIcon: _isSearching
+                  ? const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : IconButton(
+                      icon: const Icon(Icons.search),
+                      tooltip: l10n.flightAutoSearch,
+                      onPressed: _searchFlight,
+                    ),
+            ),
+            onChanged: (_) => _saveToProvider(),
+          ),
+          if (_searchError != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _searchError!,
+              style: TextStyle(color: Colors.orange[700], fontSize: 12),
+            ),
+          ],
+          if (_flightInfo != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${_flightInfo!.airline} (${_flightInfo!.flightNo})',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '${_flightInfo!.departureAirport} → ${_flightInfo!.arrivalAirport}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  if (_flightInfo!.status != null)
+                    Text(
+                      l10n.flightStatus('${_flightInfo!.status}'),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          // ── 공항 ─────────────────────────────────────────
+          TextField(
+            controller: _airportController,
+            decoration: InputDecoration(
+              labelText: l10n.flightAirportLabel(label),
+              hintText: l10n.flightAutoFillHint,
+            ),
+            onChanged: (_) => _saveToProvider(),
+          ),
+          const SizedBox(height: 12),
+          // ── 예정 시각 (항공편 조회 시 자동 입력) ───────────
+          TextField(
+            controller: _timeController,
+            decoration: InputDecoration(
+              labelText: l10n.flightTimeLabel(label),
+              hintText: l10n.flightAutoFillHint,
+            ),
+            onChanged: (_) => _saveToProvider(),
+          ),
         ],
-        const SizedBox(height: 16),
-        // ── 공항 ─────────────────────────────────────────
-        TextField(
-          controller: _airportController,
-          decoration: InputDecoration(
-            labelText: l10n.flightAirportLabel(label),
-            hintText: l10n.flightAutoFillHint,
-          ),
-          onChanged: (_) => _saveToProvider(),
-        ),
-        const SizedBox(height: 12),
-        // ── 예정 시각 (항공편 조회 시 자동 입력) ───────────
-        TextField(
-          controller: _timeController,
-          decoration: InputDecoration(
-            labelText: l10n.flightTimeLabel(label),
-            hintText: l10n.flightAutoFillHint,
-          ),
-          onChanged: (_) => _saveToProvider(),
-        ),
       ],
     );
   }

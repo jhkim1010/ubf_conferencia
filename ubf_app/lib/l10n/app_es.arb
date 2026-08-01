@@ -588,5 +588,9 @@
   "myProgramsEdit": "Editar",
   "myProgramsRegistered": "{count} inscritos",
   "cpCurrency": "Moneda",
-  "cpCurrencyHint": "Todos los asistentes de esta conferencia verán los importes en esta moneda. No se aplica conversión de tipo de cambio."
+  "cpCurrencyHint": "Todos los asistentes de esta conferencia verán los importes en esta moneda. No se aplica conversión de tipo de cambio.",
+  "flightNotBookedYet": "Todavía no he comprado mi vuelo",
+  "flightNotBookedYetHint": "Indica solo la fecha prevista. Puedes añadir el vuelo más adelante.",
+  "flightEstimatedNotice": "Se guarda como estimación, no como vuelo confirmado. Vuelve a añadir el vuelo cuando lo compres.",
+  "expFlightEstimated": "(estimación — sin comprar)"
 }

@@ -1943,4 +1943,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cpCurrencyHint =>
       'All attendees of this conference see amounts in this currency. No exchange-rate conversion is applied.';
+
+  @override
+  String get flightNotBookedYet => 'I haven\'t booked my flight yet';
+
+  @override
+  String get flightNotBookedYetHint =>
+      'Just put the date you expect. You can add the flight later.';
+
+  @override
+  String get flightEstimatedNotice =>
+      'This is recorded as an estimate, not a confirmed flight. Please come back and add the flight once you book it.';
+
+  @override
+  String get expFlightEstimated => '(estimate — not booked)';
 }

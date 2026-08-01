@@ -3633,6 +3633,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All attendees of this conference see amounts in this currency. No exchange-rate conversion is applied.'**
   String get cpCurrencyHint;
+
+  /// No description provided for @flightNotBookedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'I haven\'t booked my flight yet'**
+  String get flightNotBookedYet;
+
+  /// No description provided for @flightNotBookedYetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Just put the date you expect. You can add the flight later.'**
+  String get flightNotBookedYetHint;
+
+  /// No description provided for @flightEstimatedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'This is recorded as an estimate, not a confirmed flight. Please come back and add the flight once you book it.'**
+  String get flightEstimatedNotice;
+
+  /// No description provided for @expFlightEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'(estimate — not booked)'**
+  String get expFlightEstimated;
 }
 
 class _AppLocalizationsDelegate

@@ -340,8 +340,8 @@ router.get('/:id/stats', requireAuth, requireLeader, async (req, res) => {
         COUNT(r.id) AS total_registrations,
         COUNT(r.id) FILTER (WHERE r.submitted = true) AS submitted_count,
         COUNT(r.id) FILTER (WHERE r.food_requirements IS NOT NULL AND r.food_requirements != '' AND r.food_requirements != '없음') AS food_restriction_count,
-        COUNT(r.id) FILTER (WHERE r.arrival_flight IS NOT NULL) AS arrival_flight_count,
-        COUNT(r.id) FILTER (WHERE r.departure_flight IS NOT NULL) AS departure_flight_count,
+        COUNT(r.id) FILTER (WHERE flight_confirmed(r.arrival_flight)) AS arrival_flight_count,
+        COUNT(r.id) FILTER (WHERE flight_confirmed(r.departure_flight)) AS departure_flight_count,
         COUNT(pay.id) FILTER (WHERE pay.status = 'pending') AS pending_payment_count,
         COUNT(pay.id) FILTER (WHERE pay.status = 'confirmed') AS confirmed_payment_count
       FROM programs p
@@ -379,6 +379,9 @@ router.get('/:id/registrations', requireAuth, requireLeader, async (req, res) =>
         r.id, r.program_id, r.user_id, r.country, r.branch,
         r.real_name, r.bible_name, r.gender, r.age,
         r.arrival_flight, r.departure_flight,
+        -- 확정 항공편인지. 예상 날짜만 적은 사람을 담당자가 구분해야 한다.
+        flight_confirmed(r.arrival_flight) AS arrival_confirmed,
+        flight_confirmed(r.departure_flight) AS departure_confirmed,
         r.food_requirements, r.skips_breakfast,
         r.selected_options, r.roommate_preference,
         r.volunteer_resources, r.volunteer_note,
@@ -536,7 +539,7 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
         COUNT(*)::int AS total,
         COUNT(*) FILTER (WHERE r.country IS DISTINCT FROM ${host})::int AS overseas,
         COUNT(*) FILTER (
-          WHERE r.country IS DISTINCT FROM ${host} AND r.arrival_flight IS NULL
+          WHERE r.country IS DISTINCT FROM ${host} AND NOT flight_confirmed(r.arrival_flight)
         )::int AS flights_missing,
         COUNT(*) FILTER (
           WHERE r.food_requirements IS NOT NULL
@@ -584,7 +587,7 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
         COUNT(*)::int AS total,
         COUNT(*) FILTER (WHERE r.real_name IS NOT NULL AND r.real_name <> '')::int AS personal,
         COUNT(*) FILTER (WHERE r.food_requirements IS NOT NULL)::int AS meals,
-        COUNT(*) FILTER (WHERE r.arrival_flight IS NOT NULL)::int AS flight,
+        COUNT(*) FILTER (WHERE flight_confirmed(r.arrival_flight))::int AS flight,
         COUNT(*) FILTER (WHERE ra.id IS NOT NULL)::int AS lodging,
         COUNT(*) FILTER (WHERE r.submitted)::int AS submitted,
         COUNT(DISTINCT r.country)::int AS countries
@@ -618,7 +621,7 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
         CASE
           WHEN r.real_name IS NULL OR r.real_name = '' THEN 'personal'
           WHEN r.food_requirements IS NULL THEN 'meals'
-          WHEN r.country IS DISTINCT FROM ${host} AND r.arrival_flight IS NULL THEN 'flight'
+          WHEN r.country IS DISTINCT FROM ${host} AND NOT flight_confirmed(r.arrival_flight) THEN 'flight'
           WHEN ra.id IS NULL THEN 'lodging'
           ELSE 'payment'
         END AS stuck_at

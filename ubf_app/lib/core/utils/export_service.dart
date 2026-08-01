@@ -39,6 +39,18 @@ class ExportService {
     l10n.expSubmittedCol,
   ];
 
+  // 항공편 번호 칸. 예매 전이면 그 사실을 적는다 — 빈 칸으로 두면 담당자가
+  // "아직 안 적은 사람"과 "아직 안 산 사람"을 구별할 수 없다.
+  static String _flightNo(
+    AppLocalizations l10n,
+    Object? confirmed,
+    Map<String, dynamic>? f,
+  ) {
+    if (confirmed == true) return f?['flight_no'] as String? ?? '';
+    if (f?['estimated'] == true) return l10n.expFlightEstimated;
+    return f?['flight_no'] as String? ?? '';
+  }
+
   // 한 참가자의 값 목록 (현재 언어)
   static List<dynamic> _row(
     AppLocalizations l10n,
@@ -60,10 +72,10 @@ class ExportService {
       r['branch'] ?? '',
       gender,
       r['age'] ?? '',
-      arrival?['flight_no'] ?? '',
+      _flightNo(l10n, r['arrival_confirmed'], arrival),
       arrival?['scheduled_arrival'] ?? '',
       arrival?['arrival_airport'] ?? '',
-      departure?['flight_no'] ?? '',
+      _flightNo(l10n, r['departure_confirmed'], departure),
       departure?['scheduled_departure'] ?? '',
       departure?['departure_airport'] ?? '',
       r['food_requirements'] ?? '',

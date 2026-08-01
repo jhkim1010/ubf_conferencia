@@ -588,5 +588,9 @@
   "myProgramsEdit": "수정",
   "myProgramsRegistered": "등록 {count}명",
   "cpCurrency": "통화",
-  "cpCurrencyHint": "이 수양회 등록자 전원이 이 통화로 금액을 봅니다. 환율 변환은 하지 않습니다."
+  "cpCurrencyHint": "이 수양회 등록자 전원이 이 통화로 금액을 봅니다. 환율 변환은 하지 않습니다.",
+  "flightNotBookedYet": "아직 항공권을 예매하지 않았습니다",
+  "flightNotBookedYetHint": "예상 날짜만 적어 주십시오. 항공편은 나중에 추가할 수 있습니다.",
+  "flightEstimatedNotice": "확정이 아니라 예상으로 기록됩니다. 예매한 뒤에 다시 들어와 항공편을 넣어 주십시오.",
+  "expFlightEstimated": "(예상 — 미예매)"
 }
