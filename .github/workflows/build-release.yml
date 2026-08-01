@@ -82,6 +82,12 @@ jobs:
           channel: stable
       - name: Build Windows
         working-directory: ${{ env.APP_DIR }}
+        env:
+          # firebase_cpp_sdk 의 CMakeLists 가 cmake_minimum_required 를 3.5 미만으로
+          # 적어 두었는데, 러너의 CMake 4 가 그 호환성을 제거해 설정 단계에서 멈춘다.
+          # 우리 코드가 아니라 의존성의 문제라 여기서 고칠 수 없다. CMake 가
+          # 안내하는 탈출구를 쓴다(4.0 부터 환경변수로도 받는다).
+          CMAKE_POLICY_VERSION_MINIMUM: '3.5'
         run: |
           flutter pub get
           # 이 잡은 pwsh 로 돈다. PowerShell 에서 백슬래시는 줄 연결이 아니라
