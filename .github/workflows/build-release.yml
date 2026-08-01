@@ -12,6 +12,10 @@ on:
 env:
   FLUTTER_VERSION: '3.44.6'
   APP_DIR: ubf_app
+  # 모든 플랫폼 빌드에 넘긴다. 빠뜨리면 app_constants.dart 의 기본값인
+  # http://localhost:3000 이 박혀서, 설치한 기기가 자기 자신에게 붙으려 하다
+  # 아무것도 못 한다. 실제로 다섯 플랫폼 모두 이 값이 빠져 있었다.
+  API_BASE_URL: https://ubf.coolsistema.com/api
 
 jobs:
   # ---------------------------------------------------------------- Web
@@ -27,7 +31,8 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: |
           flutter pub get
-          flutter build web --release
+          flutter build web --release \
+            --dart-define=API_BASE_URL=${{ env.API_BASE_URL }}
       - name: Zip web
         working-directory: ${{ env.APP_DIR }}/build/web
         run: zip -r "$GITHUB_WORKSPACE/mana-web.zip" .
@@ -51,9 +56,14 @@ jobs:
           channel: stable
       - name: Build APK
         working-directory: ${{ env.APP_DIR }}
+        # API_BASE_URL 을 반드시 넘긴다. 없으면 app_constants.dart 의 기본값인
+        # http://localhost:3000 이 박혀서, 설치한 기기에서 자기 자신에게 붙으려
+        # 하다 아무것도 못 한다. 웹은 같은 도메인이라 /api 로 충분하지만
+        # 앱은 절대 주소가 필요하다.
         run: |
           flutter pub get
-          flutter build apk --release
+          flutter build apk --release \
+            --dart-define=API_BASE_URL=${{ env.API_BASE_URL }}
       - name: Rename APK
         run: cp "${{ env.APP_DIR }}/build/app/outputs/flutter-apk/app-release.apk" mana-android.apk
       - uses: actions/upload-artifact@v4
@@ -74,7 +84,8 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: |
           flutter pub get
-          flutter build windows --release
+          flutter build windows --release \
+            --dart-define=API_BASE_URL=${{ env.API_BASE_URL }}
       - name: Zip Windows (portable)
         shell: pwsh
         run: |
@@ -118,7 +129,8 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: |
           flutter pub get
-          flutter build linux --release
+          flutter build linux --release \
+            --dart-define=API_BASE_URL=${{ env.API_BASE_URL }}
       - name: Tar Linux bundle
         working-directory: ${{ env.APP_DIR }}/build/linux/x64/release/bundle
         run: tar czf "$GITHUB_WORKSPACE/mana-linux.tar.gz" .
@@ -140,7 +152,8 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: |
           flutter pub get
-          flutter build macos --release
+          flutter build macos --release \
+            --dart-define=API_BASE_URL=${{ env.API_BASE_URL }}
       - name: Create DMG
         working-directory: ${{ env.APP_DIR }}
         run: |
