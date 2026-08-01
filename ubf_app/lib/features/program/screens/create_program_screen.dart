@@ -76,6 +76,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
   final _feePremiumDescController = TextEditingController();
   final List<Map<String, dynamic>> _discountOptions = [];
 
+  // 이 수양회의 통화. 등록자 전원이 이 단위로 본다.
+  Currency _currency = Currency.usd;
+
   // 빈 칸은 0 이 아니라 "그 등급 없음"이다. 0 으로 보내면 무료 등급이 된다.
   num? _fee(TextEditingController c) {
     final t = c.text.trim();
@@ -169,6 +172,7 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
         feeBasicDesc: _text(_feeBasicDescController),
         feePremiumDesc: _text(_feePremiumDescController),
         discountOptions: _discountOptions,
+        currency: _currency.code,
       );
 
       if (!mounted) return;
@@ -442,6 +446,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
               premiumDescController: _feePremiumDescController,
               discountOptions: _discountOptions,
               onDiscountsChanged: () => setState(() {}),
+              currency: _currency,
+              onCurrencyChanged: (c) => setState(() => _currency = c),
             ),
             const SizedBox(height: 28),
 

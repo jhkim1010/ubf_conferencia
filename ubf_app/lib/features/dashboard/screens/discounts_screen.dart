@@ -22,6 +22,12 @@ class DiscountsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final async = ref.watch(programRegistrationsProvider(programId));
+    // 담당자도 등록자와 같은 단위로 봐야 한다. 승인 금액을 다른 통화로
+    // 적으면 그대로 청구 금액이 된다.
+    final currency = Currency.of(
+      ref.watch(programByIdProvider(programId)).valueOrNull?['currency']
+          as String?,
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.adDiscountTitle)),
@@ -43,8 +49,11 @@ class DiscountsScreen extends ConsumerWidget {
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: requests.length,
-              itemBuilder: (_, i) =>
-                  _RequestCard(programId: programId, registration: requests[i]),
+              itemBuilder: (_, i) => _RequestCard(
+                programId: programId,
+                registration: requests[i],
+                currency: currency,
+              ),
             ),
           );
         },
@@ -56,8 +65,13 @@ class DiscountsScreen extends ConsumerWidget {
 class _RequestCard extends ConsumerStatefulWidget {
   final String programId;
   final Map<String, dynamic> registration;
+  final Currency currency;
 
-  const _RequestCard({required this.programId, required this.registration});
+  const _RequestCard({
+    required this.programId,
+    required this.registration,
+    required this.currency,
+  });
 
   @override
   ConsumerState<_RequestCard> createState() => _RequestCardState();
@@ -199,7 +213,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                     ],
                     decoration: InputDecoration(
                       labelText: l10n.adDiscountAmount,
-                      prefixText: '${Money.symbol} ',
+                      prefixText: '${widget.currency.symbol} ',
                       border: const OutlineInputBorder(),
                       isDense: true,
                     ),

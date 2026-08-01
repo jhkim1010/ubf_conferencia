@@ -5,6 +5,7 @@ import '../../program/providers/program_provider.dart';
 import '../../../core/utils/export_service.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/constants/world_countries.dart';
+import '../../../core/utils/money.dart';
 
 // 리더용 대시보드 - 통계 + 참가자 관리
 class DashboardScreen extends ConsumerWidget {
@@ -43,17 +44,23 @@ class DashboardScreen extends ConsumerWidget {
                   .cast<Map<String, dynamic>>();
               final programName =
                   (programAsync.valueOrNull?['name'] as String?) ?? 'program';
+              // 내보내기 파일도 수양회가 정한 통화를 따른다.
+              final currency = Currency.of(
+                programAsync.valueOrNull?['currency'] as String?,
+              );
               if (val == 'csv') {
                 await ExportService.exportToCsv(
                   registrations,
                   programName,
                   l10n,
+                  currency: currency,
                 );
               } else {
                 await ExportService.exportToExcel(
                   registrations,
                   programName,
                   l10n,
+                  currency: currency,
                 );
               }
             },

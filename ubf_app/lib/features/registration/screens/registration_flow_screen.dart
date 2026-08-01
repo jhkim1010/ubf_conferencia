@@ -156,6 +156,9 @@ class _RegistrationFlowScreenState
           program['program_options'] as List? ?? [],
         );
 
+        // 이 수양회의 통화. 주최 측이 정하고 등록자 전원이 같은 단위로 본다.
+        final currency = Currency.of(program['currency'] as String?);
+
         // 개최 국가 == 참가자 거주 국가면 항공편 입력을 기본 생략 (필요 시 추가 가능)
         //
         // 양쪽을 ISO 로 정규화한 뒤에 비교한다. 019 마이그레이션이 기존 값을
@@ -220,6 +223,7 @@ class _RegistrationFlowScreenState
             widget: OptionsStep(
               programId: widget.programId,
               options: options,
+              currency: currency,
               enabled: enabledSections['special_programs'] ?? true,
             ),
           ),
@@ -251,6 +255,7 @@ class _RegistrationFlowScreenState
                 discountOptions: List<Map<String, dynamic>>.from(
                   program['discount_options'] as List? ?? const [],
                 ),
+                currency: currency,
               ),
             ),
         ];

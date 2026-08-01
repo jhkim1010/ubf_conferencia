@@ -11,7 +11,10 @@ import pg from 'pg';
 // DB 없이 파서만 확인한다. 단위 테스트에 DB 연결을 끌어들이면 CI 에서
 // 조용히 SKIP 되어 아무것도 지키지 못한다.
 test('db.js 를 불러오면 NUMERIC 파서가 숫자를 돌려준다', async () => {
-  process.env.DATABASE_URL ??= 'postgres://u:p@localhost:5432/none';
+  // db.js 는 DATABASE_URL 이 없으면 기동을 거부한다. 연결하지는 않으므로
+  // 자격증명 없는 형태로 채운다 — verify.sh 의 secrets 검사가 `user:pass@`
+  // 형태를 잡기 때문에, 가짜라도 그 모양을 저장소에 남기지 않는다.
+  process.env.DATABASE_URL ??= 'postgres://localhost:5432/none';
   await import('../src/db.js');
 
   const numeric = pg.types.getTypeParser(pg.types.builtins.NUMERIC);

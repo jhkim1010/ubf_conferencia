@@ -50,6 +50,8 @@ class SummaryScreen extends ConsumerWidget {
           );
 
           // 선택된 옵션 목록 및 비용 계산
+          final currency = Currency.of(program['currency'] as String?);
+
           final selectedOptionDetails = options
               .where(
                 (o) => formState.selectedOptions.contains(o['id'] as String),
@@ -58,7 +60,7 @@ class SummaryScreen extends ConsumerWidget {
 
           double totalCost = selectedOptionDetails.fold(
             0.0,
-            (sum, o) => sum + (o['cost'] as num).toDouble(),
+            (sum, o) => sum + (Money.parse(o['cost']) ?? 0).toDouble(),
           );
 
           // 참가비 등급과 확정된 할인을 합계에 반영한다. 투어 비용만 더하면
@@ -193,7 +195,7 @@ class SummaryScreen extends ConsumerWidget {
                       .map(
                         (o) => _InfoRow(
                           o['name'] ?? '',
-                          Money.format(o['cost'] as num),
+                          currency.format(Money.parse(o['cost'])),
                         ),
                       )
                       .toList(),
@@ -222,14 +224,14 @@ class SummaryScreen extends ConsumerWidget {
                         formState.feeTier == 'premium'
                             ? l10n.feeTierPremium
                             : l10n.feeTierBasic,
-                        Money.format(tierFee),
+                        currency.format(tierFee),
                       ),
                     if (formState.discountRequested)
                       _InfoRow(
                         l10n.discountTitle,
                         // 승인 전에는 금액이 아니라 상태를 보여준다.
                         approvedDiscount > 0
-                            ? '- ${Money.format(approvedDiscount)}'
+                            ? '- ${currency.format(approvedDiscount)}'
                             : saved?['discount_status'] == 'rejected'
                             ? l10n.discountStatusRejected
                             : l10n.discountStatusPending,
@@ -255,7 +257,7 @@ class SummaryScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      Money.format(totalCost),
+                      currency.format(totalCost),
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             fontWeight: FontWeight.bold,

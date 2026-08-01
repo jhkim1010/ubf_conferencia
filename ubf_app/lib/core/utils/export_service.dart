@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../l10n/app_localizations.dart';
 import '../constants/world_countries.dart';
+import 'money.dart';
 
 // 참가자 데이터 내보내기 서비스
 // 헤더·값은 관리자(호출자)의 현재 언어로 출력된다.
@@ -31,6 +32,9 @@ class ExportService {
     if (withOptions) l10n.expOptions,
     l10n.summarySectionRoommate,
     l10n.expTotalCost,
+    // 금액 옆에 통화를 따로 둔다. 숫자에 기호를 붙이면 엑셀에서 문자열이 되어
+    // 합계를 낼 수 없고, 통화를 아예 빼면 수양회마다 단위가 달라 뜻이 없어진다.
+    l10n.cpCurrency,
     l10n.expPaymentStatus,
     l10n.expSubmittedCol,
   ];
@@ -41,6 +45,7 @@ class ExportService {
     int index,
     Map<String, dynamic> r, {
     required bool withOptions,
+    required Currency currency,
   }) {
     final arrival = r['arrival_flight'] as Map<String, dynamic>?;
     final departure = r['departure_flight'] as Map<String, dynamic>?;
@@ -64,7 +69,8 @@ class ExportService {
       r['food_requirements'] ?? '',
       if (withOptions) '', // 옵션명은 별도 조인 필요
       r['roommate_preference'] ?? '',
-      r['total_cost'] ?? 0,
+      Money.parse(r['total_cost']) ?? 0,
+      currency.code,
       r['payment_status'] ?? l10n.expUnregistered,
       r['submitted'] == true ? l10n.dashStatusDone : l10n.expIncomplete,
     ];
@@ -74,11 +80,14 @@ class ExportService {
   static Future<void> exportToCsv(
     List<Map<String, dynamic>> registrations,
     String programName,
-    AppLocalizations l10n,
-  ) async {
+    AppLocalizations l10n, {
+    Currency currency = Currency.usd,
+  }) async {
     final rows = <List<dynamic>>[_headers(l10n, withOptions: true)];
     for (var i = 0; i < registrations.length; i++) {
-      rows.add(_row(l10n, i, registrations[i], withOptions: true));
+      rows.add(
+        _row(l10n, i, registrations[i], withOptions: true, currency: currency),
+      );
     }
 
     final csv = const ListToCsvConverter().convert(rows);
@@ -95,8 +104,9 @@ class ExportService {
   static Future<void> exportToExcel(
     List<Map<String, dynamic>> registrations,
     String programName,
-    AppLocalizations l10n,
-  ) async {
+    AppLocalizations l10n, {
+    Currency currency = Currency.usd,
+  }) async {
     final excel = Excel.createExcel();
     final sheet = excel[l10n.expRoster];
 
@@ -124,6 +134,7 @@ class ExportService {
         rowIdx,
         registrations[rowIdx],
         withOptions: false,
+        currency: currency,
       );
       for (var colIdx = 0; colIdx < rowData.length; colIdx++) {
         final cell = sheet.cell(

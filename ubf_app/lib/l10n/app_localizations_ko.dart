@@ -1896,4 +1896,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String myProgramsRegistered(int count) {
     return '등록 $count명';
   }
+
+  @override
+  String get cpCurrency => '통화';
+
+  @override
+  String get cpCurrencyHint => '이 수양회 등록자 전원이 이 통화로 금액을 봅니다. 환율 변환은 하지 않습니다.';
 }

@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import 'package:mana/features/registration/providers/registration_provider.dart';
 import 'package:mana/features/registration/screens/steps/fee_step.dart';
+import 'package:mana/core/utils/money.dart';
 
 // 참가비 등급 선택과 할인 신청은 화면과 상태가 어긋나기 쉽다.
 // 특히 "신청 안 함"은 값을 **지우는** 동작이라 copyWith 의 `??` 병합으로는
@@ -33,6 +34,7 @@ Widget _harness(
       home: Scaffold(
         body: FeeStep(
           programId: _programId,
+          currency: Currency.usd,
           feeBasic: 150,
           feePremium: 250,
           feeBasicDesc: '단체실',

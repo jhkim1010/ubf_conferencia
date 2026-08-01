@@ -19,6 +19,9 @@ class FeeStep extends ConsumerWidget {
   final String? feePremiumDesc;
   final List<Map<String, dynamic>> discountOptions;
 
+  /// 이 수양회의 통화.
+  final Currency currency;
+
   const FeeStep({
     super.key,
     required this.programId,
@@ -27,6 +30,7 @@ class FeeStep extends ConsumerWidget {
     required this.feeBasicDesc,
     required this.feePremiumDesc,
     required this.discountOptions,
+    required this.currency,
   });
 
   @override
@@ -64,6 +68,7 @@ class FeeStep extends ConsumerWidget {
             title: l10n.feeTierBasic,
             amount: feeBasic!,
             description: feeBasicDesc,
+            currency: currency,
             selected: form.feeTier == 'basic',
             onTap: () => notifier.selectFeeTier('basic'),
           ),
@@ -72,6 +77,7 @@ class FeeStep extends ConsumerWidget {
             title: l10n.feeTierPremium,
             amount: feePremium!,
             description: feePremiumDesc,
+            currency: currency,
             selected: form.feeTier == 'premium',
             onTap: () => notifier.selectFeeTier('premium'),
           ),
@@ -114,7 +120,7 @@ class FeeStep extends ConsumerWidget {
                     title: Text(o['label'] as String? ?? ''),
                     subtitle: amount != null
                         ? Text(
-                            '- ${Money.format(amount)}',
+                            '- ${currency.format(amount)}',
                             style: TextStyle(color: theme.colorScheme.primary),
                           )
                         : null,
@@ -146,6 +152,7 @@ class FeeStep extends ConsumerWidget {
               status: decidedStatus,
               amount: decidedAmount,
               note: adminNote,
+              currency: currency,
             ),
           ],
         ],
@@ -158,6 +165,7 @@ class _TierCard extends StatelessWidget {
   final String title;
   final num amount;
   final String? description;
+  final Currency currency;
   final bool selected;
   final VoidCallback onTap;
 
@@ -165,6 +173,7 @@ class _TierCard extends StatelessWidget {
     required this.title,
     required this.amount,
     required this.description,
+    required this.currency,
     required this.selected,
     required this.onTap,
   });
@@ -223,7 +232,7 @@ class _TierCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: Text(
-                  Money.format(amount),
+                  currency.format(amount),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -245,11 +254,13 @@ class _DecisionBanner extends StatelessWidget {
   final String? status;
   final Object? amount;
   final String? note;
+  final Currency currency;
 
   const _DecisionBanner({
     required this.status,
     required this.amount,
     required this.note,
+    required this.currency,
   });
 
   @override
@@ -264,7 +275,7 @@ class _DecisionBanner extends StatelessWidget {
     switch (status) {
       case 'approved':
         final v = Money.parse(amount) ?? 0;
-        text = l10n.discountStatusApproved(Money.format(v));
+        text = l10n.discountStatusApproved(currency.format(v));
         color = Colors.green[700]!;
         icon = Icons.check_circle_outline;
       case 'rejected':

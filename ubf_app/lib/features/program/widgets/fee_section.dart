@@ -20,6 +20,12 @@ class FeeSection extends StatefulWidget {
   /// 목록을 바꾼 뒤 부모가 setState 하도록 알린다.
   final VoidCallback onDiscountsChanged;
 
+  /// 이 수양회의 통화. 등록자 전원이 이 단위로 본다.
+  final Currency currency;
+
+  /// 통화를 바꿨을 때. 부모가 상태를 들고 저장 시점에 서버로 보낸다.
+  final ValueChanged<Currency> onCurrencyChanged;
+
   const FeeSection({
     super.key,
     required this.basicController,
@@ -28,6 +34,8 @@ class FeeSection extends StatefulWidget {
     required this.premiumDescController,
     required this.discountOptions,
     required this.onDiscountsChanged,
+    required this.currency,
+    required this.onCurrencyChanged,
   });
 
   @override
@@ -95,12 +103,36 @@ class _FeeSectionState extends State<FeeSection> {
         ),
         const SizedBox(height: 12),
 
+        // 통화를 먼저 고르게 한다. 금액을 입력한 뒤에 단위를 정하면 이미 적은
+        // 숫자가 어느 통화였는지 헷갈린다.
+        DropdownButtonFormField<String>(
+          initialValue: widget.currency.code,
+          decoration: InputDecoration(
+            labelText: l10n.cpCurrency,
+            helperText: l10n.cpCurrencyHint,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+          items: [
+            for (final c in Currency.all)
+              DropdownMenuItem(
+                value: c.code,
+                child: Text('${c.symbol}  ${c.code}'),
+              ),
+          ],
+          onChanged: (v) {
+            if (v != null) widget.onCurrencyChanged(Currency.of(v));
+          },
+        ),
+        const SizedBox(height: 16),
+
         _FeeRow(
           amountController: widget.basicController,
           descController: widget.basicDescController,
           amountLabel: l10n.cpFeeBasic,
           descLabel: l10n.cpFeeBasicDesc,
           validator: validateFee,
+          symbol: widget.currency.symbol,
         ),
         const SizedBox(height: 12),
         _FeeRow(
@@ -109,6 +141,7 @@ class _FeeSectionState extends State<FeeSection> {
           amountLabel: l10n.cpFeePremium,
           descLabel: l10n.cpFeePremiumDesc,
           validator: validateFee,
+          symbol: widget.currency.symbol,
         ),
 
         const SizedBox(height: 24),
@@ -137,7 +170,7 @@ class _FeeSectionState extends State<FeeSection> {
                 dense: true,
                 title: Text(e.value['label'] as String? ?? ''),
                 subtitle: amount is num
-                    ? Text('- ${Money.format(amount)}')
+                    ? Text('- ${widget.currency.format(amount)}')
                     : Text(l10n.cpDiscountAmountHint),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
@@ -180,7 +213,7 @@ class _FeeSectionState extends State<FeeSection> {
                 ],
                 decoration: InputDecoration(
                   labelText: l10n.cpDiscountAmount,
-                  prefixText: '${Money.symbol} ',
+                  prefixText: '${widget.currency.symbol} ',
                   border: const OutlineInputBorder(),
                   isDense: true,
                 ),
@@ -208,6 +241,7 @@ class _FeeRow extends StatelessWidget {
   final String amountLabel;
   final String descLabel;
   final String? Function(String?) validator;
+  final String symbol;
 
   const _FeeRow({
     required this.amountController,
@@ -215,6 +249,7 @@ class _FeeRow extends StatelessWidget {
     required this.amountLabel,
     required this.descLabel,
     required this.validator,
+    required this.symbol,
   });
 
   @override
@@ -232,7 +267,7 @@ class _FeeRow extends StatelessWidget {
             ],
             decoration: InputDecoration(
               labelText: amountLabel,
-              prefixText: '${Money.symbol} ',
+              prefixText: '$symbol ',
               border: const OutlineInputBorder(),
               isDense: true,
             ),

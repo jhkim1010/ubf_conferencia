@@ -586,5 +586,7 @@
   "myProgramsTitle": "Mis conferencias",
   "myProgramsEmpty": "Aún no has creado ninguna conferencia.\nUsa el botón de abajo para crear una.",
   "myProgramsEdit": "Editar",
-  "myProgramsRegistered": "{count} inscritos"
+  "myProgramsRegistered": "{count} inscritos",
+  "cpCurrency": "Moneda",
+  "cpCurrencyHint": "Todos los asistentes de esta conferencia verán los importes en esta moneda. No se aplica conversión de tipo de cambio."
 }

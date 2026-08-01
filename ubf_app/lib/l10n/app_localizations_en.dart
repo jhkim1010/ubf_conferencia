@@ -1936,4 +1936,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String myProgramsRegistered(int count) {
     return '$count registered';
   }
+
+  @override
+  String get cpCurrency => 'Currency';
+
+  @override
+  String get cpCurrencyHint =>
+      'All attendees of this conference see amounts in this currency. No exchange-rate conversion is applied.';
 }

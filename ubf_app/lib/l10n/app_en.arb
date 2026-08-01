@@ -1215,5 +1215,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "cpCurrency": "Currency",
+  "cpCurrencyHint": "All attendees of this conference see amounts in this currency. No exchange-rate conversion is applied."
 }

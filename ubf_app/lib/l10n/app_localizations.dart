@@ -3621,6 +3621,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} registered'**
   String myProgramsRegistered(int count);
+
+  /// No description provided for @cpCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get cpCurrency;
+
+  /// No description provided for @cpCurrencyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'All attendees of this conference see amounts in this currency. No exchange-rate conversion is applied.'**
+  String get cpCurrencyHint;
 }
 
 class _AppLocalizationsDelegate

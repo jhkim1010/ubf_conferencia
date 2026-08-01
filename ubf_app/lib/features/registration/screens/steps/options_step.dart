@@ -10,10 +10,14 @@ class OptionsStep extends ConsumerWidget {
   final List<Map<String, dynamic>> options;
   final bool enabled;
 
+  /// 이 수양회의 통화. 등록자 전원이 같은 단위로 본다.
+  final Currency currency;
+
   const OptionsStep({
     super.key,
     required this.programId,
     required this.options,
+    required this.currency,
     this.enabled = true,
   });
 
@@ -36,7 +40,7 @@ class OptionsStep extends ConsumerWidget {
     double totalCost = 0;
     for (final option in options) {
       if (selectedOptions.contains(option['id'] as String)) {
-        totalCost += (option['cost'] as num).toDouble();
+        totalCost += (Money.parse(option['cost']) ?? 0).toDouble();
       }
     }
 
@@ -54,6 +58,7 @@ class OptionsStep extends ConsumerWidget {
           (option) => _TourCard(
             programId: programId,
             option: option,
+            currency: currency,
             isSelected: selectedOptions.contains(option['id'] as String),
           ),
         ),
@@ -73,7 +78,7 @@ class OptionsStep extends ConsumerWidget {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  Money.format(totalCost),
+                  currency.format(totalCost),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -91,11 +96,13 @@ class OptionsStep extends ConsumerWidget {
 class _TourCard extends ConsumerWidget {
   final String programId;
   final Map<String, dynamic> option;
+  final Currency currency;
   final bool isSelected;
 
   const _TourCard({
     required this.programId,
     required this.option,
+    required this.currency,
     required this.isSelected,
   });
 
@@ -104,15 +111,15 @@ class _TourCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final optionId = option['id'] as String;
-    final cost = (option['cost'] as num).toDouble();
+    final cost = (Money.parse(option['cost']) ?? 0).toDouble();
     final photoUrls =
         (option['photoUrls'] as List?)?.cast<String>() ?? const <String>[];
     final description = option['description'] as String?;
     final contactName = option['contactName'] as String?;
     final brochureUrl = option['brochureUrl'] as String?;
     final videoUrl = option['videoUrl'] as String?;
-    final capacity = (option['capacity'] as num?)?.toInt();
-    final signupCount = (option['signupCount'] as num?)?.toInt() ?? 0;
+    final capacity = Money.parse(option['capacity'])?.toInt();
+    final signupCount = Money.parse(option['signupCount'])?.toInt() ?? 0;
     final deadline = option['signupDeadline'] != null
         ? DateTime.tryParse(option['signupDeadline'] as String)
         : null;
@@ -193,7 +200,7 @@ class _TourCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  cost == 0 ? l10n.optionsFree : Money.format(cost),
+                  cost == 0 ? l10n.optionsFree : currency.format(cost),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: cost == 0

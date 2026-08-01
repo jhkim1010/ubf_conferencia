@@ -63,6 +63,9 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
   final _feePremiumDescController = TextEditingController();
   List<Map<String, dynamic>> _discountOptions = [];
 
+  // 이 수양회의 통화. 등록자 전원이 이 단위로 본다.
+  Currency _currency = Currency.usd;
+
   // 빈 칸은 0 이 아니라 "그 등급 없음"이다.
   num? _fee(TextEditingController c) {
     final t = c.text.trim();
@@ -141,6 +144,8 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _feePremiumController.text = program['fee_premium']?.toString() ?? '';
     _feeBasicDescController.text = program['fee_basic_desc'] ?? '';
     _feePremiumDescController.text = program['fee_premium_desc'] ?? '';
+
+    _currency = Currency.of(program['currency'] as String?);
 
     final rawDiscounts = program['discount_options'];
     if (rawDiscounts is List) {
@@ -226,6 +231,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
         'feeBasicDesc': _text(_feeBasicDescController),
         'feePremiumDesc': _text(_feePremiumDescController),
         'discountOptions': _discountOptions,
+        'currency': _currency.code,
       });
 
       if (!mounted) return;
@@ -479,6 +485,8 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   premiumDescController: _feePremiumDescController,
                   discountOptions: _discountOptions,
                   onDiscountsChanged: () => setState(() {}),
+                  currency: _currency,
+                  onCurrencyChanged: (c) => setState(() => _currency = c),
                 ),
                 const SizedBox(height: 28),
 

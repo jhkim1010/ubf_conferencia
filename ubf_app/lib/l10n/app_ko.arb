@@ -586,5 +586,7 @@
   "myProgramsTitle": "내 프로그램 관리",
   "myProgramsEmpty": "아직 만든 수양회가 없습니다.\n아래 버튼으로 새로 만드십시오.",
   "myProgramsEdit": "수정",
-  "myProgramsRegistered": "등록 {count}명"
+  "myProgramsRegistered": "등록 {count}명",
+  "cpCurrency": "통화",
+  "cpCurrencyHint": "이 수양회 등록자 전원이 이 통화로 금액을 봅니다. 환율 변환은 하지 않습니다."
 }

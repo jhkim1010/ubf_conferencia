@@ -52,6 +52,7 @@ class ProgramService {
     String? feeBasicDesc,
     String? feePremiumDesc,
     List<Map<String, dynamic>>? discountOptions,
+    String? currency,
   }) async {
     return ApiClient.createProgram({
       'name': name,
@@ -80,6 +81,7 @@ class ProgramService {
       'feeBasicDesc': feeBasicDesc,
       'feePremiumDesc': feePremiumDesc,
       'discountOptions': discountOptions ?? const [],
+      'currency': currency ?? 'USD',
     });
   }
 
