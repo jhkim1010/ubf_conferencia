@@ -4,6 +4,34 @@ import { requireAuth, requireLeader } from '../middleware/auth.js';
 
 const router = Router();
 
+// 참가비 금액 정리. 빈 문자열/잘못된 값은 NULL(= 그 등급 없음)로 본다.
+// 음수는 DB 제약이 막지만 여기서 먼저 걸러 500 대신 400 을 돌려준다.
+function parseFee(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) return NaN; // 호출부에서 400 처리
+  return n;
+}
+
+// 할인 항목 정리. 관리자가 "1일 참석 / 2일 참석 …" 처럼 정의한다.
+// key 는 등록 레코드가 참조하므로 한 번 정해지면 바뀌면 안 된다.
+// 클라이언트가 준 key 를 그대로 쓰고, 없을 때만 위치 기반으로 채운다.
+function normalizeDiscountOptions(raw) {
+  if (!Array.isArray(raw)) return null; // 안 보냈으면 건드리지 않는다
+  const seen = new Set();
+  const out = [];
+  raw.forEach((o, i) => {
+    const label = String(o?.label ?? '').trim();
+    if (!label) return; // 문구 없는 항목은 화면에 아무것도 못 보여준다
+    let key = String(o?.key ?? '').trim() || `d${i + 1}`;
+    while (seen.has(key)) key = `${key}_`; // key 중복은 등록 참조를 망친다
+    seen.add(key);
+    const amount = parseFee(o?.amount);
+    out.push({ key, label, amount: Number.isNaN(amount) ? null : amount });
+  });
+  return out;
+}
+
 // GET /programs/:id - 단일 프로그램 + 옵션 조회 (참가자용)
 router.get('/:id', requireAuth, async (req, res) => {
   try {
@@ -74,11 +102,19 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
     name, location, startDate, endDate, enabledSections, options,
     nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
     programType, hostCountry,
+    feeBasic, feePremium, feeBasicDesc, feePremiumDesc, discountOptions,
   } = req.body;
 
   if (!name || !location) {
     return res.status(400).json({ error: '프로그램 이름과 장소는 필수입니다' });
   }
+
+  const basic = parseFee(feeBasic);
+  const premium = parseFee(feePremium);
+  if (Number.isNaN(basic) || Number.isNaN(premium)) {
+    return res.status(400).json({ error: '참가비는 0 이상의 숫자여야 합니다' });
+  }
+  const discounts = normalizeDiscountOptions(discountOptions) ?? [];
 
   try {
     // 중복 체크: 같은 리더가 같은 이름+시작일 프로그램을 이미 만든 경우
@@ -112,7 +148,8 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
       INSERT INTO programs (
         name, location, leader_id, start_date, end_date, enabled_sections,
         nearest_airport, contact1_name, contact1_phone, contact2_name, contact2_phone,
-        program_type, host_country
+        program_type, host_country,
+        fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options
       )
       VALUES (
         ${name},
@@ -127,7 +164,12 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         ${contact2Name ?? null},
         ${contact2Phone ?? null},
         ${type},
-        ${hostCountry ?? null}
+        ${hostCountry ?? null},
+        ${basic},
+        ${premium},
+        ${feeBasicDesc ?? null},
+        ${feePremiumDesc ?? null},
+        ${JSON.stringify(discounts)}
       )
       RETURNING id
     `;
@@ -167,12 +209,26 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
     name, location, startDate, endDate, enabledSections,
     nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
     programType, options, hostCountry,
+    feeBasic, feePremium, feeBasicDesc, feePremiumDesc, discountOptions,
   } = req.body;
+
+  const basic = parseFee(feeBasic);
+  const premium = parseFee(feePremium);
+  if (Number.isNaN(basic) || Number.isNaN(premium)) {
+    return res.status(400).json({ error: '참가비는 0 이상의 숫자여야 합니다' });
+  }
+  const discounts = normalizeDiscountOptions(discountOptions);
+
+  // 본문에 없는 키는 건드리지 않는다. 참가비만 고치려는 호출이 할인 항목을
+  // 지워버리면 안 된다. (기존 필드들은 덮어쓰기 방식이라 이 규칙이 없다.)
+  const has = (k) => Object.prototype.hasOwnProperty.call(req.body, k);
 
   try {
     // 소유권 + 시작일 확인
     const [program] = await sql`
-      SELECT id, program_type, start_date FROM programs
+      SELECT id, program_type, start_date,
+             fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options
+      FROM programs
       WHERE id = ${req.params.id} AND leader_id = ${req.user.leaderId} AND is_active = true
     `;
     if (!program) return res.status(403).json({ error: '권한 없음' });
@@ -202,7 +258,12 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
         contact2_name    = ${contact2Name ?? null},
         contact2_phone   = ${contact2Phone ?? null},
         program_type     = ${type},
-        host_country     = ${hostCountry ?? null}
+        host_country     = ${hostCountry ?? null},
+        fee_basic        = ${has('feeBasic') ? basic : program.fee_basic},
+        fee_premium      = ${has('feePremium') ? premium : program.fee_premium},
+        fee_basic_desc   = ${has('feeBasicDesc') ? (feeBasicDesc ?? null) : program.fee_basic_desc},
+        fee_premium_desc = ${has('feePremiumDesc') ? (feePremiumDesc ?? null) : program.fee_premium_desc},
+        discount_options = ${JSON.stringify(discounts ?? program.discount_options ?? [])}::jsonb
       WHERE id = ${req.params.id}
     `;
 
@@ -299,6 +360,9 @@ router.get('/:id/registrations', requireAuth, requireLeader, async (req, res) =>
         r.church_since, r.church_role,
         r.needs_pickup, r.service_declined,
         r.total_cost, r.submitted, r.created_at, r.updated_at,
+        r.fee_tier,
+        r.discount_requested, r.discount_option_key, r.discount_option_label,
+        r.discount_reason, r.discount_status, r.discount_amount, r.discount_note,
         (r.medical_conditions IS NOT NULL AND r.medical_conditions <> '')
           AS has_medical_note,
         json_build_object(
@@ -318,6 +382,57 @@ router.get('/:id/registrations', requireAuth, requireLeader, async (req, res) =>
     res.status(500).json({ error: '서버 오류' });
   }
 });
+
+// PATCH /programs/:id/registrations/:registrationId/discount - 할인 신청 판단 (리더 전용)
+//
+// 신청과 판단을 분리한다. 등록자는 PUT /registrations/:programId/me 로 신청만 남기고
+// (status 는 항상 'requested' 로 서버가 정한다), 확정 금액은 여기서만 정해진다.
+router.patch(
+  '/:id/registrations/:registrationId/discount',
+  requireAuth,
+  requireLeader,
+  async (req, res) => {
+    const { status, amount, note } = req.body;
+
+    if (!['approved', 'rejected', 'requested'].includes(status)) {
+      return res.status(400).json({ error: 'status 는 approved/rejected/requested 중 하나여야 합니다' });
+    }
+    const value = parseFee(amount);
+    if (Number.isNaN(value)) {
+      return res.status(400).json({ error: '할인 금액은 0 이상의 숫자여야 합니다' });
+    }
+    // 승인인데 금액이 없으면 "얼마를 깎아줬는지" 아무도 모르는 상태로 남는다.
+    if (status === 'approved' && value === null) {
+      return res.status(400).json({ error: '승인하려면 할인 금액이 필요합니다' });
+    }
+
+    try {
+      const [target] = await sql`
+        SELECT r.id FROM registrations r
+        JOIN programs p ON p.id = r.program_id
+        WHERE r.id = ${req.params.registrationId}
+          AND r.program_id = ${req.params.id}
+          AND p.leader_id = ${req.user.leaderId}
+      `;
+      if (!target) return res.status(403).json({ error: '권한 없음' });
+
+      await sql`
+        UPDATE registrations SET
+          discount_status = ${status},
+          discount_amount = ${status === 'approved' ? value : null},
+          discount_note   = ${note ?? null},
+          updated_at      = NOW()
+        WHERE id = ${req.params.registrationId}
+      `;
+
+      console.log(`[DISCOUNT] ${status} | registrationId=${req.params.registrationId} amount=${value ?? '-'} leaderId=${req.user.leaderId} email=${req.user.email}`);
+      res.json({ ok: true });
+    } catch (err) {
+      console.error('할인 판단 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  }
+);
 
 // GET /programs/:id/registrations/:registrationId/medical
 // 질병 정보 상세. 목록에서 빼둔 것을 한 사람 단위로만 조회한다.

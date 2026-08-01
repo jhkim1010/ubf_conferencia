@@ -37,20 +37,54 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     selectedOptions, roommatePreference,
     volunteerResources, volunteerNote,
     totalCost, fcmToken,
+    feeTier, discountRequested, discountOptionKey, discountReason,
   } = req.body;
 
   try {
     const [program] = await sql`
-      SELECT id, name FROM programs WHERE id = ${req.params.programId} AND is_active = true
+      SELECT id, name, fee_basic, fee_premium, discount_options
+      FROM programs WHERE id = ${req.params.programId} AND is_active = true
     `;
     if (!program) return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
 
+    // 등록자가 고른 등급은 그 수양회가 실제로 제공하는 것이어야 한다.
+    // 금액이 NULL 인 등급은 제공하지 않는다는 뜻이다(018 참조).
+    let tier = feeTier === 'basic' || feeTier === 'premium' ? feeTier : null;
+    if (tier === 'basic' && program.fee_basic === null) tier = null;
+    if (tier === 'premium' && program.fee_premium === null) tier = null;
+
+    // 할인 신청. 담당자 전용 필드(status/amount/note)는 본문에서 받지 않는다.
+    // 등록자가 스스로 승인 상태나 금액을 정할 수 있으면 신청 자체가 무의미해진다.
+    const offered = Array.isArray(program.discount_options) ? program.discount_options : [];
+    const picked = discountRequested
+      ? offered.find((o) => o.key === discountOptionKey) ?? null
+      : null;
+    const wantsDiscount = !!picked;
+
     // 기존 등록 여부 확인 (수정인지 신규인지 구분)
     const [existing] = await sql`
-      SELECT id FROM registrations
+      SELECT id, discount_option_key, discount_status, discount_amount, discount_note
+      FROM registrations
       WHERE program_id = ${req.params.programId} AND user_id = ${req.user.userId}
     `;
     const isUpdate = !!existing;
+
+    // 이미 담당자가 판단한 건은 그대로 둔다. 단 고른 항목이 바뀌면
+    // 판단의 전제가 달라진 것이므로 다시 '신청' 상태로 되돌린다.
+    let discountStatus = null;
+    let discountAmount = null;
+    let discountNote = null;
+    if (wantsDiscount) {
+      const sameChoice = existing?.discount_option_key === picked.key;
+      if (sameChoice && existing?.discount_status) {
+        discountStatus = existing.discount_status;
+        discountAmount = existing.discount_amount;
+        discountNote = existing.discount_note;
+      } else {
+        // 판단의 전제가 바뀌었으므로 확정 금액과 메모도 함께 무효화한다.
+        discountStatus = 'requested';
+      }
+    }
 
     const [registration] = await sql`
       INSERT INTO registrations (
@@ -59,7 +93,10 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         food_requirements, medical_conditions, skips_breakfast,
         selected_options, roommate_preference,
         volunteer_resources, volunteer_note,
-        total_cost, fcm_token
+        total_cost, fcm_token,
+        fee_tier, discount_requested, discount_option_key,
+        discount_option_label, discount_reason, discount_status,
+        discount_amount, discount_note
       )
       VALUES (
         ${req.params.programId}, ${req.user.userId},
@@ -76,7 +113,15 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         ${volunteerResources ?? []},
         ${volunteerNote ?? null},
         ${totalCost ?? 0},
-        ${fcmToken ?? null}
+        ${fcmToken ?? null},
+        ${tier},
+        ${wantsDiscount},
+        ${picked?.key ?? null},
+        ${picked?.label ?? null},
+        ${wantsDiscount ? (discountReason ?? null) : null},
+        ${discountStatus},
+        ${discountAmount},
+        ${discountNote}
       )
       ON CONFLICT (program_id, user_id)
       DO UPDATE SET
@@ -97,6 +142,14 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         volunteer_note = EXCLUDED.volunteer_note,
         total_cost = EXCLUDED.total_cost,
         fcm_token = EXCLUDED.fcm_token,
+        fee_tier = EXCLUDED.fee_tier,
+        discount_requested = EXCLUDED.discount_requested,
+        discount_option_key = EXCLUDED.discount_option_key,
+        discount_option_label = EXCLUDED.discount_option_label,
+        discount_reason = EXCLUDED.discount_reason,
+        discount_status = EXCLUDED.discount_status,
+        discount_amount = EXCLUDED.discount_amount,
+        discount_note = EXCLUDED.discount_note,
         updated_at = NOW()
       RETURNING id
     `;
