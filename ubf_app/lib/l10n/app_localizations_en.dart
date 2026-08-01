@@ -1967,4 +1967,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get buddyFamilyConfirm => 'Yes, we are family';
+
+  @override
+  String get myProgramsDelete => 'Delete';
+
+  @override
+  String get myProgramsDeleteTitle => 'Delete this conference?';
+
+  @override
+  String myProgramsDeleteBody(String name) {
+    return '\"$name\" will no longer appear to anyone. Registrations and assignments are kept, so ask an administrator if you need it back.';
+  }
+
+  @override
+  String myProgramsDeleteHasRegistrations(int count) {
+    return '$count people have already registered. Type the conference name to confirm.';
+  }
+
+  @override
+  String get myProgramsDeleteTypeName => 'Conference name';
+
+  @override
+  String get myProgramsDeleted => 'Deleted.';
 }

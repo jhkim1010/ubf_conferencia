@@ -31,13 +31,27 @@ function normalizeDiscountOptions(raw) {
   const seen = new Set();
   const out = [];
   raw.forEach((o, i) => {
-    const label = String(o?.label ?? '').trim();
-    if (!label) return; // 문구 없는 항목은 화면에 아무것도 못 보여준다
+    // 문구는 언어별로 받는다. 한 줄만 적으면 다른 언어 사용자는 읽지 못한다.
+    // label 은 기본값이자 번역이 없을 때의 대체값이다.
+    const labels = {};
+    for (const lang of ['ko', 'en', 'es']) {
+      const v = String(o?.labels?.[lang] ?? '').trim();
+      if (v) labels[lang] = v;
+    }
+    // 예전 형태({label}) 도 그대로 받는다. 이미 저장된 항목이 있다.
+    const label = String(o?.label ?? '').trim() || labels.en || labels.ko || labels.es || '';
+    if (!label) return; // 어떤 언어로도 문구가 없으면 화면에 보여줄 것이 없다
+
     let key = String(o?.key ?? '').trim() || `d${i + 1}`;
     while (seen.has(key)) key = `${key}_`; // key 중복은 등록 참조를 망친다
     seen.add(key);
     const amount = parseFee(o?.amount);
-    out.push({ key, label, amount: Number.isNaN(amount) ? null : amount });
+    out.push({
+      key,
+      label,
+      labels,
+      amount: Number.isNaN(amount) ? null : amount,
+    });
   });
   return out;
 }
@@ -94,7 +108,9 @@ router.get('/', requireAuth, requireLeader, async (req, res) => {
         COUNT(r.id) AS registration_count
       FROM programs p
       LEFT JOIN registrations r ON r.program_id = p.id
-      WHERE p.leader_id = ${req.user.leaderId}
+      -- is_active 를 빠뜨리면 삭제한 수양회가 목록에 그대로 남는다.
+      -- 단일 조회(GET /programs/:id)는 처음부터 이 조건을 보고 있었다.
+      WHERE p.leader_id = ${req.user.leaderId} AND p.is_active = true
       GROUP BY p.id
       ORDER BY p.created_at DESC
     `;
@@ -324,6 +340,45 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
   }
 });
 
+// DELETE /programs/:id - 수양회 삭제 (소유 리더만)
+//
+// **행을 지우지 않고 is_active=false 로 둔다.** 등록·배정·배차·결제가 이 행을
+// 참조하고 있어 실제로 지우면 그 기록이 통째로 사라진다. 잘못 눌렀을 때
+// 되돌릴 방법도 없어진다. 조회 경로는 이미 전부 is_active 를 보고 있다.
+//
+// 등록자가 있으면 확인 문구(수양회 이름)를 요구한다. 확인 없이 지울 수 있으면
+// 손이 미끄러진 한 번으로 수백 명의 등록이 화면에서 사라진다.
+router.delete('/:id', requireAuth, requireLeader, async (req, res) => {
+  try {
+    const [program] = await sql`
+      SELECT id, name FROM programs
+      WHERE id = ${req.params.id} AND leader_id = ${req.user.leaderId} AND is_active = true
+    `;
+    if (!program) return res.status(403).json({ error: '권한 없음' });
+
+    const [{ n }] = await sql`
+      SELECT COUNT(*)::int AS n FROM registrations WHERE program_id = ${req.params.id}
+    `;
+
+    // 등록자가 있으면 이름을 그대로 입력해야 한다.
+    if (n > 0 && String(req.body?.confirmName ?? '').trim() !== program.name) {
+      return res.status(428).json({
+        error: '등록자가 있는 수양회입니다. 삭제하려면 수양회 이름을 입력하십시오',
+        registrationCount: n,
+        requiresConfirmName: true,
+      });
+    }
+
+    await sql`UPDATE programs SET is_active = false WHERE id = ${req.params.id}`;
+
+    console.log(`[PROGRAM] 삭제 | programId=${req.params.id} name="${program.name}" registrations=${n} leaderId=${req.user.leaderId} email=${req.user.email}`);
+    res.json({ ok: true, registrationCount: n });
+  } catch (err) {
+    console.error('수양회 삭제 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
 // GET /programs/:id/stats - 대시보드 통계 (리더 전용)
 router.get('/:id/stats', requireAuth, requireLeader, async (req, res) => {
   try {
@@ -390,6 +445,7 @@ router.get('/:id/registrations', requireAuth, requireLeader, async (req, res) =>
         r.total_cost, r.submitted, r.created_at, r.updated_at,
         r.fee_tier,
         r.discount_requested, r.discount_option_key, r.discount_option_label,
+        r.discount_option_labels,
         r.discount_reason, r.discount_status, r.discount_amount, r.discount_note,
         (r.medical_conditions IS NOT NULL AND r.medical_conditions <> '')
           AS has_medical_note,

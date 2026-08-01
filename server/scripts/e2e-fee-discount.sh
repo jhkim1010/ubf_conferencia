@@ -66,7 +66,7 @@ curl -s -X PATCH "$API/programs/$PROG" -H "Authorization: Bearer $LT" \
     "feeBasic":150,"feePremium":250,
     "feeBasicDesc":"단체실","feePremiumDesc":"2인실",
     "discountOptions":[
-      {"key":"d1","label":"1일만 참석","amount":40},
+      {"key":"d1","label":"1일만 참석","labels":{"ko":"1일만 참석","en":"One day only","es":"Solo un día"},"amount":40},
       {"key":"d2","label":"2일 참석","amount":25},
       {"key":"d3","label":"기타 사정","amount":null}
     ]}' >/dev/null
@@ -95,6 +95,16 @@ save '{"realName":"참가비테스트","country":"PE","currency":"JPY"}' >/dev/n
 eq "등록자는 통화를 못 바꾼다" '"ARS"' "$(curl -s "$API/programs/$PROG" -H "Authorization: Bearer $T" | jqf 'r.currency')"
 curl -s -X PATCH "$API/programs/$PROG" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' -d '{"currency":"USD"}' >/dev/null
+
+echo
+echo "── 할인 문구 3개 언어 ──"
+# 한 줄만 받으면 다른 언어 사용자는 읽지 못한 채 고르게 된다.
+eq "ko 문구"               '"1일만 참석"'  "$(echo "$P" | jqf 'r.discount_options[0].labels.ko')"
+eq "en 문구"               '"One day only"' "$(echo "$P" | jqf 'r.discount_options[0].labels.en')"
+eq "es 문구"               '"Solo un día"'  "$(echo "$P" | jqf 'r.discount_options[0].labels.es')"
+# 한 언어만 적어도 항목이 만들어져야 한다 — 세 칸을 강제하면 못 만드는 지부가 생긴다
+eq "일부만 적어도 저장"      '3'  "$(echo "$P" | jqf 'r.discount_options.length')"
+eq "labels 없는 항목도 유지" '"2일 참석"' "$(echo "$P" | jqf 'r.discount_options[1].label')"
 
 echo
 echo "── 참가비 등급 ──"

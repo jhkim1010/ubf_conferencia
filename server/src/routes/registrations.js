@@ -123,7 +123,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         volunteer_resources, volunteer_note,
         total_cost, fcm_token,
         fee_tier, discount_requested, discount_option_key,
-        discount_option_label, discount_reason, discount_status,
+        discount_option_label, discount_option_labels, discount_reason, discount_status,
         discount_amount, discount_note
       )
       VALUES (
@@ -146,6 +146,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         ${wantsDiscount},
         ${picked?.key ?? null},
         ${picked?.label ?? null},
+        ${picked ? JSON.stringify(picked.labels ?? {}) : null},
         ${wantsDiscount ? (discountReason ?? null) : null},
         ${discountStatus},
         ${discountAmount},
@@ -174,6 +175,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         discount_requested = EXCLUDED.discount_requested,
         discount_option_key = EXCLUDED.discount_option_key,
         discount_option_label = EXCLUDED.discount_option_label,
+        discount_option_labels = EXCLUDED.discount_option_labels,
         discount_reason = EXCLUDED.discount_reason,
         discount_status = EXCLUDED.discount_status,
         discount_amount = EXCLUDED.discount_amount,

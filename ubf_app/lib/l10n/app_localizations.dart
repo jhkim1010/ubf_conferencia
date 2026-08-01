@@ -3675,6 +3675,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yes, we are family'**
   String get buddyFamilyConfirm;
+
+  /// No description provided for @myProgramsDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get myProgramsDelete;
+
+  /// No description provided for @myProgramsDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this conference?'**
+  String get myProgramsDeleteTitle;
+
+  /// No description provided for @myProgramsDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" will no longer appear to anyone. Registrations and assignments are kept, so ask an administrator if you need it back.'**
+  String myProgramsDeleteBody(String name);
+
+  /// No description provided for @myProgramsDeleteHasRegistrations.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} people have already registered. Type the conference name to confirm.'**
+  String myProgramsDeleteHasRegistrations(int count);
+
+  /// No description provided for @myProgramsDeleteTypeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Conference name'**
+  String get myProgramsDeleteTypeName;
+
+  /// No description provided for @myProgramsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted.'**
+  String get myProgramsDeleted;
 }
 
 class _AppLocalizationsDelegate

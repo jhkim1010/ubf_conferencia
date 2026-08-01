@@ -1224,5 +1224,25 @@
   "expFlightEstimated": "(estimate — not booked)",
   "buddyFamilyTitle": "Are you travelling together?",
   "buddyFamilyBody": "This person is a different gender. Rooms are same-gender by default; you can share only if you are family travelling together (spouse, parent and child, and so on). They still have to accept.",
-  "buddyFamilyConfirm": "Yes, we are family"
+  "buddyFamilyConfirm": "Yes, we are family",
+  "myProgramsDelete": "Delete",
+  "myProgramsDeleteTitle": "Delete this conference?",
+  "myProgramsDeleteBody": "\"{name}\" will no longer appear to anyone. Registrations and assignments are kept, so ask an administrator if you need it back.",
+  "@myProgramsDeleteBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "myProgramsDeleteHasRegistrations": "{count} people have already registered. Type the conference name to confirm.",
+  "@myProgramsDeleteHasRegistrations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "myProgramsDeleteTypeName": "Conference name",
+  "myProgramsDeleted": "Deleted."
 }

@@ -205,6 +205,30 @@ class ApiClient {
     _decode(response);
   }
 
+  /// 수양회 삭제 (소유 리더만). 행을 지우지 않고 비활성화한다 —
+  /// 등록·배정·배차 기록이 이 행을 참조한다.
+  ///
+  /// 등록자가 있으면 서버가 428 과 함께 이름 확인을 요구한다.
+  /// [confirmName] 에 수양회 이름을 그대로 넣어 다시 호출한다.
+  static Future<void> deleteProgram(
+    String programId, {
+    String? confirmName,
+  }) async {
+    final response = await http.delete(
+      _uri('/programs/$programId'),
+      headers: await _headers(),
+      body: jsonEncode({'confirmName': confirmName}),
+    );
+    if (response.statusCode == 428) {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      throw ConfirmNameRequiredException(
+        (body['registrationCount'] as num?)?.toInt() ?? 0,
+        body['error'] as String? ?? '확인이 필요합니다',
+      );
+    }
+    _decode(response);
+  }
+
   // 할인 신청 판단 (리더 전용). 승인 금액은 여기서만 정해진다 —
   // 등록자가 보내는 저장 요청에는 금액도 상태도 담기지 않는다.
   static Future<void> decideDiscount(
@@ -832,6 +856,15 @@ class ApiException implements Exception {
 }
 
 // 서버 409: 같은 이름+시작일의 프로그램이 이미 존재
+/// 등록자가 있는 수양회를 지우려 할 때. 이름을 그대로 입력해야 진행된다.
+class ConfirmNameRequiredException implements Exception {
+  final int registrationCount;
+  final String message;
+  ConfirmNameRequiredException(this.registrationCount, this.message);
+  @override
+  String toString() => message;
+}
+
 class DuplicateProgramException implements Exception {
   final String existingId;
   const DuplicateProgramException(this.existingId);

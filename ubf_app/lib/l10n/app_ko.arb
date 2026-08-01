@@ -595,5 +595,11 @@
   "expFlightEstimated": "(예상 — 미예매)",
   "buddyFamilyTitle": "함께 오시는 분입니까?",
   "buddyFamilyBody": "상대가 다른 성별입니다. 방은 기본적으로 같은 성별끼리 씁니다. 부부·부모자녀처럼 함께 오신 가족인 경우에만 같은 방을 쓸 수 있습니다. 상대의 수락도 필요합니다.",
-  "buddyFamilyConfirm": "예, 가족입니다"
+  "buddyFamilyConfirm": "예, 가족입니다",
+  "myProgramsDelete": "삭제",
+  "myProgramsDeleteTitle": "이 수양회를 삭제할까요?",
+  "myProgramsDeleteBody": "\"{name}\" 이(가) 더 이상 아무에게도 보이지 않습니다. 등록·배정 기록은 남으므로 되살리려면 관리자에게 문의하십시오.",
+  "myProgramsDeleteHasRegistrations": "이미 {count}명이 등록했습니다. 확인을 위해 수양회 이름을 입력하십시오.",
+  "myProgramsDeleteTypeName": "수양회 이름",
+  "myProgramsDeleted": "삭제되었습니다."
 }

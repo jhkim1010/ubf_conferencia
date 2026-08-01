@@ -1925,4 +1925,26 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get buddyFamilyConfirm => '예, 가족입니다';
+
+  @override
+  String get myProgramsDelete => '삭제';
+
+  @override
+  String get myProgramsDeleteTitle => '이 수양회를 삭제할까요?';
+
+  @override
+  String myProgramsDeleteBody(String name) {
+    return '\"$name\" 이(가) 더 이상 아무에게도 보이지 않습니다. 등록·배정 기록은 남으므로 되살리려면 관리자에게 문의하십시오.';
+  }
+
+  @override
+  String myProgramsDeleteHasRegistrations(int count) {
+    return '이미 $count명이 등록했습니다. 확인을 위해 수양회 이름을 입력하십시오.';
+  }
+
+  @override
+  String get myProgramsDeleteTypeName => '수양회 이름';
+
+  @override
+  String get myProgramsDeleted => '삭제되었습니다.';
 }

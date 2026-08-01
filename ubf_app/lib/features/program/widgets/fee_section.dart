@@ -43,19 +43,31 @@ class FeeSection extends StatefulWidget {
 }
 
 class _FeeSectionState extends State<FeeSection> {
-  final _labelController = TextEditingController();
+  // 언어별 문구. 한 줄만 받으면 다른 언어 사용자는 읽지 못한 채 고르게 된다.
+  // 돈이 걸린 선택지라 더 나쁘다.
+  final _labelKo = TextEditingController();
+  final _labelEn = TextEditingController();
+  final _labelEs = TextEditingController();
   final _amountController = TextEditingController();
 
   @override
   void dispose() {
-    _labelController.dispose();
+    _labelKo.dispose();
+    _labelEn.dispose();
+    _labelEs.dispose();
     _amountController.dispose();
     super.dispose();
   }
 
   void _add() {
-    final label = _labelController.text.trim();
-    if (label.isEmpty) return;
+    final labels = <String, String>{
+      for (final e in {'ko': _labelKo, 'en': _labelEn, 'es': _labelEs}.entries)
+        if (e.value.text.trim().isNotEmpty) e.key: e.value.text.trim(),
+    };
+    // 한 칸만 채워도 만들 수 있다. 세 칸을 모두 강제하면 한 언어만 쓰는
+    // 지부가 항목을 아예 못 만든다. 비어 있는 언어는 기본 문구로 대체된다.
+    if (labels.isEmpty) return;
+    final label = labels['en'] ?? labels['ko'] ?? labels['es']!;
     final amount = num.tryParse(_amountController.text.trim());
 
     // key 는 등록 레코드가 참조한다. 위치가 아니라 "지금까지 쓴 적 없는 번호"로
@@ -72,9 +84,12 @@ class _FeeSectionState extends State<FeeSection> {
     widget.discountOptions.add({
       'key': 'd$n',
       'label': label,
+      'labels': labels,
       'amount': amount != null && amount >= 0 ? amount : null,
     });
-    _labelController.clear();
+    _labelKo.clear();
+    _labelEn.clear();
+    _labelEs.clear();
     _amountController.clear();
     widget.onDiscountsChanged();
     setState(() {});
@@ -168,10 +183,11 @@ class _FeeSectionState extends State<FeeSection> {
               margin: const EdgeInsets.only(bottom: 6),
               child: ListTile(
                 dense: true,
-                title: Text(e.value['label'] as String? ?? ''),
+                title: Text(_labelSummary(e.value)),
                 subtitle: amount is num
                     ? Text('- ${widget.currency.format(amount)}')
                     : Text(l10n.cpDiscountAmountHint),
+                isThreeLine: _labelSummary(e.value).contains('\n'),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
                   tooltip: l10n.cpDiscountRemove,
@@ -186,21 +202,24 @@ class _FeeSectionState extends State<FeeSection> {
           }),
 
         const SizedBox(height: 8),
+        // 언어별 문구. 아는 언어만 채우면 된다.
+        _LangField(controller: _labelKo, lang: '한국어', hint: '1일만 참석'),
+        const SizedBox(height: 6),
+        _LangField(
+          controller: _labelEn,
+          lang: 'English',
+          hint: 'Attending one day only',
+        ),
+        const SizedBox(height: 6),
+        _LangField(
+          controller: _labelEs,
+          lang: 'Español',
+          hint: 'Asisto solo un día',
+        ),
+        const SizedBox(height: 6),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              flex: 3,
-              child: TextFormField(
-                controller: _labelController,
-                decoration: InputDecoration(
-                  labelText: l10n.cpDiscountLabel,
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
             Expanded(
               flex: 2,
               child: TextFormField(
@@ -233,6 +252,43 @@ class _FeeSectionState extends State<FeeSection> {
       ],
     );
   }
+}
+
+// 목록에 보여줄 요약. 언어별로 다르게 적었으면 모두 보여준다 —
+// 관리자가 어느 언어를 빠뜨렸는지 여기서 바로 보여야 한다.
+String _labelSummary(Map<String, dynamic> option) {
+  final raw = option['labels'];
+  final labels = raw is Map ? Map<String, dynamic>.from(raw) : const {};
+  final parts = <String>[];
+  for (final lang in ['ko', 'en', 'es']) {
+    final v = labels[lang];
+    if (v is String && v.trim().isNotEmpty) parts.add('$lang  ${v.trim()}');
+  }
+  if (parts.isEmpty) return option['label'] as String? ?? '';
+  return parts.join('\n');
+}
+
+class _LangField extends StatelessWidget {
+  final TextEditingController controller;
+  final String lang;
+  final String hint;
+
+  const _LangField({
+    required this.controller,
+    required this.lang,
+    required this.hint,
+  });
+
+  @override
+  Widget build(BuildContext context) => TextFormField(
+    controller: controller,
+    decoration: InputDecoration(
+      labelText: lang,
+      hintText: hint,
+      border: const OutlineInputBorder(),
+      isDense: true,
+    ),
+  );
 }
 
 class _FeeRow extends StatelessWidget {

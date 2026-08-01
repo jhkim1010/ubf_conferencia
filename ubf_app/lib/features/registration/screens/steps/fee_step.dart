@@ -117,7 +117,13 @@ class FeeStep extends ConsumerWidget {
                   return RadioListTile<String>(
                     contentPadding: EdgeInsets.zero,
                     value: o['key'] as String? ?? '',
-                    title: Text(o['label'] as String? ?? ''),
+                    // 관리자가 언어별로 적은 문구 중 지금 언어의 것.
+                    title: Text(
+                      discountLabelFor(
+                        o,
+                        Localizations.localeOf(context).languageCode,
+                      ),
+                    ),
                     subtitle: amount != null
                         ? Text(
                             '- ${currency.format(amount)}',

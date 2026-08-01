@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/utils/api_client.dart';
 import '../providers/program_provider.dart';
 
 // 내 프로그램 관리
@@ -62,6 +63,80 @@ class _ProgramCard extends ConsumerWidget {
   final Map<String, dynamic> program;
 
   const _ProgramCard({required this.program});
+
+  // 삭제. 행을 지우지 않고 비활성화한다 — 등록·배정·배차가 이 행을 참조한다.
+  //
+  // 등록자가 있으면 서버가 이름 확인을 요구한다(428). 그때만 입력을 받는다.
+  // 아무도 등록하지 않은 수양회까지 이름을 치게 하면 실수를 막는 대신
+  // 매번 성가시기만 하다.
+  Future<void> _delete(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) async {
+    final id = program['id'] as String;
+    final name = program['name'] as String? ?? '';
+    final messenger = ScaffoldMessenger.of(context);
+
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(l10n.myProgramsDeleteTitle),
+        content: Text(l10n.myProgramsDeleteBody(name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.myProgramsDelete),
+          ),
+        ],
+      ),
+    );
+    if (sure != true) return;
+
+    Future<void> run(String? confirmName) async {
+      await ApiClient.deleteProgram(id, confirmName: confirmName);
+      ref.invalidate(leaderProgramsProvider);
+      messenger.showSnackBar(SnackBar(content: Text(l10n.myProgramsDeleted)));
+    }
+
+    try {
+      await run(null);
+    } on ConfirmNameRequiredException catch (e) {
+      if (!context.mounted) return;
+      final typed = await showDialog<String>(
+        context: context,
+        builder: (_) => _ConfirmNameDialog(
+          name: name,
+          registrationCount: e.registrationCount,
+        ),
+      );
+      if (typed == null) return;
+      try {
+        await run(typed);
+      } catch (err) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(l10n.commonErrorDetail('$err')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.commonErrorDetail('$e')),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -142,11 +217,90 @@ class _ProgramCard extends ConsumerWidget {
                     ref.invalidate(leaderProgramsProvider);
                   },
                 ),
+                TextButton.icon(
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  label: Text(l10n.myProgramsDelete),
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                  ),
+                  onPressed: () => _delete(context, ref, l10n),
+                ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 등록자가 있는 수양회를 지울 때만 뜬다. 이름을 그대로 입력해야 버튼이 열린다.
+class _ConfirmNameDialog extends StatefulWidget {
+  final String name;
+  final int registrationCount;
+
+  const _ConfirmNameDialog({
+    required this.name,
+    required this.registrationCount,
+  });
+
+  @override
+  State<_ConfirmNameDialog> createState() => _ConfirmNameDialogState();
+}
+
+class _ConfirmNameDialogState extends State<_ConfirmNameDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final matches = _controller.text.trim() == widget.name;
+
+    return AlertDialog(
+      title: Text(l10n.myProgramsDeleteTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.myProgramsDeleteHasRegistrations(widget.registrationCount)),
+          const SizedBox(height: 12),
+          Text(
+            widget.name,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: l10n.myProgramsDeleteTypeName,
+              border: const OutlineInputBorder(),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.actionCancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+          onPressed: matches
+              ? () => Navigator.pop(context, _controller.text.trim())
+              : null,
+          child: Text(l10n.myProgramsDelete),
+        ),
+      ],
     );
   }
 }

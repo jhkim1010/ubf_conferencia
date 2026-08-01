@@ -1977,4 +1977,26 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get buddyFamilyConfirm => 'Sí, somos familia';
+
+  @override
+  String get myProgramsDelete => 'Eliminar';
+
+  @override
+  String get myProgramsDeleteTitle => '¿Eliminar esta conferencia?';
+
+  @override
+  String myProgramsDeleteBody(String name) {
+    return '\"$name\" dejará de mostrarse a todos. Las inscripciones y asignaciones se conservan; pide ayuda a un administrador si necesitas recuperarla.';
+  }
+
+  @override
+  String myProgramsDeleteHasRegistrations(int count) {
+    return 'Ya se han inscrito $count personas. Escribe el nombre de la conferencia para confirmar.';
+  }
+
+  @override
+  String get myProgramsDeleteTypeName => 'Nombre de la conferencia';
+
+  @override
+  String get myProgramsDeleted => 'Eliminada.';
 }

@@ -177,7 +177,12 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
             // 등록자가 고른 항목. 등록 시점 문구를 그대로 보관한 값이므로
             // 관리자가 항목을 고친 뒤에도 그때 본 문구가 남는다.
             Text(
-              r['discount_option_label'] as String? ?? '',
+              // 등록 시점에 언어별로 스냅샷한 문구 중 담당자의 언어로.
+              // 없으면 등록자가 본 기본 문구를 그대로 보여준다.
+              discountLabelFor({
+                'label': r['discount_option_label'],
+                'labels': r['discount_option_labels'],
+              }, Localizations.localeOf(context).languageCode),
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             if (reason != null && reason.isNotEmpty) ...[

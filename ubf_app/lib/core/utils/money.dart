@@ -120,3 +120,19 @@ class Money {
     return num.tryParse(value.toString());
   }
 }
+
+/// 관리자가 언어별로 적은 문구에서 현재 언어의 것을 고른다.
+///
+/// 세 칸을 모두 채우도록 강제하지 않으므로 빈 언어가 있다. 그때는 기본
+/// 문구(label)로 대체한다 — 빈 줄을 보여주면 무엇을 고르는지 알 수 없다.
+///
+/// [option] 은 { 'label': String, 'labels': {'ko':…,'en':…,'es':…} } 형태다.
+/// labels 가 없는 예전 항목도 그대로 동작한다.
+String discountLabelFor(Map<String, dynamic> option, String languageCode) {
+  final raw = option['labels'];
+  if (raw is Map) {
+    final v = raw[languageCode];
+    if (v is String && v.trim().isNotEmpty) return v.trim();
+  }
+  return (option['label'] as String? ?? '').trim();
+}
