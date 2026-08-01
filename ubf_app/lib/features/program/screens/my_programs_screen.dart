@@ -81,6 +81,8 @@ class _ProgramCard extends ConsumerWidget {
     final sure = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
+        // 창이 낮으면 내용이 버튼 위로 겹쳐 그려진다. 실제로 겹쳤다.
+        scrollable: true,
         title: Text(l10n.myProgramsDeleteTitle),
         content: Text(l10n.myProgramsDeleteBody(name)),
         actions: [
@@ -263,6 +265,8 @@ class _ConfirmNameDialogState extends State<_ConfirmNameDialog> {
     final matches = _controller.text.trim() == widget.name;
 
     return AlertDialog(
+      // 입력칸이 취소·삭제 버튼과 겹치지 않도록. 창이 낮을 때 실제로 겹쳤다.
+      scrollable: true,
       title: Text(l10n.myProgramsDeleteTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
