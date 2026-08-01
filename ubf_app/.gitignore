@@ -46,3 +46,8 @@ app.*.map.json
 
 # Flutter 디버그 로그
 /logs/
+
+# 안드로이드 서명 키 — 절대 커밋하지 않는다
+key.properties
+*.jks
+*.keystore

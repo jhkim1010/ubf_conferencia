@@ -25,6 +25,17 @@ class AppConstants {
   static const String googleClientId =
       '479734237683-vbeo3u1k79gfabok29fvmaqnka8rtohh.apps.googleusercontent.com';
 
+  // 안드로이드가 서버에 넘길 ID 토큰의 audience.
+  //
+  // 안드로이드는 clientId 를 코드로 주지 않는다 — 패키지명 + 서명 SHA-1 로
+  // 식별한다. 대신 serverClientId 에 **웹** 클라이언트 ID 를 주면 그 값이
+  // ID 토큰의 audience 가 되고, 서버가 GOOGLE_CLIENT_ID 로 검증한다.
+  //
+  // 웹 로그인이 쓰는 것과 같은 값이어야 한다(web/index.html 의 meta 태그).
+  // 다른 프로젝트의 ID 를 넣으면 서버가 audience 불일치로 거절한다.
+  static const String googleServerClientId =
+      '920846151950-b7isfu2ob60hv4nggr59vgu2ps1fop51.apps.googleusercontent.com';
+
   // 카카오 네이티브 앱 키 (https://developers.kakao.com → 내 애플리케이션)
   static const String kakaoAppKey = ''; // TODO: 카카오 개발자 콘솔에서 발급
 

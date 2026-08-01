@@ -54,6 +54,29 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
+      # 릴리스 서명 키를 시크릿에서 복원한다.
+      #
+      # 예전에는 디버그 키로 서명했다. 러너는 매번 새로 만들어지므로 디버그
+      # 키스토어도 매번 새로 생겨 SHA-1 이 빌드마다 달라졌고, 구글 로그인이
+      # 그 지문을 알아보지 못해 ApiException: 10 으로 실패했다.
+      - name: Restore signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PW:  ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS:    ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "✗ ANDROID_KEYSTORE_BASE64 시크릿이 없습니다."
+            echo "  디버그 키로 서명하면 지문이 빌드마다 바뀌어 구글 로그인이 막힙니다."
+            exit 1
+          fi
+          mkdir -p "$HOME/.ubf-keys"
+          echo "$KEYSTORE_B64" | base64 -d > "$HOME/.ubf-keys/mana-release.jks"
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=%s\n' \
+            "$KEYSTORE_PW" "$KEYSTORE_PW" "$KEY_ALIAS" "$HOME/.ubf-keys/mana-release.jks" \
+            > "$HOME/.ubf-keys/key.properties"
+          chmod 600 "$HOME/.ubf-keys/mana-release.jks" "$HOME/.ubf-keys/key.properties"
+
       - name: Build APK
         working-directory: ${{ env.APP_DIR }}
         # API_BASE_URL 을 반드시 넘긴다. 없으면 app_constants.dart 의 기본값인

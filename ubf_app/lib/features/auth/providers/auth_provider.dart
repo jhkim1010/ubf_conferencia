@@ -79,14 +79,33 @@ class AuthNotifier extends StateNotifier<AuthState> {
     _init();
   }
 
+  // 플랫폼마다 구글이 요구하는 것이 다르다. 하나로 뭉뚱그리면 어딘가는 깨진다.
+  //
+  //   웹        clientId 를 주지 않는다 → web/index.html 의
+  //             <meta name="google-signin-client_id"> 를 쓴다.
+  //   iOS·macOS clientId 에 iOS/macOS 클라이언트 ID.
+  //   안드로이드 clientId 를 주면 안 된다. 안드로이드는 코드가 아니라
+  //             **패키지명 + 서명 SHA-1** 로 앱을 식별하며, 그 조합이 구글
+  //             콘솔에 등록돼 있어야 한다. 대신 서버가 검증할 ID 토큰을 받으려면
+  //             serverClientId 에 **웹** 클라이언트 ID 를 준다.
+  //
+  // 예전에는 웹이 아니면 무조건 iOS 클라이언트 ID 를 넘겼다. 안드로이드에서는
+  // 그것이 sign_in_failed(ApiException: 10, DEVELOPER_ERROR)로 돌아온다.
   static final _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
-    // 웹: null → web/index.html 의 <meta name="google-signin-client_id"> 를 사용
-    //      (웹은 반드시 "웹 애플리케이션" 타입 클라이언트 ID + 승인된 JS 원본 필요)
-    // 네이티브(macOS/iOS): app_constants 의 iOS/macOS 클라이언트 ID 사용
-    clientId: kIsWeb || AppConstants.googleClientId.isEmpty
-        ? null
-        : AppConstants.googleClientId,
+    scopes: const ['email', 'profile'],
+    clientId: switch (defaultTargetPlatform) {
+      _ when kIsWeb => null,
+      TargetPlatform.iOS || TargetPlatform.macOS =>
+        AppConstants.googleClientId.isEmpty
+            ? null
+            : AppConstants.googleClientId,
+      _ => null,
+    },
+    // 안드로이드에서만 의미가 있다. 이 값이 ID 토큰의 audience 가 되며,
+    // 서버는 GOOGLE_CLIENT_ID(웹)로 그것을 검증한다.
+    serverClientId: !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+        ? AppConstants.googleServerClientId
+        : null,
   );
 
   // 앱 시작 시 저장된 JWT로 인증 복원
@@ -180,9 +199,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   // 로그아웃 — disconnect()로 계정 캐시까지 삭제해서 다른 계정으로 전환 가능
   Future<void> signOut() async {
-    try { await _googleSignIn.disconnect(); } catch (_) {}
+    try {
+      await _googleSignIn.disconnect();
+    } catch (_) {}
     if (AppConstants.kakaoAppKey.isNotEmpty) {
-      try { await UserApi.instance.logout(); } catch (_) {}
+      try {
+        await UserApi.instance.logout();
+      } catch (_) {}
     }
     await ApiClient.clearToken();
     state = AuthState.guest;
@@ -190,7 +213,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   // 리더 등록 완료 후 상태 갱신
   void setLeader(String leaderId) {
-    final newRole = state.role == UserRole.participant ? UserRole.admin : state.role;
+    final newRole = state.role == UserRole.participant
+        ? UserRole.admin
+        : state.role;
     state = state.copyWith(isLeader: true, leaderId: leaderId, role: newRole);
   }
 
