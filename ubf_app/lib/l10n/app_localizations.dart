@@ -3436,6 +3436,84 @@ abstract class AppLocalizations {
   /// **'Organizer note: {note}'**
   String discountAdminNote(String note);
 
+  /// No description provided for @cohortSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Bible study teams'**
+  String get cohortSection;
+
+  /// No description provided for @cohortHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Teams are split by language first, then by age. Adulto 20+ · Junior 19 and under.'**
+  String get cohortHint;
+
+  /// No description provided for @cohortMinSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum team size'**
+  String get cohortMinSize;
+
+  /// No description provided for @cohortKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave as is'**
+  String get cohortKeep;
+
+  /// No description provided for @cohortKeepSub.
+  ///
+  /// In en, this message translates to:
+  /// **'If no team fits, they stay unassigned for you to place'**
+  String get cohortKeepSub;
+
+  /// No description provided for @cohortAbsorb.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up to the Adulto team in the same language'**
+  String get cohortAbsorb;
+
+  /// No description provided for @cohortAbsorbSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps everyone in a language they share'**
+  String get cohortAbsorbSub;
+
+  /// No description provided for @cohortMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge with the same age band in another language'**
+  String get cohortMerge;
+
+  /// No description provided for @cohortMergeSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps them with people their own age'**
+  String get cohortMergeSub;
+
+  /// No description provided for @studyLangTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which language will you study in?'**
+  String get studyLangTitle;
+
+  /// No description provided for @studyLangBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bible study teams are formed by this language.'**
+  String get studyLangBody;
+
+  /// No description provided for @studyLangNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this later from your registration.'**
+  String get studyLangNote;
+
+  /// No description provided for @regStepStudyLang.
+  ///
+  /// In en, this message translates to:
+  /// **'Bible study'**
+  String get regStepStudyLang;
+
   /// No description provided for @discountNoOptions.
   ///
   /// In en, this message translates to:

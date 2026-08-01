@@ -1804,6 +1804,46 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get cohortSection => '성경공부 팀';
+
+  @override
+  String get cohortHint =>
+      '팀은 사용 언어로 갈리고, 그 안에서 나이로 나뉩니다. Adulto 20세 이상 · Junior 19세 이하.';
+
+  @override
+  String get cohortMinSize => '한 팀 최소 인원';
+
+  @override
+  String get cohortKeep => '그대로 둔다';
+
+  @override
+  String get cohortKeepSub => '받을 팀이 없으면 미배정으로 남겨 직접 정합니다';
+
+  @override
+  String get cohortAbsorb => '같은 언어의 Adulto 팀으로 올린다';
+
+  @override
+  String get cohortAbsorbSub => '말이 통하는 쪽을 우선합니다';
+
+  @override
+  String get cohortMerge => '같은 나이대의 다른 언어 팀과 합친다';
+
+  @override
+  String get cohortMergeSub => '또래를 우선합니다';
+
+  @override
+  String get studyLangTitle => '말씀 공부를 어떤 언어로 하시겠습니까?';
+
+  @override
+  String get studyLangBody => '성경공부 팀이 이 언어로 나뉩니다.';
+
+  @override
+  String get studyLangNote => '나중에 등록 화면에서 바꾸실 수 있습니다.';
+
+  @override
+  String get regStepStudyLang => '말씀 공부';
+
+  @override
   String get discountNoOptions => '이 수양회는 할인 신청을 받지 않습니다.';
 
   @override

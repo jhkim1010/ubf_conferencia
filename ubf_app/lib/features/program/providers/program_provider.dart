@@ -53,6 +53,8 @@ class ProgramService {
     String? feePremiumDesc,
     List<Map<String, dynamic>>? discountOptions,
     String? currency,
+    String? smallCohortPolicy,
+    int? minTeamSize,
   }) async {
     return ApiClient.createProgram({
       'name': name,
@@ -82,6 +84,8 @@ class ProgramService {
       'feePremiumDesc': feePremiumDesc,
       'discountOptions': discountOptions ?? const [],
       'currency': currency ?? 'USD',
+      'smallCohortPolicy': smallCohortPolicy ?? 'keep',
+      'minTeamSize': minTeamSize ?? 5,
     });
   }
 

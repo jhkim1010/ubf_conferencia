@@ -1840,6 +1840,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get cohortSection => 'Bible study teams';
+
+  @override
+  String get cohortHint =>
+      'Teams are split by language first, then by age. Adulto 20+ · Junior 19 and under.';
+
+  @override
+  String get cohortMinSize => 'Minimum team size';
+
+  @override
+  String get cohortKeep => 'Leave as is';
+
+  @override
+  String get cohortKeepSub =>
+      'If no team fits, they stay unassigned for you to place';
+
+  @override
+  String get cohortAbsorb => 'Move up to the Adulto team in the same language';
+
+  @override
+  String get cohortAbsorbSub => 'Keeps everyone in a language they share';
+
+  @override
+  String get cohortMerge => 'Merge with the same age band in another language';
+
+  @override
+  String get cohortMergeSub => 'Keeps them with people their own age';
+
+  @override
+  String get studyLangTitle => 'Which language will you study in?';
+
+  @override
+  String get studyLangBody => 'Bible study teams are formed by this language.';
+
+  @override
+  String get studyLangNote =>
+      'You can change this later from your registration.';
+
+  @override
+  String get regStepStudyLang => 'Bible study';
+
+  @override
   String get discountNoOptions =>
       'This conference does not offer discount requests.';
 

@@ -10,6 +10,7 @@ import {
   connectedComponents,
   assignRooms,
   assignGroups,
+  ageBandOf,
 } from '../src/services/assignment_engine.js';
 
 // 묶음 배열을 비교 가능한 정규형으로 (내부 정렬 + 사전순 정렬)
@@ -408,5 +409,142 @@ describe('assignGroups', () => {
     assert.equal(assignments.length, 6);
     const m = byPerson(assignments, 'groupId');
     assert.equal(new Set(Object.values(m)).size, 1, '전원이 한 묶음이면 한 조로 간다');
+  });
+});
+
+// ── 언어 × 연령대 편성 (025) ─────────────────────────────────
+//
+// 말이 통하지 않으면 공부가 되지 않으므로 언어가 먼저다. 언어는 짐작하지 않고
+// 참석자가 직접 고른 값(study_language)을 쓴다.
+describe('assignGroups — 언어와 연령대', () => {
+  const P = (id, lang, age, gender = 'M') => ({ id, studyLanguage: lang, age, gender });
+  const G = (id, lang, band) => ({ id, studyLanguage: lang, ageBand: band });
+  const where = (assignments, id) =>
+    assignments.find((a) => a.registrationId === id)?.groupId;
+
+  test('언어가 다르면 다른 조로 간다', () => {
+    const { assignments } = assignGroups({
+      groups: [G('es', 'es', 'adulto'), G('ko', 'ko', 'adulto')],
+      people: [P('a', 'es', 30), P('b', 'es', 40), P('c', 'ko', 30), P('d', 'ko', 40)],
+      groupEdges: [],
+    });
+    assert.equal(where(assignments, 'a'), 'es');
+    assert.equal(where(assignments, 'b'), 'es');
+    assert.equal(where(assignments, 'c'), 'ko');
+    assert.equal(where(assignments, 'd'), 'ko');
+  });
+
+  test('20세는 adulto, 19세는 junior', () => {
+    assert.equal(ageBandOf(20), 'adulto');
+    assert.equal(ageBandOf(19), 'junior');
+    // 나이를 안 적었다고 배정에서 빠지면 안 된다.
+    assert.equal(ageBandOf(null), 'adulto');
+    assert.equal(ageBandOf(undefined), 'adulto');
+  });
+
+  test('같은 언어라도 연령대가 다르면 갈린다', () => {
+    const { assignments } = assignGroups({
+      groups: [G('esA', 'es', 'adulto'), G('esJ', 'es', 'junior')],
+      people: [P('grown', 'es', 35), P('teen', 'es', 16)],
+      groupEdges: [],
+    });
+    assert.equal(where(assignments, 'grown'), 'esA');
+    assert.equal(where(assignments, 'teen'), 'esJ');
+  });
+
+  test('부모와 자녀가 함께 지목하면 adulto 로 간다', () => {
+    // 묶음에 성인이 한 명이라도 있으면 junior 조가 아니라 adulto 조다.
+    const { assignments } = assignGroups({
+      groups: [G('esA', 'es', 'adulto'), G('esJ', 'es', 'junior')],
+      people: [P('parent', 'es', 45), P('child', 'es', 15)],
+      groupEdges: [['parent', 'child']],
+    });
+    assert.equal(where(assignments, 'parent'), 'esA');
+    assert.equal(where(assignments, 'child'), 'esA', '묶음은 쪼개지지 않는다');
+  });
+
+  test('025 이전 조(속성 없음)는 아무나 받는다', () => {
+    // 기존 수양회의 배정이 깨지면 안 된다.
+    const { assignments, unplaced } = assignGroups({
+      groups: [{ id: 'old1' }, { id: 'old2' }],
+      people: [P('a', 'es', 30), P('b', 'ko', 16)],
+      groupEdges: [],
+    });
+    assert.equal(assignments.length, 2);
+    assert.deepEqual(unplaced, []);
+  });
+});
+
+describe('assignGroups — 인원이 적은 칸', () => {
+  const P = (id, lang, age) => ({ id, studyLanguage: lang, age, gender: 'M' });
+  const G = (id, lang, band) => ({ id, studyLanguage: lang, ageBand: band });
+  const where = (assignments, id) =>
+    assignments.find((a) => a.registrationId === id)?.groupId;
+
+  // 스페인어 Junior 2명 + 스페인어 Adulto 6명. 최소 5명.
+  const setup = (policy) =>
+    assignGroups({
+      groups: [G('esA', 'es', 'adulto'), G('esJ', 'es', 'junior'), G('koJ', 'ko', 'junior')],
+      people: [
+        P('j1', 'es', 15), P('j2', 'es', 16),
+        P('a1', 'es', 30), P('a2', 'es', 31), P('a3', 'es', 32),
+        P('a4', 'es', 33), P('a5', 'es', 34), P('a6', 'es', 35),
+      ],
+      groupEdges: [],
+      policy,
+      minTeamSize: 5,
+    });
+
+  test('absorb — 같은 언어의 adulto 조로 올라간다', () => {
+    const { assignments, notes } = setup('absorb');
+    assert.equal(where(assignments, 'j1'), 'esA');
+    assert.equal(where(assignments, 'j2'), 'esA');
+    // 왜 옮겼는지 남긴다. 조용히 옮기면 관리자가 이유를 알 수 없다.
+    assert.ok(notes.some((n) => n.action === 'absorbed' && n.count === 2));
+  });
+
+  test('merge — 같은 연령대의 다른 언어 조로 간다', () => {
+    const { assignments, notes } = setup('merge');
+    assert.equal(where(assignments, 'j1'), 'koJ');
+    assert.equal(where(assignments, 'j2'), 'koJ');
+    assert.ok(notes.some((n) => n.action === 'merged' && n.count === 2));
+  });
+
+  test('keep — 그대로 자기 조에 남는다', () => {
+    const { assignments, notes } = setup('keep');
+    assert.equal(where(assignments, 'j1'), 'esJ');
+    assert.equal(where(assignments, 'j2'), 'esJ');
+    assert.equal(notes.length, 0, '옮기지 않았으므로 남길 것도 없다');
+  });
+
+  test('keep 인데 받을 조가 없으면 미배정으로 남긴다', () => {
+    // 억지로 아무 조에나 넣지 않는다 — 담당자가 조를 만드는 편이 낫다.
+    const { assignments, unplaced, notes } = assignGroups({
+      groups: [G('esA', 'es', 'adulto')],
+      people: [P('j1', 'es', 15), P('j2', 'es', 16)],
+      groupEdges: [],
+      policy: 'keep',
+      minTeamSize: 5,
+    });
+    assert.equal(assignments.length, 0);
+    assert.equal(unplaced.length, 2);
+    assert.ok(notes.some((n) => n.action === 'unplaced'));
+  });
+
+  test('인원이 충분하면 방침과 무관하게 자기 칸에 남는다', () => {
+    for (const policy of ['absorb', 'merge', 'keep']) {
+      const { assignments, notes } = assignGroups({
+        groups: [G('esA', 'es', 'adulto'), G('esJ', 'es', 'junior')],
+        people: [
+          P('j1', 'es', 15), P('j2', 'es', 16), P('j3', 'es', 17),
+          P('j4', 'es', 18), P('j5', 'es', 19),
+        ],
+        groupEdges: [],
+        policy,
+        minTeamSize: 5,
+      });
+      assert.equal(where(assignments, 'j1'), 'esJ', `${policy}: 5명이면 그대로 둔다`);
+      assert.equal(notes.length, 0, `${policy}: 옮기지 않았다`);
+    }
   });
 });

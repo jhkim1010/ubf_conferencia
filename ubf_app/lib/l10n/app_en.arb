@@ -1178,6 +1178,19 @@
       }
     }
   },
+  "cohortSection": "Bible study teams",
+  "cohortHint": "Teams are split by language first, then by age. Adulto 20+ · Junior 19 and under.",
+  "cohortMinSize": "Minimum team size",
+  "cohortKeep": "Leave as is",
+  "cohortKeepSub": "If no team fits, they stay unassigned for you to place",
+  "cohortAbsorb": "Move up to the Adulto team in the same language",
+  "cohortAbsorbSub": "Keeps everyone in a language they share",
+  "cohortMerge": "Merge with the same age band in another language",
+  "cohortMergeSub": "Keeps them with people their own age",
+  "studyLangTitle": "Which language will you study in?",
+  "studyLangBody": "Bible study teams are formed by this language.",
+  "studyLangNote": "You can change this later from your registration.",
+  "regStepStudyLang": "Bible study",
   "discountNoOptions": "This conference does not offer discount requests.",
   "discountDomesticOnly": "Discounts can only be requested by attendees coming from {country}.",
   "@discountDomesticOnly": {

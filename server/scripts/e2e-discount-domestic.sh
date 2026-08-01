@@ -56,9 +56,15 @@ I=$(mk "할인자격-국제-$$" international AR)
 [ -n "$I" ] || { echo "생성 실패"; exit 1; }
 eq "개최국 참석자는 신청된다"      '200' "$(save "$I" "$AR" AR yes)"
 eq "  신청으로 저장된다"           'true' "$(requested "$I" "$AR")"
-eq "다른 나라 참석자는 422"        '422' "$(save "$I" "$KR" KR yes)"
-eq "  등록 자체는 막지 않는다"     '200' "$(save "$I" "$KR" KR no)"
-eq "  신청은 남지 않는다"          'false' "$(requested "$I" "$KR")"
+
+# 자격이 없으면 **신청만 떨어뜨리고 저장은 통과시킨다.**
+#
+# 처음에는 422 로 거절했는데, 그러면 자격을 잃은 사람이 이름 한 글자도 저장할
+# 수 없게 된다 — 화면에 할인 항목이 안 보이므로 스스로 취소할 수도 없다.
+# 에뮬레이터로 확인하다 실제로 그 상태에 갇혔다.
+eq "다른 나라 참석자도 저장은 된다" '200'   "$(save "$I" "$KR" KR yes)"
+eq "  신청은 남지 않는다"           'false' "$(requested "$I" "$KR")"
+eq "  할인 없이 저장해도 된다"      '200'   "$(save "$I" "$KR" KR no)"
 
 echo
 echo "── 개최국을 옮기면 자격도 옮겨간다 ──"
@@ -66,8 +72,11 @@ echo "── 개최국을 옮기면 자격도 옮겨간다 ──"
 # 이제는 해당 없는 사람이 계속 신청할 수 있다.
 curl -s -o /dev/null -X PATCH "$API/programs/$I" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' -d '{"programType":"international","hostCountry":"KR"}'
-eq "개최국이 KR 이 되면 KR 이 신청된다" '200' "$(save "$I" "$KR" KR yes)"
-eq "  AR 은 이제 422"                   '422' "$(save "$I" "$AR" AR yes)"
+eq "개최국이 KR 이 되면 KR 이 신청된다" '200'   "$(save "$I" "$KR" KR yes)"
+eq "  신청으로 남는다"                  'true'  "$(requested "$I" "$KR")"
+# 자격을 잃은 AR 참석자는 갇히지 않는다. 저장은 되고 예전 신청은 사라진다.
+eq "AR 은 저장은 되고"                  '200'   "$(save "$I" "$AR" AR yes)"
+eq "  예전 신청이 사라진다"             'false' "$(requested "$I" "$AR")"
 
 echo
 echo "── 지역 수양회 (개최국 없음) ──"

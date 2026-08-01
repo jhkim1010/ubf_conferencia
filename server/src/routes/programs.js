@@ -36,6 +36,20 @@ function currencyFor(type, requested, current) {
   return requested ?? current ?? 'USD';
 }
 
+
+// 소수 인원 칸을 어떻게 할지(025). 관리자가 미리 정해 둔다 — 자동으로
+// 처리하고 말면 왜 그렇게 배정됐는지 아무도 모른다.
+function normalizeCohortPolicy(v) {
+  if (v === null || v === undefined || v === '') return null; // 안 보냈으면 유지
+  return ['absorb', 'merge', 'keep'].includes(v) ? v : NaN;   // 호출부에서 400
+}
+
+function normalizeMinTeamSize(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 1 && n <= 50 ? n : NaN;
+}
+
 // 할인 항목 정리. 관리자가 "1일 참석 / 2일 참석 …" 처럼 정의한다.
 // key 는 등록 레코드가 참조하므로 한 번 정해지면 바뀌면 안 된다.
 // 클라이언트가 준 key 를 그대로 쓰고, 없을 때만 위치 기반으로 채운다.
@@ -142,7 +156,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
     nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
     programType, hostCountry,
     feeBasic, feePremium, feeBasicDesc, feePremiumDesc, discountOptions,
-    currency,
+    currency, smallCohortPolicy, minTeamSize,
   } = req.body;
 
   if (!name || !location) {
@@ -159,6 +173,12 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
   const cur = normalizeCurrency(currency);
   if (Number.isNaN(cur)) {
     return res.status(400).json({ error: '통화는 ISO 4217 코드(대문자 세 글자)여야 합니다' });
+  }
+
+  const cohortPolicy = normalizeCohortPolicy(smallCohortPolicy);
+  const teamMin = normalizeMinTeamSize(minTeamSize);
+  if (Number.isNaN(cohortPolicy) || Number.isNaN(teamMin)) {
+    return res.status(400).json({ error: '소수 인원 방침이 올바르지 않습니다' });
   }
 
   try {
@@ -195,7 +215,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         nearest_airport, contact1_name, contact1_phone, contact2_name, contact2_phone,
         program_type, host_country,
         fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options,
-        currency
+        currency, small_cohort_policy, min_team_size
       )
       VALUES (
         ${name},
@@ -216,7 +236,9 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         ${feeBasicDesc ?? null},
         ${feePremiumDesc ?? null},
         ${JSON.stringify(discounts)},
-        ${currencyFor(type, cur, null)}
+        ${currencyFor(type, cur, null)},
+        ${cohortPolicy ?? 'keep'},
+        ${teamMin ?? 5}
       )
       RETURNING id
     `;
@@ -265,6 +287,12 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
     return res.status(400).json({ error: '통화는 ISO 4217 코드(대문자 세 글자)여야 합니다' });
   }
 
+  const patchPolicy  = normalizeCohortPolicy(req.body.smallCohortPolicy);
+  const patchTeamMin = normalizeMinTeamSize(req.body.minTeamSize);
+  if (Number.isNaN(patchPolicy) || Number.isNaN(patchTeamMin)) {
+    return res.status(400).json({ error: '소수 인원 방침이 올바르지 않습니다' });
+  }
+
   const basic = parseFee(feeBasic);
   const premium = parseFee(feePremium);
   if (Number.isNaN(basic) || Number.isNaN(premium)) {
@@ -280,6 +308,7 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
     // 소유권 + 시작일 확인
     const [program] = await sql`
       SELECT id, program_type, start_date, currency,
+             small_cohort_policy, min_team_size,
              fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options
       FROM programs
       WHERE id = ${req.params.id} AND leader_id = ${req.user.leaderId} AND is_active = true
@@ -317,7 +346,9 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
         fee_basic_desc   = ${has('feeBasicDesc') ? (feeBasicDesc ?? null) : program.fee_basic_desc},
         fee_premium_desc = ${has('feePremiumDesc') ? (feePremiumDesc ?? null) : program.fee_premium_desc},
         discount_options = ${JSON.stringify(discounts ?? program.discount_options ?? [])}::jsonb,
-        currency         = ${currencyFor(type, patchCurrency, program.currency)}
+        currency         = ${currencyFor(type, patchCurrency, program.currency)},
+        small_cohort_policy = ${patchPolicy ?? program.small_cohort_policy ?? 'keep'},
+        min_team_size       = ${patchTeamMin ?? program.min_team_size ?? 5}
       WHERE id = ${req.params.id}
     `;
 

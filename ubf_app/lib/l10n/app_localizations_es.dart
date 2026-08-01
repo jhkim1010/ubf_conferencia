@@ -1849,6 +1849,49 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get cohortSection => 'Equipos de estudio bíblico';
+
+  @override
+  String get cohortHint =>
+      'Los equipos se dividen primero por idioma y luego por edad. Adulto 20+ · Junior 19 o menos.';
+
+  @override
+  String get cohortMinSize => 'Tamaño mínimo del equipo';
+
+  @override
+  String get cohortKeep => 'Dejar como está';
+
+  @override
+  String get cohortKeepSub =>
+      'Si ningún equipo encaja, quedan sin asignar para que usted decida';
+
+  @override
+  String get cohortAbsorb => 'Subir al equipo Adulto del mismo idioma';
+
+  @override
+  String get cohortAbsorbSub => 'Prioriza el idioma que comparten';
+
+  @override
+  String get cohortMerge => 'Unir con la misma franja de edad de otro idioma';
+
+  @override
+  String get cohortMergeSub => 'Prioriza estar con gente de su edad';
+
+  @override
+  String get studyLangTitle => '¿En qué idioma quiere estudiar la Biblia?';
+
+  @override
+  String get studyLangBody =>
+      'Los equipos de estudio bíblico se forman por este idioma.';
+
+  @override
+  String get studyLangNote =>
+      'Puede cambiarlo más adelante desde su inscripción.';
+
+  @override
+  String get regStepStudyLang => 'Estudio bíblico';
+
+  @override
   String get discountNoOptions =>
       'Esta conferencia no admite solicitudes de descuento.';
 

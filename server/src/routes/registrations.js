@@ -38,7 +38,16 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     volunteerResources, volunteerNote,
     fcmToken,
     feeTier, discountRequested, discountOptionKey, discountReason,
+    studyLanguage,
   } = req.body;
+
+  // 말씀 공부 언어. 참석자가 직접 고른 값이다 — 앱 표시 언어나 국가로 유추하면
+  // 틀린다(아르헨티나 한인 2세, 스페인어권 한국인 선교사 둘 다 흔하다).
+  // ISO 639-1 두 글자만 받는다. 아니면 안 보낸 것으로 본다.
+  const studyLang =
+    typeof studyLanguage === 'string' && /^[a-z]{2}$/.test(studyLanguage.trim().toLowerCase())
+      ? studyLanguage.trim().toLowerCase()
+      : null;
 
   try {
     const [program] = await sql`
@@ -66,19 +75,21 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     const isDomestic = !host || (!!country && country === host);
 
     const offered = Array.isArray(program.discount_options) ? program.discount_options : [];
-    const picked = discountRequested
+    const requested = discountRequested
       ? offered.find((o) => o.key === discountOptionKey) ?? null
       : null;
 
-    // 조용히 무시하지 않고 막는다. 무시하면 등록자는 신청한 줄 알고 기다리다가
-    // 아무 답도 못 받는다.
-    if (picked && !isDomestic) {
-      return res.status(422).json({
-        error: '할인은 개최국에서 참석하는 분만 신청할 수 있습니다',
-        hostCountry: host,
-      });
-    }
-
+    // 자격이 없으면 신청을 **떨어뜨린다. 저장 자체를 막지 않는다.**
+    //
+    // 처음에는 422 로 거절했다. 그런데 자격은 나중에 바뀐다 — 참석자가 국가를
+    // 고쳐 적거나 관리자가 개최국을 바꾸면, 예전에 신청해 둔 할인이 남은 채
+    // 자격만 사라진다. 그때부터 그 사람은 **이름 한 글자도 저장할 수 없다.**
+    // 화면에는 할인 항목이 아예 안 보이므로 스스로 취소할 방법도 없다.
+    // 에뮬레이터로 흐름을 따라가다 실제로 이 상태에 갇혔다.
+    //
+    // 떨어뜨려도 "신청한 줄 알고 기다리는" 일은 없다. 화면이 항목 대신
+    // 이유를 보여주고, 조회하면 신청이 없는 상태 그대로 돌아온다.
+    const picked = isDomestic ? requested : null;
     const wantsDiscount = !!picked;
 
     // 기존 등록 여부 확인 (수정인지 신규인지 구분)
@@ -144,7 +155,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         total_cost, fcm_token,
         fee_tier, discount_requested, discount_option_key,
         discount_option_label, discount_option_labels, discount_reason, discount_status,
-        discount_amount, discount_note
+        discount_amount, discount_note, study_language
       )
       VALUES (
         ${req.params.programId}, ${req.user.userId},
@@ -170,7 +181,8 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         ${wantsDiscount ? (discountReason ?? null) : null},
         ${discountStatus},
         ${discountAmount},
-        ${discountNote}
+        ${discountNote},
+        ${studyLang}
       )
       ON CONFLICT (program_id, user_id)
       DO UPDATE SET
@@ -200,6 +212,9 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         discount_status = EXCLUDED.discount_status,
         discount_amount = EXCLUDED.discount_amount,
         discount_note = EXCLUDED.discount_note,
+        -- 안 보냈으면 지우지 않는다. 이 화면을 안 거치는 저장(임시저장 등)이
+        -- 참석자가 고른 언어를 날려 버리면 배정이 통째로 어긋난다.
+        study_language = COALESCE(EXCLUDED.study_language, registrations.study_language),
         updated_at = NOW()
       RETURNING id
     `;
@@ -292,6 +307,60 @@ router.post('/:programId/me/submit', requireAuth, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('제출 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// PUT /registrations/:programId/departure-check - 출발 여부 자가 확인 답변
+//
+// 운항 API 대신 본인에게 묻는다(026). 공항에 있는 사람보다 정확한 소식통은 없다.
+// 이 답은 배차와 직결되므로 관리자 명부에 그대로 보인다.
+const CHECK_STATUS = ['on_time', 'delayed', 'cancelled'];
+
+router.put('/:programId/departure-check', requireAuth, async (req, res) => {
+  const { status, newTime, note, leg } = req.body;
+
+  if (!CHECK_STATUS.includes(status)) {
+    return res.status(400).json({ error: '출발 상태가 올바르지 않습니다' });
+  }
+  // 지연이라면 언제로 밀렸는지가 핵심이다. 그것 없이 "지연"만 받으면
+  // 픽업 담당자는 아무것도 다시 짤 수 없다.
+  if (status === 'delayed' && !newTime) {
+    return res.status(400).json({ error: '지연된 출발 시각을 함께 적어 주십시오' });
+  }
+
+  try {
+    const payload = {
+      leg: leg === 'arrival' ? 'arrival' : 'departure',
+      status,
+      new_time: status === 'delayed' ? String(newTime) : null,
+      note: typeof note === 'string' && note.trim() ? note.trim() : null,
+      answered_at: new Date().toISOString(),
+    };
+
+    const rows = await sql`
+      UPDATE registrations
+         SET departure_check = ${JSON.stringify(payload)}::jsonb,
+             updated_at = NOW()
+       WHERE program_id = ${req.params.programId} AND user_id = ${req.user.userId}
+      RETURNING id, real_name
+    `;
+    if (!rows.length) return res.status(404).json({ error: '등록을 찾을 수 없습니다' });
+
+    // 정상 출발은 알리지 않는다 — 수백 명이 "정상"이라고 답할 때마다 울리면
+    // 담당자는 곧 알림을 꺼 버리고, 정작 결항 소식을 놓친다.
+    if (status !== 'on_time') {
+      const label = status === 'delayed' ? `지연 → ${payload.new_time}` : '결항·변경';
+      notifyProgramAdmins(
+        req.params.programId,
+        `✈️ <b>출발 변경</b>\n\n👤 ${rows[0].real_name ?? '참가자'}\n${label}` +
+          (payload.note ? `\n📝 ${payload.note}` : ''),
+      ).catch((err) => console.error('출발 변경 알림 오류:', err.message));
+    }
+
+    res.json({ departureCheck: payload });
+  } catch (err) {
+    console.error('출발 확인 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });

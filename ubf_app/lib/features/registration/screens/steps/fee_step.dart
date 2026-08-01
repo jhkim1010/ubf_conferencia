@@ -26,8 +26,8 @@ class FeeStep extends ConsumerWidget {
   /// 개최 국가(ISO). 지역 수양회는 null 이다.
   ///
   /// 할인은 개최국에서 오는 사람만 신청할 수 있다 — 항목이 "1일만 참석"처럼
-  /// 현지에서 오가는 사람을 전제로 만들어지기 때문이다. 서버가 막지만
-  /// (422), 고를 수 있게 두면 눌러 본 뒤에야 거절을 보게 된다.
+  /// 현지에서 오가는 사람을 전제로 만들어지기 때문이다. 서버도 같은 판단으로
+  /// 신청을 떨어뜨리지만, 고를 수 있게 두면 신청한 줄 알고 기다리게 된다.
   final String? hostCountry;
 
   const FeeStep({
@@ -45,7 +45,7 @@ class FeeStep extends ConsumerWidget {
   /// 이 참가자가 할인을 신청할 수 있는가.
   ///
   /// 서버(registrations.js)와 같은 판정이다. 한쪽만 고치면 화면에는 보이는데
-  /// 저장이 422 로 막히거나, 반대로 못 고르는 항목이 서버에서는 통과한다.
+  /// 저장 때 조용히 사라지거나, 반대로 못 고르는 항목이 서버에서는 통과한다.
   ///
   /// 양쪽을 ISO 로 정규화한 뒤 비교한다 — 019 이전에 저장된 표시명이 남아
   /// 있을 수 있고, 정규화 없이 문자열을 비교했던 것이 항공편 생략 기능이
@@ -118,22 +118,13 @@ class FeeStep extends ConsumerWidget {
         // 개최국에서 오는 사람이 아니면 항목을 감추고 이유를 밝힌다.
         // 그냥 감추기만 하면 "다른 사람에게는 보이던데 왜 나는 없지" 가 된다.
         else if (!_eligible(form.country))
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  l10n.discountDomesticOnly(
-                    WorldCountries.display(hostCountry) ?? '',
-                  ),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ),
-            ],
+          _IneligibleNotice(
+            hostCountry: hostCountry,
+            // 자격을 잃었는데 예전 신청이 남아 있으면 지운다. 화면에서 항목이
+            // 사라지므로 본인은 취소할 방법이 없다. 서버도 떨어뜨리지만,
+            // 폼에 남겨 두면 요약 화면이 없는 할인을 계속 보여준다.
+            staleRequest: form.discountRequested,
+            onClearStale: notifier.clearDiscountRequest,
           )
         else ...[
           Text(
@@ -369,6 +360,60 @@ class _DecisionBanner extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+// 할인 자격이 없을 때 보여줄 안내.
+//
+// 예전 신청이 남아 있으면 조용히 지운다 — 여기서는 항목이 보이지 않으므로
+// 본인이 취소할 방법이 없고, 남겨 두면 요약 화면이 없는 할인을 계속 보여준다.
+// 서버도 같은 판단으로 떨어뜨리므로(registrations.js) 저장은 막히지 않는다.
+class _IneligibleNotice extends StatefulWidget {
+  final String? hostCountry;
+  final bool staleRequest;
+  final VoidCallback onClearStale;
+
+  const _IneligibleNotice({
+    required this.hostCountry,
+    required this.staleRequest,
+    required this.onClearStale,
+  });
+
+  @override
+  State<_IneligibleNotice> createState() => _IneligibleNoticeState();
+}
+
+class _IneligibleNoticeState extends State<_IneligibleNotice> {
+  @override
+  void initState() {
+    super.initState();
+    // build 중에 상태를 바꾸면 안 된다. 프레임 뒤로 미룬다.
+    if (widget.staleRequest) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onClearStale();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            l10n.discountDomesticOnly(
+              WorldCountries.display(widget.hostCountry) ?? '',
+            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+          ),
+        ),
+      ],
     );
   }
 }

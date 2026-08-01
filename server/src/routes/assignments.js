@@ -8,7 +8,7 @@ const router = Router();
 // ── 데이터 로더 ───────────────────────────────────────────────
 async function loadPeople(programId) {
   return sql`
-    SELECT id, gender, age FROM registrations
+    SELECT id, gender, age, study_language AS "studyLanguage" FROM registrations
     WHERE program_id = ${programId} AND real_name IS NOT NULL AND real_name <> ''
   `;
 }
@@ -136,13 +136,21 @@ router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, async (r
 router.post('/:programId/groups/auto', requireAuth, requireProgramAdmin, async (req, res) => {
   const { programId } = req.params;
   try {
-    const [groups, people, groupEdges] = await Promise.all([
-      sql`SELECT id FROM groups WHERE program_id = ${programId} ORDER BY sort_order`,
+    const [groups, people, groupEdges, [program]] = await Promise.all([
+      sql`SELECT id, study_language AS "studyLanguage", age_band AS "ageBand"
+            FROM groups WHERE program_id = ${programId} ORDER BY sort_order`,
       loadPeople(programId),
       loadAcceptedEdges(programId, 'group'),
+      sql`SELECT small_cohort_policy, min_team_size FROM programs WHERE id = ${programId}`,
     ]);
 
-    const { assignments } = assignGroups({ groups, people, groupEdges });
+    const { assignments, unplaced, notes } = assignGroups({
+      groups,
+      people,
+      groupEdges,
+      policy: program?.small_cohort_policy ?? 'keep',
+      minTeamSize: program?.min_team_size ?? 5,
+    });
 
     await sql.transaction(async (client) => {
       await client.query(
@@ -158,7 +166,9 @@ router.post('/:programId/groups/auto', requireAuth, requireProgramAdmin, async (
       }
     });
 
-    res.json({ assigned: assignments.length });
+    // notes 는 "왜 이렇게 됐는지"다. 조용히 옮기고 말면 관리자는 스페인어 아이가
+    // 왜 한국어 조에 있는지 영영 알 수 없다.
+    res.json({ assigned: assignments.length, unplaced, notes });
   } catch (err) {
     console.error('말씀조 자동 배정 오류:', err);
     res.status(500).json({ error: '서버 오류' });

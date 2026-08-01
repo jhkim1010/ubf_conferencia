@@ -4,6 +4,7 @@ import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
 import '../providers/program_provider.dart';
 import '../widgets/fee_section.dart';
+import '../widgets/cohort_policy_section.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 
@@ -65,6 +66,11 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
 
   // 이 수양회의 통화. 등록자 전원이 이 단위로 본다.
   Currency _currency = Currency.usd;
+
+  // 소수 인원 칸 처리 방침(025). 기본은 keep — 조용히 옮기는 것보다
+  // "3명이 남았습니다"를 보여 주는 편이 낫다.
+  String _cohortPolicy = 'keep';
+  int _minTeamSize = 5;
 
   // 빈 칸은 0 이 아니라 "그 등급 없음"이다.
   num? _fee(TextEditingController c) {
@@ -152,6 +158,9 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _currency = _programType == 'international'
         ? Currency.usd
         : Currency.of(program['currency'] as String?);
+
+    _cohortPolicy = program['small_cohort_policy'] as String? ?? 'keep';
+    _minTeamSize = (program['min_team_size'] as num?)?.toInt() ?? 5;
 
     final rawDiscounts = program['discount_options'];
     if (rawDiscounts is List) {
@@ -241,6 +250,8 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
         'feePremiumDesc': _text(_feePremiumDescController),
         'discountOptions': _discountOptions,
         'currency': _currency.code,
+        'smallCohortPolicy': _cohortPolicy,
+        'minTeamSize': _minTeamSize,
       });
 
       if (!mounted) return;
@@ -497,6 +508,13 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   currency: _currency,
                   onCurrencyChanged: (c) => setState(() => _currency = c),
                   canChooseCurrency: _programType == 'local',
+                ),
+                const SizedBox(height: 28),
+                CohortPolicySection(
+                  policy: _cohortPolicy,
+                  onPolicyChanged: (v) => setState(() => _cohortPolicy = v),
+                  minTeamSize: _minTeamSize,
+                  onMinTeamSizeChanged: (v) => setState(() => _minTeamSize = v),
                 ),
                 const SizedBox(height: 28),
 

@@ -33,6 +33,11 @@ class RegistrationFormState {
   final String? discountOptionKey; // programs.discount_options[].key
   final String? discountReason; // 보충 설명(선택)
 
+  /// 말씀 공부를 어떤 언어로 할지. 참석자가 직접 고른다(025).
+  /// 앱 표시 언어나 국가로 유추하지 않는다 — 아르헨티나 한인 2세와
+  /// 스페인어권 한국인 선교사가 둘 다 흔하고, 유추하면 둘 다 틀린다.
+  final String? studyLanguage;
+
   const RegistrationFormState({
     required this.programId,
     this.country,
@@ -54,6 +59,7 @@ class RegistrationFormState {
     this.discountRequested = false,
     this.discountOptionKey,
     this.discountReason,
+    this.studyLanguage,
   });
 
   RegistrationFormState copyWith({
@@ -76,6 +82,7 @@ class RegistrationFormState {
     bool? discountRequested,
     String? discountOptionKey,
     String? discountReason,
+    String? studyLanguage,
     // copyWith 는 `??` 로 병합하므로 null 을 넘겨 값을 지울 수 없다.
     // 할인 신청 철회는 "지우는" 동작이라 별도 플래그가 필요하다.
     bool clearDiscount = false,
@@ -107,6 +114,7 @@ class RegistrationFormState {
       discountReason: clearDiscount
           ? null
           : (discountReason ?? this.discountReason),
+      studyLanguage: studyLanguage ?? this.studyLanguage,
     );
   }
 
@@ -131,6 +139,7 @@ class RegistrationFormState {
     'discountRequested': discountRequested,
     'discountOptionKey': discountOptionKey,
     'discountReason': discountReason,
+    'studyLanguage': studyLanguage,
   };
 
   factory RegistrationFormState.fromJson(Map<String, dynamic> json) =>
@@ -155,6 +164,7 @@ class RegistrationFormState {
         discountRequested: json['discountRequested'] as bool? ?? false,
         discountOptionKey: json['discountOptionKey'] as String?,
         discountReason: json['discountReason'] as String?,
+        studyLanguage: json['studyLanguage'] as String?,
       );
 }
 
@@ -280,6 +290,10 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
 
   void clearDiscountRequest() => _update(state.copyWith(clearDiscount: true));
 
+  /// 말씀 공부 언어(025). 배정이 이 값으로 갈리므로 참석자가 직접 고른다.
+  void selectStudyLanguage(String code) =>
+      _update(state.copyWith(studyLanguage: code));
+
   // ─── 서버 저장 (임시저장 버튼) ─────────────────────────────
 
   Future<void> saveProgress(List<Map<String, dynamic>> allOptions) async {
@@ -311,6 +325,7 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       'discountRequested': state.discountRequested,
       'discountOptionKey': state.discountOptionKey,
       'discountReason': state.discountReason,
+      'studyLanguage': state.studyLanguage,
     });
   }
 
@@ -351,6 +366,7 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       discountRequested: data['discount_requested'] as bool? ?? false,
       discountOptionKey: data['discount_option_key'],
       discountReason: data['discount_reason'],
+      studyLanguage: data['study_language'],
     );
     state = loaded;
     // DB에서 불러온 내용도 바로 draft로 저장

@@ -119,51 +119,178 @@ export function assignRooms({ rooms, people, roommateEdges, familyEdges = [] }) 
   return { assignments, unplaced };
 }
 
+// ── 연령대 ────────────────────────────────────────────────────
+// Adulto 20세 이상 / Junior 19세 이하.
+//
+// 나이를 모르면 adulto 로 본다. 성인을 junior 조에 넣는 것보다 그 반대가
+// 덜 어색하고, 무엇보다 나이를 안 적었다고 배정에서 빠지면 안 된다.
+export const ADULT_MIN_AGE = 20;
+
+export function ageBandOf(age) {
+  return typeof age === 'number' && age < ADULT_MIN_AGE ? 'junior' : 'adulto';
+}
+
 // ── 말씀조 자동 배정 ──────────────────────────────────────────
-// 묶음은 같은 조 유지. 연령·성비를 조마다 고르게(least-loaded + 성비 tiebreak,
-// 묶음을 평균연령 순으로 처리해 연령을 분산).
-// groups: [{id}]  people: [{id, gender, age}]  groupEdges: [fromId,toId][]
-// 반환: { assignments: [{groupId, registrationId}] }
-export function assignGroups({ groups, people, groupEdges }) {
+//
+// 조는 **언어로 먼저 갈리고, 그 안에서 연령대로** 나뉜다. 말이 통하지 않으면
+// 공부가 되지 않으므로 언어가 먼저다.
+//
+// 칸(cohort) 안에서는 예전 로직을 그대로 쓴다 — 묶음은 쪼개지 않고, 인원이
+// 적은 조부터, 성비가 기우는 쪽을 피해서. 이미 검증된 부분이라 손대지 않는다.
+//
+// **인원이 적은 칸**은 관리자가 미리 정해 둔 방침대로 처리한다(025):
+//   absorb — 같은 언어의 adulto 칸으로 올린다 (말이 통하는 쪽 우선)
+//   merge  — 같은 연령대의 다른 언어 칸과 합친다 (또래 우선)
+//   keep   — 그대로 둔다. 받을 조가 없으면 미배정으로 남긴다
+//
+// 조용히 옮기지 않고 무엇을 왜 옮겼는지 notes 로 돌려준다. 자동으로 처리하고
+// 말면 관리자는 "왜 스페인어 아이가 한국어 조에 있지"를 영영 알 수 없다.
+//
+// groups: [{id, studyLanguage?, ageBand?}]  — 둘 다 없으면 아무나 받는 조
+// people: [{id, gender, age, studyLanguage?}]
+// groupEdges: [fromId,toId][] (수락된 것만)
+// policy: 'absorb' | 'merge' | 'keep'   minTeamSize: number
+// 반환: { assignments, unplaced: [{registrationId, reason}], notes: [{cohort, action, count}] }
+export function assignGroups({
+  groups,
+  people,
+  groupEdges,
+  policy = 'keep',
+  minTeamSize = 5,
+}) {
   const assignments = [];
-  if (groups.length === 0) return { assignments };
+  const unplaced = [];
+  const notes = [];
+  if (groups.length === 0) return { assignments, unplaced, notes };
 
   const byId = new Map(people.map((p) => [p.id, p]));
   const ids = people.map((p) => p.id);
-  let units = connectedComponents(ids, groupEdges);
+  const units = connectedComponents(ids, groupEdges);
 
-  // 각 묶음의 평균 연령·성별 구성
+  // 묶음 하나가 어느 칸에 속하는가.
+  //
+  // 언어는 최빈값. 연령대는 한 명이라도 성인이면 adulto 다 — 부모와 자녀가
+  // 같이 공부하겠다고 지목했으면 junior 조가 아니라 adulto 조로 간다.
   const unitInfo = units.map((u) => {
-    const ages = u.map((id) => byId.get(id)?.age).filter((a) => typeof a === 'number');
+    const members = u.map((id) => byId.get(id)).filter(Boolean);
+    const ages = members.map((p) => p.age).filter((a) => typeof a === 'number');
     const avgAge = ages.length ? ages.reduce((s, a) => s + a, 0) / ages.length : 999;
-    const male = u.filter((id) => byId.get(id)?.gender === 'M').length;
-    const female = u.filter((id) => byId.get(id)?.gender === 'F').length;
-    return { members: u, avgAge, male, female, size: u.length };
-  });
-  // 연령 순으로 처리 → 조마다 연령대가 고르게 섞이도록
-  unitInfo.sort((a, b) => a.avgAge - b.avgAge);
 
-  // 조 상태
-  const state = groups.map((g) => ({ id: g.id, size: 0, male: 0, female: 0 }));
-
-  for (const unit of unitInfo) {
-    // 1순위: 인원 적은 조 / 2순위: 이 묶음의 우세 성별이 적은 조
-    const dominant = unit.male >= unit.female ? 'male' : 'female';
-    let best = null;
-    for (const s of state) {
-      if (
-        best === null ||
-        s.size < best.size ||
-        (s.size === best.size && s[dominant] < best[dominant])
-      ) {
-        best = s;
-      }
+    const langCount = new Map();
+    for (const p of members) {
+      const l = p.studyLanguage ?? null;
+      langCount.set(l, (langCount.get(l) ?? 0) + 1);
     }
-    best.size += unit.size;
-    best.male += unit.male;
-    best.female += unit.female;
-    for (const id of unit.members) assignments.push({ groupId: best.id, registrationId: id });
+    let language = null;
+    let top = -1;
+    for (const [l, n] of langCount) {
+      if (n > top) { top = n; language = l; }
+    }
+
+    const band = members.some((p) => ageBandOf(p.age) === 'adulto') ? 'adulto' : 'junior';
+
+    return {
+      members: u,
+      avgAge,
+      language,
+      band,
+      male: members.filter((p) => p.gender === 'M').length,
+      female: members.filter((p) => p.gender === 'F').length,
+      size: u.length,
+    };
+  });
+
+  const key = (language, band) => `${language ?? '-'} ${band}`;
+
+  // 칸별로 묶음을 모은다
+  const cohorts = new Map();
+  for (const unit of unitInfo) {
+    const k = key(unit.language, unit.band);
+    if (!cohorts.has(k)) {
+      cohorts.set(k, { language: unit.language, band: unit.band, units: [], size: 0 });
+    }
+    const c = cohorts.get(k);
+    c.units.push(unit);
+    c.size += unit.size;
   }
 
-  return { assignments };
+  // 조가 어느 칸을 받는가. 025 이전에 만든 조는 둘 다 null 이라 아무나 받는다.
+  const state = groups.map((g) => ({
+    id: g.id,
+    language: g.studyLanguage ?? null,
+    band: g.ageBand ?? null,
+    size: 0,
+    male: 0,
+    female: 0,
+  }));
+  const openGroups = state.filter((s) => s.language === null && s.band === null);
+
+  const groupsFor = (language, band) => {
+    const exact = state.filter((s) => s.language === language && s.band === band);
+    return exact.length ? exact : openGroups;
+  };
+
+  // 방침에 따라 이 칸을 어디로 보낼지 정한다. 옮겼으면 notes 에 남긴다.
+  const resolve = (cohort) => {
+    const own = groupsFor(cohort.language, cohort.band);
+    const big = cohort.size >= minTeamSize;
+    if (big && own.length) return own;
+
+    const label = `${cohort.language ?? '?'}·${cohort.band}`;
+
+    if (!big && policy === 'absorb' && cohort.band === 'junior') {
+      const up = groupsFor(cohort.language, 'adulto');
+      if (up.length && up !== own) {
+        notes.push({ cohort: label, action: 'absorbed', count: cohort.size });
+        return up;
+      }
+    }
+    if (!big && policy === 'merge') {
+      const peers = state.filter((s) => s.band === cohort.band && s.language !== cohort.language);
+      if (peers.length) {
+        notes.push({ cohort: label, action: 'merged', count: cohort.size });
+        return peers;
+      }
+    }
+
+    if (own.length) return own;
+
+    // 받을 조가 없다. 억지로 아무 데나 넣지 않는다 — 담당자가 조를 만드는 편이 낫다.
+    notes.push({ cohort: label, action: 'unplaced', count: cohort.size });
+    return [];
+  };
+
+  for (const cohort of cohorts.values()) {
+    const targets = resolve(cohort);
+    if (targets.length === 0) {
+      for (const unit of cohort.units) {
+        for (const id of unit.members) {
+          unplaced.push({ registrationId: id, reason: 'no_matching_group' });
+        }
+      }
+      continue;
+    }
+
+    // 칸 안에서는 예전 로직 그대로 — 연령 순으로 처리해 조마다 고르게 섞는다.
+    const ordered = [...cohort.units].sort((a, b) => a.avgAge - b.avgAge);
+    for (const unit of ordered) {
+      const dominant = unit.male >= unit.female ? 'male' : 'female';
+      let best = null;
+      for (const s of targets) {
+        if (
+          best === null ||
+          s.size < best.size ||
+          (s.size === best.size && s[dominant] < best[dominant])
+        ) {
+          best = s;
+        }
+      }
+      best.size += unit.size;
+      best.male += unit.male;
+      best.female += unit.female;
+      for (const id of unit.members) assignments.push({ groupId: best.id, registrationId: id });
+    }
+  }
+
+  return { assignments, unplaced, notes };
 }

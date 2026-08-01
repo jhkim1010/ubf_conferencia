@@ -8,7 +8,7 @@ import { sql } from './db.js';
 import jwt from 'jsonwebtoken';
 import { googleLogin, kakaoLogin, requireAuth, effectiveRole } from './middleware/auth.js';
 import { sendDailySummary } from './services/telegram.js';
-import { notifyProgramParticipants } from './services/fcm.js';
+import { notifyProgramParticipants, sendPushNotification } from './services/fcm.js';
 import programsRouter from './routes/programs.js';
 import registrationsRouter from './routes/registrations.js';
 import leadersRouter from './routes/leaders.js';
@@ -246,6 +246,55 @@ cron.schedule('* * * * *', async () => {
     }
   } catch (err) {
     console.error('[cron schedule] 오류:', err.message);
+  }
+});
+
+// ── 출발 3시간 전 자가 확인 (026) ────────────────────────────
+//
+// 운항 API 를 쓰지 않는다. 출발 예정 3시간 전에 본인에게 묻고 본인이 답한다 —
+// 공항에 있는 사람보다 정확한 소식통은 없고, 무료 API 는 참가자가 수백 명이면
+// 한도를 넘긴다.
+//
+// 한 번만 묻는다(departure_check_asked_at). 매 분 다시 물으면 알림이 계속 울려
+// 사람들이 알림을 꺼 버리고, 그러면 정작 필요한 것도 못 받는다.
+cron.schedule('* * * * *', async () => {
+  try {
+    const due = await sql`
+      SELECT r.id, r.program_id, r.fcm_token,
+             COALESCE(
+               r.departure_flight->>'scheduled_departure',
+               r.arrival_flight->>'scheduled_departure'
+             ) AS depart_at
+        FROM registrations r
+        JOIN programs p ON p.id = r.program_id
+       WHERE r.departure_check_asked_at IS NULL
+         AND r.submitted = true
+         AND p.is_active = true
+         AND COALESCE(
+               r.departure_flight->>'scheduled_departure',
+               r.arrival_flight->>'scheduled_departure'
+             )::timestamptz
+             BETWEEN NOW() + INTERVAL '2 hours 59 minutes'
+                 AND NOW() + INTERVAL '3 hours 1 minute'
+    `;
+
+    for (const r of due) {
+      if (r.fcm_token) {
+        await sendPushNotification(
+          [r.fcm_token],
+          '✈️ 예정대로 출발합니까?',
+          '3시간 뒤 출발입니다. 지연이나 결항이 있으면 알려 주십시오.',
+          { type: 'departure_check', programId: r.program_id },
+        );
+      }
+      // 푸시 토큰이 없어도 물어본 것으로 남긴다. 앱을 열면 화면에서 묻는다 —
+      // 토큰이 없다고 매 분 다시 조회하면 그 사람만 영원히 대상으로 남는다.
+      await sql`
+        UPDATE registrations SET departure_check_asked_at = NOW() WHERE id = ${r.id}
+      `;
+    }
+  } catch (err) {
+    console.error('[cron departure-check] 오류:', err.message);
   }
 });
 

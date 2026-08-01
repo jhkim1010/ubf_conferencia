@@ -18,6 +18,7 @@ import 'steps/fee_step.dart';
 import 'steps/buddy_step.dart';
 import 'steps/companion_step.dart';
 import 'steps/volunteer_resources_step.dart';
+import 'steps/study_language_step.dart';
 import 'package:mana/l10n/app_localizations.dart';
 
 // 등록 폼 - PageView 기반
@@ -233,6 +234,12 @@ class _RegistrationFlowScreenState
               programId: widget.programId,
               enabled: enabledSections['roommate'] ?? true,
             ),
+          ),
+          // 말씀 공부 언어. 성경공부 팀이 이 값으로 갈리므로(025) 본인에게 묻는다.
+          // 앞의 룸메이트 단계 바로 뒤에 둔다 — 둘 다 "누구와 함께하는가"다.
+          (
+            title: l10n.regStepStudyLang,
+            widget: StudyLanguageStep(programId: widget.programId),
           ),
           (
             title: l10n.regStepVolunteer,
