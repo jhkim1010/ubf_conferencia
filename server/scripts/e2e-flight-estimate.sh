@@ -35,6 +35,20 @@ PROG=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
 echo "검증용 수양회: $PROG"
 echo
 
+# 검증이 끝나면 만든 수양회를 지운다.
+#
+# 예전에는 지우지 않아 DB 에 같은 이름의 수양회가 계속 쌓였다. 등록자가 있으면
+# 서버가 이름 확인을 요구하므로(428) confirmName 을 함께 보낸다 — 이것을
+# 빠뜨리면 조용히 실패하고 찌꺼기가 남는다. trap 이라 도중에 죽어도 지운다.
+cleanup_program() {
+  [ -n "${PROG:-}" ] || return 0
+  curl -s -o /dev/null -X DELETE "$API/programs/$PROG" \
+    -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+    -d "{\"confirmName\":\"항공편검증용(e2e)\"}"
+}
+trap cleanup_program EXIT
+
+
 save() {
   curl -s -X PUT "$API/registrations/$PROG/me" -H "Authorization: Bearer $T" \
     -H 'Content-Type: application/json' -d "$1" >/dev/null

@@ -44,7 +44,24 @@ flutter run -d chrome
 `export PATH="/opt/homebrew/bin:$PATH";`를 앞에 붙이거나 `zsh -lc '...'`로 실행하십시오.
 
 서버는 `PORT`(기본 3000), `DATABASE_URL`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`,
-`GOOGLE_IOS_CLIENT_ID`, `ALLOWED_ORIGINS`를 사용합니다. `server/.env`는 커밋하지 않습니다.
+`GOOGLE_IOS_CLIENT_ID`, `ALLOWED_ORIGINS`를 사용합니다. `server/.env*`는 커밋하지 않습니다.
+
+**DB 파일은 셋이며 기본값은 stage 입니다.**
+
+| 파일 | 대상 | 쓰이는 곳 |
+|---|---|---|
+| `server/.env` | stage | `npm run dev`, `npm run migrate` 기본값 |
+| `server/.env.stage` | stage | `./serve-web.sh` 기본값 |
+| `server/.env.prod` | **운영** | `./serve-web.sh --prod-db` 로 명시할 때만 |
+
+한동안 `.env.stage` 가 실제 운영 DB(배포 서버와 같은 것)를 가리키고 있었고,
+그래서 e2e 검증이 운영 데이터에 검증용 수양회 53개와 계정 24개를 남겼습니다.
+**e2e 를 돌리기 전에 `DATABASE_URL` 이 어디를 가리키는지 확인하십시오.**
+호스트만 보는 방법: `grep '^DATABASE_URL=' server/.env | sed -E 's#.*@([^.]+).*#\1#'`
+
+`deploy.sh` 는 **마이그레이션을 돌리지 않습니다.** 스키마를 바꾼 뒤 배포할 때는
+운영 DB에 대고 `npm run migrate` 를 먼저 실행해야 합니다
+(`cd server && DATABASE_URL="$(grep '^DATABASE_URL=' .env.prod | cut -d= -f2-)" npm run migrate`).
 헬스체크: `GET /health`.
 
 ---

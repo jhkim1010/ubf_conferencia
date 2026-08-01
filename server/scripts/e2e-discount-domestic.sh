@@ -23,6 +23,17 @@ login() {
 }
 
 LT=$(login "$LEADER")
+
+# 리더 자격을 스스로 확보한다.
+#
+# 예전에는 이 계정이 미리 리더로 만들어져 있다고 가정했다. 그래서 e2e 가
+# **미리 손질된 DB**를 필요로 했고, 결국 운영 DB 를 검증에 쓰게 됐다.
+# 이미 리더면 400 이 돌아오고 기존 토큰을 그대로 쓴다.
+NEW_LT=$(curl -s -X POST "$API/leaders/register" \
+  -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+  -d '{"name":"e2e 리더"}' \
+  | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
+[ -n "$NEW_LT" ] && LT="$NEW_LT"
 AR=$(login "dc-ar-$$@test.local")   # 개최국(아르헨티나)에서 오는 사람
 KR=$(login "dc-kr-$$@test.local")   # 다른 나라에서 오는 사람
 [ "$LT" != undefined ] || { echo "로그인 실패 — ENABLE_DEV_LOGIN=1 확인"; exit 1; }
@@ -48,8 +59,12 @@ requested() { # $1=programId $2=token → 저장된 신청 여부
   curl -s "$API/registrations/$1/me" -H "Authorization: Bearer $2" \
     | node -pe "const r=JSON.parse(require('fs').readFileSync(0)); String(r?.discount_requested ?? 'null')"
 }
-cleanup() { curl -s -o /dev/null -X DELETE "$API/programs/$1" \
-    -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' -d '{}'; }
+# 등록자가 있으면 서버가 이름 확인을 요구한다(428). 빠뜨리면 조용히 실패하고
+# 검증용 수양회가 DB 에 쌓인다 — 실제로 그렇게 쌓였다.
+cleanup() { # $1=programId $2=name
+  curl -s -o /dev/null -X DELETE "$API/programs/$1" \
+    -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+    -d "{\"confirmName\":\"$2\"}"; }
 
 echo "── 국제 수양회 (개최국 AR) ──"
 I=$(mk "할인자격-국제-$$" international AR)
@@ -85,7 +100,8 @@ L=$(mk "할인자격-지역-$$" local "")
 eq "아무 나라나 신청된다"          '200' "$(save "$L" "$KR" KR yes)"
 eq "  신청으로 저장된다"           'true' "$(requested "$L" "$KR")"
 
-cleanup "$I"; cleanup "$L"
+cleanup "$I" "할인자격-국제-$$"
+cleanup "$L" "할인자격-지역-$$"
 
 echo
 echo "통과 $pass · 실패 $fail"

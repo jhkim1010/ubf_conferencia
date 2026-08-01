@@ -21,18 +21,30 @@ if (!url) {
   process.exit(1);
 }
 
-// 운영 DB 보호: server/.env 의 호스트와 같으면 중단
-try {
-  const prodEnv = readFileSync(resolve(__dirname, '../.env'), 'utf-8');
-  const prodUrl = prodEnv.match(/^DATABASE_URL=(.+)$/m)?.[1] ?? '';
+// 운영 DB 보호: server/.env.prod 의 호스트와 같으면 중단.
+//
+// 예전에는 .env 와 비교했다. 그런데 .env 는 로컬 개발용(stage)이고 운영은
+// .env.prod 다 — 한동안 이 둘이 뒤바뀌어 있어서, 이 검사가 정작 stage 시드를
+// 막고 운영 시드는 통과시킬 뻔했다. 비교 대상을 명시적으로 못박는다.
+//
+// **비교 파일이 없으면 건너뛰지 않고 멈춘다.** 예전에는 조용히 통과했는데,
+// 안전장치가 파일 하나 없다고 사라지면 그건 안전장치가 아니다.
+{
   const host = (u) => (u.match(/@([^/]+)\//) ?? [])[1] ?? '';
+  let prodUrl = '';
+  try {
+    prodUrl = readFileSync(resolve(__dirname, '../.env.prod'), 'utf-8')
+      .match(/^DATABASE_URL=(.+)$/m)?.[1] ?? '';
+  } catch {
+    console.error('✗ server/.env.prod 를 읽을 수 없어 운영 DB 인지 판단할 수 없습니다.');
+    console.error('  ALLOW_UNSAFE_SEED=1 을 붙이면 검사 없이 진행합니다.');
+    if (process.env.ALLOW_UNSAFE_SEED !== '1') process.exit(1);
+  }
   if (host(prodUrl) && host(prodUrl) === host(url)) {
-    console.error('✗ 운영 DB 로 보입니다. stage 연결 문자열을 쓰십시오.');
+    console.error('✗ 운영 DB 입니다. stage 연결 문자열을 쓰십시오.');
     console.error(`  host=${host(url)}`);
     process.exit(1);
   }
-} catch {
-  // .env 가 없으면 비교를 건너뛴다
 }
 
 // --region <코드> 로 참석자 거주 국가를 바꾼다 (국내/해외 시나리오 전환)

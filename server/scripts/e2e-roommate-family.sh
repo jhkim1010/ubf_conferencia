@@ -23,6 +23,17 @@ login() {
 }
 
 LT=$(login "$LEADER")
+
+# 리더 자격을 스스로 확보한다.
+#
+# 예전에는 이 계정이 미리 리더로 만들어져 있다고 가정했다. 그래서 e2e 가
+# **미리 손질된 DB**를 필요로 했고, 결국 운영 DB 를 검증에 쓰게 됐다.
+# 이미 리더면 400 이 돌아오고 기존 토큰을 그대로 쓴다.
+NEW_LT=$(curl -s -X POST "$API/leaders/register" \
+  -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+  -d '{"name":"e2e 리더"}' \
+  | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
+[ -n "$NEW_LT" ] && LT="$NEW_LT"
 HT=$(login husband@test.com)
 WT=$(login wife@test.com)
 BT=$(login brother@test.com)
@@ -37,6 +48,20 @@ PROG=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
 [ -n "$PROG" ] || { echo "검증용 수양회 생성 실패"; exit 1; }
 echo "검증용 수양회: $PROG"
 echo
+
+# 검증이 끝나면 만든 수양회를 지운다.
+#
+# 예전에는 지우지 않아 DB 에 같은 이름의 수양회가 계속 쌓였다. 등록자가 있으면
+# 서버가 이름 확인을 요구하므로(428) confirmName 을 함께 보낸다 — 이것을
+# 빠뜨리면 조용히 실패하고 찌꺼기가 남는다. trap 이라 도중에 죽어도 지운다.
+cleanup_program() {
+  [ -n "${PROG:-}" ] || return 0
+  curl -s -o /dev/null -X DELETE "$API/programs/$PROG" \
+    -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+    -d "{\"confirmName\":\"룸메이트검증용(e2e)\"}"
+}
+trap cleanup_program EXIT
+
 
 reg() { # $1=token $2=이름 $3=성별
   curl -s -X PUT "$API/registrations/$PROG/me" -H "Authorization: Bearer $1" \

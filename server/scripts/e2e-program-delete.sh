@@ -21,6 +21,17 @@ login() {
 }
 
 LT=$(login "$LEADER")
+
+# 리더 자격을 스스로 확보한다.
+#
+# 예전에는 이 계정이 미리 리더로 만들어져 있다고 가정했다. 그래서 e2e 가
+# **미리 손질된 DB**를 필요로 했고, 결국 운영 DB 를 검증에 쓰게 됐다.
+# 이미 리더면 400 이 돌아오고 기존 토큰을 그대로 쓴다.
+NEW_LT=$(curl -s -X POST "$API/leaders/register" \
+  -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+  -d '{"name":"e2e 리더"}' \
+  | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
+[ -n "$NEW_LT" ] && LT="$NEW_LT"
 OT=$(login other-leader@test.com)   # 리더가 아닌 계정
 PT=$(login deltest@test.com)        # 등록자
 [ "$LT" != undefined ] || { echo "로그인 실패 — ENABLE_DEV_LOGIN=1 확인"; exit 1; }

@@ -6,6 +6,14 @@
 #   ./serve-web.sh --no-build   빌드 없이 서버만 (이미 빌드돼 있을 때)
 #   ./serve-web.sh --prod-db    운영 DB 사용 (기본은 stage)
 #
+# DB 파일은 셋이다. **기본값은 반드시 stage 여야 한다** —
+# 한동안 .env.stage 가 실제 운영 DB 를 가리키고 있었고, 그래서 e2e 검증이
+# 운영 데이터에 찌꺼기를 남겼다.
+#
+#   server/.env        stage  (npm run dev 기본값도 여기)
+#   server/.env.stage  stage
+#   server/.env.prod   운영. --prod-db 로 명시할 때만
+#
 # 이 스크립트는 **로컬 검증 전용**이다. 릴리스 빌드는 .github/workflows/
 # build-release.yml 이 담당하며 그쪽은 건드리지 않는다.
 
@@ -27,7 +35,7 @@ DB_FILE=".env.stage"
 for a in "$@"; do
   case "$a" in
     --no-build) BUILD=0 ;;
-    --prod-db)  DB_FILE=".env" ;;
+    --prod-db)  DB_FILE=".env.prod" ;;
   esac
 done
 

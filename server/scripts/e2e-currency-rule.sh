@@ -24,6 +24,17 @@ login() {
 }
 
 LT=$(login "$LEADER")
+
+# 리더 자격을 스스로 확보한다.
+#
+# 예전에는 이 계정이 미리 리더로 만들어져 있다고 가정했다. 그래서 e2e 가
+# **미리 손질된 DB**를 필요로 했고, 결국 운영 DB 를 검증에 쓰게 됐다.
+# 이미 리더면 400 이 돌아오고 기존 토큰을 그대로 쓴다.
+NEW_LT=$(curl -s -X POST "$API/leaders/register" \
+  -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+  -d '{"name":"e2e 리더"}' \
+  | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
+[ -n "$NEW_LT" ] && LT="$NEW_LT"
 [ "$LT" != undefined ] || { echo "로그인 실패 — ENABLE_DEV_LOGIN=1 확인"; exit 1; }
 
 mk() { # $1=이름 $2=programType $3=currency → programId
@@ -42,11 +53,13 @@ patch() { # $1=programId $2=programType $3=currency → http code
     -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
     -d "{\"programType\":\"$2\",\"currency\":\"$3\"}"
 }
-cleanup() { curl -s -o /dev/null -X DELETE "$API/programs/$1" \
-    -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' -d '{}'; }
+cleanup() { # $1=programId $2=name — 등록자가 있으면 이름 확인이 필요하다(428)
+  curl -s -o /dev/null -X DELETE "$API/programs/$1" \
+    -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+    -d "{\"confirmName\":\"$2\"}"; }
 
 echo "── 국제 수양회 ──"
-I=$(mk "통화검증-국제-$$(date +%s 2>/dev/null || echo x)" international ARS)
+I=$(mk "통화검증-국제-$$" international ARS)
 [ -n "$I" ] || { echo "생성 실패"; exit 1; }
 eq "ARS 를 보내도 USD 로 저장된다"        'USD' "$(cur "$I")"
 eq "KRW 로 수정해도 USD 로 남는다"        '200' "$(patch "$I" international KRW)"
@@ -54,7 +67,7 @@ eq "  수정 후에도 USD"                   'USD' "$(cur "$I")"
 
 echo
 echo "── 지역 수양회 ──"
-L=$(mk "통화검증-지역-$$(date +%s 2>/dev/null || echo y)" local ARS)
+L=$(mk "통화검증-지역-$$" local ARS)
 [ -n "$L" ] || { echo "생성 실패"; exit 1; }
 eq "고른 통화가 그대로 저장된다"          'ARS' "$(cur "$L")"
 eq "다른 나라 통화로 바꿀 수 있다"        '200' "$(patch "$L" local BRL)"
@@ -72,7 +85,8 @@ echo "── 잘못된 입력 ──"
 eq "세 글자가 아닌 통화는 400"            '400' "$(patch "$L" local peso)"
 eq "  거부 후 값이 바뀌지 않는다"         'ARS' "$(cur "$L")"
 
-cleanup "$I"; cleanup "$L"
+cleanup "$I" "통화검증-국제-$$"
+cleanup "$L" "통화검증-지역-$$"
 
 echo
 echo "통과 $pass · 실패 $fail"
