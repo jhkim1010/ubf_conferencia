@@ -1179,6 +1179,10 @@
     }
   },
   "discountNoOptions": "This conference does not offer discount requests.",
+  "discountDomesticOnly": "Discounts can only be requested by attendees coming from {country}.",
+  "@discountDomesticOnly": {
+    "placeholders": { "country": { "type": "String" } }
+  },
   "cpFeeSection": "Fee",
   "cpFeeBasic": "Standard fee",
   "cpFeePremium": "Premium fee",

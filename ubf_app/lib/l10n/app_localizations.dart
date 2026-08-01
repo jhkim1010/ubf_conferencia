@@ -3442,6 +3442,12 @@ abstract class AppLocalizations {
   /// **'This conference does not offer discount requests.'**
   String get discountNoOptions;
 
+  /// No description provided for @discountDomesticOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Discounts can only be requested by attendees coming from {country}.'**
+  String discountDomesticOnly(String country);
+
   /// No description provided for @cpFeeSection.
   ///
   /// In en, this message translates to:

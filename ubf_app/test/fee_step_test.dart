@@ -19,6 +19,7 @@ const _programId = 'p1';
 Widget _harness(
   ProviderContainer container, {
   List<Map<String, dynamic>>? discounts,
+  String? hostCountry,
 }) {
   return UncontrolledProviderScope(
     container: container,
@@ -45,6 +46,7 @@ Widget _harness(
                 {'key': 'd1', 'label': '1일만 참석', 'amount': 40},
                 {'key': 'd2', 'label': '2일 참석', 'amount': 25},
               ],
+          hostCountry: hostCountry,
         ),
       ),
     ),
@@ -123,5 +125,75 @@ void main() {
 
     expect(find.text('할인 신청 안 함'), findsNothing);
     expect(find.text('이 수양회는 할인 신청을 받지 않습니다.'), findsOneWidget);
+  });
+
+  // 할인은 개최국에서 오는 사람만 신청할 수 있다. 서버도 같은 판정을 하므로
+  // (registrations.js, 422), 한쪽만 바뀌면 화면과 저장이 어긋난다.
+  group('개최국 참석자만 할인을 신청할 수 있다', () {
+    testWidgets('개최국에서 오면 항목이 보인다', (tester) async {
+      final c = _container();
+      addTearDown(c.dispose);
+      c
+          .read(registrationFormProvider(_programId).notifier)
+          .updatePersonalInfo(country: 'AR');
+      await tester.pumpWidget(_harness(c, hostCountry: 'AR'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1일만 참석'), findsOneWidget);
+      expect(find.text('할인 신청 안 함'), findsOneWidget);
+    });
+
+    testWidgets('다른 나라에서 오면 항목 대신 이유를 보여준다', (tester) async {
+      final c = _container();
+      addTearDown(c.dispose);
+      c
+          .read(registrationFormProvider(_programId).notifier)
+          .updatePersonalInfo(country: 'KR');
+      await tester.pumpWidget(_harness(c, hostCountry: 'AR'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1일만 참석'), findsNothing);
+      expect(find.text('할인 신청 안 함'), findsNothing);
+      // 그냥 감추기만 하면 "왜 나는 안 보이지" 가 된다. 국가명을 밝힌다.
+      expect(find.textContaining('Argentina 에서 참석하는 분만'), findsOneWidget);
+    });
+
+    testWidgets('국가를 아직 안 고른 사람에게는 보이지 않는다', (tester) async {
+      // 신청하게 뒀다가 저장 시점에 422 로 막으면, 자기가 무엇을 잘못했는지
+      // 알 수 없다.
+      final c = _container();
+      addTearDown(c.dispose);
+      await tester.pumpWidget(_harness(c, hostCountry: 'AR'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1일만 참석'), findsNothing);
+    });
+
+    testWidgets('지역 수양회(개최국 없음)는 제한하지 않는다', (tester) async {
+      // 참가자가 모두 같은 나라 사람이므로 막을 이유가 없다.
+      final c = _container();
+      addTearDown(c.dispose);
+      c
+          .read(registrationFormProvider(_programId).notifier)
+          .updatePersonalInfo(country: 'KR');
+      await tester.pumpWidget(_harness(c, hostCountry: null));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1일만 참석'), findsOneWidget);
+    });
+
+    testWidgets('019 이전 표시명이 남아 있어도 같은 나라로 본다', (tester) async {
+      // 정규화 없이 문자열을 비교했던 것이 항공편 생략 기능이 한 번도
+      // 동작하지 않은 원인이었다. 같은 실수를 반복하지 않는다.
+      final c = _container();
+      addTearDown(c.dispose);
+      c
+          .read(registrationFormProvider(_programId).notifier)
+          .updatePersonalInfo(country: 'ARGENTINA');
+      await tester.pumpWidget(_harness(c, hostCountry: 'AR'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1일만 참석'), findsOneWidget);
+    });
   });
 }

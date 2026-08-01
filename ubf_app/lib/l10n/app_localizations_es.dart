@@ -1853,6 +1853,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esta conferencia no admite solicitudes de descuento.';
 
   @override
+  String discountDomesticOnly(String country) {
+    return 'Solo pueden solicitar descuento quienes asisten desde $country.';
+  }
+
+  @override
   String get cpFeeSection => 'Cuota';
 
   @override

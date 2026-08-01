@@ -557,6 +557,10 @@
   "discountStatusRejected": "No aprobado.",
   "discountAdminNote": "Nota del organizador: {note}",
   "discountNoOptions": "Esta conferencia no admite solicitudes de descuento.",
+  "discountDomesticOnly": "Solo pueden solicitar descuento quienes asisten desde {country}.",
+  "@discountDomesticOnly": {
+    "placeholders": { "country": { "type": "String" } }
+  },
   "cpFeeSection": "Cuota",
   "cpFeeBasic": "Cuota estándar",
   "cpFeePremium": "Cuota premium",

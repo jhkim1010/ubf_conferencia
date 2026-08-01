@@ -1807,6 +1807,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get discountNoOptions => '이 수양회는 할인 신청을 받지 않습니다.';
 
   @override
+  String discountDomesticOnly(String country) {
+    return '할인은 $country 에서 참석하는 분만 신청할 수 있습니다.';
+  }
+
+  @override
   String get cpFeeSection => '참가비';
 
   @override

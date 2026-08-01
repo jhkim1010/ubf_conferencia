@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../providers/registration_provider.dart';
 import '../../../../core/utils/money.dart';
+import '../../../../core/constants/world_countries.dart';
 
 // 참가비 등급 선택 + 할인 신청
 //
@@ -22,6 +23,13 @@ class FeeStep extends ConsumerWidget {
   /// 이 수양회의 통화.
   final Currency currency;
 
+  /// 개최 국가(ISO). 지역 수양회는 null 이다.
+  ///
+  /// 할인은 개최국에서 오는 사람만 신청할 수 있다 — 항목이 "1일만 참석"처럼
+  /// 현지에서 오가는 사람을 전제로 만들어지기 때문이다. 서버가 막지만
+  /// (422), 고를 수 있게 두면 눌러 본 뒤에야 거절을 보게 된다.
+  final String? hostCountry;
+
   const FeeStep({
     super.key,
     required this.programId,
@@ -31,7 +39,23 @@ class FeeStep extends ConsumerWidget {
     required this.feePremiumDesc,
     required this.discountOptions,
     required this.currency,
+    required this.hostCountry,
   });
+
+  /// 이 참가자가 할인을 신청할 수 있는가.
+  ///
+  /// 서버(registrations.js)와 같은 판정이다. 한쪽만 고치면 화면에는 보이는데
+  /// 저장이 422 로 막히거나, 반대로 못 고르는 항목이 서버에서는 통과한다.
+  ///
+  /// 양쪽을 ISO 로 정규화한 뒤 비교한다 — 019 이전에 저장된 표시명이 남아
+  /// 있을 수 있고, 정규화 없이 문자열을 비교했던 것이 항공편 생략 기능이
+  /// 한 번도 동작하지 않은 원인이었다.
+  bool _eligible(String? registrantCountry) {
+    final host = WorldCountries.isoForLegacy(hostCountry);
+    if (host == null) return true; // 지역 수양회 — 모두 같은 나라다
+    final mine = WorldCountries.isoForLegacy(registrantCountry);
+    return mine != null && mine == host;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -90,6 +114,26 @@ class FeeStep extends ConsumerWidget {
           Text(
             l10n.discountNoOptions,
             style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          )
+        // 개최국에서 오는 사람이 아니면 항목을 감추고 이유를 밝힌다.
+        // 그냥 감추기만 하면 "다른 사람에게는 보이던데 왜 나는 없지" 가 된다.
+        else if (!_eligible(form.country))
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  l10n.discountDomesticOnly(
+                    WorldCountries.display(hostCountry) ?? '',
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ),
+            ],
           )
         else ...[
           Text(

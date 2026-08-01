@@ -1844,6 +1844,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This conference does not offer discount requests.';
 
   @override
+  String discountDomesticOnly(String country) {
+    return 'Discounts can only be requested by attendees coming from $country.';
+  }
+
+  @override
   String get cpFeeSection => 'Fee';
 
   @override

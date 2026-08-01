@@ -42,7 +42,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
 
   try {
     const [program] = await sql`
-      SELECT id, name, fee_basic, fee_premium, discount_options
+      SELECT id, name, fee_basic, fee_premium, discount_options, host_country
       FROM programs WHERE id = ${req.params.programId} AND is_active = true
     `;
     if (!program) return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
@@ -55,10 +55,30 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
 
     // 할인 신청. 담당자 전용 필드(status/amount/note)는 본문에서 받지 않는다.
     // 등록자가 스스로 승인 상태나 금액을 정할 수 있으면 신청 자체가 무의미해진다.
+    // 할인은 **개최국에서 오는 사람만** 신청할 수 있다. 할인 항목은 "1일만
+    // 참석" 처럼 현지에서 오가는 사람을 전제로 만들어지기 때문이다.
+    //
+    // 판정은 registrations.country 와 programs.host_country 를 맞춰 본다 —
+    // 준비 현황·봉사 자격이 이미 쓰는 기준이라 여기서만 다르게 볼 이유가 없다.
+    // 지역 수양회는 host_country 가 없다. 그때는 참가자가 모두 같은 나라
+    // 사람이므로 제한하지 않는다.
+    const host = program.host_country;
+    const isDomestic = !host || (!!country && country === host);
+
     const offered = Array.isArray(program.discount_options) ? program.discount_options : [];
     const picked = discountRequested
       ? offered.find((o) => o.key === discountOptionKey) ?? null
       : null;
+
+    // 조용히 무시하지 않고 막는다. 무시하면 등록자는 신청한 줄 알고 기다리다가
+    // 아무 답도 못 받는다.
+    if (picked && !isDomestic) {
+      return res.status(422).json({
+        error: '할인은 개최국에서 참석하는 분만 신청할 수 있습니다',
+        hostCountry: host,
+      });
+    }
+
     const wantsDiscount = !!picked;
 
     // 기존 등록 여부 확인 (수정인지 신규인지 구분)

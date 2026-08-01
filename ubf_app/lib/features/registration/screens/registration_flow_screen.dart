@@ -256,6 +256,7 @@ class _RegistrationFlowScreenState
                   program['discount_options'] as List? ?? const [],
                 ),
                 currency: currency,
+                hostCountry: hostCountry,
               ),
             ),
         ];
