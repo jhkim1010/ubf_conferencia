@@ -1221,5 +1221,8 @@
   "flightNotBookedYet": "I haven't booked my flight yet",
   "flightNotBookedYetHint": "Just put the date you expect. You can add the flight later.",
   "flightEstimatedNotice": "This is recorded as an estimate, not a confirmed flight. Please come back and add the flight once you book it.",
-  "expFlightEstimated": "(estimate — not booked)"
+  "expFlightEstimated": "(estimate — not booked)",
+  "buddyFamilyTitle": "Are you travelling together?",
+  "buddyFamilyBody": "This person is a different gender. Rooms are same-gender by default; you can share only if you are family travelling together (spouse, parent and child, and so on). They still have to accept.",
+  "buddyFamilyConfirm": "Yes, we are family"
 }

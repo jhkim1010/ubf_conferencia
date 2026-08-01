@@ -3657,6 +3657,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'(estimate — not booked)'**
   String get expFlightEstimated;
+
+  /// No description provided for @buddyFamilyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you travelling together?'**
+  String get buddyFamilyTitle;
+
+  /// No description provided for @buddyFamilyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This person is a different gender. Rooms are same-gender by default; you can share only if you are family travelling together (spouse, parent and child, and so on). They still have to accept.'**
+  String get buddyFamilyBody;
+
+  /// No description provided for @buddyFamilyConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, we are family'**
+  String get buddyFamilyConfirm;
 }
 
 class _AppLocalizationsDelegate

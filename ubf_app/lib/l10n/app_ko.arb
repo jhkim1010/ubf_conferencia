@@ -592,5 +592,8 @@
   "flightNotBookedYet": "아직 항공권을 예매하지 않았습니다",
   "flightNotBookedYetHint": "예상 날짜만 적어 주십시오. 항공편은 나중에 추가할 수 있습니다.",
   "flightEstimatedNotice": "확정이 아니라 예상으로 기록됩니다. 예매한 뒤에 다시 들어와 항공편을 넣어 주십시오.",
-  "expFlightEstimated": "(예상 — 미예매)"
+  "expFlightEstimated": "(예상 — 미예매)",
+  "buddyFamilyTitle": "함께 오시는 분입니까?",
+  "buddyFamilyBody": "상대가 다른 성별입니다. 방은 기본적으로 같은 성별끼리 씁니다. 부부·부모자녀처럼 함께 오신 가족인 경우에만 같은 방을 쓸 수 있습니다. 상대의 수락도 필요합니다.",
+  "buddyFamilyConfirm": "예, 가족입니다"
 }

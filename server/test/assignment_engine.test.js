@@ -63,6 +63,114 @@ describe('connectedComponents', () => {
 
 describe('assignRooms', () => {
   const dorm = (id, capacity, gender) => ({ id, capacity, gender, roomType: 'dorm' });
+  const mixedRoom = (id, capacity, roomType = 'couple') => ({
+    id,
+    capacity,
+    gender: 'mixed',
+    roomType,
+  });
+
+  // ── 동행자는 성별이 달라도 같은 방 (022) ───────────────────
+  //
+  // 예전에는 성별을 넘는 간선을 조용히 버려서, 부부가 같은 방을 신청해도
+  // 각자 다른 단체실로 흩어졌다. couple·family 방을 만들어 둬도 자동 배정이
+  // dorm 만 보고 있어 한 번도 쓰이지 않았다.
+
+  test('동행으로 수락된 짝은 성별이 달라도 mixed 방에 함께 들어간다', () => {
+    const { assignments, unplaced } = assignRooms({
+      rooms: [dorm('m1', 4, 'M'), dorm('f1', 4, 'F'), mixedRoom('c1', 2)],
+      people: [
+        { id: 'husband', gender: 'M' },
+        { id: 'wife', gender: 'F' },
+      ],
+      roommateEdges: [['husband', 'wife']],
+      familyEdges: [['husband', 'wife']],
+    });
+    assert.equal(unplaced.length, 0);
+    assert.deepEqual(byPerson(assignments, 'roomId'), {
+      husband: 'c1',
+      wife: 'c1',
+    });
+  });
+
+  test('동행 관계가 아니면 이성 간선은 무시하고 각자 배정한다', () => {
+    const { assignments } = assignRooms({
+      rooms: [dorm('m1', 4, 'M'), dorm('f1', 4, 'F'), mixedRoom('c1', 2)],
+      people: [
+        { id: 'a', gender: 'M' },
+        { id: 'b', gender: 'F' },
+      ],
+      roommateEdges: [['a', 'b']], // familyEdges 없음
+    });
+    assert.deepEqual(byPerson(assignments, 'roomId'), { a: 'm1', b: 'f1' });
+  });
+
+  test('mixed 방이 없으면 억지로 넣지 않고 사유를 남긴다', () => {
+    // 억지로 단체실에 넣으면 혼숙이 된다. 담당자가 보고 방을 늘려야 한다.
+    const { assignments, unplaced } = assignRooms({
+      rooms: [dorm('m1', 4, 'M'), dorm('f1', 4, 'F')],
+      people: [
+        { id: 'husband', gender: 'M' },
+        { id: 'wife', gender: 'F' },
+      ],
+      roommateEdges: [['husband', 'wife']],
+      familyEdges: [['husband', 'wife']],
+    });
+    assert.equal(assignments.length, 0);
+    assert.deepEqual(
+      unplaced.map((u) => u.reason).sort(),
+      ['no_mixed_room', 'no_mixed_room'],
+    );
+  });
+
+  test('mixed 방은 동행용으로 남긴다 — 혼자 온 사람으로 채우지 않는다', () => {
+    // 부부용 2인실을 먼저 채워버리면 정작 필요한 짝이 들어갈 자리가 없어진다.
+    const { assignments } = assignRooms({
+      rooms: [mixedRoom('c1', 2), dorm('m1', 4, 'M')],
+      people: [{ id: 'solo', gender: 'M' }],
+      roommateEdges: [],
+    });
+    assert.deepEqual(byPerson(assignments, 'roomId'), { solo: 'm1' });
+  });
+
+  test('가족 3인(부·모·자녀)도 한 방에 묶인다', () => {
+    const { assignments, unplaced } = assignRooms({
+      rooms: [mixedRoom('fam1', 4, 'family'), dorm('m1', 8, 'M')],
+      people: [
+        { id: 'dad', gender: 'M' },
+        { id: 'mom', gender: 'F' },
+        { id: 'son', gender: 'M' },
+      ],
+      roommateEdges: [
+        ['dad', 'mom'],
+        ['dad', 'son'],
+      ],
+      familyEdges: [
+        ['dad', 'mom'],
+        ['dad', 'son'],
+      ],
+    });
+    assert.equal(unplaced.length, 0);
+    assert.deepEqual(byPerson(assignments, 'roomId'), {
+      dad: 'fam1',
+      mom: 'fam1',
+      son: 'fam1',
+    });
+  });
+
+  test('같은 성별 요청은 지금까지처럼 단체실에 함께 들어간다', () => {
+    const { assignments } = assignRooms({
+      rooms: [dorm('m1', 8, 'M'), mixedRoom('c1', 2)],
+      people: [
+        { id: 'a', gender: 'M' },
+        { id: 'b', gender: 'M' },
+      ],
+      roommateEdges: [['a', 'b']],
+      familyEdges: [],
+    });
+    assert.deepEqual(byPerson(assignments, 'roomId'), { a: 'm1', b: 'm1' });
+  });
+
 
   test('성별에 맞는 방에만 배정한다', () => {
     const { assignments } = assignRooms({
@@ -86,7 +194,9 @@ describe('assignRooms', () => {
     assert.equal(unplaced[0].registrationId, 'm');
   });
 
-  test('mixed 방은 자동 배정 대상이 아니다', () => {
+  test('단일 성별 묶음은 mixed 방에 들어가지 않는다', () => {
+    // 022 로 동행 짝은 mixed 방을 쓰게 됐지만, 혼자 온 사람을 혼숙 방에 넣는
+    // 것은 여전히 사람이 판단할 일이다.
     const { assignments } = assignRooms({
       rooms: [dorm('x', 4, 'mixed')],
       people: [{ id: 'm', gender: 'M' }],

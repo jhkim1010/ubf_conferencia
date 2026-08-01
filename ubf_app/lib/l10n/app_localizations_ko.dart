@@ -1915,4 +1915,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get expFlightEstimated => '(예상 — 미예매)';
+
+  @override
+  String get buddyFamilyTitle => '함께 오시는 분입니까?';
+
+  @override
+  String get buddyFamilyBody =>
+      '상대가 다른 성별입니다. 방은 기본적으로 같은 성별끼리 씁니다. 부부·부모자녀처럼 함께 오신 가족인 경우에만 같은 방을 쓸 수 있습니다. 상대의 수락도 필요합니다.';
+
+  @override
+  String get buddyFamilyConfirm => '예, 가족입니다';
 }

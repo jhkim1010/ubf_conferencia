@@ -21,6 +21,17 @@ async function loadAcceptedEdges(programId, kind) {
   return rows.map((r) => [r.a, r.b]);
 }
 
+// 동행(가족) 관계로 수락된 짝. 성별이 달라도 같은 방을 쓸 수 있는 근거다(022).
+async function loadFamilyEdges(programId) {
+  const rows = await sql`
+    SELECT from_registration_id AS a, to_registration_id AS b
+    FROM buddy_requests
+    WHERE program_id = ${programId}
+      AND kind = 'roommate' AND status = 'accepted' AND relation = 'family'
+  `;
+  return rows.map((r) => [r.a, r.b]);
+}
+
 // ── GET 숙소 배정 현황 ────────────────────────────────────────
 router.get('/:programId/rooms', requireAuth, requireProgramAdmin, async (req, res) => {
   const { programId } = req.params;
@@ -91,8 +102,14 @@ router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, async (r
       loadPeople(programId),
       loadAcceptedEdges(programId, 'roommate'),
     ]);
+    const familyEdges = await loadFamilyEdges(programId);
 
-    const { assignments, unplaced } = assignRooms({ rooms, people, roommateEdges });
+    const { assignments, unplaced } = assignRooms({
+      rooms,
+      people,
+      roommateEdges,
+      familyEdges,
+    });
 
     await sql.transaction(async (client) => {
       await client.query(

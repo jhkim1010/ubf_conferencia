@@ -41,7 +41,7 @@ router.get('/:programId/me', requireAuth, async (req, res) => {
     if (!me) return res.json({ sent: [], received: [] });
 
     const sent = await sql`
-      SELECT br.id, br.kind, br.status, br.to_registration_id AS "otherId",
+      SELECT br.id, br.kind, br.status, br.relation, br.to_registration_id AS "otherId",
              r.real_name AS "otherName", r.bible_name AS "otherBibleName",
              r.gender AS "otherGender", r.branch AS "otherBranch"
       FROM buddy_requests br
@@ -50,7 +50,7 @@ router.get('/:programId/me', requireAuth, async (req, res) => {
       ORDER BY br.created_at DESC
     `;
     const received = await sql`
-      SELECT br.id, br.kind, br.status, br.from_registration_id AS "otherId",
+      SELECT br.id, br.kind, br.status, br.relation, br.from_registration_id AS "otherId",
              r.real_name AS "otherName", r.bible_name AS "otherBibleName",
              r.gender AS "otherGender", r.branch AS "otherBranch"
       FROM buddy_requests br
@@ -72,6 +72,7 @@ router.post('/:programId', requireAuth, async (req, res) => {
   if (!toRegistrationId || !['roommate', 'group'].includes(kind)) {
     return res.status(400).json({ error: 'toRegistrationId와 유효한 kind가 필요합니다' });
   }
+  const relation = req.body.relation === 'family' ? 'family' : 'peer';
 
   try {
     const me = await myRegistration(req.user.userId, programId);
@@ -86,19 +87,28 @@ router.post('/:programId', requireAuth, async (req, res) => {
     `;
     if (!target) return res.status(404).json({ error: '대상을 찾을 수 없습니다' });
 
-    // 룸메이트 요청은 같은 성별만 (단체실 혼숙 방침) — 부부/가족은 동반자 기능으로 처리
-    if (kind === 'roommate' && me.gender && target.gender && me.gender !== target.gender) {
+    // 룸메이트 요청: 같은 성별이면 그대로, 성별이 다르면 동행 관계를 밝혀야
+    // 한다(022). 부부·부모자녀처럼 함께 온 사람은 같은 방을 쓸 수 있어야 한다.
+    //
+    // 어느 쪽이든 상대의 수락이 있어야 성립한다. 그 상호 동의가 성별이 다른
+    // 방 배정을 정당화하는 유일한 근거이므로, 여기서 문을 열더라도 수락 절차는
+    // 그대로 둔다.
+    const crossGender =
+      kind === 'roommate' && me.gender && target.gender && me.gender !== target.gender;
+    if (crossGender && relation !== 'family') {
       return res.status(422).json({
-        error: '룸메이트는 같은 성별에게만 요청할 수 있습니다',
+        error: '성별이 다른 사람과 같은 방을 쓰려면 동행(가족) 관계여야 합니다',
+        needsRelation: 'family',
       });
     }
 
     const [created] = await sql`
-      INSERT INTO buddy_requests (program_id, from_registration_id, to_registration_id, kind)
-      VALUES (${programId}, ${me.id}, ${toRegistrationId}, ${kind})
+      INSERT INTO buddy_requests
+        (program_id, from_registration_id, to_registration_id, kind, relation)
+      VALUES (${programId}, ${me.id}, ${toRegistrationId}, ${kind}, ${relation})
       ON CONFLICT (from_registration_id, to_registration_id, kind)
-      DO UPDATE SET status = 'pending', updated_at = NOW()
-      RETURNING id, kind, status
+      DO UPDATE SET status = 'pending', relation = EXCLUDED.relation, updated_at = NOW()
+      RETURNING id, kind, status, relation
     `;
     res.status(201).json(created);
   } catch (err) {

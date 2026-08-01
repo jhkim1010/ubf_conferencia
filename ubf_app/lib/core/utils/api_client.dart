@@ -551,15 +551,23 @@ class ApiClient {
   }
 
   // kind: 'roommate' | 'group'
+  // relation: 'peer' | 'family'
+  //   성별이 다른 사람에게 룸메이트를 요청하려면 'family' 여야 한다(022).
+  //   서버는 상대의 수락이 있어야만 실제로 같은 방에 넣는다.
   static Future<void> sendBuddyRequest(
     String programId,
     String toRegistrationId,
-    String kind,
-  ) async {
+    String kind, {
+    String relation = 'peer',
+  }) async {
     final response = await http.post(
       _uri('/buddy-requests/$programId'),
       headers: await _headers(),
-      body: jsonEncode({'toRegistrationId': toRegistrationId, 'kind': kind}),
+      body: jsonEncode({
+        'toRegistrationId': toRegistrationId,
+        'kind': kind,
+        'relation': relation,
+      }),
     );
     _decode(response);
   }

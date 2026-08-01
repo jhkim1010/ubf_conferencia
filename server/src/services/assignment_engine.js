@@ -28,44 +28,86 @@ export function connectedComponents(nodeIds, edges) {
 }
 
 // ── 숙소 자동 배정 ────────────────────────────────────────────
-// 단체실(dorm)만 대상. 같은 성별끼리, 묶음은 쪼개지 않고, 정원 준수(FFD).
-// rooms: [{id, capacity, gender('M'|'F'|'mixed'), roomType}]
+//
+// 같은 성별끼리 단체실(dorm)에 넣는 것이 기본이다. 다만 **동행 관계로 수락된
+// 짝은 성별이 달라도 함께 둔다** — 부부나 부모·자녀가 같은 방을 쓸 수 없으면
+// 안 되기 때문이다(022). 성별이 섞인 묶음은 mixed 방(couple·family)에만
+// 들어간다.
+//
+// 예전에는 성별을 넘는 간선을 조용히 버렸고, couple·family 방은 아무리 만들어
+// 둬도 한 번도 쓰이지 않았다.
+//
+// 묶음은 쪼개지 않고, 큰 묶음부터 채운다(FFD). 자리가 없으면 억지로 넣지 않고
+// 사유와 함께 남긴다 — 담당자가 보고 방을 늘리는 편이 낫다.
+//
+// rooms: [{id, capacity, gender('M'|'F'|'mixed'), roomType('dorm'|'couple'|'family')}]
 // people: [{id, gender('M'|'F'|null)}]
 // roommateEdges: [fromId, toId][] (수락된 것만)
+// familyEdges:   [fromId, toId][] (수락 + 동행 관계. roommateEdges 의 부분집합)
 // 반환: { assignments: [{roomId, registrationId}], unplaced: [{registrationId, reason}] }
-export function assignRooms({ rooms, people, roommateEdges }) {
+export function assignRooms({ rooms, people, roommateEdges, familyEdges = [] }) {
   const assignments = [];
   const unplaced = [];
   const genderOf = new Map(people.map((p) => [p.id, p.gender]));
 
-  for (const G of ['M', 'F']) {
-    const ids = people.filter((p) => p.gender === G).map((p) => p.id);
-    // 이 성별 내부의 간선만으로 묶음 계산
-    const idSet = new Set(ids);
-    const edges = roommateEdges.filter(([a, b]) => idSet.has(a) && idSet.has(b));
-    let units = connectedComponents(ids, edges);
-    // 큰 묶음 먼저 (first-fit decreasing)
-    units.sort((a, b) => b.length - a.length);
+  // 성별이 있는 사람만 자동 배정 대상이다.
+  const placeable = people.filter((p) => p.gender === 'M' || p.gender === 'F');
+  const placeableIds = placeable.map((p) => p.id);
+  const idSet = new Set(placeableIds);
 
-    // 이 성별의 단체실 (남은 정원 추적)
-    const dorms = rooms
-      .filter((r) => r.roomType === 'dorm' && r.gender === G)
-      .map((r) => ({ id: r.id, remaining: r.capacity }));
+  const key = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+  const familySet = new Set(familyEdges.map(([a, b]) => key(a, b)));
 
-    for (const unit of units) {
-      const room = dorms.find((d) => d.remaining >= unit.length);
-      if (!room) {
-        for (const id of unit) {
-          unplaced.push({
-            registrationId: id,
-            reason: unit.length > 1 ? 'unit_too_large_or_full' : 'no_space',
-          });
-        }
-        continue;
+  // 쓸 수 있는 간선만 남긴다.
+  //   · 같은 성별            → 그대로
+  //   · 성별이 다르면        → 동행으로 수락된 짝만
+  // 동행이 아닌 이성 간선은 여기서 버린다. 버리는 것이 맞다 — 요청 단계에서
+  // 이미 막고 있고(buddy_requests), 옛 데이터가 남아 있을 수 있다.
+  const edges = roommateEdges.filter(([a, b]) => {
+    if (!idSet.has(a) || !idSet.has(b)) return false;
+    if (genderOf.get(a) === genderOf.get(b)) return true;
+    return familySet.has(key(a, b));
+  });
+
+  let units = connectedComponents(placeableIds, edges);
+  units.sort((a, b) => b.length - a.length); // 큰 묶음 먼저
+
+  // 남은 정원을 추적한다. 성별이 섞인 묶음은 mixed 방만 쓸 수 있다.
+  const pool = rooms.map((r) => ({
+    id: r.id,
+    remaining: r.capacity,
+    gender: r.gender,
+    roomType: r.roomType,
+  }));
+
+  for (const unit of units) {
+    const genders = new Set(unit.map((id) => genderOf.get(id)));
+    const mixed = genders.size > 1;
+
+    const room = pool.find((d) => {
+      if (d.remaining < unit.length) return false;
+      if (mixed) return d.gender === 'mixed';
+      // 단일 성별 묶음은 그 성별의 단체실에 넣는다. mixed 방은 동행용으로
+      // 남겨 둔다 — 부부용 2인실을 혼자 온 사람으로 채우면 정작 필요한 짝이
+      // 들어갈 자리가 없어진다.
+      return d.roomType === 'dorm' && d.gender === [...genders][0];
+    });
+
+    if (!room) {
+      for (const id of unit) {
+        unplaced.push({
+          registrationId: id,
+          reason: mixed
+            ? 'no_mixed_room'
+            : unit.length > 1
+              ? 'unit_too_large_or_full'
+              : 'no_space',
+        });
       }
-      room.remaining -= unit.length;
-      for (const id of unit) assignments.push({ roomId: room.id, registrationId: id });
+      continue;
     }
+    room.remaining -= unit.length;
+    for (const id of unit) assignments.push({ roomId: room.id, registrationId: id });
   }
 
   // 성별 미기입자는 자동 배정 대상 제외
@@ -74,7 +116,6 @@ export function assignRooms({ rooms, people, roommateEdges }) {
       unplaced.push({ registrationId: p.id, reason: 'no_gender' });
     }
   }
-  void genderOf;
   return { assignments, unplaced };
 }
 

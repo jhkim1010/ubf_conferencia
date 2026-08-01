@@ -592,5 +592,8 @@
   "flightNotBookedYet": "Todavía no he comprado mi vuelo",
   "flightNotBookedYetHint": "Indica solo la fecha prevista. Puedes añadir el vuelo más adelante.",
   "flightEstimatedNotice": "Se guarda como estimación, no como vuelo confirmado. Vuelve a añadir el vuelo cuando lo compres.",
-  "expFlightEstimated": "(estimación — sin comprar)"
+  "expFlightEstimated": "(estimación — sin comprar)",
+  "buddyFamilyTitle": "¿Vienen juntos?",
+  "buddyFamilyBody": "Esta persona es de otro género. Las habitaciones son del mismo género por defecto; solo pueden compartir si son familia que viaja junta (cónyuge, padre e hijo, etc.). La otra persona también debe aceptar.",
+  "buddyFamilyConfirm": "Sí, somos familia"
 }

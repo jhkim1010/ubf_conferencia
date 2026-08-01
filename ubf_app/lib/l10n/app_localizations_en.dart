@@ -1957,4 +1957,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expFlightEstimated => '(estimate — not booked)';
+
+  @override
+  String get buddyFamilyTitle => 'Are you travelling together?';
+
+  @override
+  String get buddyFamilyBody =>
+      'This person is a different gender. Rooms are same-gender by default; you can share only if you are family travelling together (spouse, parent and child, and so on). They still have to accept.';
+
+  @override
+  String get buddyFamilyConfirm => 'Yes, we are family';
 }

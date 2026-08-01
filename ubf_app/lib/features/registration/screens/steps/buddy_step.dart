@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/api_client.dart';
 import '../../providers/buddy_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import '../../providers/registration_provider.dart';
 import '../../../../core/constants/world_countries.dart';
 
 // PRD F3 — 룸메이트·말씀조 지목(요청) + 받은 요청 수락/거절
@@ -24,10 +25,65 @@ class _BuddyStepState extends ConsumerState<BuddyStep> {
     ref.invalidate(buddyCandidatesProvider(widget.programId));
   }
 
-  Future<void> _send(String toId, String kind) async {
+  // 룸메이트 요청. 성별이 다르면 동행(가족) 관계인지 먼저 확인한다.
+  //
+  // 서버가 거절할 때까지 기다리지 않고 여기서 물어보는 이유: 거절 메시지만
+  // 보여주면 "왜 안 되는지"만 알고 "어떻게 하면 되는지"는 모른 채 막힌다.
+  Future<void> _roommate(Map<String, dynamic> candidate) async {
+    final l10n = AppLocalizations.of(context)!;
+    final myGender = ref
+        .read(registrationFormProvider(widget.programId))
+        .gender;
+    final theirGender = candidate['gender'] as String?;
+    final toId = candidate['id'] as String;
+
+    final crossGender =
+        myGender != null &&
+        theirGender != null &&
+        myGender.isNotEmpty &&
+        theirGender.isNotEmpty &&
+        myGender != theirGender;
+
+    if (!crossGender) {
+      await _send(toId, 'roommate');
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(l10n.buddyFamilyTitle),
+        content: Text(l10n.buddyFamilyBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.actionCancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.buddyFamilyConfirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _send(toId, 'roommate', relation: 'family');
+    }
+  }
+
+  Future<void> _send(
+    String toId,
+    String kind, {
+    String relation = 'peer',
+  }) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      await ApiClient.sendBuddyRequest(widget.programId, toId, kind);
+      await ApiClient.sendBuddyRequest(
+        widget.programId,
+        toId,
+        kind,
+        relation: relation,
+      );
       _refresh();
       if (mounted) {
         ScaffoldMessenger.of(
@@ -190,7 +246,7 @@ class _BuddyStepState extends ConsumerState<BuddyStep> {
                   .map(
                     (c) => _CandidateTile(
                       candidate: c,
-                      onRoommate: () => _send(c['id'] as String, 'roommate'),
+                      onRoommate: () => _roommate(c),
                       onGroup: () => _send(c['id'] as String, 'group'),
                     ),
                   )
