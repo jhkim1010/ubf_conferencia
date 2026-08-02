@@ -4017,6 +4017,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{before} night(s) before · {after} night(s) after'**
   String summaryHotelNights(int before, int after);
+
+  /// No description provided for @hotelComputed.
+  ///
+  /// In en, this message translates to:
+  /// **'You need {before} night(s) before the conference and {after} night(s) after.'**
+  String hotelComputed(int before, int after);
+
+  /// No description provided for @hotelComputedBeforeOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'You need {before} night(s) before the conference. We could not work out the nights after — your return flight is not entered yet.'**
+  String hotelComputedBeforeOnly(int before);
+
+  /// No description provided for @hotelComputedAfterOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'You need {after} night(s) after. We could not work out the nights before — your arrival flight is not entered yet.'**
+  String hotelComputedAfterOnly(int after);
+
+  /// No description provided for @hotelComputedNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your flights arrive and leave within the conference, so you do not need a hotel around it.'**
+  String get hotelComputedNone;
+
+  /// No description provided for @hotelNoFlightYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your flights and we will work out how many nights you need. You can also set them yourself below.'**
+  String get hotelNoFlightYet;
+
+  /// No description provided for @hotelPickPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose the option you want:'**
+  String get hotelPickPrompt;
+
+  /// No description provided for @hotelAdjustHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted from your flights and the conference dates. Adjust below if it is wrong.'**
+  String get hotelAdjustHint;
+
+  /// No description provided for @hotelRecalc.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalculate from my flights'**
+  String get hotelRecalc;
 }
 
 class _AppLocalizationsDelegate

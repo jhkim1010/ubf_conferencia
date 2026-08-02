@@ -2167,4 +2167,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String summaryHotelNights(int before, int after) {
     return '$before night(s) before · $after night(s) after';
   }
+
+  @override
+  String hotelComputed(int before, int after) {
+    return 'You need $before night(s) before the conference and $after night(s) after.';
+  }
+
+  @override
+  String hotelComputedBeforeOnly(int before) {
+    return 'You need $before night(s) before the conference. We could not work out the nights after — your return flight is not entered yet.';
+  }
+
+  @override
+  String hotelComputedAfterOnly(int after) {
+    return 'You need $after night(s) after. We could not work out the nights before — your arrival flight is not entered yet.';
+  }
+
+  @override
+  String get hotelComputedNone =>
+      'Your flights arrive and leave within the conference, so you do not need a hotel around it.';
+
+  @override
+  String get hotelNoFlightYet =>
+      'Enter your flights and we will work out how many nights you need. You can also set them yourself below.';
+
+  @override
+  String get hotelPickPrompt => 'Please choose the option you want:';
+
+  @override
+  String get hotelAdjustHint =>
+      'Counted from your flights and the conference dates. Adjust below if it is wrong.';
+
+  @override
+  String get hotelRecalc => 'Recalculate from my flights';
 }

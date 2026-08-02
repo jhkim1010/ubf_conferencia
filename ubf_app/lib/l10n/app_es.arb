@@ -666,5 +666,13 @@
   "hotelAddLevel": "Agregar nivel",
   "hotelNoLevelsYet": "Aún no agregaste niveles",
   "summarySectionHotel": "Hotel antes / después",
-  "summaryHotelNights": "{before} antes · {after} después"
+  "summaryHotelNights": "{before} antes · {after} después",
+  "hotelComputed": "Necesitas {before} noche(s) antes del retiro y {after} noche(s) después.",
+  "hotelComputedBeforeOnly": "Necesitas {before} noche(s) antes del retiro. No pudimos calcular las noches posteriores: falta tu vuelo de regreso.",
+  "hotelComputedAfterOnly": "Necesitas {after} noche(s) después. No pudimos calcular las noches previas: falta tu vuelo de llegada.",
+  "hotelComputedNone": "Tus vuelos llegan y salen dentro del retiro, así que no necesitas hotel alrededor.",
+  "hotelNoFlightYet": "Carga tus vuelos y calcularemos cuántas noches necesitas. También puedes indicarlas abajo.",
+  "hotelPickPrompt": "Elige la opción que prefieras:",
+  "hotelAdjustHint": "Calculado con tus vuelos y las fechas del retiro. Corrígelo abajo si no coincide.",
+  "hotelRecalc": "Recalcular con mis vuelos"
 }

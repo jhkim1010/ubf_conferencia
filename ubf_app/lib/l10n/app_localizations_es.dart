@@ -2179,4 +2179,37 @@ class AppLocalizationsEs extends AppLocalizations {
   String summaryHotelNights(int before, int after) {
     return '$before antes · $after después';
   }
+
+  @override
+  String hotelComputed(int before, int after) {
+    return 'Necesitas $before noche(s) antes del retiro y $after noche(s) después.';
+  }
+
+  @override
+  String hotelComputedBeforeOnly(int before) {
+    return 'Necesitas $before noche(s) antes del retiro. No pudimos calcular las noches posteriores: falta tu vuelo de regreso.';
+  }
+
+  @override
+  String hotelComputedAfterOnly(int after) {
+    return 'Necesitas $after noche(s) después. No pudimos calcular las noches previas: falta tu vuelo de llegada.';
+  }
+
+  @override
+  String get hotelComputedNone =>
+      'Tus vuelos llegan y salen dentro del retiro, así que no necesitas hotel alrededor.';
+
+  @override
+  String get hotelNoFlightYet =>
+      'Carga tus vuelos y calcularemos cuántas noches necesitas. También puedes indicarlas abajo.';
+
+  @override
+  String get hotelPickPrompt => 'Elige la opción que prefieras:';
+
+  @override
+  String get hotelAdjustHint =>
+      'Calculado con tus vuelos y las fechas del retiro. Corrígelo abajo si no coincide.';
+
+  @override
+  String get hotelRecalc => 'Recalcular con mis vuelos';
 }

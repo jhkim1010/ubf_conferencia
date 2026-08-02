@@ -2121,4 +2121,35 @@ class AppLocalizationsKo extends AppLocalizations {
   String summaryHotelNights(int before, int after) {
     return '전 $before박 · 후 $after박';
   }
+
+  @override
+  String hotelComputed(int before, int after) {
+    return '수양회 전 $before박, 수양회 이후 $after박이 더 필요합니다.';
+  }
+
+  @override
+  String hotelComputedBeforeOnly(int before) {
+    return '수양회 전 $before박이 더 필요합니다. 이후 박수는 돌아가는 항공편이 없어 계산하지 못했습니다.';
+  }
+
+  @override
+  String hotelComputedAfterOnly(int after) {
+    return '수양회 이후 $after박이 더 필요합니다. 전 박수는 오시는 항공편이 없어 계산하지 못했습니다.';
+  }
+
+  @override
+  String get hotelComputedNone => '항공편이 수양회 기간 안에 오가므로 전후로 호텔이 필요하지 않습니다.';
+
+  @override
+  String get hotelNoFlightYet =>
+      '항공편을 적어 주시면 몇 박이 필요한지 계산해 드립니다. 아래에서 직접 정하셔도 됩니다.';
+
+  @override
+  String get hotelPickPrompt => '다음 가격 옵션 중 원하시는 것을 선택해 주십시오.';
+
+  @override
+  String get hotelAdjustHint => '항공편과 수양회 일정으로 계산한 값입니다. 다르면 아래에서 고쳐 주십시오.';
+
+  @override
+  String get hotelRecalc => '항공편 기준으로 다시 계산';
 }

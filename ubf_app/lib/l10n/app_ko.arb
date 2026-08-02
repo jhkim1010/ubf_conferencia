@@ -666,5 +666,13 @@
   "hotelAddLevel": "수준 추가",
   "hotelNoLevelsYet": "아직 추가한 수준이 없습니다",
   "summarySectionHotel": "수양회 전후 숙박",
-  "summaryHotelNights": "전 {before}박 · 후 {after}박"
+  "summaryHotelNights": "전 {before}박 · 후 {after}박",
+  "hotelComputed": "수양회 전 {before}박, 수양회 이후 {after}박이 더 필요합니다.",
+  "hotelComputedBeforeOnly": "수양회 전 {before}박이 더 필요합니다. 이후 박수는 돌아가는 항공편이 없어 계산하지 못했습니다.",
+  "hotelComputedAfterOnly": "수양회 이후 {after}박이 더 필요합니다. 전 박수는 오시는 항공편이 없어 계산하지 못했습니다.",
+  "hotelComputedNone": "항공편이 수양회 기간 안에 오가므로 전후로 호텔이 필요하지 않습니다.",
+  "hotelNoFlightYet": "항공편을 적어 주시면 몇 박이 필요한지 계산해 드립니다. 아래에서 직접 정하셔도 됩니다.",
+  "hotelPickPrompt": "다음 가격 옵션 중 원하시는 것을 선택해 주십시오.",
+  "hotelAdjustHint": "항공편과 수양회 일정으로 계산한 값입니다. 다르면 아래에서 고쳐 주십시오.",
+  "hotelRecalc": "항공편 기준으로 다시 계산"
 }

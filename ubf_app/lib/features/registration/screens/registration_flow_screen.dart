@@ -254,6 +254,11 @@ class _RegistrationFlowScreenState
                   program['hotel_options'] as List? ?? const [],
                 ),
                 currency: currency,
+                // 항공편으로 박수를 계산하려면 수양회 일정과 투어 종료일이
+                // 필요하다. 투어가 수양회보다 늦게 끝나면 그 뒤부터 호텔이다.
+                programStart: program['start_date'],
+                programEnd: program['end_date'],
+                tours: options,
               ),
             ),
           (

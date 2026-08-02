@@ -1369,5 +1369,37 @@
         "type": "int"
       }
     }
-  }
+  },
+  "hotelComputed": "You need {before} night(s) before the conference and {after} night(s) after.",
+  "@hotelComputed": {
+    "placeholders": {
+      "before": {
+        "type": "int"
+      },
+      "after": {
+        "type": "int"
+      }
+    }
+  },
+  "hotelComputedBeforeOnly": "You need {before} night(s) before the conference. We could not work out the nights after — your return flight is not entered yet.",
+  "@hotelComputedBeforeOnly": {
+    "placeholders": {
+      "before": {
+        "type": "int"
+      }
+    }
+  },
+  "hotelComputedAfterOnly": "You need {after} night(s) after. We could not work out the nights before — your arrival flight is not entered yet.",
+  "@hotelComputedAfterOnly": {
+    "placeholders": {
+      "after": {
+        "type": "int"
+      }
+    }
+  },
+  "hotelComputedNone": "Your flights arrive and leave within the conference, so you do not need a hotel around it.",
+  "hotelNoFlightYet": "Enter your flights and we will work out how many nights you need. You can also set them yourself below.",
+  "hotelPickPrompt": "Please choose the option you want:",
+  "hotelAdjustHint": "Counted from your flights and the conference dates. Adjust below if it is wrong.",
+  "hotelRecalc": "Recalculate from my flights"
 }
