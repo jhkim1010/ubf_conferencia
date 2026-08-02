@@ -674,5 +674,9 @@
   "hotelNoFlightYet": "Carga tus vuelos y calcularemos cuántas noches necesitas. También puedes indicarlas abajo.",
   "hotelPickPrompt": "Elige la opción que prefieras:",
   "hotelAdjustHint": "Calculado con tus vuelos y las fechas del retiro. Corrígelo abajo si no coincide.",
-  "hotelRecalc": "Recalcular con mis vuelos"
+  "hotelRecalc": "Recalcular con mis vuelos",
+  "pcInviteLink": "Enlace de invitación",
+  "pcInviteLinkHelp": "Envía esto en lugar del UUID. Al abrirlo, la persona entra directo a este retiro, sin escribir ningún código.",
+  "pcCopyLink": "Copiar enlace",
+  "pcLinkCopied": "Enlace de invitación copiado"
 }

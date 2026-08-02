@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/providers/locale_provider.dart';
+import 'core/utils/join_link.dart';
+import 'core/utils/join_query_cleanup.dart';
 import 'l10n/app_localizations.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/screens/login_screen.dart';
@@ -45,6 +47,14 @@ class _UbfAppState extends ConsumerState<UbfApp> {
     _router = GoRouter(
       initialLocation: '/home',
       redirect: (_, state) {
+        // 초대 링크(?program=<uuid>)로 들어왔으면 목적지를 기억해 둔다.
+        //
+        // **인증 검사보다 먼저 본다.** 처음 오는 사람은 반드시 로그인과
+        // 프로필 입력을 지나가는데, 그 사이에 주소가 갈아치워지므로
+        // 여기서 붙잡지 않으면 목적지를 잃고 결국 UUID 를 손으로 묻게 된다.
+        final fromLink = programIdFromQuery(state.uri.queryParameters);
+        if (fromLink != null) PendingJoin.remember(fromLink);
+
         final auth = ref.read(authProvider);
         if (auth.isLoading) return '/loading';
 
@@ -58,6 +68,19 @@ class _UbfAppState extends ConsumerState<UbfApp> {
         // 로그인 + 프로필 미완성 → 프로필 입력 화면
         if (!auth.profileCompleted) {
           return loc == '/profile-setup' ? null : '/profile-setup';
+        }
+
+        // 준비가 끝났으면 기억해 둔 수양회로 곧장 보낸다.
+        // take() 는 꺼내면서 지운다 — 남겨 두면 이후에 홈으로 가려 할 때마다
+        // 등록 화면으로 끌려간다.
+        if (PendingJoin.isPending) {
+          final id = PendingJoin.take();
+          if (id != null) {
+            // 다 썼으니 주소에서도 지운다. 남겨 두면 새로고침할 때마다
+            // 여기로 다시 끌려온다(웹은 해시 전략이라 쿼리가 계속 남는다).
+            clearJoinQuery();
+            return '/registration/$id';
+          }
         }
 
         // 로그인 + 프로필 완료 → 불필요한 화면에서 홈으로

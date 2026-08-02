@@ -1401,5 +1401,9 @@
   "hotelNoFlightYet": "Enter your flights and we will work out how many nights you need. You can also set them yourself below.",
   "hotelPickPrompt": "Please choose the option you want:",
   "hotelAdjustHint": "Counted from your flights and the conference dates. Adjust below if it is wrong.",
-  "hotelRecalc": "Recalculate from my flights"
+  "hotelRecalc": "Recalculate from my flights",
+  "pcInviteLink": "Invite link",
+  "pcInviteLinkHelp": "Send this instead of the UUID. Opening it takes the person straight to this conference — no code to type in.",
+  "pcCopyLink": "Copy link",
+  "pcLinkCopied": "Invite link copied"
 }

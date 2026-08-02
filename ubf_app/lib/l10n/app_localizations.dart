@@ -4065,6 +4065,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recalculate from my flights'**
   String get hotelRecalc;
+
+  /// No description provided for @pcInviteLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link'**
+  String get pcInviteLink;
+
+  /// No description provided for @pcInviteLinkHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send this instead of the UUID. Opening it takes the person straight to this conference — no code to type in.'**
+  String get pcInviteLinkHelp;
+
+  /// No description provided for @pcCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get pcCopyLink;
+
+  /// No description provided for @pcLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link copied'**
+  String get pcLinkCopied;
 }
 
 class _AppLocalizationsDelegate

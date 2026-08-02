@@ -2212,4 +2212,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get hotelRecalc => 'Recalcular con mis vuelos';
+
+  @override
+  String get pcInviteLink => 'Enlace de invitación';
+
+  @override
+  String get pcInviteLinkHelp =>
+      'Envía esto en lugar del UUID. Al abrirlo, la persona entra directo a este retiro, sin escribir ningún código.';
+
+  @override
+  String get pcCopyLink => 'Copiar enlace';
+
+  @override
+  String get pcLinkCopied => 'Enlace de invitación copiado';
 }

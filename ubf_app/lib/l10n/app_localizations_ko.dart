@@ -2152,4 +2152,17 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get hotelRecalc => '항공편 기준으로 다시 계산';
+
+  @override
+  String get pcInviteLink => '초대 링크';
+
+  @override
+  String get pcInviteLinkHelp =>
+      'UUID 대신 이것을 보내십시오. 링크를 누르면 이 수양회로 바로 들어갑니다 — 참가자가 코드를 옮겨 적을 필요가 없습니다.';
+
+  @override
+  String get pcCopyLink => '링크 복사';
+
+  @override
+  String get pcLinkCopied => '초대 링크를 복사했습니다';
 }

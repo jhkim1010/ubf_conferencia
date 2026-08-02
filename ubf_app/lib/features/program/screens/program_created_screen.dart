@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/join_link.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mana/l10n/app_localizations.dart';
@@ -91,6 +92,57 @@ class ProgramCreatedScreen extends StatelessWidget {
                           context,
                         ).showSnackBar(SnackBar(content: Text(l10n.pcCopied)));
                       },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // 초대 링크. UUID 를 손으로 옮겨 적게 하면 반드시 틀린다 —
+              // 36자에 하이픈이 섞여 있고 메신저로 보내면 줄바꿈이 낀다.
+              // 링크를 먼저 보여주고 UUID 는 그 아래 참고로 둔다.
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green[200]!),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      l10n.pcInviteLink,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: Colors.green[800],
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SelectableText(
+                      joinLinkFor(programId),
+                      style: const TextStyle(fontSize: 12.5),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      icon: const Icon(Icons.link, size: 18),
+                      label: Text(l10n.pcCopyLink),
+                      onPressed: () {
+                        Clipboard.setData(
+                          ClipboardData(text: joinLinkFor(programId)),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.pcLinkCopied)),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.pcInviteLinkHelp,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[700],
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
