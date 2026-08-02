@@ -19,6 +19,7 @@ import 'steps/buddy_step.dart';
 import 'steps/companion_step.dart';
 import 'steps/volunteer_resources_step.dart';
 import 'steps/study_language_step.dart';
+import 'steps/hotel_step.dart';
 import 'package:mana/l10n/app_localizations.dart';
 
 // 등록 폼 - PageView 기반
@@ -241,6 +242,20 @@ class _RegistrationFlowScreenState
             title: l10n.regStepStudyLang,
             widget: StudyLanguageStep(programId: widget.programId),
           ),
+          // 수양회 전후 숙박(028). **외국에서 오는 사람에게만 묻는다** —
+          // 개최국 참가자는 전후에 집으로 가므로 물어볼 것이 없고,
+          // 서버도 그 선택을 떨어뜨린다(services/hotel.js).
+          if (!sameCountryAsHost && hostCountry != null)
+            (
+              title: l10n.regStepHotel,
+              widget: HotelStep(
+                programId: widget.programId,
+                options: List<Map<String, dynamic>>.from(
+                  program['hotel_options'] as List? ?? const [],
+                ),
+                currency: currency,
+              ),
+            ),
           (
             title: l10n.regStepVolunteer,
             widget: VolunteerResourcesStep(

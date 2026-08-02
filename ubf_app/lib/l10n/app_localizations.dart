@@ -3885,6 +3885,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save the PDF: {detail}'**
   String mealsDownloadFailed(String detail);
+
+  /// No description provided for @regStepHotel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotel'**
+  String get regStepHotel;
+
+  /// Registration step asking about hotel stay before/after the conference (028)
+  ///
+  /// In en, this message translates to:
+  /// **'Staying before or after?'**
+  String get hotelTitle;
+
+  /// No description provided for @hotelBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If you arrive early or stay on after the tour, you will need a hotel. Pick the level you want and how many nights.'**
+  String get hotelBody;
+
+  /// No description provided for @hotelNoOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'The organisers have not set hotel levels yet. You can come back to this later.'**
+  String get hotelNoOptions;
+
+  /// No description provided for @hotelNone.
+  ///
+  /// In en, this message translates to:
+  /// **'I don\'t need a hotel'**
+  String get hotelNone;
+
+  /// No description provided for @hotelPerNight.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} / night'**
+  String hotelPerNight(String amount);
+
+  /// No description provided for @hotelPriceTbd.
+  ///
+  /// In en, this message translates to:
+  /// **'To be announced'**
+  String get hotelPriceTbd;
+
+  /// No description provided for @hotelNightsBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Nights before the conference'**
+  String get hotelNightsBefore;
+
+  /// No description provided for @hotelNightsAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Nights after the tour'**
+  String get hotelNightsAfter;
+
+  /// No description provided for @hotelNightsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}'**
+  String hotelNightsCount(int count);
+
+  /// No description provided for @hotelEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated hotel cost'**
+  String get hotelEstimate;
+
+  /// No description provided for @hotelNotInFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Not included in your conference fee. You settle this separately.'**
+  String get hotelNotInFee;
+
+  /// No description provided for @hotelSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotel levels (before / after)'**
+  String get hotelSectionTitle;
+
+  /// No description provided for @hotelSectionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Only attendees coming from abroad see these. They pick a level and the number of nights.'**
+  String get hotelSectionHelp;
+
+  /// No description provided for @hotelLevelKo.
+  ///
+  /// In en, this message translates to:
+  /// **'Level (Korean)'**
+  String get hotelLevelKo;
+
+  /// No description provided for @hotelLevelEn.
+  ///
+  /// In en, this message translates to:
+  /// **'Level (English)'**
+  String get hotelLevelEn;
+
+  /// No description provided for @hotelLevelEs.
+  ///
+  /// In en, this message translates to:
+  /// **'Level (Spanish)'**
+  String get hotelLevelEs;
+
+  /// No description provided for @hotelPricePerNightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per night'**
+  String get hotelPricePerNightLabel;
+
+  /// No description provided for @hotelAddLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add level'**
+  String get hotelAddLevel;
+
+  /// No description provided for @hotelNoLevelsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No levels added yet'**
+  String get hotelNoLevelsYet;
+
+  /// No description provided for @summarySectionHotel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotel before / after'**
+  String get summarySectionHotel;
+
+  /// No description provided for @summaryHotelNights.
+  ///
+  /// In en, this message translates to:
+  /// **'{before} night(s) before · {after} night(s) after'**
+  String summaryHotelNights(int before, int after);
 }
 
 class _AppLocalizationsDelegate

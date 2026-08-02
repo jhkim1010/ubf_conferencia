@@ -5,6 +5,7 @@ import '../../../core/utils/api_client.dart';
 import '../providers/program_provider.dart';
 import '../widgets/fee_section.dart';
 import '../widgets/cohort_policy_section.dart';
+import '../widgets/hotel_section.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 
@@ -63,6 +64,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
   final _feeBasicDescController = TextEditingController();
   final _feePremiumDescController = TextEditingController();
   List<Map<String, dynamic>> _discountOptions = [];
+  List<Map<String, dynamic>> _hotelOptions = [];
 
   // 이 수양회의 통화. 등록자 전원이 이 단위로 본다.
   Currency _currency = Currency.usd;
@@ -168,6 +170,13 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
           .map((o) => Map<String, dynamic>.from(o as Map))
           .toList();
     }
+
+    final rawHotels = program['hotel_options'];
+    if (rawHotels is List) {
+      _hotelOptions = rawHotels
+          .map((o) => Map<String, dynamic>.from(o as Map))
+          .toList();
+    }
   }
 
   void _onProgramTypeChanged(String type) {
@@ -252,6 +261,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
         'currency': _currency.code,
         'smallCohortPolicy': _cohortPolicy,
         'minTeamSize': _minTeamSize,
+        'hotelOptions': _hotelOptions,
       });
 
       if (!mounted) return;
@@ -508,6 +518,13 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   currency: _currency,
                   onCurrencyChanged: (c) => setState(() => _currency = c),
                   canChooseCurrency: _programType == 'local',
+                ),
+                const SizedBox(height: 28),
+                // 수양회 전후 숙박 수준(028). 외국에서 오는 참가자만 고른다.
+                HotelSection(
+                  hotelOptions: _hotelOptions,
+                  onChanged: () => setState(() {}),
+                  currency: _currency,
                 ),
                 const SizedBox(height: 28),
                 CohortPolicySection(

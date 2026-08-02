@@ -38,6 +38,12 @@ class RegistrationFormState {
   /// 스페인어권 한국인 선교사가 둘 다 흔하고, 유추하면 둘 다 틀린다.
   final String? studyLanguage;
 
+  /// 수양회 전후 숙박(028). 외국에서 오는 사람만 고른다 — 개최국 참가자는
+  /// 전후에 집으로 간다. 박수를 함께 받아야 호텔에 방을 잡을 수 있다.
+  final String? hotelOptionKey;
+  final int hotelNightsBefore;
+  final int hotelNightsAfter;
+
   const RegistrationFormState({
     required this.programId,
     this.country,
@@ -60,6 +66,9 @@ class RegistrationFormState {
     this.discountOptionKey,
     this.discountReason,
     this.studyLanguage,
+    this.hotelOptionKey,
+    this.hotelNightsBefore = 0,
+    this.hotelNightsAfter = 0,
   });
 
   RegistrationFormState copyWith({
@@ -83,6 +92,10 @@ class RegistrationFormState {
     String? discountOptionKey,
     String? discountReason,
     String? studyLanguage,
+    String? hotelOptionKey,
+    int? hotelNightsBefore,
+    int? hotelNightsAfter,
+    bool clearHotel = false,
     // copyWith 는 `??` 로 병합하므로 null 을 넘겨 값을 지울 수 없다.
     // 할인 신청 철회는 "지우는" 동작이라 별도 플래그가 필요하다.
     bool clearDiscount = false,
@@ -115,6 +128,17 @@ class RegistrationFormState {
           ? null
           : (discountReason ?? this.discountReason),
       studyLanguage: studyLanguage ?? this.studyLanguage,
+      // 등급을 비우면 박수도 함께 비운다. "3박" 만 남으면 어느 등급으로
+      // 방을 잡을지 알 수 없고 화면에도 아무것도 안 보인다.
+      hotelOptionKey: clearHotel
+          ? null
+          : (hotelOptionKey ?? this.hotelOptionKey),
+      hotelNightsBefore: clearHotel
+          ? 0
+          : (hotelNightsBefore ?? this.hotelNightsBefore),
+      hotelNightsAfter: clearHotel
+          ? 0
+          : (hotelNightsAfter ?? this.hotelNightsAfter),
     );
   }
 
@@ -140,6 +164,9 @@ class RegistrationFormState {
     'discountOptionKey': discountOptionKey,
     'discountReason': discountReason,
     'studyLanguage': studyLanguage,
+    'hotelOptionKey': hotelOptionKey,
+    'hotelNightsBefore': hotelNightsBefore,
+    'hotelNightsAfter': hotelNightsAfter,
   };
 
   factory RegistrationFormState.fromJson(Map<String, dynamic> json) =>
@@ -165,6 +192,9 @@ class RegistrationFormState {
         discountOptionKey: json['discountOptionKey'] as String?,
         discountReason: json['discountReason'] as String?,
         studyLanguage: json['studyLanguage'] as String?,
+        hotelOptionKey: json['hotelOptionKey'] as String?,
+        hotelNightsBefore: json['hotelNightsBefore'] as int? ?? 0,
+        hotelNightsAfter: json['hotelNightsAfter'] as int? ?? 0,
       );
 }
 
@@ -294,6 +324,17 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
   void selectStudyLanguage(String code) =>
       _update(state.copyWith(studyLanguage: code));
 
+  // ─── 수양회 전후 숙박(028) ──────────────────────────────────
+
+  void selectHotelOption(String key) =>
+      _update(state.copyWith(hotelOptionKey: key));
+
+  void clearHotelChoice() => _update(state.copyWith(clearHotel: true));
+
+  void setHotelNights({int? before, int? after}) => _update(
+    state.copyWith(hotelNightsBefore: before, hotelNightsAfter: after),
+  );
+
   // ─── 서버 저장 (임시저장 버튼) ─────────────────────────────
 
   Future<void> saveProgress(List<Map<String, dynamic>> allOptions) async {
@@ -326,6 +367,9 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       'discountOptionKey': state.discountOptionKey,
       'discountReason': state.discountReason,
       'studyLanguage': state.studyLanguage,
+      'hotelOptionKey': state.hotelOptionKey,
+      'hotelNightsBefore': state.hotelNightsBefore,
+      'hotelNightsAfter': state.hotelNightsAfter,
     });
   }
 
@@ -367,6 +411,9 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       discountOptionKey: data['discount_option_key'],
       discountReason: data['discount_reason'],
       studyLanguage: data['study_language'],
+      hotelOptionKey: data['hotel_option_key'],
+      hotelNightsBefore: data['hotel_nights_before'] as int? ?? 0,
+      hotelNightsAfter: data['hotel_nights_after'] as int? ?? 0,
     );
     state = loaded;
     // DB에서 불러온 내용도 바로 draft로 저장

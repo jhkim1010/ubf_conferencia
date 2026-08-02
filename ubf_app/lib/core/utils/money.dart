@@ -128,7 +128,12 @@ class Money {
 ///
 /// [option] 은 { 'label': String, 'labels': {'ko':…,'en':…,'es':…} } 형태다.
 /// labels 가 없는 예전 항목도 그대로 동작한다.
-String discountLabelFor(Map<String, dynamic> option, String languageCode) {
+String discountLabelFor(Map<String, dynamic> option, String languageCode) =>
+    optionLabelFor(option, languageCode);
+
+/// 같은 모양을 쓰는 다른 목록(숙박 등급 028 등)도 이것을 쓴다.
+/// 이름에 'discount' 가 붙어 있으면 읽는 사람이 할인 전용으로 오해한다.
+String optionLabelFor(Map<String, dynamic> option, String languageCode) {
   final raw = option['labels'];
   if (raw is Map) {
     final v = raw[languageCode];

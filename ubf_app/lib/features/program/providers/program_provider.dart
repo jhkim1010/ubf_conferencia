@@ -61,6 +61,7 @@ class ProgramService {
     String? currency,
     String? smallCohortPolicy,
     int? minTeamSize,
+    List<Map<String, dynamic>>? hotelOptions,
   }) async {
     return ApiClient.createProgram({
       'name': name,
@@ -92,6 +93,7 @@ class ProgramService {
       'currency': currency ?? 'USD',
       'smallCohortPolicy': smallCohortPolicy ?? 'keep',
       'minTeamSize': minTeamSize ?? 5,
+      'hotelOptions': hotelOptions ?? const [],
     });
   }
 

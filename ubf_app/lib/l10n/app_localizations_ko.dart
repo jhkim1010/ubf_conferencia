@@ -2048,4 +2048,77 @@ class AppLocalizationsKo extends AppLocalizations {
   String mealsDownloadFailed(String detail) {
     return 'PDF 를 저장하지 못했습니다: $detail';
   }
+
+  @override
+  String get regStepHotel => '숙박';
+
+  @override
+  String get hotelTitle => '수양회 전후에 머무십니까?';
+
+  @override
+  String get hotelBody =>
+      '일찍 도착하시거나 투어가 끝난 뒤 더 머무시면 호텔이 필요합니다. 원하시는 수준과 박수를 골라 주십시오.';
+
+  @override
+  String get hotelNoOptions => '주최 측이 아직 숙소 수준을 정하지 않았습니다. 나중에 다시 오셔도 됩니다.';
+
+  @override
+  String get hotelNone => '호텔이 필요 없습니다';
+
+  @override
+  String hotelPerNight(String amount) {
+    return '1박 $amount';
+  }
+
+  @override
+  String get hotelPriceTbd => '금액 미정';
+
+  @override
+  String get hotelNightsBefore => '수양회 전 박수';
+
+  @override
+  String get hotelNightsAfter => '투어 후 박수';
+
+  @override
+  String hotelNightsCount(int count) {
+    return '$count박';
+  }
+
+  @override
+  String get hotelEstimate => '예상 숙박비';
+
+  @override
+  String get hotelNotInFee => '참가비에는 포함되지 않습니다. 숙박비는 따로 정산합니다.';
+
+  @override
+  String get hotelSectionTitle => '숙박 수준 (수양회 전후)';
+
+  @override
+  String get hotelSectionHelp => '외국에서 오는 참가자에게만 보입니다. 수준과 박수를 직접 고릅니다.';
+
+  @override
+  String get hotelLevelKo => '수준 (한국어)';
+
+  @override
+  String get hotelLevelEn => '수준 (영어)';
+
+  @override
+  String get hotelLevelEs => '수준 (스페인어)';
+
+  @override
+  String get hotelPricePerNightLabel => '1박 단가';
+
+  @override
+  String get hotelAddLevel => '수준 추가';
+
+  @override
+  String get hotelNoLevelsYet => '아직 추가한 수준이 없습니다';
+
+  @override
+  String get summarySectionHotel => '수양회 전후 숙박';
+
+  @override
+  String summaryHotelNights(int before, int after) {
+    return '전 $before박 · 후 $after박';
+  }
 }

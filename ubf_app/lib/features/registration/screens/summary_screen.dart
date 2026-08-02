@@ -103,6 +103,25 @@ class SummaryScreen extends ConsumerWidget {
           // 선택된 옵션 목록 및 비용 계산
           final currency = Currency.of(program['currency'] as String?);
 
+          // 수양회 전후 숙박(028). 등급을 고른 사람에게만 보여준다.
+          // 예상 금액은 여기서 계산한다 — 저장해 두면 단가를 고친 뒤에도
+          // 옛 금액이 남아 참가자와 담당자가 다른 숫자를 본다.
+          final hotelOptions = List<Map<String, dynamic>>.from(
+            program['hotel_options'] as List? ?? const [],
+          );
+          final hotelPicked = hotelOptions
+              .cast<Map<String, dynamic>?>()
+              .firstWhere(
+                (o) => o?['key'] == formState.hotelOptionKey,
+                orElse: () => null,
+              );
+          final hotelNights =
+              formState.hotelNightsBefore + formState.hotelNightsAfter;
+          final hotelPerNight = Money.parse(hotelPicked?['pricePerNight']);
+          final hotelEstimate = hotelPerNight != null && hotelNights > 0
+              ? hotelPerNight * hotelNights
+              : null;
+
           final selectedOptionDetails = options
               .where(
                 (o) => formState.selectedOptions.contains(o['id'] as String),
@@ -249,6 +268,39 @@ class SummaryScreen extends ConsumerWidget {
                   onEdit: () => context.go('/registration/$programId'),
                   children: [_InfoRow('', formState.roommatePreference ?? '-')],
                 ),
+
+              // 수양회 전후 숙박(028). 고른 사람에게만 보인다.
+              //
+              // 참가비 총액과 **분리해서** 보여준다. 아래 총액에 섞어 놓으면
+              // 그 금액을 입금해야 하는 줄 알고, 호텔 값을 두 번 내거나
+              // 아예 안 내게 된다.
+              if (hotelPicked != null) ...[
+                const SizedBox(height: 12),
+                _SectionCard(
+                  title: l10n.summarySectionHotel,
+                  icon: Icons.hotel_outlined,
+                  onEdit: () => context.go('/registration/$programId'),
+                  children: [
+                    _InfoRow(
+                      optionLabelFor(
+                        hotelPicked,
+                        Localizations.localeOf(context).languageCode,
+                      ),
+                      hotelEstimate != null
+                          ? currency.format(hotelEstimate)
+                          : l10n.hotelPriceTbd,
+                    ),
+                    _InfoRow(
+                      '',
+                      l10n.summaryHotelNights(
+                        formState.hotelNightsBefore,
+                        formState.hotelNightsAfter,
+                      ),
+                    ),
+                    _InfoRow('', l10n.hotelNotInFee),
+                  ],
+                ),
+              ],
 
               // 참가비 등급 + 할인
               if (tierFee != null || formState.discountRequested) ...[

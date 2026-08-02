@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
+import { resolveHotelChoice } from '../services/hotel.js';
 import { requireAuth } from '../middleware/auth.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
 
@@ -39,6 +40,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     fcmToken,
     feeTier, discountRequested, discountOptionKey, discountReason,
     studyLanguage,
+    hotelOptionKey, hotelNightsBefore, hotelNightsAfter,
   } = req.body;
 
   // 말씀 공부 언어. 참석자가 직접 고른 값이다 — 앱 표시 언어나 국가로 유추하면
@@ -51,7 +53,8 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
 
   try {
     const [program] = await sql`
-      SELECT id, name, fee_basic, fee_premium, discount_options, host_country
+      SELECT id, name, fee_basic, fee_premium, discount_options, host_country,
+             hotel_options
       FROM programs WHERE id = ${req.params.programId} AND is_active = true
     `;
     if (!program) return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
@@ -91,6 +94,24 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     // 이유를 보여주고, 조회하면 신청이 없는 상태 그대로 돌아온다.
     const picked = isDomestic ? requested : null;
     const wantsDiscount = !!picked;
+
+    // 수양회 전후 숙박(028). 할인과 방향이 반대다 — **외국에서 오는 사람만**
+    // 고른다. 개최국 사람은 전후에 집으로 간다.
+    //
+    // 자격이 없거나 없는 등급을 보내오면 조용히 떨어뜨린다(services/hotel.js).
+    // 422 로 막으면 자격을 잃은 사람이 아무것도 저장할 수 없게 된다.
+    const hotel = resolveHotelChoice({
+      options: program.hotel_options,
+      hostCountry: host,
+      country,
+      optionKey: hotelOptionKey,
+      nightsBefore: hotelNightsBefore,
+      nightsAfter: hotelNightsAfter,
+    });
+    // 숙박 칸을 아예 안 보낸 저장(임시저장 등)은 기존 선택을 건드리지 않는다.
+    // 보냈다면 비우는 것도 뜻이 있으므로 그대로 반영한다.
+    const sentHotel = ['hotelOptionKey', 'hotelNightsBefore', 'hotelNightsAfter']
+      .some((k) => Object.prototype.hasOwnProperty.call(req.body, k));
 
     // 기존 등록 여부 확인 (수정인지 신규인지 구분)
     const [existing] = await sql`
@@ -155,7 +176,8 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         total_cost, fcm_token,
         fee_tier, discount_requested, discount_option_key,
         discount_option_label, discount_option_labels, discount_reason, discount_status,
-        discount_amount, discount_note, study_language
+        discount_amount, discount_note, study_language,
+        hotel_option_key, hotel_nights_before, hotel_nights_after
       )
       VALUES (
         ${req.params.programId}, ${req.user.userId},
@@ -182,7 +204,10 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         ${discountStatus},
         ${discountAmount},
         ${discountNote},
-        ${studyLang}
+        ${studyLang},
+        ${hotel.key},
+        ${hotel.nightsBefore},
+        ${hotel.nightsAfter}
       )
       ON CONFLICT (program_id, user_id)
       DO UPDATE SET
@@ -215,6 +240,12 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         -- 안 보냈으면 지우지 않는다. 이 화면을 안 거치는 저장(임시저장 등)이
         -- 참석자가 고른 언어를 날려 버리면 배정이 통째로 어긋난다.
         study_language = COALESCE(EXCLUDED.study_language, registrations.study_language),
+        hotel_option_key = CASE WHEN ${sentHotel}
+          THEN EXCLUDED.hotel_option_key ELSE registrations.hotel_option_key END,
+        hotel_nights_before = CASE WHEN ${sentHotel}
+          THEN EXCLUDED.hotel_nights_before ELSE registrations.hotel_nights_before END,
+        hotel_nights_after = CASE WHEN ${sentHotel}
+          THEN EXCLUDED.hotel_nights_after ELSE registrations.hotel_nights_after END,
         updated_at = NOW()
       RETURNING id
     `;

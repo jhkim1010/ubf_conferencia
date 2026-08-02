@@ -2091,4 +2091,80 @@ class AppLocalizationsEn extends AppLocalizations {
   String mealsDownloadFailed(String detail) {
     return 'Could not save the PDF: $detail';
   }
+
+  @override
+  String get regStepHotel => 'Hotel';
+
+  @override
+  String get hotelTitle => 'Staying before or after?';
+
+  @override
+  String get hotelBody =>
+      'If you arrive early or stay on after the tour, you will need a hotel. Pick the level you want and how many nights.';
+
+  @override
+  String get hotelNoOptions =>
+      'The organisers have not set hotel levels yet. You can come back to this later.';
+
+  @override
+  String get hotelNone => 'I don\'t need a hotel';
+
+  @override
+  String hotelPerNight(String amount) {
+    return '$amount / night';
+  }
+
+  @override
+  String get hotelPriceTbd => 'To be announced';
+
+  @override
+  String get hotelNightsBefore => 'Nights before the conference';
+
+  @override
+  String get hotelNightsAfter => 'Nights after the tour';
+
+  @override
+  String hotelNightsCount(int count) {
+    return '$count';
+  }
+
+  @override
+  String get hotelEstimate => 'Estimated hotel cost';
+
+  @override
+  String get hotelNotInFee =>
+      'Not included in your conference fee. You settle this separately.';
+
+  @override
+  String get hotelSectionTitle => 'Hotel levels (before / after)';
+
+  @override
+  String get hotelSectionHelp =>
+      'Only attendees coming from abroad see these. They pick a level and the number of nights.';
+
+  @override
+  String get hotelLevelKo => 'Level (Korean)';
+
+  @override
+  String get hotelLevelEn => 'Level (English)';
+
+  @override
+  String get hotelLevelEs => 'Level (Spanish)';
+
+  @override
+  String get hotelPricePerNightLabel => 'Price per night';
+
+  @override
+  String get hotelAddLevel => 'Add level';
+
+  @override
+  String get hotelNoLevelsYet => 'No levels added yet';
+
+  @override
+  String get summarySectionHotel => 'Hotel before / after';
+
+  @override
+  String summaryHotelNights(int before, int after) {
+    return '$before night(s) before · $after night(s) after';
+  }
 }

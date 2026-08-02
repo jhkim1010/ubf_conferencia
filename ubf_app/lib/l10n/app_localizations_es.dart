@@ -2103,4 +2103,80 @@ class AppLocalizationsEs extends AppLocalizations {
   String mealsDownloadFailed(String detail) {
     return 'No se pudo guardar el PDF: $detail';
   }
+
+  @override
+  String get regStepHotel => 'Hotel';
+
+  @override
+  String get hotelTitle => '¿Te quedas antes o después?';
+
+  @override
+  String get hotelBody =>
+      'Si llegas antes o te quedas después del tour, necesitarás hotel. Elige el nivel y cuántas noches.';
+
+  @override
+  String get hotelNoOptions =>
+      'Los organizadores aún no definieron los niveles de hotel. Puedes volver más tarde.';
+
+  @override
+  String get hotelNone => 'No necesito hotel';
+
+  @override
+  String hotelPerNight(String amount) {
+    return '$amount / noche';
+  }
+
+  @override
+  String get hotelPriceTbd => 'Por definir';
+
+  @override
+  String get hotelNightsBefore => 'Noches antes del retiro';
+
+  @override
+  String get hotelNightsAfter => 'Noches después del tour';
+
+  @override
+  String hotelNightsCount(int count) {
+    return '$count';
+  }
+
+  @override
+  String get hotelEstimate => 'Costo estimado de hotel';
+
+  @override
+  String get hotelNotInFee =>
+      'No está incluido en la cuota del retiro. Se paga aparte.';
+
+  @override
+  String get hotelSectionTitle => 'Niveles de hotel (antes / después)';
+
+  @override
+  String get hotelSectionHelp =>
+      'Solo los participantes que vienen del exterior los ven. Eligen nivel y cantidad de noches.';
+
+  @override
+  String get hotelLevelKo => 'Nivel (coreano)';
+
+  @override
+  String get hotelLevelEn => 'Nivel (inglés)';
+
+  @override
+  String get hotelLevelEs => 'Nivel (español)';
+
+  @override
+  String get hotelPricePerNightLabel => 'Precio por noche';
+
+  @override
+  String get hotelAddLevel => 'Agregar nivel';
+
+  @override
+  String get hotelNoLevelsYet => 'Aún no agregaste niveles';
+
+  @override
+  String get summarySectionHotel => 'Hotel antes / después';
+
+  @override
+  String summaryHotelNights(int before, int after) {
+    return '$before antes · $after después';
+  }
 }

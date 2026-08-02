@@ -50,6 +50,42 @@ function normalizeMinTeamSize(v) {
   return Number.isInteger(n) && n >= 1 && n <= 50 ? n : NaN;
 }
 
+// 숙박 등급 정리(028). 관리자가 "3성급 / 4성급 …" 처럼 정의한다.
+//
+// 할인 항목과 모양이 같아서 붙여 쓰고 싶지만, 금액 칸의 뜻이 다르다 —
+// 할인은 깎는 금액이고 이쪽은 **1박 단가**다. 한 함수로 묶으면 어느 쪽
+// 규칙을 고치는지 읽는 사람이 알 수 없어 따로 둔다.
+function normalizeHotelOptions(raw) {
+  if (!Array.isArray(raw)) return null; // 안 보냈으면 건드리지 않는다
+  const seen = new Set();
+  const out = [];
+  raw.forEach((o, i) => {
+    const labels = {};
+    for (const lang of ['ko', 'en', 'es']) {
+      const v = String(o?.labels?.[lang] ?? '').trim();
+      if (v) labels[lang] = v;
+    }
+    const label =
+      String(o?.label ?? '').trim() || labels.en || labels.ko || labels.es || '';
+    if (!label) return; // 어떤 언어로도 문구가 없으면 화면에 보여줄 것이 없다
+
+    let key = String(o?.key ?? '').trim() || `h${i + 1}`;
+    while (seen.has(key)) key = `${key}_`; // key 중복은 등록 참조를 망친다
+    seen.add(key);
+
+    // 단가를 못 적을 수도 있다(아직 협상 중). 그때는 null 로 두고 화면이
+    // "금액 미정"이라고 말한다. 0 으로 적어 두면 공짜인 줄 안다.
+    const price = parseFee(o?.pricePerNight);
+    out.push({
+      key,
+      label,
+      labels,
+      pricePerNight: Number.isNaN(price) ? null : price,
+    });
+  });
+  return out;
+}
+
 // 할인 항목 정리. 관리자가 "1일 참석 / 2일 참석 …" 처럼 정의한다.
 // key 는 등록 레코드가 참조하므로 한 번 정해지면 바뀌면 안 된다.
 // 클라이언트가 준 key 를 그대로 쓰고, 없을 때만 위치 기반으로 채운다.
@@ -156,7 +192,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
     nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
     programType, hostCountry,
     feeBasic, feePremium, feeBasicDesc, feePremiumDesc, discountOptions,
-    currency, smallCohortPolicy, minTeamSize,
+    currency, smallCohortPolicy, minTeamSize, hotelOptions,
   } = req.body;
 
   if (!name || !location) {
@@ -169,6 +205,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
     return res.status(400).json({ error: '참가비는 0 이상의 숫자여야 합니다' });
   }
   const discounts = normalizeDiscountOptions(discountOptions) ?? [];
+  const hotels = normalizeHotelOptions(hotelOptions) ?? [];
 
   const cur = normalizeCurrency(currency);
   if (Number.isNaN(cur)) {
@@ -215,7 +252,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         nearest_airport, contact1_name, contact1_phone, contact2_name, contact2_phone,
         program_type, host_country,
         fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options,
-        currency, small_cohort_policy, min_team_size
+        currency, small_cohort_policy, min_team_size, hotel_options
       )
       VALUES (
         ${name},
@@ -238,7 +275,8 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         ${JSON.stringify(discounts)},
         ${currencyFor(type, cur, null)},
         ${cohortPolicy ?? 'keep'},
-        ${teamMin ?? 5}
+        ${teamMin ?? 5},
+        ${JSON.stringify(hotels)}
       )
       RETURNING id
     `;
@@ -279,7 +317,7 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
     nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
     programType, options, hostCountry,
     feeBasic, feePremium, feeBasicDesc, feePremiumDesc, discountOptions,
-    currency,
+    currency, hotelOptions,
   } = req.body;
 
   const patchCurrency = normalizeCurrency(currency);
@@ -299,6 +337,9 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
     return res.status(400).json({ error: '참가비는 0 이상의 숫자여야 합니다' });
   }
   const discounts = normalizeDiscountOptions(discountOptions);
+  // 안 보냈으면 null 이 되고 아래에서 기존 값을 그대로 쓴다. 숙박 등급만
+  // 고치려는 호출이 참가비를 지우지 않는 것과 같은 규칙이다.
+  const hotels = normalizeHotelOptions(hotelOptions);
 
   // 본문에 없는 키는 건드리지 않는다. 참가비만 고치려는 호출이 할인 항목을
   // 지워버리면 안 된다. (기존 필드들은 덮어쓰기 방식이라 이 규칙이 없다.)
@@ -309,7 +350,8 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
     const [program] = await sql`
       SELECT id, program_type, start_date, currency,
              small_cohort_policy, min_team_size,
-             fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options
+             fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options,
+             hotel_options
       FROM programs
       WHERE id = ${req.params.id} AND leader_id = ${req.user.leaderId} AND is_active = true
     `;
@@ -348,7 +390,8 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
         discount_options = ${JSON.stringify(discounts ?? program.discount_options ?? [])}::jsonb,
         currency         = ${currencyFor(type, patchCurrency, program.currency)},
         small_cohort_policy = ${patchPolicy ?? program.small_cohort_policy ?? 'keep'},
-        min_team_size       = ${patchTeamMin ?? program.min_team_size ?? 5}
+        min_team_size       = ${patchTeamMin ?? program.min_team_size ?? 5},
+        hotel_options       = ${JSON.stringify(hotels ?? program.hotel_options ?? [])}::jsonb
       WHERE id = ${req.params.id}
     `;
 
@@ -486,6 +529,9 @@ router.get('/:id/registrations', requireAuth, requireLeader, async (req, res) =>
         r.volunteer_resources, r.volunteer_note,
         r.church_since, r.church_role,
         r.needs_pickup, r.service_declined,
+        -- 수양회 전후 숙박(028). 담당자가 호텔에 방을 잡으려면 등급과 박수를
+        -- 함께 봐야 한다.
+        r.hotel_option_key, r.hotel_nights_before, r.hotel_nights_after,
         r.total_cost, r.submitted, r.created_at, r.updated_at,
         r.fee_tier,
         r.discount_requested, r.discount_option_key, r.discount_option_label,

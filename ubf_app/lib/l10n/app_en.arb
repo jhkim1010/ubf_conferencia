@@ -1320,5 +1320,54 @@
         "type": "String"
       }
     }
+  },
+  "regStepHotel": "Hotel",
+  "hotelTitle": "Staying before or after?",
+  "@hotelTitle": {
+    "description": "Registration step asking about hotel stay before/after the conference (028)"
+  },
+  "hotelBody": "If you arrive early or stay on after the tour, you will need a hotel. Pick the level you want and how many nights.",
+  "hotelNoOptions": "The organisers have not set hotel levels yet. You can come back to this later.",
+  "hotelNone": "I don't need a hotel",
+  "hotelPerNight": "{amount} / night",
+  "@hotelPerNight": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "hotelPriceTbd": "To be announced",
+  "hotelNightsBefore": "Nights before the conference",
+  "hotelNightsAfter": "Nights after the tour",
+  "hotelNightsCount": "{count}",
+  "@hotelNightsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hotelEstimate": "Estimated hotel cost",
+  "hotelNotInFee": "Not included in your conference fee. You settle this separately.",
+  "hotelSectionTitle": "Hotel levels (before / after)",
+  "hotelSectionHelp": "Only attendees coming from abroad see these. They pick a level and the number of nights.",
+  "hotelLevelKo": "Level (Korean)",
+  "hotelLevelEn": "Level (English)",
+  "hotelLevelEs": "Level (Spanish)",
+  "hotelPricePerNightLabel": "Price per night",
+  "hotelAddLevel": "Add level",
+  "hotelNoLevelsYet": "No levels added yet",
+  "summarySectionHotel": "Hotel before / after",
+  "summaryHotelNights": "{before} night(s) before · {after} night(s) after",
+  "@summaryHotelNights": {
+    "placeholders": {
+      "before": {
+        "type": "int"
+      },
+      "after": {
+        "type": "int"
+      }
+    }
   }
 }
