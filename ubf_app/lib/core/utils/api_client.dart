@@ -265,6 +265,16 @@ class ApiClient {
     return _decode(response);
   }
 
+  // 식사 제한 명단 — 준비 현황의 식사 카드를 열면 나온다.
+  // { program, total, skips_breakfast, people[] }
+  static Future<Map<String, dynamic>?> getProgramMeals(String programId) async {
+    final response = await http.get(
+      _uri('/programs/$programId/meals'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
   static Future<List<dynamic>> getProgramRegistrations(String programId) async {
     final response = await http.get(
       _uri('/programs/$programId/registrations'),

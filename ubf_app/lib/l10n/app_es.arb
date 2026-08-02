@@ -574,7 +574,11 @@
   "discountNoOptions": "Esta conferencia no admite solicitudes de descuento.",
   "discountDomesticOnly": "Solo pueden solicitar descuento quienes asisten desde {country}.",
   "@discountDomesticOnly": {
-    "placeholders": { "country": { "type": "String" } }
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
   },
   "cpFeeSection": "Cuota",
   "cpFeeBasic": "Cuota estándar",
@@ -610,7 +614,11 @@
   "cpCurrencyHint": "Todos los asistentes de esta conferencia verán los importes en esta moneda. No se aplica conversión de tipo de cambio.",
   "cpCurrencyFixed": "Las conferencias internacionales se cobran en {code}. Los asistentes vienen de muchos países, así que la moneda es la misma para todos.",
   "@cpCurrencyFixed": {
-    "placeholders": { "code": { "type": "String" } }
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
   },
   "flightNotBookedYet": "Todavía no he comprado mi vuelo",
   "flightNotBookedYetHint": "Indica solo la fecha prevista. Puedes añadir el vuelo más adelante.",
@@ -624,5 +632,17 @@
   "myProgramsDeleteBody": "\"{name}\" dejará de mostrarse a todos. Las inscripciones y asignaciones se conservan; pide ayuda a un administrador si necesitas recuperarla.",
   "myProgramsDeleteHasRegistrations": "Ya se han inscrito {count} personas. Escribe el nombre de la conferencia para confirmar.",
   "myProgramsDeleteTypeName": "Nombre de la conferencia",
-  "myProgramsDeleted": "Eliminada."
+  "myProgramsDeleted": "Eliminada.",
+  "mealsTitle": "Restricciones alimentarias",
+  "mealsSubtitle": "Quién no puede comer qué — para la cocina",
+  "mealsEmpty": "Nadie ha indicado una restricción alimentaria.",
+  "mealsRestriction": "No puede comer · notas",
+  "mealsSkipsBreakfast": "no desayuna",
+  "mealsSummary": "{restricted} de {total} participantes",
+  "mealsPdfSummary": "{restricted} de {total} participantes inscritos indicaron una restricción alimentaria.",
+  "mealsPdfNote": "Recopilado de lo que cada participante escribió. Confirma con la persona antes de suponer que una alergia es leve.",
+  "mealsDownloadPdf": "Descargar PDF",
+  "mealsHint": "Toca dos veces para ver quién no puede comer qué",
+  "mealsNotSubmitted": "sin enviar",
+  "mealsDownloadFailed": "No se pudo guardar el PDF: {detail}"
 }

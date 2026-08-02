@@ -18,9 +18,23 @@ pass=0; fail=0
 ok()  { echo "  ✓ $1"; pass=$((pass+1)); }
 bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=$((fail+1)); }
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
+# 로그인 실패를 삼키지 않는다.
+#
+# 인증 경로는 15분에 20회로 제한된다(index.js authLimiter). 이 스크립트는 한 번
+# 도는 데 9번을 쓰므로 연달아 두 번 돌리면 걸린다. 예전에는 토큰 자리에
+# "undefined" 가 들어간 채로 계속 진행해, 레이트 리밋을 **기능 실패로**
+# 보고했다 — 규칙을 일부러 깨고 확인하던 중 실제로 그렇게 속았다.
 login() {
-  curl -s -X POST "$API/auth/dev-login" -H 'Content-Type: application/json' \
-    -d "{\"email\":\"$1\"}" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
+  local body; body=$(curl -s -X POST "$API/auth/dev-login" \
+    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+  local tok; tok=$(printf '%s' "$body" \
+    | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
+  if [ -z "$tok" ]; then
+    echo "로그인 실패($1): $body" >&2
+    echo "  레이트 리밋이면 서버를 다시 띄우거나 15분 기다리십시오." >&2
+    exit 1
+  fi
+  printf '%s' "$tok"
 }
 
 LT=$(login "$LEADER")

@@ -2060,4 +2060,47 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get myProgramsDeleted => 'Eliminada.';
+
+  @override
+  String get mealsTitle => 'Restricciones alimentarias';
+
+  @override
+  String get mealsSubtitle => 'Quién no puede comer qué — para la cocina';
+
+  @override
+  String get mealsEmpty => 'Nadie ha indicado una restricción alimentaria.';
+
+  @override
+  String get mealsRestriction => 'No puede comer · notas';
+
+  @override
+  String get mealsSkipsBreakfast => 'no desayuna';
+
+  @override
+  String mealsSummary(int restricted, int total) {
+    return '$restricted de $total participantes';
+  }
+
+  @override
+  String mealsPdfSummary(int restricted, int total) {
+    return '$restricted de $total participantes inscritos indicaron una restricción alimentaria.';
+  }
+
+  @override
+  String get mealsPdfNote =>
+      'Recopilado de lo que cada participante escribió. Confirma con la persona antes de suponer que una alergia es leve.';
+
+  @override
+  String get mealsDownloadPdf => 'Descargar PDF';
+
+  @override
+  String get mealsHint => 'Toca dos veces para ver quién no puede comer qué';
+
+  @override
+  String get mealsNotSubmitted => 'sin enviar';
+
+  @override
+  String mealsDownloadFailed(String detail) {
+    return 'No se pudo guardar el PDF: $detail';
+  }
 }

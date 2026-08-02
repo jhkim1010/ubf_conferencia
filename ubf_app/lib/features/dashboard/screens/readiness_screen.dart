@@ -52,6 +52,7 @@ class ReadinessScreen extends ConsumerWidget {
                 const SizedBox(height: 10),
                 _ReadinessGrid(
                   readiness: data['readiness'] as Map<String, dynamic>? ?? {},
+                  programId: programId,
                 ),
                 const SizedBox(height: 24),
                 _SectionTitle(l10n.rdySectionCohorts),
@@ -180,7 +181,8 @@ class _Header extends StatelessWidget {
 // ─── 준비 항목 ────────────────────────────────────────────────
 class _ReadinessGrid extends StatelessWidget {
   final Map<String, dynamic> readiness;
-  const _ReadinessGrid({required this.readiness});
+  final String programId;
+  const _ReadinessGrid({required this.readiness, required this.programId});
 
   @override
   Widget build(BuildContext context) {
@@ -215,11 +217,15 @@ class _ReadinessGrid extends StatelessWidget {
         figure: '${flights['missing'] ?? 0}',
         caption: l10n.unitPeople((flights['overseas_total'] as int?) ?? 0),
       ),
+      // 식사 카드만 두 번 누르면 명단이 열린다. 숫자만으로는 장을 볼 수 없다 —
+      // 누가 무엇을 못 먹는지 봐야 하고, 그것을 주방에 넘겨야 한다.
       _ItemCard(
         name: l10n.rdyMeals,
         status: meals['status'] as String?,
         figure: '${meals['restricted'] ?? 0}',
         caption: l10n.unitPeople((meals['total'] as int?) ?? 0),
+        hint: l10n.mealsHint,
+        onOpen: () => context.push('/leader/program/$programId/meals'),
       ),
       _ItemCard(
         name: l10n.rdyPayment,
@@ -256,12 +262,17 @@ class _ItemCard extends StatelessWidget {
   final String? status;
   final String figure;
   final String caption;
+  // 열 수 있는 카드만 준다. 없으면 예전 그대로 눌리지 않는 카드다.
+  final VoidCallback? onOpen;
+  final String? hint;
 
   const _ItemCard({
     required this.name,
     required this.status,
     required this.figure,
     required this.caption,
+    this.onOpen,
+    this.hint,
   });
 
   @override
@@ -269,55 +280,66 @@ class _ItemCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final color = _statusColor(status);
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(height: 3, color: color),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(height: 3, color: color),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      _StatusBadge(
-                        status: status,
-                        label: _statusLabel(l10n, status),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    figure,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      fontFeatures: [FontFeature.tabularFigures()],
                     ),
+                    _StatusBadge(
+                      status: status,
+                      label: _statusLabel(l10n, status),
+                    ),
+                  ],
+                ),
+                Text(
+                  figure,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
-                  Text(
-                    caption,
-                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+                ),
+                Text(
+                  hint ?? caption,
+                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
-        ],
+        ),
+      ],
+    );
+
+    if (onOpen == null) return Card(clipBehavior: Clip.antiAlias, child: body);
+
+    // 두 번 누르면 열린다. 다만 그것만 두면 화면 낭독기 사용자와 마우스에
+    // 익숙하지 않은 사람이 들어갈 길이 없다 — 길게 누르기도 같은 곳으로
+    // 보내고, 카드 아래 문구로 그 사실을 적어 둔다.
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Semantics(
+        button: true,
+        label: '$name. ${hint ?? ''}',
+        child: InkWell(onDoubleTap: onOpen, onLongPress: onOpen, child: body),
       ),
     );
   }

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
-import { requireAuth, requireLeader } from '../middleware/auth.js';
+import { requireAuth, requireLeader, requireProgramAdmin } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -642,11 +642,10 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
         COUNT(*) FILTER (
           WHERE r.country IS DISTINCT FROM ${host} AND NOT flight_confirmed(r.arrival_flight)
         )::int AS flights_missing,
-        COUNT(*) FILTER (
-          WHERE r.food_requirements IS NOT NULL
-            AND r.food_requirements <> ''
-            AND r.food_requirements <> '없음'
-        )::int AS meals_restricted,
+        -- 판정은 has_food_restriction(027) 하나로 모았다. 카드의 숫자와
+        -- 카드를 열었을 때 나오는 명단(GET /:id/meals)이 어긋나면 안 된다.
+        COUNT(*) FILTER (WHERE has_food_restriction(r.food_requirements))::int
+          AS meals_restricted,
         -- 국제 수양회의 개최국 참가자는 픽업 대상이 아니다(dispatch_engine.js
         -- isPickupExempt 와 같은 규칙). 배차판에서 빠진 사람을 여기서 계속
         -- 세면 필요 좌석이 부풀려져 밴을 과하게 잡는다.
@@ -809,6 +808,68 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
     });
   } catch (err) {
     console.error('준비 현황 조회 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// GET /programs/:id/meals — 식사 제한 명단 (준비 현황 카드를 열면 나온다)
+//
+// 주방에 넘길 목록이다. 준비 현황 카드의 숫자와 같은 판정
+// (has_food_restriction, 027)을 쓴다 — 두 곳에 각각 적으면 반드시 어긋난다.
+//
+// 공동 관리자도 봐야 한다. 식단은 주방·구매 담당이 챙기는 일이지 수양회를
+// 만든 사람만의 일이 아니다. 그래서 requireLeader 가 아니라
+// requireProgramAdmin 이다.
+router.get('/:id/meals', requireAuth, requireProgramAdmin, async (req, res) => {
+  const programId = req.params.id;
+  try {
+    const [program] = await sql`
+      SELECT id, name, location, start_date, end_date
+      FROM programs WHERE id = ${programId} AND is_active = true
+    `;
+    if (!program) return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
+
+    // 제출 여부로 거르지 않는다. 아직 제출하지 않았어도 못 먹는 것은 못 먹는다.
+    const people = await sql`
+      SELECT r.real_name, r.bible_name, r.country, r.branch, r.gender,
+             r.food_requirements, r.skips_breakfast, r.submitted
+      FROM registrations r
+      WHERE r.program_id = ${programId}
+        AND has_food_restriction(r.food_requirements)
+      ORDER BY r.country NULLS LAST, r.real_name
+    `;
+
+    const [counts] = await sql`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE r.skips_breakfast)::int AS skips_breakfast
+      FROM registrations r
+      WHERE r.program_id = ${programId}
+    `;
+
+    res.json({
+      program: {
+        id: program.id,
+        name: program.name,
+        location: program.location,
+        start_date: program.start_date,
+        end_date: program.end_date,
+      },
+      total: counts.total,
+      skips_breakfast: counts.skips_breakfast,
+      people: people.map((p) => ({
+        real_name: p.real_name,
+        bible_name: p.bible_name,
+        country: p.country,
+        branch: p.branch,
+        gender: p.gender,
+        food_requirements: p.food_requirements,
+        skips_breakfast: p.skips_breakfast,
+        submitted: p.submitted,
+      })),
+    });
+  } catch (err) {
+    console.error('식사 제한 명단 조회 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });

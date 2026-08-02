@@ -2005,4 +2005,47 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get myProgramsDeleted => '삭제되었습니다.';
+
+  @override
+  String get mealsTitle => '식사 제한';
+
+  @override
+  String get mealsSubtitle => '누가 무엇을 못 먹는지 — 주방 전달용';
+
+  @override
+  String get mealsEmpty => '식사 제한을 적어 낸 사람이 없습니다.';
+
+  @override
+  String get mealsRestriction => '못 먹는 것 · 비고';
+
+  @override
+  String get mealsSkipsBreakfast => '아침 거름';
+
+  @override
+  String mealsSummary(int restricted, int total) {
+    return '참가자 $total명 중 $restricted명';
+  }
+
+  @override
+  String mealsPdfSummary(int restricted, int total) {
+    return '등록 참가자 $total명 중 $restricted명이 식사 제한을 적어 냈습니다.';
+  }
+
+  @override
+  String get mealsPdfNote =>
+      '참가자가 직접 적은 내용을 모은 것입니다. 알레르기가 가볍다고 단정하기 전에 본인에게 확인하십시오.';
+
+  @override
+  String get mealsDownloadPdf => 'PDF 내려받기';
+
+  @override
+  String get mealsHint => '두 번 누르면 누가 무엇을 못 먹는지 보입니다';
+
+  @override
+  String get mealsNotSubmitted => '미제출';
+
+  @override
+  String mealsDownloadFailed(String detail) {
+    return 'PDF 를 저장하지 못했습니다: $detail';
+  }
 }

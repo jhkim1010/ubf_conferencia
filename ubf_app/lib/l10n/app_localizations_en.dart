@@ -2048,4 +2048,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get myProgramsDeleted => 'Deleted.';
+
+  @override
+  String get mealsTitle => 'Dietary restrictions';
+
+  @override
+  String get mealsSubtitle => 'Who cannot eat what — for the kitchen';
+
+  @override
+  String get mealsEmpty => 'Nobody has reported a dietary restriction.';
+
+  @override
+  String get mealsRestriction => 'Cannot eat / notes';
+
+  @override
+  String get mealsSkipsBreakfast => 'skips breakfast';
+
+  @override
+  String mealsSummary(int restricted, int total) {
+    return '$restricted of $total attendees';
+  }
+
+  @override
+  String mealsPdfSummary(int restricted, int total) {
+    return '$restricted of $total registered attendees reported a dietary restriction.';
+  }
+
+  @override
+  String get mealsPdfNote =>
+      'Compiled from what attendees entered themselves. Confirm with the person before assuming an allergy is mild.';
+
+  @override
+  String get mealsDownloadPdf => 'Download PDF';
+
+  @override
+  String get mealsHint => 'Double-tap to see who cannot eat what';
+
+  @override
+  String get mealsNotSubmitted => 'not submitted';
+
+  @override
+  String mealsDownloadFailed(String detail) {
+    return 'Could not save the PDF: $detail';
+  }
 }

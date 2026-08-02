@@ -3813,6 +3813,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deleted.'**
   String get myProgramsDeleted;
+
+  /// Readiness card: dietary restrictions
+  ///
+  /// In en, this message translates to:
+  /// **'Dietary restrictions'**
+  String get mealsTitle;
+
+  /// No description provided for @mealsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who cannot eat what — for the kitchen'**
+  String get mealsSubtitle;
+
+  /// No description provided for @mealsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has reported a dietary restriction.'**
+  String get mealsEmpty;
+
+  /// No description provided for @mealsRestriction.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot eat / notes'**
+  String get mealsRestriction;
+
+  /// No description provided for @mealsSkipsBreakfast.
+  ///
+  /// In en, this message translates to:
+  /// **'skips breakfast'**
+  String get mealsSkipsBreakfast;
+
+  /// No description provided for @mealsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{restricted} of {total} attendees'**
+  String mealsSummary(int restricted, int total);
+
+  /// No description provided for @mealsPdfSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{restricted} of {total} registered attendees reported a dietary restriction.'**
+  String mealsPdfSummary(int restricted, int total);
+
+  /// No description provided for @mealsPdfNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Compiled from what attendees entered themselves. Confirm with the person before assuming an allergy is mild.'**
+  String get mealsPdfNote;
+
+  /// No description provided for @mealsDownloadPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Download PDF'**
+  String get mealsDownloadPdf;
+
+  /// No description provided for @mealsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Double-tap to see who cannot eat what'**
+  String get mealsHint;
+
+  /// No description provided for @mealsNotSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'not submitted'**
+  String get mealsNotSubmitted;
+
+  /// No description provided for @mealsDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the PDF: {detail}'**
+  String mealsDownloadFailed(String detail);
 }
 
 class _AppLocalizationsDelegate

@@ -24,6 +24,12 @@ final programReadinessProvider =
       (_, programId) => ApiClient.getProgramReadiness(programId),
     );
 
+// 식사 제한 명단 — 준비 현황의 식사 카드를 두 번 누르면 열린다
+final programMealsProvider =
+    FutureProvider.family<Map<String, dynamic>?, String>(
+      (_, programId) => ApiClient.getProgramMeals(programId),
+    );
+
 // 참가자 전체 목록
 final programRegistrationsProvider =
     FutureProvider.family<List<dynamic>, String>(

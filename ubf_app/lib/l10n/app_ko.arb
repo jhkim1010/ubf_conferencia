@@ -574,7 +574,11 @@
   "discountNoOptions": "이 수양회는 할인 신청을 받지 않습니다.",
   "discountDomesticOnly": "할인은 {country} 에서 참석하는 분만 신청할 수 있습니다.",
   "@discountDomesticOnly": {
-    "placeholders": { "country": { "type": "String" } }
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
   },
   "cpFeeSection": "참가비",
   "cpFeeBasic": "기본 참가비",
@@ -610,7 +614,11 @@
   "cpCurrencyHint": "이 수양회 등록자 전원이 이 통화로 금액을 봅니다. 환율 변환은 하지 않습니다.",
   "cpCurrencyFixed": "국제 수양회의 금액은 {code} 로 적습니다. 여러 나라에서 오므로 통화를 통일합니다.",
   "@cpCurrencyFixed": {
-    "placeholders": { "code": { "type": "String" } }
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
   },
   "flightNotBookedYet": "아직 항공권을 예매하지 않았습니다",
   "flightNotBookedYetHint": "예상 날짜만 적어 주십시오. 항공편은 나중에 추가할 수 있습니다.",
@@ -624,5 +632,17 @@
   "myProgramsDeleteBody": "\"{name}\" 이(가) 더 이상 아무에게도 보이지 않습니다. 등록·배정 기록은 남으므로 되살리려면 관리자에게 문의하십시오.",
   "myProgramsDeleteHasRegistrations": "이미 {count}명이 등록했습니다. 확인을 위해 수양회 이름을 입력하십시오.",
   "myProgramsDeleteTypeName": "수양회 이름",
-  "myProgramsDeleted": "삭제되었습니다."
+  "myProgramsDeleted": "삭제되었습니다.",
+  "mealsTitle": "식사 제한",
+  "mealsSubtitle": "누가 무엇을 못 먹는지 — 주방 전달용",
+  "mealsEmpty": "식사 제한을 적어 낸 사람이 없습니다.",
+  "mealsRestriction": "못 먹는 것 · 비고",
+  "mealsSkipsBreakfast": "아침 거름",
+  "mealsSummary": "참가자 {total}명 중 {restricted}명",
+  "mealsPdfSummary": "등록 참가자 {total}명 중 {restricted}명이 식사 제한을 적어 냈습니다.",
+  "mealsPdfNote": "참가자가 직접 적은 내용을 모은 것입니다. 알레르기가 가볍다고 단정하기 전에 본인에게 확인하십시오.",
+  "mealsDownloadPdf": "PDF 내려받기",
+  "mealsHint": "두 번 누르면 누가 무엇을 못 먹는지 보입니다",
+  "mealsNotSubmitted": "미제출",
+  "mealsDownloadFailed": "PDF 를 저장하지 못했습니다: {detail}"
 }

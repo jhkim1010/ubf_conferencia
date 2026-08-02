@@ -1199,7 +1199,11 @@
   "discountNoOptions": "This conference does not offer discount requests.",
   "discountDomesticOnly": "Discounts can only be requested by attendees coming from {country}.",
   "@discountDomesticOnly": {
-    "placeholders": { "country": { "type": "String" } }
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
   },
   "cpFeeSection": "Fee",
   "cpFeeBasic": "Standard fee",
@@ -1242,7 +1246,11 @@
   "cpCurrencyHint": "All attendees of this conference see amounts in this currency. No exchange-rate conversion is applied.",
   "cpCurrencyFixed": "International conferences are priced in {code}. Attendees come from many countries, so the currency is the same for everyone.",
   "@cpCurrencyFixed": {
-    "placeholders": { "code": { "type": "String" } }
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
   },
   "flightNotBookedYet": "I haven't booked my flight yet",
   "flightNotBookedYetHint": "Just put the date you expect. You can add the flight later.",
@@ -1270,5 +1278,47 @@
     }
   },
   "myProgramsDeleteTypeName": "Conference name",
-  "myProgramsDeleted": "Deleted."
+  "myProgramsDeleted": "Deleted.",
+  "mealsTitle": "Dietary restrictions",
+  "@mealsTitle": {
+    "description": "Readiness card: dietary restrictions"
+  },
+  "mealsSubtitle": "Who cannot eat what — for the kitchen",
+  "mealsEmpty": "Nobody has reported a dietary restriction.",
+  "mealsRestriction": "Cannot eat / notes",
+  "mealsSkipsBreakfast": "skips breakfast",
+  "mealsSummary": "{restricted} of {total} attendees",
+  "@mealsSummary": {
+    "placeholders": {
+      "restricted": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "mealsPdfSummary": "{restricted} of {total} registered attendees reported a dietary restriction.",
+  "@mealsPdfSummary": {
+    "placeholders": {
+      "restricted": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "mealsPdfNote": "Compiled from what attendees entered themselves. Confirm with the person before assuming an allergy is mild.",
+  "mealsDownloadPdf": "Download PDF",
+  "mealsHint": "Double-tap to see who cannot eat what",
+  "mealsNotSubmitted": "not submitted",
+  "mealsDownloadFailed": "Could not save the PDF: {detail}",
+  "@mealsDownloadFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  }
 }
