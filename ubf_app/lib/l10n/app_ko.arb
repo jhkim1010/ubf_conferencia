@@ -497,6 +497,8 @@
   "mtrMeetPoint": "집결지",
   "mtrSelfDrive": "자차로 이동해요",
   "mtrSelfDriveDesc": "픽업이 필요 없으면 꺼주세요",
+  "mtrHostCountryTitle": "공항 픽업 대상이 아닙니다",
+  "mtrHostCountryDesc": "개최국에서 참석하시므로 공항 픽업 명단에 들어가지 않습니다. 비행기로 오신다면 등록 화면에서 항공편을 입력해 주십시오. 그러면 명단에 들어갑니다.",
   "rdyTitle": "준비 현황",
   "rdySubtitle": "무엇이 막혀 있고 누구에게 연락해야 하는지",
   "rdySectionItems": "준비 항목",

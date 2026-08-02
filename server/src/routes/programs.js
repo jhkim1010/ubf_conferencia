@@ -623,7 +623,7 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
   const programId = req.params.id;
   try {
     const [program] = await sql`
-      SELECT id, name, location, start_date, end_date, host_country,
+      SELECT id, name, location, start_date, end_date, host_country, program_type,
              registration_deadline, capacity, base_fee
       FROM programs
       WHERE id = ${programId} AND leader_id = ${req.user.leaderId}
@@ -631,6 +631,7 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
     if (!program) return res.status(403).json({ error: '권한 없음' });
 
     const host = program.host_country;
+    const isInternational = program.program_type === 'international';
 
     // 국내/해외 판정은 registrations.country 를 쓴다. 등록 화면에서 직접 고른
     // 값이라 users.region 보다 정확하다.
@@ -646,7 +647,19 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
             AND r.food_requirements <> ''
             AND r.food_requirements <> '없음'
         )::int AS meals_restricted,
-        COUNT(*) FILTER (WHERE r.needs_pickup IS NOT FALSE)::int AS pickup_needed
+        -- 국제 수양회의 개최국 참가자는 픽업 대상이 아니다(dispatch_engine.js
+        -- isPickupExempt 와 같은 규칙). 배차판에서 빠진 사람을 여기서 계속
+        -- 세면 필요 좌석이 부풀려져 밴을 과하게 잡는다.
+        COUNT(*) FILTER (
+          WHERE r.needs_pickup IS NOT FALSE
+            AND NOT (
+              ${isInternational}
+              AND ${host}::text IS NOT NULL
+              AND r.country IS NOT DISTINCT FROM ${host}
+              AND COALESCE(r.arrival_flight->>'arrival_airport', '') = ''
+              AND COALESCE(r.arrival_flight->>'scheduled_arrival', '') = ''
+            )
+        )::int AS pickup_needed
       FROM registrations r
       WHERE r.program_id = ${programId}
     `;

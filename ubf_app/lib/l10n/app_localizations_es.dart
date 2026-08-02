@@ -1659,6 +1659,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mtrSelfDriveDesc => 'Desactiva si no necesitas recogida';
 
   @override
+  String get mtrHostCountryTitle =>
+      'No te corresponde recogida en el aeropuerto';
+
+  @override
+  String get mtrHostCountryDesc =>
+      'Asistes desde el país anfitrión, así que no figuras en la lista de recogida del aeropuerto. ¿Llegas en avión? Agrega tu vuelo en la inscripción y te incluiremos.';
+
+  @override
   String get rdyTitle => 'Estado de preparación';
 
   @override

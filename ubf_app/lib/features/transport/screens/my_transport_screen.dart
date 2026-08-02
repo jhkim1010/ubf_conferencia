@@ -30,52 +30,87 @@ class MyTransportScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text(l10n.commonErrorDetail('$e'))),
         data: (data) {
           final needsPickup = data['needsPickup'] as bool? ?? true;
+          // 국제 수양회의 개최국 참석자는 배차판에 올라가지 않는다(서버 판정).
+          // 그 사실을 여기서 말해 주지 않으면 오지 않을 차를 기다리게 된다.
+          final pickupExempt = data['pickupExempt'] as bool? ?? false;
           final arrival = data['arrival'] as Map<String, dynamic>?;
           final departure = data['departure'] as Map<String, dynamic>?;
+          // 대상이 아니어도 담당자가 손으로 태워 둔 경우가 있다. 그때는 배차
+          // 카드를 그대로 보여준다 — 실제로 그 차를 타야 하기 때문이다.
+          final showArrival = arrival != null || !pickupExempt;
+          final showDeparture = departure != null || !pickupExempt;
           return RefreshIndicator(
             onRefresh: () async => refresh(),
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _runCard(
-                  context,
-                  title: l10n.mtrArrival,
-                  route: l10n.mtrArrivalRoute(arrival?['airport'] as String? ?? '—'),
-                  run: arrival,
-                  color: const Color(0xFF0F7A6E),
-                  emptyText: l10n.mtrPending,
-                ),
-                const SizedBox(height: 12),
-                _runCard(
-                  context,
-                  title: l10n.mtrDeparture,
-                  route: l10n.mtrDepartureRoute(departure?['airport'] as String? ?? '—'),
-                  run: departure,
-                  color: const Color(0xFF1565C0),
-                  emptyText: l10n.mtrPending,
-                ),
-                const SizedBox(height: 16),
-                // 자차 이동 토글
-                Card(
-                  child: SwitchListTile(
-                    secondary: const Icon(Icons.directions_car_outlined),
-                    title: Text(l10n.mtrSelfDrive,
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text(l10n.mtrSelfDriveDesc),
-                    value: !needsPickup,
-                    onChanged: (selfDrive) async {
-                      try {
-                        await ApiClient.setMyPickup(programId, !selfDrive);
-                        refresh();
-                      } on ApiException catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(e.message), backgroundColor: Colors.red));
-                        }
-                      }
-                    },
+                if (showArrival) ...[
+                  _runCard(
+                    context,
+                    title: l10n.mtrArrival,
+                    route: l10n.mtrArrivalRoute(
+                      arrival?['airport'] as String? ?? '—',
+                    ),
+                    run: arrival,
+                    color: const Color(0xFF0F7A6E),
+                    emptyText: l10n.mtrPending,
                   ),
-                ),
+                  const SizedBox(height: 12),
+                ],
+                if (showDeparture) ...[
+                  _runCard(
+                    context,
+                    title: l10n.mtrDeparture,
+                    route: l10n.mtrDepartureRoute(
+                      departure?['airport'] as String? ?? '—',
+                    ),
+                    run: departure,
+                    color: const Color(0xFF1565C0),
+                    emptyText: l10n.mtrPending,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                const SizedBox(height: 4),
+                if (pickupExempt)
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.home_outlined),
+                      title: Text(
+                        l10n.mtrHostCountryTitle,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(l10n.mtrHostCountryDesc),
+                      isThreeLine: true,
+                    ),
+                  )
+                else
+                  // 자차 이동 토글
+                  Card(
+                    child: SwitchListTile(
+                      secondary: const Icon(Icons.directions_car_outlined),
+                      title: Text(
+                        l10n.mtrSelfDrive,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(l10n.mtrSelfDriveDesc),
+                      value: !needsPickup,
+                      onChanged: (selfDrive) async {
+                        try {
+                          await ApiClient.setMyPickup(programId, !selfDrive);
+                          refresh();
+                        } on ApiException catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(e.message),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                  ),
               ],
             ),
           );
@@ -117,51 +152,91 @@ class MyTransportScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title,
-                  style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1)),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
+                ),
+              ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
-                    color: Colors.white24, borderRadius: BorderRadius.circular(999)),
-                child: Text(assigned ? l10n.mtrAssigned : l10n.mtrPendingBadge,
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  assigned ? l10n.mtrAssigned : l10n.mtrPendingBadge,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(route,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)),
+          Text(
+            route,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
           const SizedBox(height: 10),
           if (!assigned)
-            Text(emptyText, style: const TextStyle(color: Colors.white70, fontSize: 13))
+            Text(
+              emptyText,
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
+            )
           else ...[
             if (vehicle != null && vehicle.isNotEmpty || depart.isNotEmpty)
-              _kv(l10n.mtrVehicle,
-                  [vehicle ?? '', if (depart.isNotEmpty) depart].where((s) => s.isNotEmpty).join(' · ')),
+              _kv(
+                l10n.mtrVehicle,
+                [
+                  vehicle ?? '',
+                  if (depart.isNotEmpty) depart,
+                ].where((s) => s.isNotEmpty).join(' · '),
+              ),
             if (driver != null && driver.isNotEmpty)
-              _kv(l10n.mtrDriver,
-                  [driver, if (phone != null && phone.isNotEmpty) phone].join(' · ')),
+              _kv(
+                l10n.mtrDriver,
+                [
+                  driver,
+                  if (phone != null && phone.isNotEmpty) phone,
+                ].join(' · '),
+              ),
             if (coPax.isNotEmpty) _kv(l10n.mtrCoPassengers, coPax.join(', ')),
             if (meet != null && meet.isNotEmpty) ...[
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                    color: Colors.white24, borderRadius: BorderRadius.circular(10)),
-                child: Row(children: [
-                  const Icon(Icons.place, color: Colors.white, size: 16),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text('${l10n.mtrMeetPoint} · $meet',
-                        style: const TextStyle(color: Colors.white, fontSize: 12)),
-                  ),
-                ]),
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.place, color: Colors.white, size: 16),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '${l10n.mtrMeetPoint} · $meet',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ],
@@ -171,20 +246,28 @@ class MyTransportScreen extends ConsumerWidget {
   }
 
   Widget _kv(String k, String v) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 64,
-              child: Text(k, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-            ),
-            Expanded(
-              child: Text(v,
-                  style: const TextStyle(
-                      color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
-            ),
-          ],
+    padding: const EdgeInsets.symmetric(vertical: 3),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 64,
+          child: Text(
+            k,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
         ),
-      );
+        Expanded(
+          child: Text(
+            v,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }

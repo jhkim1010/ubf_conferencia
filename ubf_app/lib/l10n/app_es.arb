@@ -497,6 +497,8 @@
   "mtrMeetPoint": "Punto de encuentro",
   "mtrSelfDrive": "Voy por mi cuenta",
   "mtrSelfDriveDesc": "Desactiva si no necesitas recogida",
+  "mtrHostCountryTitle": "No te corresponde recogida en el aeropuerto",
+  "mtrHostCountryDesc": "Asistes desde el país anfitrión, así que no figuras en la lista de recogida del aeropuerto. ¿Llegas en avión? Agrega tu vuelo en la inscripción y te incluiremos.",
   "rdyTitle": "Estado de preparación",
   "rdySubtitle": "Qué está bloqueado y a quién contactar",
   "rdySectionItems": "Elementos de preparación",

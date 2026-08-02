@@ -970,6 +970,11 @@
   "mtrMeetPoint": "Meeting point",
   "mtrSelfDrive": "I'll drive myself",
   "mtrSelfDriveDesc": "Turn off if you don't need pickup",
+  "mtrHostCountryTitle": "No airport pickup for you",
+  "@mtrHostCountryTitle": {
+    "description": "Shown when the attendee lives in the host country of an international conference and is therefore left off the pickup list"
+  },
+  "mtrHostCountryDesc": "You are attending from the host country, so you are not on the airport pickup list. Flying in? Add your flight to your registration and you will be included.",
   "rdyTitle": "Readiness",
   "@rdyTitle": {
     "description": "A003 readiness screen"

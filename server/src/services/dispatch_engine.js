@@ -2,6 +2,27 @@
 // PRD F5: 기사 명부(runs)에 승객을 채운다. 밴을 새로 만들지 않음.
 // 매칭 원칙: 같은 공항 → 도착 시각순 → 대기 허용폭(windowMin) 안에서 → 밴 정원까지.
 
+// ── 픽업 대상 제외 판정 ──────────────────────────────────────
+// 국제 수양회의 **개최국 참가자는 공항 픽업 명단에 넣지 않는다.** 현지에서
+// 오가므로 마중 나갈 일이 없는데, 항공편이 없다는 이유로 미배차 칸에 계속
+// 쌓여 정작 마중이 필요한 사람이 묻힌다.
+//
+// 지역 수양회(local)에는 적용하지 않는다. 참가자가 모두 같은 나라 사람이라
+// 적용하면 명단이 통째로 비어 버린다.
+//
+// 다만 국토가 넓은 나라에서는 개최국 사람도 국내선을 타고 온다. 등록 화면이
+// 그런 사람을 위해 항공편 스텝을 되살릴 수 있게 해 두었으므로
+// (registration_flow_screen.dart 의 _domesticWantsFlight),
+// **항공편을 실제로 적어 낸 사람은 명단에 남긴다.** 그러지 않으면 비행기로
+// 오는 사람이 조용히 사라져 아무도 공항에 나가지 않는다.
+//
+// country 를 모르면 제외하지 않는다 — 잘못 빼는 쪽이 잘못 남기는 쪽보다 나쁘다.
+export function isPickupExempt({ programType, hostCountry, country, hasFlight }) {
+  if (programType !== 'international') return false;
+  if (!hostCountry || !country || country !== hostCountry) return false;
+  return !hasFlight;
+}
+
 // ── 자동 배차 ────────────────────────────────────────────────
 // runs:   [{ id, airport, capacity }]              (관리자가 등록한 명부 = 공급)
 // people: [{ id, airport, timeAt, needsPickup }]   (timeAt: 정렬 가능한 숫자 — 도착 or 데드라인 epoch ms)

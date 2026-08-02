@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
 import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
-import { autoDispatch, departureDeadline } from '../services/dispatch_engine.js';
+import { autoDispatch, departureDeadline, isPickupExempt } from '../services/dispatch_engine.js';
 
 const router = Router();
 
@@ -17,12 +17,24 @@ function pickFlight(flight, direction) {
   return { airport: airport || null, timeAt };
 }
 
+// 공항이든 시각이든 하나라도 있으면 "항공편을 적어 냈다"고 본다.
+// flight_confirmed(021)보다 느슨하다 — 편명 없이 날짜만 적은 예상 항공편이라도
+// 비행기로 온다는 뜻이므로 픽업 명단에서 빼면 안 된다.
+function hasFlightInfo({ airport, timeAt }) {
+  return !!airport || (typeof timeAt === 'number' && !Number.isNaN(timeAt));
+}
+
 // 프로그램+방향의 픽업 대상(등록자+동반자) 로드 → { people, meta, info }
 //   people: 엔진 입력  meta: key→{regId,compId}  info: key→표시용
+//
+// 개최국 참가자는 여기서 걸러진다(isPickupExempt). 걸러진 사람은 meta/info 에도
+// 넣지 않으므로 미배차 목록·자동 배차 양쪽에서 함께 사라진다. 이미 밴에 타
+// 있는 사람은 건드리지 않는다 — 명부(runs) 조회는 별도 질의다.
 async function loadDispatchPeople(programId, direction) {
-  const [regs, comps] = await Promise.all([
+  const [[program], regs, comps] = await Promise.all([
+    sql`SELECT program_type, host_country FROM programs WHERE id = ${programId}`,
     sql`
-      SELECT id, real_name AS name, needs_pickup, arrival_flight, departure_flight
+      SELECT id, real_name AS name, country, needs_pickup, arrival_flight, departure_flight
       FROM registrations
       WHERE program_id = ${programId} AND submitted = true
         AND real_name IS NOT NULL AND real_name <> ''
@@ -30,12 +42,16 @@ async function loadDispatchPeople(programId, direction) {
     sql`
       SELECT c.id, c.real_name AS name, c.needs_pickup, c.same_flight_as_primary,
              c.arrival_flight, c.departure_flight,
+             r.country AS p_country,
              r.arrival_flight AS p_arrival, r.departure_flight AS p_departure
       FROM companions c
       JOIN registrations r ON r.id = c.registration_id
       WHERE r.program_id = ${programId} AND r.submitted = true
     `,
   ]);
+
+  const programType = program?.program_type ?? null;
+  const hostCountry = program?.host_country ?? null;
 
   const people = [];
   const meta = new Map();
@@ -44,6 +60,16 @@ async function loadDispatchPeople(programId, direction) {
   for (const r of regs) {
     const flight = direction === 'arrival' ? r.arrival_flight : r.departure_flight;
     const { airport, timeAt } = pickFlight(flight, direction);
+    if (
+      isPickupExempt({
+        programType,
+        hostCountry,
+        country: r.country,
+        hasFlight: hasFlightInfo({ airport, timeAt }),
+      })
+    ) {
+      continue;
+    }
     const key = `reg:${r.id}`;
     meta.set(key, { regId: r.id, compId: null });
     info.set(key, { name: r.name, airport, timeAt, flight });
@@ -54,6 +80,17 @@ async function loadDispatchPeople(programId, direction) {
     const primary = direction === 'arrival' ? c.p_arrival : c.p_departure;
     const flight = c.same_flight_as_primary ? primary : own;
     const { airport, timeAt } = pickFlight(flight, direction);
+    // 동반자는 국적 칸이 따로 없다. 등록자와 함께 오므로 등록자의 나라로 본다.
+    if (
+      isPickupExempt({
+        programType,
+        hostCountry,
+        country: c.p_country,
+        hasFlight: hasFlightInfo({ airport, timeAt }),
+      })
+    ) {
+      continue;
+    }
     const key = `comp:${c.id}`;
     meta.set(key, { regId: null, compId: c.id });
     info.set(key, { name: c.name, airport, timeAt, flight });
@@ -328,10 +365,27 @@ router.get('/:programId/my-transport', requireAuth, async (req, res) => {
   const { programId } = req.params;
   try {
     const [me] = await sql`
-      SELECT id, needs_pickup FROM registrations
-      WHERE program_id = ${programId} AND user_id = ${req.user.userId}
+      SELECT r.id, r.needs_pickup, r.country, r.arrival_flight, r.departure_flight,
+             p.program_type, p.host_country
+      FROM registrations r
+      JOIN programs p ON p.id = r.program_id
+      WHERE r.program_id = ${programId} AND r.user_id = ${req.user.userId}
     `;
-    if (!me) return res.json({ needsPickup: true, arrival: null, departure: null });
+    if (!me) {
+      return res.json({ needsPickup: true, pickupExempt: false, arrival: null, departure: null });
+    }
+
+    // 명단에서 빠진 사람에게는 그 사실을 알려야 한다. 배차판에는 없는데 화면은
+    // "곧 배차될 예정입니다"라고 말하면, 오지 않을 차를 공항에서 기다린다.
+    // 할인 신청에서 같은 함정을 한 번 만들었다(registrations.js 참조).
+    const pickupExempt = isPickupExempt({
+      programType: me.program_type,
+      hostCountry: me.host_country,
+      country: me.country,
+      hasFlight:
+        hasFlightInfo(pickFlight(me.arrival_flight, 'arrival')) ||
+        hasFlightInfo(pickFlight(me.departure_flight, 'departure')),
+    });
 
     // 내가 탄 밴(등록자 기준) + 동승자 이름
     const runs = await sql`
@@ -348,7 +402,7 @@ router.get('/:programId/my-transport', requireAuth, async (req, res) => {
     `;
     const arrival = runs.find((r) => r.direction === 'arrival') ?? null;
     const departure = runs.find((r) => r.direction === 'departure') ?? null;
-    res.json({ needsPickup: me.needs_pickup, arrival, departure });
+    res.json({ needsPickup: me.needs_pickup, pickupExempt, arrival, departure });
   } catch (err) {
     console.error('내 이동 정보 오류:', err);
     res.status(500).json({ error: '서버 오류' });

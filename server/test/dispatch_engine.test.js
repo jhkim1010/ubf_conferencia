@@ -5,7 +5,11 @@
 
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { autoDispatch, departureDeadline } from '../src/services/dispatch_engine.js';
+import {
+  autoDispatch,
+  departureDeadline,
+  isPickupExempt,
+} from '../src/services/dispatch_engine.js';
 
 // 테스트 가독성을 위한 시각 헬퍼 (고정 기준 시각 + 분 단위 오프셋)
 const T0 = Date.UTC(2026, 7, 1, 9, 0, 0);
@@ -206,5 +210,49 @@ describe('departureDeadline', () => {
   test('데드라인은 출발 시각보다 항상 이르다', () => {
     const depart = at(600);
     assert.ok(departureDeadline(depart) < depart);
+  });
+});
+
+describe('isPickupExempt — 국제 수양회 개최국 참가자', () => {
+  const intl = { programType: 'international', hostCountry: 'AR' };
+
+  test('개최국 참가자는 항공편이 없으면 명단에서 빠진다', () => {
+    assert.equal(isPickupExempt({ ...intl, country: 'AR', hasFlight: false }), true);
+  });
+
+  test('항공편을 적어 냈으면 개최국 참가자라도 남는다', () => {
+    // 국토가 넓은 나라의 국내선. 빼면 아무도 공항에 나가지 않는다.
+    assert.equal(isPickupExempt({ ...intl, country: 'AR', hasFlight: true }), false);
+  });
+
+  test('해외 참가자는 항공편이 없어도 남는다', () => {
+    // 아직 항공편을 못 적었을 뿐이다. 미배차로 보여야 담당자가 챙긴다.
+    assert.equal(isPickupExempt({ ...intl, country: 'KR', hasFlight: false }), false);
+  });
+
+  test('지역 수양회에는 적용하지 않는다', () => {
+    // 참가자가 모두 같은 나라 사람이라 적용하면 명단이 통째로 비어 버린다.
+    assert.equal(
+      isPickupExempt({ programType: 'local', hostCountry: 'AR', country: 'AR', hasFlight: false }),
+      false,
+    );
+  });
+
+  test('개최국이 정해지지 않았으면 아무도 빼지 않는다', () => {
+    assert.equal(
+      isPickupExempt({ programType: 'international', hostCountry: null, country: 'AR', hasFlight: false }),
+      false,
+    );
+  });
+
+  test('참가자 국가를 모르면 빼지 않는다', () => {
+    // 잘못 빼는 쪽이 잘못 남기는 쪽보다 나쁘다.
+    for (const country of [null, undefined, '']) {
+      assert.equal(isPickupExempt({ ...intl, country, hasFlight: false }), false);
+    }
+  });
+
+  test('다른 나라 사람은 이름이 비슷해도 빼지 않는다', () => {
+    assert.equal(isPickupExempt({ ...intl, country: 'AU', hasFlight: false }), false);
   });
 });

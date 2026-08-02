@@ -1618,6 +1618,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mtrSelfDriveDesc => '픽업이 필요 없으면 꺼주세요';
 
   @override
+  String get mtrHostCountryTitle => '공항 픽업 대상이 아닙니다';
+
+  @override
+  String get mtrHostCountryDesc =>
+      '개최국에서 참석하시므로 공항 픽업 명단에 들어가지 않습니다. 비행기로 오신다면 등록 화면에서 항공편을 입력해 주십시오. 그러면 명단에 들어갑니다.';
+
+  @override
   String get rdyTitle => '준비 현황';
 
   @override

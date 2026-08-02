@@ -1652,6 +1652,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mtrSelfDriveDesc => 'Turn off if you don\'t need pickup';
 
   @override
+  String get mtrHostCountryTitle => 'No airport pickup for you';
+
+  @override
+  String get mtrHostCountryDesc =>
+      'You are attending from the host country, so you are not on the airport pickup list. Flying in? Add your flight to your registration and you will be included.';
+
+  @override
   String get rdyTitle => 'Readiness';
 
   @override

@@ -3082,6 +3082,18 @@ abstract class AppLocalizations {
   /// **'Turn off if you don\'t need pickup'**
   String get mtrSelfDriveDesc;
 
+  /// Shown when the attendee lives in the host country of an international conference and is therefore left off the pickup list
+  ///
+  /// In en, this message translates to:
+  /// **'No airport pickup for you'**
+  String get mtrHostCountryTitle;
+
+  /// No description provided for @mtrHostCountryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You are attending from the host country, so you are not on the airport pickup list. Flying in? Add your flight to your registration and you will be included.'**
+  String get mtrHostCountryDesc;
+
   /// A003 readiness screen
   ///
   /// In en, this message translates to:
