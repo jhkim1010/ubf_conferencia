@@ -2477,4 +2477,10 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get companionWhy =>
       '여기에 적는 것은 같은 방에 배정받기 위해서입니다. 방이 따로 배정되어도 괜찮으시면 적지 않으셔도 됩니다.';
+
+  @override
+  String get homeAlsoAttending => '저도 참석합니다';
+
+  @override
+  String get homeAlsoAttendingSub => '직접 등록하거나, 이미 적어 둔 내용을 열어 봅니다';
 }

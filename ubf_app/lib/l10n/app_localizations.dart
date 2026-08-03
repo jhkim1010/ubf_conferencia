@@ -4673,6 +4673,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You add them here so you are placed in the same room. If it is fine for you to be placed separately, you do not need to add them.'**
   String get companionWhy;
+
+  /// No description provided for @homeAlsoAttending.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m attending too'**
+  String get homeAlsoAttending;
+
+  /// No description provided for @homeAlsoAttendingSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Register yourself, or open the registration you already filled in'**
+  String get homeAlsoAttendingSub;
 }
 
 class _AppLocalizationsDelegate

@@ -761,5 +761,7 @@
   "companionSameBranch": "Mesma sede que a minha",
   "companionSameBranchSub": "Desative se for de outra sede",
   "companionMustRegister": "Cada acompanhante também precisa se inscrever por conta própria.",
-  "companionWhy": "Você os adiciona aqui para ficarem no mesmo quarto. Se não fizer diferença ficarem em quartos separados, não é preciso adicionar."
+  "companionWhy": "Você os adiciona aqui para ficarem no mesmo quarto. Se não fizer diferença ficarem em quartos separados, não é preciso adicionar.",
+  "homeAlsoAttending": "Eu também participo",
+  "homeAlsoAttendingSub": "Inscreva-se ou abra a inscrição que você já preencheu"
 }

@@ -140,6 +140,33 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
 
+            // 담당자도 참석자다. 이 수양회를 열어 둔 채로 자기 등록을
+            // 바로 열 수 있어야 한다 — 홈으로 나갔다 UUID 를 다시 찾는 것은
+            // 자기 수양회에서 할 일이 아니다.
+            Card(
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.how_to_reg_outlined,
+                    color: Colors.blueGrey,
+                  ),
+                ),
+                title: Text(
+                  l10n.homeAlsoAttending,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(l10n.homeAlsoAttendingSub),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/registration/$programId'),
+              ),
+            ),
+            const SizedBox(height: 10),
+
             // 자료실 — 교재 PDF (030)
             Card(
               child: ListTile(

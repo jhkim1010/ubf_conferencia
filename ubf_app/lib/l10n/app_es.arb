@@ -775,5 +775,7 @@
   "companionSameBranch": "Mismo capítulo que yo",
   "companionSameBranchSub": "Desactiva si pertenece a otro capítulo",
   "companionMustRegister": "Cada acompañante también debe inscribirse por su cuenta.",
-  "companionWhy": "Los agregas aquí para que los ubiquen en la misma habitación. Si no te importa que los ubiquen por separado, no hace falta agregarlos."
+  "companionWhy": "Los agregas aquí para que los ubiquen en la misma habitación. Si no te importa que los ubiquen por separado, no hace falta agregarlos.",
+  "homeAlsoAttending": "Yo también asisto",
+  "homeAlsoAttendingSub": "Inscríbete o abre la inscripción que ya completaste"
 }

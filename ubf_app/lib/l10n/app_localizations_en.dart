@@ -2534,4 +2534,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get companionWhy =>
       'You add them here so you are placed in the same room. If it is fine for you to be placed separately, you do not need to add them.';
+
+  @override
+  String get homeAlsoAttending => 'I\'m attending too';
+
+  @override
+  String get homeAlsoAttendingSub =>
+      'Register yourself, or open the registration you already filled in';
 }

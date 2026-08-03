@@ -77,8 +77,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       body: switch (user.role) {
-        UserRole.director => _DirectorHomeView(userEmail: user.email ?? ''),
-        UserRole.admin => _LeaderHomeView(userEmail: user.email ?? ''),
+        UserRole.director => _DirectorHomeView(
+          userEmail: user.email ?? '',
+          uuidController: _uuidController,
+        ),
+        UserRole.admin => _LeaderHomeView(
+          userEmail: user.email ?? '',
+          uuidController: _uuidController,
+        ),
         UserRole.participant => _AttendeeHomeView(
           uuidController: _uuidController,
         ),
@@ -160,8 +166,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 // ─── Director 홈 화면 ────────────────────────────────────────
 class _DirectorHomeView extends ConsumerWidget {
   final String userEmail;
+  final TextEditingController uuidController;
 
-  const _DirectorHomeView({required this.userEmail});
+  const _DirectorHomeView({
+    required this.userEmail,
+    required this.uuidController,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -230,6 +240,15 @@ class _DirectorHomeView extends ConsumerWidget {
             color: Colors.deepPurple,
             onTap: () => context.push('/director/assign-admins'),
           ),
+          const SizedBox(height: 28),
+          // 디렉터도 참석자다. 담당자 홈과 같은 이유다.
+          Text(l10n.homeAlsoAttending, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 2),
+          Text(
+            l10n.homeAlsoAttendingSub,
+            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          ),
+          _AttendeeHomeView(uuidController: uuidController, embedded: true),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(16),
@@ -260,8 +279,12 @@ class _DirectorHomeView extends ConsumerWidget {
 // ─── Admin(리더) 홈 화면 ─────────────────────────────────────
 class _LeaderHomeView extends ConsumerWidget {
   final String userEmail;
+  final TextEditingController uuidController;
 
-  const _LeaderHomeView({required this.userEmail});
+  const _LeaderHomeView({
+    required this.userEmail,
+    required this.uuidController,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -321,6 +344,16 @@ class _LeaderHomeView extends ConsumerWidget {
             color: Colors.green,
             onTap: () => context.push('/leader/programs'),
           ),
+          const SizedBox(height: 28),
+          // **담당자도 참석자다.** 예전에는 역할로 화면을 갈라서, 관리자로
+          // 로그인하면 자기가 적어 둔 등록 내용을 열 길이 아예 없었다.
+          Text(l10n.homeAlsoAttending, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 2),
+          Text(
+            l10n.homeAlsoAttendingSub,
+            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          ),
+          _AttendeeHomeView(uuidController: uuidController, embedded: true),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(16),
@@ -352,7 +385,18 @@ class _LeaderHomeView extends ConsumerWidget {
 class _AttendeeHomeView extends StatefulWidget {
   final TextEditingController uuidController;
 
-  const _AttendeeHomeView({required this.uuidController});
+  /// 담당자 홈 안에 끼워 넣을 때 참이다.
+  ///
+  /// **담당자도 참석자다.** 예전에는 역할로 화면을 통째로 갈라서, 관리자로
+  /// 로그인하면 자기가 적어 둔 등록 내용을 열 길이 아예 없었다.
+  /// 끼워 넣을 때는 바깥 스크롤이 부모에게 있고, 큰 제목과 "리더로 전환"
+  /// 링크는 그 자리에서 뜻이 없으므로 뺀다.
+  final bool embedded;
+
+  const _AttendeeHomeView({
+    required this.uuidController,
+    this.embedded = false,
+  });
 
   @override
   State<_AttendeeHomeView> createState() => _AttendeeHomeViewState();
@@ -398,11 +442,10 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!widget.embedded) ...[
           const SizedBox(height: 20),
           Text(
             l10n.homeJoinTitle,
@@ -417,9 +460,11 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
               color: Colors.grey[600],
             ),
           ),
-          const SizedBox(height: 20),
-          // QR 나눔(031). 수양회에 등록하지 않았어도 명함은 만들 수 있다 —
-          // 지난 수양회에서 만난 사람을 다시 보는 것이 이 기능의 절반이다.
+        ],
+        const SizedBox(height: 20),
+        // QR 나눔(031). 수양회에 등록하지 않았어도 명함은 만들 수 있다 —
+        // 지난 수양회에서 만난 사람을 다시 보는 것이 이 기능의 절반이다.
+        if (!widget.embedded)
           Card(
             child: ListTile(
               leading: Container(
@@ -439,57 +484,57 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
               onTap: () => context.push('/cards'),
             ),
           ),
-          const SizedBox(height: 24),
-          TextField(
-            controller: widget.uuidController,
-            decoration: InputDecoration(
-              labelText: l10n.homeUuidLabel,
-              hintText: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-              prefixIcon: const Icon(Icons.vpn_key_outlined),
-            ),
+        const SizedBox(height: 24),
+        TextField(
+          controller: widget.uuidController,
+          decoration: InputDecoration(
+            labelText: l10n.homeUuidLabel,
+            hintText: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+            prefixIcon: const Icon(Icons.vpn_key_outlined),
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () =>
-                  _join(context, widget.uuidController.text.trim()),
-              child: Text(l10n.homeJoinButton),
-            ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () => _join(context, widget.uuidController.text.trim()),
+            child: Text(l10n.homeJoinButton),
           ),
+        ),
 
-          // ── 최근 참가 프로그램 ──────────────────────────
-          if (_recentPrograms.isNotEmpty) ...[
-            const SizedBox(height: 36),
-            Text(l10n.homeRecentPrograms, style: theme.textTheme.titleSmall),
-            const SizedBox(height: 8),
-            ...(_recentPrograms.map((prog) {
-              final uuid = prog['uuid'] as String;
-              final name = prog['name'] as String? ?? uuid;
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: const Icon(Icons.history),
-                  title: Text(
-                    name,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    uuid,
-                    style: const TextStyle(fontSize: 11),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.close, size: 18),
-                    tooltip: l10n.homeRemoveFromList,
-                    onPressed: () => _removeRecent(uuid),
-                  ),
-                  onTap: () => _join(context, uuid),
+        // ── 최근 참가 프로그램 ──────────────────────────
+        if (_recentPrograms.isNotEmpty) ...[
+          const SizedBox(height: 36),
+          Text(l10n.homeRecentPrograms, style: theme.textTheme.titleSmall),
+          const SizedBox(height: 8),
+          ...(_recentPrograms.map((prog) {
+            final uuid = prog['uuid'] as String;
+            final name = prog['name'] as String? ?? uuid;
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: const Icon(Icons.history),
+                title: Text(
+                  name,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-              );
-            })),
-          ],
+                subtitle: Text(
+                  uuid,
+                  style: const TextStyle(fontSize: 11),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: l10n.homeRemoveFromList,
+                  onPressed: () => _removeRecent(uuid),
+                ),
+                onTap: () => _join(context, uuid),
+              ),
+            );
+          })),
+        ],
 
+        if (!widget.embedded) ...[
           const SizedBox(height: 32),
           Center(
             child: TextButton(
@@ -497,10 +542,16 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
               child: Text(l10n.homeBecomeLeader),
             ),
           ),
-          const SizedBox(height: 16),
         ],
-      ),
+        const SizedBox(height: 16),
+      ],
     );
+
+    // 끼워 넣을 때는 바깥 스크롤이 부모에게 있다. 스크롤을 겹치면
+    // 안쪽이 먼저 먹어 버려 목록 끝까지 내려가지 않는다.
+    return widget.embedded
+        ? body
+        : SingleChildScrollView(padding: const EdgeInsets.all(24), child: body);
   }
 }
 
