@@ -145,6 +145,58 @@ function stripBotToken(program) {
   return { ...rest, telegram_bot_configured: !!token };
 }
 
+// GET /programs/for-my-chapter — 우리 지부 지부장이 만든 수양회
+//
+// **이 경로는 반드시 /:id 보다 위에 있어야 한다.** 아래로 내려가면
+// '/for-my-chapter' 가 프로그램 id 로 잡혀 UUID 파싱에서 깨진다 —
+// 실제로 그렇게 두었다가 잡았다.
+//
+// 한 번이라도 등록한 적이 있으면 그 등록서에 나라와 지부가 적혀 있다.
+// 그 지부의 지부장이 새 수양회를 만들면 UUID 를 몰라도 여기서 보인다.
+//
+// **모든 판단을 서버가 한다.** 앱이 "내 지부는 이것" 이라고 보내오게 하면,
+// 아무 지부나 적어 남의 수양회 UUID 를 받아 갈 수 있다 — UUID 는 참가의
+// 열쇠이므로 그것은 자물쇠를 없애는 것과 같다.
+//
+// 처음 오는 사람에게는 아무것도 안 나온다. 나라·지부를 알 방법이 없다.
+// 그때는 UUID 가 유일한 길이고, 그것이 맞다.
+router.get('/for-my-chapter', requireAuth, async (req, res) => {
+  try {
+    // 가장 최근 등록의 나라·지부. 지부는 화면에서 고른 UBF 챕터 이름이다.
+    const [me] = await sql`
+      SELECT country, branch
+      FROM registrations
+      WHERE user_id = ${req.user.userId}
+        AND country IS NOT NULL AND btrim(COALESCE(branch, '')) <> ''
+      ORDER BY updated_at DESC NULLS LAST
+      LIMIT 1
+    `;
+    if (!me) return res.json([]);
+
+    const rows = await sql`
+      SELECT p.id, p.name, p.location, p.start_date, p.end_date,
+             l.name AS leader_name
+      FROM programs p
+      JOIN leaders l ON l.id = p.leader_id
+      WHERE p.is_active = true
+        AND l.nation_iso = ${me.country}
+        AND lower(btrim(l.chapter)) = lower(btrim(${me.branch}))
+        -- 이미 등록한 수양회는 알릴 것이 없다.
+        AND NOT EXISTS (
+          SELECT 1 FROM registrations r
+          WHERE r.program_id = p.id AND r.user_id = ${req.user.userId}
+        )
+        -- 끝난 수양회는 알리지 않는다. 종료일이 없으면 시작일로 본다.
+        AND COALESCE(p.end_date, p.start_date, CURRENT_DATE) >= CURRENT_DATE
+      ORDER BY p.start_date NULLS LAST, p.created_at DESC
+    `;
+    res.json(rows);
+  } catch (err) {
+    console.error('지부 수양회 조회 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
 // GET /programs/:id - 단일 프로그램 + 옵션 조회 (참가자용)
 router.get('/:id', requireAuth, async (req, res) => {
   try {

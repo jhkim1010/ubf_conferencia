@@ -2559,4 +2559,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeOrEnterUuid => 'O escribe el UUID del retiro de otra persona';
+
+  @override
+  String chapterNoticeTitle(String leader) {
+    return 'Tu líder de capítulo $leader creó un retiro';
+  }
+
+  @override
+  String get chapterNoticeAsk => '¿Deseas asistir?';
+
+  @override
+  String get chapterNoticeJoin => 'Sí, inscribirme';
+
+  @override
+  String get chapterNoticeLater => 'Ahora no';
 }

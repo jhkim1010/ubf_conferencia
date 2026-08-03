@@ -5,9 +5,45 @@ import jwt from 'jsonwebtoken';
 
 const router = Router();
 
+// PATCH /leaders/me/chapter — 내 지부 적어 두기
+//
+// 이미 리더로 등록된 사람은 위 경로가 400 을 준다. 그런데 지부 칸은 033
+// 이전에 등록한 사람에게는 비어 있다 — 다시 등록하라고 할 수는 없으므로
+// 여기서 채운다. 앱이 "지부장이신가요?" 확인을 지날 때마다 보낸다.
+router.patch('/me/chapter', requireAuth, async (req, res) => {
+  const chapter = cleanChapter(req.body?.chapter);
+  const nationIso = cleanIso(req.body?.nationIso);
+  if (!chapter || !nationIso) {
+    return res.status(400).json({ error: '지부 정보가 올바르지 않습니다' });
+  }
+  try {
+    const [row] = await sql`
+      UPDATE leaders SET chapter = ${chapter}, nation_iso = ${nationIso}
+      WHERE user_id = ${req.user.userId}
+      RETURNING id
+    `;
+    if (!row) return res.status(404).json({ error: '리더가 아닙니다' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('지부 저장 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
 // POST /leaders/register - 리더 등록
+// 지부 정보(033)는 앱이 "지부장이신가요?" 확인 화면에서 찾아낸 값을 그대로
+// 보낸다. 사람이 직접 확인한 값이라 서버가 표를 따로 들고 있는 것보다 낫다.
+function cleanChapter(v) {
+  const t = String(v ?? '').trim();
+  return t.length > 0 && t.length <= 120 ? t : null;
+}
+function cleanIso(v) {
+  const t = String(v ?? '').trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(t) ? t : null;
+}
+
 router.post('/register', requireAuth, async (req, res) => {
-  const { name } = req.body;
+  const { name, chapter, nationIso } = req.body;
 
   try {
     // 이미 리더인지 확인
@@ -27,8 +63,9 @@ router.post('/register', requireAuth, async (req, res) => {
     `;
 
     const [leader] = await sql`
-      INSERT INTO leaders (user_id, gmail, name)
-      VALUES (${req.user.userId}, ${user.email}, ${name ?? user.name})
+      INSERT INTO leaders (user_id, gmail, name, chapter, nation_iso)
+      VALUES (${req.user.userId}, ${user.email}, ${name ?? user.name},
+              ${cleanChapter(chapter)}, ${cleanIso(nationIso)})
       RETURNING id
     `;
 

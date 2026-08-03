@@ -1555,5 +1555,16 @@
   "homeAlsoAttending": "I'm attending too",
   "homeAlsoAttendingSub": "Register yourself, or open the registration you already filled in",
   "homePickMyProgram": "Go straight to one of my conferences",
-  "homeOrEnterUuid": "Or enter a UUID for someone else's conference"
+  "homeOrEnterUuid": "Or enter a UUID for someone else's conference",
+  "chapterNoticeTitle": "Your chapter leader {leader} has created a conference",
+  "@chapterNoticeTitle": {
+    "placeholders": {
+      "leader": {
+        "type": "String"
+      }
+    }
+  },
+  "chapterNoticeAsk": "Would you like to attend?",
+  "chapterNoticeJoin": "Yes, register",
+  "chapterNoticeLater": "Not now"
 }

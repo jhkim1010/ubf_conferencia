@@ -6,7 +6,11 @@ import '../../../core/utils/api_client.dart';
 import 'package:mana/l10n/app_localizations.dart';
 
 class BecomeLeaderScreen extends ConsumerStatefulWidget {
-  const BecomeLeaderScreen({super.key});
+  /// "지부장이신가요?" 확인 화면이 찾아낸 지부. 직접 들어오면 null 이다 —
+  /// 그때는 지부 없이 등록되고, 다음에 그 확인을 지날 때 채워진다.
+  final Map<String, dynamic>? chapterInfo;
+
+  const BecomeLeaderScreen({super.key, this.chapterInfo});
 
   @override
   ConsumerState<BecomeLeaderScreen> createState() => _BecomeLeaderScreenState();
@@ -42,7 +46,11 @@ class _BecomeLeaderScreenState extends ConsumerState<BecomeLeaderScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final leaderId = await ApiClient.registerAsLeader(name);
+      final leaderId = await ApiClient.registerAsLeader(
+        name,
+        chapter: widget.chapterInfo?['chapter'] as String?,
+        nationIso: widget.chapterInfo?['nationIso'] as String?,
+      );
       ref.read(authProvider.notifier).setLeader(leaderId);
 
       if (!mounted) return;

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../core/utils/api_client.dart';
 import '../../program/providers/program_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -154,9 +155,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       );
 
+      // 이미 리더면 등록 화면으로 보낼 것이 아니라 지부만 채우면 된다.
+      // 033 이전에 등록한 지부장은 이 칸이 비어 있어 알림이 안 나간다.
+      final iso = isoForUbfNation(match.nation) ?? '';
+      if (ref.read(currentUserProvider).isLeader && iso.isNotEmpty) {
+        await ApiClient.updateLeaderChapter(
+          chapter: match.chapterName,
+          nationIso: iso,
+        );
+        return;
+      }
+
       if (confirmed == true && mounted) {
-        // 리더 등록 화면으로 이동
-        context.push('/become-leader');
+        // 여기서 찾아낸 지부를 등록 화면까지 들고 간다. 서버가 같은
+        // 대응표를 따로 들고 있으면 지부 목록이 바뀔 때 어긋난다(033).
+        context.push(
+          '/become-leader',
+          extra: {
+            'chapter': match.chapterName,
+            'nationIso': isoForUbfNation(match.nation) ?? '',
+          },
+        );
       }
     } catch (_) {
       // JSON 로드 실패 시 무시 — 참가자로 계속 진행
@@ -458,6 +477,8 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 12),
+        const _ChapterNotice(),
         if (!widget.embedded) ...[
           const SizedBox(height: 20),
           Text(
@@ -565,6 +586,92 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
     return widget.embedded
         ? body
         : SingleChildScrollView(padding: const EdgeInsets.all(24), child: body);
+  }
+}
+
+// ─── 우리 지부 지부장의 수양회 알림 ─────────────────────────
+//
+// 한 번이라도 등록한 적이 있으면 그 등록서에 나라와 지부가 적혀 있다.
+// 그 지부의 지부장이 새 수양회를 만들면 UUID 를 몰라도 여기서 보인다.
+//
+// 처음 오는 사람에게는 아무것도 안 나온다 — 나라·지부를 알 방법이 없고,
+// 그때는 UUID 가 유일한 길이다.
+class _ChapterNotice extends ConsumerWidget {
+  const _ChapterNotice();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final async = ref.watch(chapterProgramsProvider);
+
+    return async.when(
+      // 못 불러와도 조용히 지나간다. 알림은 부가 기능이고, 여기서 오류를
+      // 띄우면 멀쩡히 살아 있는 UUID 경로까지 막힌 것처럼 보인다.
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (programs) {
+        if (programs.isEmpty) return const SizedBox.shrink();
+        return Column(
+          children: [
+            for (final raw in programs.cast<Map<String, dynamic>>())
+              Card(
+                margin: const EdgeInsets.only(bottom: 10),
+                color: theme.colorScheme.primaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.chapterNoticeTitle('${raw['leader_name'] ?? ''}'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        [
+                          raw['name'] ?? '',
+                          if (raw['location'] != null) raw['location'],
+                          '${raw['start_date'] ?? ''}'.split('T').first,
+                        ].where((e) => '$e'.isNotEmpty).join(' · '),
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.chapterNoticeAsk,
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {},
+                            child: Text(l10n.chapterNoticeLater),
+                          ),
+                          const SizedBox(width: 6),
+                          FilledButton(
+                            onPressed: () =>
+                                context.push('/registration/${raw['id']}'),
+                            child: Text(l10n.chapterNoticeJoin),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 }
 

@@ -110,7 +110,8 @@ class _UbfAppState extends ConsumerState<UbfApp> {
         ),
         GoRoute(
           path: '/become-leader',
-          builder: (_, _) => const BecomeLeaderScreen(),
+          builder: (_, s) =>
+              BecomeLeaderScreen(chapterInfo: s.extra as Map<String, dynamic>?),
         ),
         GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
         GoRoute(

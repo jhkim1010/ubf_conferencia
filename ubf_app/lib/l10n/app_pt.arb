@@ -765,5 +765,9 @@
   "homeAlsoAttending": "Eu também participo",
   "homeAlsoAttendingSub": "Inscreva-se ou abra a inscrição que você já preencheu",
   "homePickMyProgram": "Entrar direto em um dos meus retiros",
-  "homeOrEnterUuid": "Ou digite o UUID do retiro de outra pessoa"
+  "homeOrEnterUuid": "Ou digite o UUID do retiro de outra pessoa",
+  "chapterNoticeTitle": "O líder da sua sede {leader} criou um retiro",
+  "chapterNoticeAsk": "Você gostaria de participar?",
+  "chapterNoticeJoin": "Sim, quero me inscrever",
+  "chapterNoticeLater": "Agora não"
 }

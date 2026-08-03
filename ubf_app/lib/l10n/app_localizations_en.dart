@@ -2548,4 +2548,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeOrEnterUuid =>
       'Or enter a UUID for someone else\'s conference';
+
+  @override
+  String chapterNoticeTitle(String leader) {
+    return 'Your chapter leader $leader has created a conference';
+  }
+
+  @override
+  String get chapterNoticeAsk => 'Would you like to attend?';
+
+  @override
+  String get chapterNoticeJoin => 'Yes, register';
+
+  @override
+  String get chapterNoticeLater => 'Not now';
 }

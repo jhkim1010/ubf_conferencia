@@ -4697,6 +4697,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Or enter a UUID for someone else\'s conference'**
   String get homeOrEnterUuid;
+
+  /// No description provided for @chapterNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your chapter leader {leader} has created a conference'**
+  String chapterNoticeTitle(String leader);
+
+  /// No description provided for @chapterNoticeAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Would you like to attend?'**
+  String get chapterNoticeAsk;
+
+  /// No description provided for @chapterNoticeJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, register'**
+  String get chapterNoticeJoin;
+
+  /// No description provided for @chapterNoticeLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get chapterNoticeLater;
 }
 
 class _AppLocalizationsDelegate

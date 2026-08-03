@@ -473,16 +473,53 @@ class ApiClient {
 
   // ─── 리더 ────────────────────────────────────────────────
 
-  static Future<String> registerAsLeader(String name) async {
+  /// 리더 등록. 지부는 "지부장이신가요?" 확인 화면이 찾아낸 값을 함께 보낸다 —
+  /// 서버가 같은 대응표를 따로 들고 있으면 지부 목록이 바뀔 때 어긋난다(033).
+  static Future<String> registerAsLeader(
+    String name, {
+    String? chapter,
+    String? nationIso,
+  }) async {
     final response = await http.post(
       _uri('/leaders/register'),
       headers: await _headers(),
-      body: jsonEncode({'name': name}),
+      body: jsonEncode({
+        'name': name,
+        'chapter': ?chapter,
+        'nationIso': ?nationIso,
+      }),
     );
     final data = _decode(response);
     // 리더 권한이 포함된 새 JWT 저장
     await saveToken(data['token'] as String);
     return data['leaderId'] as String;
+  }
+
+  /// 이미 리더인 사람의 지부를 채운다(033 이전에 등록한 사람).
+  /// 실패해도 조용히 넘긴다 — 알림은 부가 기능이고, 여기서 막히면
+  /// 로그인 직후 화면이 서지 않는다.
+  static Future<void> updateLeaderChapter({
+    required String chapter,
+    required String nationIso,
+  }) async {
+    try {
+      await http.patch(
+        _uri('/leaders/me/chapter'),
+        headers: await _headers(),
+        body: jsonEncode({'chapter': chapter, 'nationIso': nationIso}),
+      );
+    } catch (_) {}
+  }
+
+  /// 우리 지부 지부장이 만든 수양회. 서버가 내 등록서를 보고 판단한다 —
+  /// 앱이 "내 지부는 이것" 이라고 보내오게 하면 아무 지부나 적어 남의
+  /// 수양회 UUID 를 받아 갈 수 있다.
+  static Future<List<dynamic>> getChapterPrograms() async {
+    final response = await http.get(
+      _uri('/programs/for-my-chapter'),
+      headers: await _headers(),
+    );
+    return _decodeList(response);
   }
 
   // ─── 입금 ────────────────────────────────────────────────

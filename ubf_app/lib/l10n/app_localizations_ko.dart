@@ -2489,4 +2489,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get homeOrEnterUuid => '다른 분이 만든 수양회는 UUID 를 적어 주십시오';
+
+  @override
+  String chapterNoticeTitle(String leader) {
+    return '지부장 $leader 님이 만든 수양회가 있습니다';
+  }
+
+  @override
+  String get chapterNoticeAsk => '참석하시겠습니까?';
+
+  @override
+  String get chapterNoticeJoin => '예, 등록하겠습니다';
+
+  @override
+  String get chapterNoticeLater => '나중에';
 }

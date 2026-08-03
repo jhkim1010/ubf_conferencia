@@ -30,6 +30,12 @@ final programMealsProvider =
       (_, programId) => ApiClient.getProgramMeals(programId),
     );
 
+// 우리 지부 지부장이 만든 수양회(033). 한 번이라도 등록한 적이 있어야
+// 나라·지부를 알 수 있다 — 처음 오는 사람에게는 빈 목록이 온다.
+final chapterProgramsProvider = FutureProvider<List<dynamic>>(
+  (_) => ApiClient.getChapterPrograms(),
+);
+
 // 참가자 전체 목록
 final programRegistrationsProvider =
     FutureProvider.family<List<dynamic>, String>(
