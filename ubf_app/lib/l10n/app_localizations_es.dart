@@ -370,7 +370,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Si no está en la lista, ingrésalo manualmente abajo';
 
   @override
-  String get regBranch => 'Nombre de la sede *';
+  String get regBranch => 'Nombre del capítulo *';
 
   @override
   String get regBranchHint => 'ej. Tokio, Chicago';
@@ -573,7 +573,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get summaryCountry => 'País';
 
   @override
-  String get summaryBranch => 'Sede';
+  String get summaryBranch => 'Capítulo';
 
   @override
   String get summaryRealName => 'Nombre real';
@@ -1623,12 +1623,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String mtrArrivalRoute(String airport) {
-    return '$airport → Sede';
+    return '$airport → Sede del retiro';
   }
 
   @override
   String mtrDepartureRoute(String airport) {
-    return 'Sede → $airport';
+    return 'Sede del retiro → $airport';
   }
 
   @override
@@ -1762,7 +1762,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get privacyWhat =>
-      'Nombre, nombre bíblico, sexo, edad, país de residencia y sede; datos de vuelo; restricciones alimentarias; condiciones de salud; preferencia de compañero de cuarto; estado del pago. Si usa SOS, también se envía su ubicación en ese momento.';
+      'Nombre, nombre bíblico, sexo, edad, país de residencia y capítulo; datos de vuelo; restricciones alimentarias; condiciones de salud; preferencia de compañero de cuarto; estado del pago. Si usa SOS, también se envía su ubicación en ese momento.';
 
   @override
   String get privacyWhyTitle => 'Para qué';
