@@ -370,7 +370,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get regChapterManualHint => 'Se não estiver na lista, digite abaixo';
 
   @override
-  String get regBranch => 'Nome do capítulo *';
+  String get regBranch => 'Nome da sede *';
 
   @override
   String get regBranchHint => 'ex.: São Paulo, Chicago';
@@ -574,7 +574,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get summaryCountry => 'País';
 
   @override
-  String get summaryBranch => 'Capítulo';
+  String get summaryBranch => 'Sede';
 
   @override
   String get summaryRealName => 'Nome real';
@@ -1766,7 +1766,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get privacyWhat =>
-      'Nome, nome bíblico, sexo, idade, país de residência e capítulo; dados do voo; restrições alimentares; condições de saúde; preferência de colega de quarto; situação do pagamento. Se você usar o SOS, sua localização naquele momento também é enviada.';
+      'Nome, nome bíblico, sexo, idade, país de residência e sede; dados do voo; restrições alimentares; condições de saúde; preferência de colega de quarto; situação do pagamento. Se você usar o SOS, sua localização naquele momento também é enviada.';
 
   @override
   String get privacyWhyTitle => 'Para quê';
@@ -2536,8 +2536,8 @@ class AppLocalizationsPt extends AppLocalizations {
       'Seu cartão, seu QR e as pessoas que você conheceu';
 
   @override
-  String get companionSameBranch => 'Mesmo capítulo que o meu';
+  String get companionSameBranch => 'Mesma sede que a minha';
 
   @override
-  String get companionSameBranchSub => 'Desative se for de outro capítulo';
+  String get companionSameBranchSub => 'Desative se for de outra sede';
 }
