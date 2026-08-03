@@ -2538,4 +2538,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get companionSameBranchSub => 'Desactiva si pertenece a otro capítulo';
+
+  @override
+  String get companionMustRegister =>
+      'Cada acompañante también debe inscribirse por su cuenta.';
+
+  @override
+  String get companionWhy =>
+      'Los agregas aquí para que los ubiquen en la misma habitación. Si no te importa que los ubiquen por separado, no hace falta agregarlos.';
 }

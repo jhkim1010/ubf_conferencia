@@ -773,5 +773,7 @@
   "homeQrShare": "Compartir por QR",
   "homeQrShareSub": "Tu tarjeta, tu QR y la gente que conociste",
   "companionSameBranch": "Mismo capítulo que yo",
-  "companionSameBranchSub": "Desactiva si pertenece a otro capítulo"
+  "companionSameBranchSub": "Desactiva si pertenece a otro capítulo",
+  "companionMustRegister": "Cada acompañante también debe inscribirse por su cuenta.",
+  "companionWhy": "Los agregas aquí para que los ubiquen en la misma habitación. Si no te importa que los ubiquen por separado, no hace falta agregarlos."
 }

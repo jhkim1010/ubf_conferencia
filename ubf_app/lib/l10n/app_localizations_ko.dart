@@ -2470,4 +2470,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get companionSameBranchSub => '다른 지부에서 오시면 꺼 주세요';
+
+  @override
+  String get companionMustRegister => '동반자도 각자 따로 등록해야 합니다.';
+
+  @override
+  String get companionWhy =>
+      '여기에 적는 것은 같은 방에 배정받기 위해서입니다. 방이 따로 배정되어도 괜찮으시면 적지 않으셔도 됩니다.';
 }

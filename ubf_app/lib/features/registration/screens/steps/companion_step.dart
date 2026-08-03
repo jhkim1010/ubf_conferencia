@@ -144,6 +144,41 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
               ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 14),
+            // 여기에 적는 것이 "등록"이라고 오해하는 사람이 있다. 실제로는
+            // 방 배정에만 쓰이고, 동반자도 각자 등록해야 한다. 그 사실을
+            // 안 적어 두면 등록하지 않은 사람이 명단에 없는 채로 온다.
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.info_outline, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.companionMustRegister,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.companionWhy,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 20),
             if (_companions.isEmpty)
               Padding(

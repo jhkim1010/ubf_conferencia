@@ -1549,5 +1549,7 @@
   "homeQrShare": "QR sharing",
   "homeQrShareSub": "Your card, your QR, and the people you met",
   "companionSameBranch": "Same chapter as me",
-  "companionSameBranchSub": "Turn off if they belong to a different chapter"
+  "companionSameBranchSub": "Turn off if they belong to a different chapter",
+  "companionMustRegister": "Each companion has to register on their own as well.",
+  "companionWhy": "You add them here so you are placed in the same room. If it is fine for you to be placed separately, you do not need to add them."
 }

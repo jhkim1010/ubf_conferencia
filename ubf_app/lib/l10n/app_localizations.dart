@@ -4661,6 +4661,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn off if they belong to a different chapter'**
   String get companionSameBranchSub;
+
+  /// No description provided for @companionMustRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Each companion has to register on their own as well.'**
+  String get companionMustRegister;
+
+  /// No description provided for @companionWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'You add them here so you are placed in the same room. If it is fine for you to be placed separately, you do not need to add them.'**
+  String get companionWhy;
 }
 
 class _AppLocalizationsDelegate

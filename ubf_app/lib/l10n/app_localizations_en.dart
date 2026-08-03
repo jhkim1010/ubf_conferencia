@@ -2526,4 +2526,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get companionSameBranchSub =>
       'Turn off if they belong to a different chapter';
+
+  @override
+  String get companionMustRegister =>
+      'Each companion has to register on their own as well.';
+
+  @override
+  String get companionWhy =>
+      'You add them here so you are placed in the same room. If it is fine for you to be placed separately, you do not need to add them.';
 }

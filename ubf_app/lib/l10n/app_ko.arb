@@ -773,5 +773,7 @@
   "homeQrShare": "QR 나눔",
   "homeQrShareSub": "내 명함·QR·만난 사람들",
   "companionSameBranch": "저와 같은 지부입니다",
-  "companionSameBranchSub": "다른 지부에서 오시면 꺼 주세요"
+  "companionSameBranchSub": "다른 지부에서 오시면 꺼 주세요",
+  "companionMustRegister": "동반자도 각자 따로 등록해야 합니다.",
+  "companionWhy": "여기에 적는 것은 같은 방에 배정받기 위해서입니다. 방이 따로 배정되어도 괜찮으시면 적지 않으셔도 됩니다."
 }

@@ -2540,4 +2540,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get companionSameBranchSub => 'Desative se for de outra sede';
+
+  @override
+  String get companionMustRegister =>
+      'Cada acompanhante também precisa se inscrever por conta própria.';
+
+  @override
+  String get companionWhy =>
+      'Você os adiciona aqui para ficarem no mesmo quarto. Se não fizer diferença ficarem em quartos separados, não é preciso adicionar.';
 }
