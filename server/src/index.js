@@ -23,6 +23,8 @@ import companionsRouter from './routes/companions.js';
 import assignmentsRouter from './routes/assignments.js';
 import transportRouter from './routes/transport.js';
 import serviceSignupsRouter from './routes/service_signups.js';
+import mediaRouter, { mediaStatic } from './routes/media.js';
+import libraryRouter from './routes/library.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -201,6 +203,12 @@ app.use('/companions', companionsRouter);
 app.use('/assignments', assignmentsRouter);
 app.use('/transport', transportRouter);
 app.use('/service-signups', serviceSignupsRouter);
+app.use('/media', mediaRouter);
+app.use('/library', libraryRouter);
+
+// 올린 이미지 내보내기. 운영에서는 nginx 가 먼저 잡으므로 여기까지 오지
+// 않는다 — 로컬(serve-web.sh)에서 사진을 확인하기 위한 경로다.
+app.use('/media', mediaStatic);
 
 // 에러 핸들러
 app.use((err, req, res, _next) => {
