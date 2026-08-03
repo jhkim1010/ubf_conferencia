@@ -2575,4 +2575,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chapterNoticeLater => 'Agora não';
+
+  @override
+  String get cpFeeDescHint => 'ex.: quarto coletivo, 3 refeições';
+
+  @override
+  String get cpFeeDescLooksLikeAmount =>
+      'Isto parece um valor. Escreva o número no campo de taxa à esquerda; este campo é para o que está incluído.';
+
+  @override
+  String get cpFeeNoneWarning =>
+      'Não há taxa definida, então os participantes não veem a tela de taxa. Deixe vazio só se o retiro for gratuito.';
 }

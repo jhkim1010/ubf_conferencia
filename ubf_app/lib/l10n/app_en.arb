@@ -1566,5 +1566,8 @@
   },
   "chapterNoticeAsk": "Would you like to attend?",
   "chapterNoticeJoin": "Yes, register",
-  "chapterNoticeLater": "Not now"
+  "chapterNoticeLater": "Not now",
+  "cpFeeDescHint": "e.g. shared room, 3 meals a day",
+  "cpFeeDescLooksLikeAmount": "This looks like an amount. Put the number in the fee box on the left — this box is for what the fee covers.",
+  "cpFeeNoneWarning": "No fee is set, so attendees never see the fee step. Leave it empty only if this conference is free."
 }

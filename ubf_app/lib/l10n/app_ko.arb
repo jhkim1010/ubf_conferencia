@@ -783,5 +783,8 @@
   "chapterNoticeTitle": "지부장 {leader} 님이 만든 수양회가 있습니다",
   "chapterNoticeAsk": "참석하시겠습니까?",
   "chapterNoticeJoin": "예, 등록하겠습니다",
-  "chapterNoticeLater": "나중에"
+  "chapterNoticeLater": "나중에",
+  "cpFeeDescHint": "예: 단체실, 하루 세 끼",
+  "cpFeeDescLooksLikeAmount": "금액처럼 보입니다. 숫자는 왼쪽 참가비 칸에 적어 주십시오 — 이 칸은 무엇이 포함되는지 적는 곳입니다.",
+  "cpFeeNoneWarning": "참가비가 비어 있어 참가자에게 참가비 화면이 나오지 않습니다. 무료 수양회일 때만 비워 두십시오."
 }

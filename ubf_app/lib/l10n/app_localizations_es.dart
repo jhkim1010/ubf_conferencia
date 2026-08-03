@@ -2573,4 +2573,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chapterNoticeLater => 'Ahora no';
+
+  @override
+  String get cpFeeDescHint => 'ej. habitación compartida, 3 comidas';
+
+  @override
+  String get cpFeeDescLooksLikeAmount =>
+      'Esto parece un importe. Escribe el número en el campo de cuota de la izquierda; este campo es para lo que incluye.';
+
+  @override
+  String get cpFeeNoneWarning =>
+      'No hay cuota definida, así que los participantes no ven la pantalla de cuota. Déjalo vacío solo si el retiro es gratuito.';
 }

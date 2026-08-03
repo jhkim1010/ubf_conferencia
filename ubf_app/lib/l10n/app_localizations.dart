@@ -4721,6 +4721,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get chapterNoticeLater;
+
+  /// No description provided for @cpFeeDescHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. shared room, 3 meals a day'**
+  String get cpFeeDescHint;
+
+  /// No description provided for @cpFeeDescLooksLikeAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'This looks like an amount. Put the number in the fee box on the left — this box is for what the fee covers.'**
+  String get cpFeeDescLooksLikeAmount;
+
+  /// No description provided for @cpFeeNoneWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'No fee is set, so attendees never see the fee step. Leave it empty only if this conference is free.'**
+  String get cpFeeNoneWarning;
 }
 
 class _AppLocalizationsDelegate

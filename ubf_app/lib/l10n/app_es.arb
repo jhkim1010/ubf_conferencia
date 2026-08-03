@@ -783,5 +783,8 @@
   "chapterNoticeTitle": "Tu líder de capítulo {leader} creó un retiro",
   "chapterNoticeAsk": "¿Deseas asistir?",
   "chapterNoticeJoin": "Sí, inscribirme",
-  "chapterNoticeLater": "Ahora no"
+  "chapterNoticeLater": "Ahora no",
+  "cpFeeDescHint": "ej. habitación compartida, 3 comidas",
+  "cpFeeDescLooksLikeAmount": "Esto parece un importe. Escribe el número en el campo de cuota de la izquierda; este campo es para lo que incluye.",
+  "cpFeeNoneWarning": "No hay cuota definida, así que los participantes no ven la pantalla de cuota. Déjalo vacío solo si el retiro es gratuito."
 }

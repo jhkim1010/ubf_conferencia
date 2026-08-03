@@ -2562,4 +2562,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chapterNoticeLater => 'Not now';
+
+  @override
+  String get cpFeeDescHint => 'e.g. shared room, 3 meals a day';
+
+  @override
+  String get cpFeeDescLooksLikeAmount =>
+      'This looks like an amount. Put the number in the fee box on the left — this box is for what the fee covers.';
+
+  @override
+  String get cpFeeNoneWarning =>
+      'No fee is set, so attendees never see the fee step. Leave it empty only if this conference is free.';
 }

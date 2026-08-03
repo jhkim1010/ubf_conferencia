@@ -2503,4 +2503,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chapterNoticeLater => '나중에';
+
+  @override
+  String get cpFeeDescHint => '예: 단체실, 하루 세 끼';
+
+  @override
+  String get cpFeeDescLooksLikeAmount =>
+      '금액처럼 보입니다. 숫자는 왼쪽 참가비 칸에 적어 주십시오 — 이 칸은 무엇이 포함되는지 적는 곳입니다.';
+
+  @override
+  String get cpFeeNoneWarning =>
+      '참가비가 비어 있어 참가자에게 참가비 화면이 나오지 않습니다. 무료 수양회일 때만 비워 두십시오.';
 }
