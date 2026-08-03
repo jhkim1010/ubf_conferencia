@@ -12,6 +12,9 @@ const supportedLanguages = <(String code, String label)>[
   ('ko', '한국어'),
   ('en', 'English'),
   ('es', 'Español'),
+  // 브라질에서도 참석한다. 스페인어로 대신 읽게 두면 안 된다 —
+  // 가깝다고 해서 읽히는 언어가 아니다.
+  ('pt', 'Português'),
 ];
 
 const _prefsKey = 'app_locale';

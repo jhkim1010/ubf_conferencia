@@ -65,6 +65,19 @@ Future<List<UbfNationData>> loadUbfChapters() async {
       .toList();
 }
 
+/// 대륙 표시 이름.
+///
+/// 원본 목록(assets/ubf_chapters.json)의 값은 UBF 국제본부가 쓰는 약칭이라
+/// 화면에 그대로 내놓으면 뜻이 통하지 않는다 — 'LATIN' 만 보고 남미 전체를
+/// 가리킨다고 읽기 어렵다.
+///
+/// **저장·비교에 쓰는 값은 그대로 두고 보여줄 때만 바꾼다.** 원본 값을
+/// 고치면 목록을 다시 받아올 때 조용히 되돌아간다.
+String continentLabel(String raw) => switch (raw) {
+  'LATIN' => 'Latin America (LATAM)',
+  _ => raw,
+};
+
 /// 대륙 목록 추출 (중복 제거, 알파벳순)
 List<String> getContinents(List<UbfNationData> data) {
   return data.map((e) => e.continent).toSet().toList()..sort();

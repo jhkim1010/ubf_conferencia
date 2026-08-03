@@ -61,7 +61,7 @@ function normalizeHotelOptions(raw) {
   const out = [];
   raw.forEach((o, i) => {
     const labels = {};
-    for (const lang of ['ko', 'en', 'es']) {
+    for (const lang of ['ko', 'en', 'es', 'pt']) {
       const v = String(o?.labels?.[lang] ?? '').trim();
       if (v) labels[lang] = v;
     }
@@ -97,7 +97,7 @@ function normalizeDiscountOptions(raw) {
     // 문구는 언어별로 받는다. 한 줄만 적으면 다른 언어 사용자는 읽지 못한다.
     // label 은 기본값이자 번역이 없을 때의 대체값이다.
     const labels = {};
-    for (const lang of ['ko', 'en', 'es']) {
+    for (const lang of ['ko', 'en', 'es', 'pt']) {
       const v = String(o?.labels?.[lang] ?? '').trim();
       if (v) labels[lang] = v;
     }

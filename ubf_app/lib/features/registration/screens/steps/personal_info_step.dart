@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/utils/country_guess.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/ubf_chapters.dart';
 import '../../../../../core/constants/world_countries.dart';
@@ -72,6 +73,35 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
         }
       }
     });
+
+    // 아직 아무것도 안 고른 사람에게만 지금 있는 나라를 채워 준다.
+    // 저장된 값이 있으면 건드리지 않는다 — 짐작이 사람이 정한 것을 이기면 안 된다.
+    if (_nation == null) await _prefillFromLocation(data);
+  }
+
+  // 시간대로 지금 있는 나라를 짐작해 **대륙과 국가를 함께** 골라 둔다.
+  //
+  // 국가만 채우면 대륙 칸이 빈 채로 남아 국가 드롭다운이 잠긴다(대륙을 골라야
+  // 열린다). 둘은 같이 채워야 화면이 말이 된다.
+  //
+  // UBF 지부가 없는 나라도 있다. 그때는 아무것도 채우지 않는다 — 목록에 없는
+  // 값을 넣으면 드롭다운이 빈칸을 고른 상태가 된다.
+  Future<void> _prefillFromLocation(List<UbfNationData> data) async {
+    final iso = await CountryGuess.guess(
+      localeCountryCode:
+          WidgetsBinding.instance.platformDispatcher.locale.countryCode,
+    );
+    if (!mounted || iso == null) return;
+    final nation = ubfNationForIso(data, iso);
+    if (nation == null) return;
+    final match = data.where((e) => e.nation == nation);
+    if (match.isEmpty) return;
+    if (_nation != null || _continent != null) return; // 그새 골랐으면 그대로 둔다
+    setState(() {
+      _continent = match.first.continent;
+      _nation = nation;
+    });
+    _save();
   }
 
   @override
@@ -159,7 +189,11 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
           decoration: InputDecoration(labelText: l10n.regContinent),
           hint: Text(l10n.regContinentHint),
           items: continents.map((c) {
-            return DropdownMenuItem<String>(value: c, child: Text(c));
+            // 값은 원본 그대로, 보여주는 것만 읽히는 이름으로.
+            return DropdownMenuItem<String>(
+              value: c,
+              child: Text(continentLabel(c)),
+            );
           }).toList(),
           onChanged: _onContinentChanged,
         ),

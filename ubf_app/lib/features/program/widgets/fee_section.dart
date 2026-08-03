@@ -285,7 +285,7 @@ String _labelSummary(Map<String, dynamic> option) {
   final raw = option['labels'];
   final labels = raw is Map ? Map<String, dynamic>.from(raw) : const {};
   final parts = <String>[];
-  for (final lang in ['ko', 'en', 'es']) {
+  for (final lang in ['ko', 'en', 'es', 'pt']) {
     final v = labels[lang];
     if (v is String && v.trim().isNotEmpty) parts.add('$lang  ${v.trim()}');
   }

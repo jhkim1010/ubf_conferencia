@@ -116,23 +116,28 @@ check_flutter_tests() {
   fi
 }
 
-# ARB 3개 파일의 키 집합 일치 검사.
+# ARB 파일들의 키 집합 일치 검사.
+#
+# 로케일을 **목록에 적지 않는다.** app_*.arb 를 훑어서 en 과 비교한다.
+# 언어를 늘릴 때 이 검사를 같이 고치는 것을 잊으면, 새 언어만 조용히
+# 어긋난 채 통과한다 — 검사가 아무것도 안 보는 것과 같다.
+#
 # @-접두 키(메타데이터·@@locale)는 로케일마다 다르므로 비교 대상에서 제외한다.
 check_arb_parity() {
   command -v jq >/dev/null || { skip arb-parity "jq 없음"; return 0; }
-  local en ko es diff_ko diff_es
+  local en msg="" f loc other diff
   en="$(jq -r 'keys[]|select(startswith("@")|not)' "$APP/lib/l10n/app_en.arb" | sort)"
-  ko="$(jq -r 'keys[]|select(startswith("@")|not)' "$APP/lib/l10n/app_ko.arb" | sort)"
-  es="$(jq -r 'keys[]|select(startswith("@")|not)' "$APP/lib/l10n/app_es.arb" | sort)"
-  diff_ko="$(diff <(echo "$en") <(echo "$ko") | grep -E '^[<>]' || true)"
-  diff_es="$(diff <(echo "$en") <(echo "$es") | grep -E '^[<>]' || true)"
-  if [ -z "$diff_ko" ] && [ -z "$diff_es" ]; then
+  for f in "$APP"/lib/l10n/app_*.arb; do
+    loc="$(basename "$f" .arb)"; loc="${loc#app_}"
+    [ "$loc" = en ] && continue
+    other="$(jq -r 'keys[]|select(startswith("@")|not)' "$f" | sort)"
+    diff="$(diff <(echo "$en") <(echo "$other") | grep -E '^[<>]' || true)"
+    [ -n "$diff" ] && msg="$msg $loc 불일치: $(echo "$diff" | head -3 | tr '\n' ' ') /"
+  done
+  if [ -z "$msg" ]; then
     pass arb-parity
   else
-    local msg=""
-    [ -n "$diff_ko" ] && msg="ko 불일치: $(echo "$diff_ko" | head -3 | tr '\n' ' ')"
-    [ -n "$diff_es" ] && msg="$msg / es 불일치: $(echo "$diff_es" | head -3 | tr '\n' ' ')"
-    fail arb-parity "$msg  (< 는 en 에만, > 는 해당 로케일에만 존재)"
+    fail arb-parity "${msg% /}  (< 는 en 에만, > 는 해당 로케일에만 존재)"
   fi
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/country_guess.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/constants/world_countries.dart';
@@ -26,6 +27,26 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     super.initState();
     // 구글/카카오에서 받은 이름을 기본값으로 설정
     _nameController.text = ref.read(currentUserProvider).name ?? '';
+    _prefillCountry();
+  }
+
+  // 지금 있는 나라를 기본으로 골라 둔다(시간대로 짐작).
+  //
+  // 200개가 넘는 목록에서 백지로 찾게 하면 시간이 걸리고 엉뚱한 나라를
+  // 고르기도 쉽다. 대부분은 지금 있는 나라에서 오므로 대개 그대로 맞다.
+  // **이미 고른 값이 있으면 덮지 않는다** — 짐작이 사람이 정한 것을 이기면 안 된다.
+  Future<void> _prefillCountry() async {
+    final iso = await CountryGuess.guess(
+      localeCountryCode:
+          WidgetsBinding.instance.platformDispatcher.locale.countryCode,
+    );
+    if (!mounted || iso == null || _selectedCountry != null) return;
+    final match = WorldCountries.all.where((c) => c.iso == iso);
+    if (match.isEmpty) return;
+    setState(() {
+      _selectedCountry = iso;
+      _countryController.text = match.first.name;
+    });
   }
 
   @override
