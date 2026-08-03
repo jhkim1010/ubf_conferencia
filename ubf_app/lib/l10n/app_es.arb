@@ -771,5 +771,7 @@
   "cardOpenEmail": "Correo",
   "cardNoContacts": "Esta persona no compartió datos de contacto.",
   "homeQrShare": "Compartir por QR",
-  "homeQrShareSub": "Tu tarjeta, tu QR y la gente que conociste"
+  "homeQrShareSub": "Tu tarjeta, tu QR y la gente que conociste",
+  "companionSameBranch": "Mismo capítulo que yo",
+  "companionSameBranchSub": "Desactiva si pertenece a otro capítulo"
 }

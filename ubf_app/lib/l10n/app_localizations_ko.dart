@@ -2464,4 +2464,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get homeQrShareSub => '내 명함·QR·만난 사람들';
+
+  @override
+  String get companionSameBranch => '저와 같은 지부입니다';
+
+  @override
+  String get companionSameBranchSub => '다른 지부에서 오시면 꺼 주세요';
 }

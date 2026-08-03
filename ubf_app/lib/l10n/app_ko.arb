@@ -771,5 +771,7 @@
   "cardOpenEmail": "메일",
   "cardNoContacts": "이 분은 연락처를 나누지 않았습니다.",
   "homeQrShare": "QR 나눔",
-  "homeQrShareSub": "내 명함·QR·만난 사람들"
+  "homeQrShareSub": "내 명함·QR·만난 사람들",
+  "companionSameBranch": "저와 같은 지부입니다",
+  "companionSameBranchSub": "다른 지부에서 오시면 꺼 주세요"
 }

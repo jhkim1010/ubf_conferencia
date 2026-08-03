@@ -1547,5 +1547,7 @@
   "cardOpenEmail": "Email",
   "cardNoContacts": "This person did not share contact details.",
   "homeQrShare": "QR sharing",
-  "homeQrShareSub": "Your card, your QR, and the people you met"
+  "homeQrShareSub": "Your card, your QR, and the people you met",
+  "companionSameBranch": "Same chapter as me",
+  "companionSameBranchSub": "Turn off if they belong to a different chapter"
 }

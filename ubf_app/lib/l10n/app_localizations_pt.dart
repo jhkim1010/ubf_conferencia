@@ -2534,4 +2534,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get homeQrShareSub =>
       'Seu cartão, seu QR e as pessoas que você conheceu';
+
+  @override
+  String get companionSameBranch => 'Mesmo capítulo que o meu';
+
+  @override
+  String get companionSameBranchSub => 'Desative se for de outro capítulo';
 }

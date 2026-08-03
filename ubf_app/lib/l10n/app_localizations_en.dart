@@ -2519,4 +2519,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeQrShareSub => 'Your card, your QR, and the people you met';
+
+  @override
+  String get companionSameBranch => 'Same chapter as me';
+
+  @override
+  String get companionSameBranchSub =>
+      'Turn off if they belong to a different chapter';
 }

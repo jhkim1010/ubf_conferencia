@@ -45,6 +45,9 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     'age': r['age'],
     'language': r['language'] ?? '',
     'branch': r['branch'] ?? '',
+    // 기본은 "같은 지부". 이미 있는 동반자는 서버 기본값이 false 라
+    // 적어 둔 지부를 그대로 쓴다(032).
+    'sameBranchAsPrimary': r['same_branch_as_primary'] ?? false,
     'sameFlightAsPrimary': r['same_flight_as_primary'] ?? true,
     'arrivalFlightNo': (r['arrival_flight'] as Map?)?['flight_no'] ?? '',
     'departureFlightNo': (r['departure_flight'] as Map?)?['flight_no'] ?? '',
@@ -60,7 +63,10 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
       'gender': c['gender'],
       'age': c['age'],
       'language': c['language'],
+      // 체크가 켜져 있어도 적어 둔 값은 지우지 않고 함께 보낸다 —
+      // 체크를 풀면 예전에 적은 값이 다시 보여야 한다.
       'branch': c['branch'],
+      'sameBranchAsPrimary': c['sameBranchAsPrimary'] == true,
       'sameFlightAsPrimary': same,
       'arrivalFlight': (!same && '${c['arrivalFlightNo']}'.isNotEmpty)
           ? {'flight_no': c['arrivalFlightNo']}
@@ -166,7 +172,10 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
                   else if (c['gender'] == 'F')
                     l10n.genderFemale,
                   if (c['age'] != null) '${c['age']}',
-                  if ('${c['branch']}'.isNotEmpty) c['branch'],
+                  // 같은 지부면 굳이 되풀이하지 않는다 — 등록자 것과 같다.
+                  if (c['sameBranchAsPrimary'] != true &&
+                      '${c['branch']}'.isNotEmpty)
+                    c['branch'],
                 ].where((x) => x != null && '$x'.isNotEmpty).join(' · ');
                 return Card(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -235,6 +244,7 @@ class _CompanionSheetState extends State<_CompanionSheet> {
   late final TextEditingController _arrFlight;
   late final TextEditingController _depFlight;
   String? _gender;
+  bool _sameBranch = true;
   bool _sameFlight = true;
   bool _needsPickup = true;
 
@@ -250,6 +260,9 @@ class _CompanionSheetState extends State<_CompanionSheet> {
     _arrFlight = TextEditingController(text: e?['arrivalFlightNo'] ?? '');
     _depFlight = TextEditingController(text: e?['departureFlightNo'] ?? '');
     _gender = e?['gender'] as String?;
+    // 새로 추가하는 동반자는 "같은 지부"가 기본이다 — 대부분 그렇고,
+    // 아무것도 안 해도 맞는 쪽이 기본이어야 한다.
+    _sameBranch = e?['sameBranchAsPrimary'] ?? true;
     _sameFlight = e?['sameFlightAsPrimary'] ?? true;
     _needsPickup = e?['needsPickup'] ?? true;
   }
@@ -275,6 +288,7 @@ class _CompanionSheetState extends State<_CompanionSheet> {
       'age': int.tryParse(_age.text.trim()),
       'language': _language.text.trim(),
       'branch': _branch.text.trim(),
+      'sameBranchAsPrimary': _sameBranch,
       'sameFlightAsPrimary': _sameFlight,
       'arrivalFlightNo': _arrFlight.text.trim(),
       'departureFlightNo': _depFlight.text.trim(),
@@ -352,14 +366,29 @@ class _CompanionSheetState extends State<_CompanionSheet> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    controller: _branch,
-                    decoration: InputDecoration(labelText: l10n.summaryBranch),
+                if (!_sameBranch) ...[
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _branch,
+                      decoration: InputDecoration(
+                        labelText: l10n.summaryBranch,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ],
+            ),
+            // 동반자는 거의 언제나 등록자와 같은 지부다(부부·부모와 자녀).
+            // 다시 적게 하면 같은 지부가 'São Paulo UBF' / 'Sao Paulo' 로
+            // 갈라져 적힌다.
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              value: _sameBranch,
+              onChanged: (v) => setState(() => _sameBranch = v),
+              title: Text(l10n.companionSameBranch),
+              subtitle: Text(l10n.companionSameBranchSub),
             ),
             const SizedBox(height: 8),
             SwitchListTile(

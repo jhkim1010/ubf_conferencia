@@ -4649,6 +4649,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your card, your QR, and the people you met'**
   String get homeQrShareSub;
+
+  /// No description provided for @companionSameBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Same chapter as me'**
+  String get companionSameBranch;
+
+  /// No description provided for @companionSameBranchSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off if they belong to a different chapter'**
+  String get companionSameBranchSub;
 }
 
 class _AppLocalizationsDelegate
