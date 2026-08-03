@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../program/providers/program_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -248,6 +249,12 @@ class _DirectorHomeView extends ConsumerWidget {
             l10n.homeAlsoAttendingSub,
             style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           ),
+          const _MyProgramPicker(),
+          const SizedBox(height: 14),
+          Text(
+            l10n.homeOrEnterUuid,
+            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          ),
           _AttendeeHomeView(uuidController: uuidController, embedded: true),
           const SizedBox(height: 24),
           Container(
@@ -351,6 +358,12 @@ class _LeaderHomeView extends ConsumerWidget {
           const SizedBox(height: 2),
           Text(
             l10n.homeAlsoAttendingSub,
+            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          ),
+          const _MyProgramPicker(),
+          const SizedBox(height: 14),
+          Text(
+            l10n.homeOrEnterUuid,
             style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           ),
           _AttendeeHomeView(uuidController: uuidController, embedded: true),
@@ -552,6 +565,56 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
     return widget.embedded
         ? body
         : SingleChildScrollView(padding: const EdgeInsets.all(24), child: body);
+  }
+}
+
+// ─── 내가 만든 수양회 고르기 ─────────────────────────────────
+//
+// 담당자가 자기 수양회에 참석자로 들어갈 때 UUID 를 다시 찾아 붙여넣는 것은
+// 말이 안 된다. 만든 목록에서 고르면 된다.
+//
+// UUID 칸은 그대로 둔다 — **다른 분이 만든 수양회**에는 그것이 유일한 길이다.
+class _MyProgramPicker extends ConsumerWidget {
+  const _MyProgramPicker();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final async = ref.watch(leaderProgramsProvider);
+
+    return async.when(
+      // 목록을 못 불러와도 UUID 칸은 아래에 그대로 있다. 여기서 오류를
+      // 크게 띄우면 멀쩡한 경로까지 막힌 것처럼 보인다.
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (programs) {
+        if (programs.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: DropdownButtonFormField<String>(
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: l10n.homePickMyProgram,
+              prefixIcon: const Icon(Icons.event_available_outlined),
+              border: const OutlineInputBorder(),
+            ),
+            items: [
+              for (final raw in programs)
+                DropdownMenuItem(
+                  value: (raw as Map<String, dynamic>)['id'] as String,
+                  child: Text(
+                    '${raw['name'] ?? ''}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+            onChanged: (id) {
+              if (id != null) context.push('/registration/$id');
+            },
+          ),
+        );
+      },
+    );
   }
 }
 

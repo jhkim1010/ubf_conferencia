@@ -2555,4 +2555,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get homeAlsoAttendingSub =>
       'Inscreva-se ou abra a inscrição que você já preencheu';
+
+  @override
+  String get homePickMyProgram => 'Entrar direto em um dos meus retiros';
+
+  @override
+  String get homeOrEnterUuid => 'Ou digite o UUID do retiro de outra pessoa';
 }

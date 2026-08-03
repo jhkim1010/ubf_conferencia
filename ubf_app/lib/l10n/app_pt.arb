@@ -763,5 +763,7 @@
   "companionMustRegister": "Cada acompanhante também precisa se inscrever por conta própria.",
   "companionWhy": "Você os adiciona aqui para ficarem no mesmo quarto. Se não fizer diferença ficarem em quartos separados, não é preciso adicionar.",
   "homeAlsoAttending": "Eu também participo",
-  "homeAlsoAttendingSub": "Inscreva-se ou abra a inscrição que você já preencheu"
+  "homeAlsoAttendingSub": "Inscreva-se ou abra a inscrição que você já preencheu",
+  "homePickMyProgram": "Entrar direto em um dos meus retiros",
+  "homeOrEnterUuid": "Ou digite o UUID do retiro de outra pessoa"
 }

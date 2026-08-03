@@ -4685,6 +4685,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Register yourself, or open the registration you already filled in'**
   String get homeAlsoAttendingSub;
+
+  /// No description provided for @homePickMyProgram.
+  ///
+  /// In en, this message translates to:
+  /// **'Go straight to one of my conferences'**
+  String get homePickMyProgram;
+
+  /// No description provided for @homeOrEnterUuid.
+  ///
+  /// In en, this message translates to:
+  /// **'Or enter a UUID for someone else\'s conference'**
+  String get homeOrEnterUuid;
 }
 
 class _AppLocalizationsDelegate

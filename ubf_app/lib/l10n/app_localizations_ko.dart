@@ -2483,4 +2483,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get homeAlsoAttendingSub => '직접 등록하거나, 이미 적어 둔 내용을 열어 봅니다';
+
+  @override
+  String get homePickMyProgram => '내가 만든 수양회로 바로 들어가기';
+
+  @override
+  String get homeOrEnterUuid => '다른 분이 만든 수양회는 UUID 를 적어 주십시오';
 }

@@ -1553,5 +1553,7 @@
   "companionMustRegister": "Each companion has to register on their own as well.",
   "companionWhy": "You add them here so you are placed in the same room. If it is fine for you to be placed separately, you do not need to add them.",
   "homeAlsoAttending": "I'm attending too",
-  "homeAlsoAttendingSub": "Register yourself, or open the registration you already filled in"
+  "homeAlsoAttendingSub": "Register yourself, or open the registration you already filled in",
+  "homePickMyProgram": "Go straight to one of my conferences",
+  "homeOrEnterUuid": "Or enter a UUID for someone else's conference"
 }

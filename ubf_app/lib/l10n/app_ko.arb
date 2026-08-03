@@ -777,5 +777,7 @@
   "companionMustRegister": "동반자도 각자 따로 등록해야 합니다.",
   "companionWhy": "여기에 적는 것은 같은 방에 배정받기 위해서입니다. 방이 따로 배정되어도 괜찮으시면 적지 않으셔도 됩니다.",
   "homeAlsoAttending": "저도 참석합니다",
-  "homeAlsoAttendingSub": "직접 등록하거나, 이미 적어 둔 내용을 열어 봅니다"
+  "homeAlsoAttendingSub": "직접 등록하거나, 이미 적어 둔 내용을 열어 봅니다",
+  "homePickMyProgram": "내가 만든 수양회로 바로 들어가기",
+  "homeOrEnterUuid": "다른 분이 만든 수양회는 UUID 를 적어 주십시오"
 }

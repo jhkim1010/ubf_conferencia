@@ -2541,4 +2541,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeAlsoAttendingSub =>
       'Register yourself, or open the registration you already filled in';
+
+  @override
+  String get homePickMyProgram => 'Go straight to one of my conferences';
+
+  @override
+  String get homeOrEnterUuid =>
+      'Or enter a UUID for someone else\'s conference';
 }
