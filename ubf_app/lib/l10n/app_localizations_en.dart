@@ -1768,7 +1768,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyWho =>
-      'Only the conference organizers. Medical information is not shown in lists; an organizer opens it per person when needed, and that access is logged.';
+      'Conference organizers. Other participants see only what you choose to share through QR sharing — your verse, prayer topics and the contacts you switch on. Medical information is never shared with participants; it is not shown in lists, an organizer opens it per person when needed, and that access is logged.';
 
   @override
   String get privacyWhereTitle => 'Where it is stored';
@@ -1789,7 +1789,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyRights =>
-      'You can change what you entered at any time. To have it deleted, ask an organizer.';
+      'You can change what you entered at any time. For QR sharing you can switch each item off, cut off anyone who saved your card, or make a new QR so old codes stop working. To have your data deleted, ask an organizer.';
 
   @override
   String get privacyAgree => 'I have read this';
@@ -2344,4 +2344,179 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get photoOrUrl => 'or paste an image address';
+
+  @override
+  String get cardTitle => 'My card';
+
+  @override
+  String get cardShareTitle => 'QR sharing';
+
+  @override
+  String get cardShareIntro =>
+      'Swap verses, prayer topics and contacts with people you meet.';
+
+  @override
+  String get cardPhoto => 'Photo';
+
+  @override
+  String get cardChangePhoto => 'Change photo';
+
+  @override
+  String get cardVerseRef => 'Life verse';
+
+  @override
+  String get cardVerseRefHint => 'e.g. John 10:10';
+
+  @override
+  String get cardVerseText => 'Verse text (optional)';
+
+  @override
+  String get cardPrayerTopics => 'Prayer topics · up to 3';
+
+  @override
+  String get cardPrayerHint => 'One per line';
+
+  @override
+  String get cardContacts => 'Contacts — only what you turn on is shown';
+
+  @override
+  String get cardChannels => 'Channels';
+
+  @override
+  String get cardEmail => 'Email';
+
+  @override
+  String get cardWhatsapp => 'WhatsApp';
+
+  @override
+  String get cardPhone => 'Phone';
+
+  @override
+  String get cardInstagram => 'Instagram';
+
+  @override
+  String get cardX => 'X';
+
+  @override
+  String get cardYoutube => 'YouTube';
+
+  @override
+  String get cardJuniorLocked =>
+      'You are 19 or under, so contact details stay off. You can still share your verse, prayer topics and channels.';
+
+  @override
+  String get cardShowQr => 'Show my QR';
+
+  @override
+  String get cardScan => 'Scan a QR';
+
+  @override
+  String get cardQrHint => 'When someone scans this, your card opens.';
+
+  @override
+  String get cardQrRotate => 'Make a new QR';
+
+  @override
+  String get cardQrRotateWarn =>
+      'The old code stops working right away. People you already saved stay in your list.';
+
+  @override
+  String get cardQrRotated => 'A new QR was created';
+
+  @override
+  String get cardScanUnsupported =>
+      'Scanning needs a camera. Use your phone, or open the site in a browser.';
+
+  @override
+  String get cardScanPoint => 'Point at the other person\'s QR';
+
+  @override
+  String get cardSaveFriend => 'Save as friend';
+
+  @override
+  String get cardDontSave => 'Don\'t save';
+
+  @override
+  String get cardSaved => 'Saved to your friends';
+
+  @override
+  String get cardAlreadySaved => 'Already in your friends';
+
+  @override
+  String get cardSelfScan => 'That is your own card';
+
+  @override
+  String get cardExpiredCode => 'That code has expired or does not exist';
+
+  @override
+  String get friendsTitle => 'Sharing friends';
+
+  @override
+  String get friendsEmpty =>
+      'Nobody yet. Scan someone\'s QR after you have talked.';
+
+  @override
+  String get friendsSearch => 'Search by name or country…';
+
+  @override
+  String friendsMetOn(String date) {
+    return 'Met on $date';
+  }
+
+  @override
+  String get friendsNote => 'My note (only you see this)';
+
+  @override
+  String get friendsRemove => 'Remove from my list';
+
+  @override
+  String get friendsOtherPrograms => 'Other conferences';
+
+  @override
+  String get cardPrivacyTitle => 'Sharing settings';
+
+  @override
+  String get cardWhoCanSee => 'Who can open my card';
+
+  @override
+  String get cardVisToken => 'People who scan my QR';
+
+  @override
+  String get cardVisProgram => 'Everyone at the same conference';
+
+  @override
+  String get cardVisProgramNote =>
+      'With this on, people can open your card from the participant list without a QR. It is off by default.';
+
+  @override
+  String cardSavedBy(int count) {
+    return 'People who saved my card · $count';
+  }
+
+  @override
+  String get cardSavedByEmpty => 'Nobody has saved your card yet.';
+
+  @override
+  String get cardRevoke => 'Cut off';
+
+  @override
+  String get cardRevokeDone => 'They can no longer see your card';
+
+  @override
+  String get cardSaveBack => 'Save them too';
+
+  @override
+  String get cardOpenWhatsapp => 'WhatsApp';
+
+  @override
+  String get cardOpenEmail => 'Email';
+
+  @override
+  String get cardNoContacts => 'This person did not share contact details.';
+
+  @override
+  String get homeQrShare => 'QR sharing';
+
+  @override
+  String get homeQrShareSub => 'Your card, your QR, and the people you met';
 }

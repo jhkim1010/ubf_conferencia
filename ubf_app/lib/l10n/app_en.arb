@@ -1115,7 +1115,7 @@
   "@privacyWhoTitle": {
     "description": "Privacy notice on the registration flow"
   },
-  "privacyWho": "Only the conference organizers. Medical information is not shown in lists; an organizer opens it per person when needed, and that access is logged.",
+  "privacyWho": "Conference organizers. Other participants see only what you choose to share through QR sharing — your verse, prayer topics and the contacts you switch on. Medical information is never shared with participants; it is not shown in lists, an organizer opens it per person when needed, and that access is logged.",
   "@privacyWho": {
     "description": "Privacy notice on the registration flow"
   },
@@ -1139,7 +1139,7 @@
   "@privacyRightsTitle": {
     "description": "Privacy notice on the registration flow"
   },
-  "privacyRights": "You can change what you entered at any time. To have it deleted, ask an organizer.",
+  "privacyRights": "You can change what you entered at any time. For QR sharing you can switch each item off, cut off anyone who saved your card, or make a new QR so old codes stop working. To have your data deleted, ask an organizer.",
   "@privacyRights": {
     "description": "Privacy notice on the registration flow"
   },
@@ -1478,5 +1478,74 @@
       }
     }
   },
-  "photoOrUrl": "or paste an image address"
+  "photoOrUrl": "or paste an image address",
+  "cardTitle": "My card",
+  "cardShareTitle": "QR sharing",
+  "cardShareIntro": "Swap verses, prayer topics and contacts with people you meet.",
+  "cardPhoto": "Photo",
+  "cardChangePhoto": "Change photo",
+  "cardVerseRef": "Life verse",
+  "cardVerseRefHint": "e.g. John 10:10",
+  "cardVerseText": "Verse text (optional)",
+  "cardPrayerTopics": "Prayer topics · up to 3",
+  "cardPrayerHint": "One per line",
+  "cardContacts": "Contacts — only what you turn on is shown",
+  "cardChannels": "Channels",
+  "cardEmail": "Email",
+  "cardWhatsapp": "WhatsApp",
+  "cardPhone": "Phone",
+  "cardInstagram": "Instagram",
+  "cardX": "X",
+  "cardYoutube": "YouTube",
+  "cardJuniorLocked": "You are 19 or under, so contact details stay off. You can still share your verse, prayer topics and channels.",
+  "cardShowQr": "Show my QR",
+  "cardScan": "Scan a QR",
+  "cardQrHint": "When someone scans this, your card opens.",
+  "cardQrRotate": "Make a new QR",
+  "cardQrRotateWarn": "The old code stops working right away. People you already saved stay in your list.",
+  "cardQrRotated": "A new QR was created",
+  "cardScanUnsupported": "Scanning needs a camera. Use your phone, or open the site in a browser.",
+  "cardScanPoint": "Point at the other person's QR",
+  "cardSaveFriend": "Save as friend",
+  "cardDontSave": "Don't save",
+  "cardSaved": "Saved to your friends",
+  "cardAlreadySaved": "Already in your friends",
+  "cardSelfScan": "That is your own card",
+  "cardExpiredCode": "That code has expired or does not exist",
+  "friendsTitle": "Sharing friends",
+  "friendsEmpty": "Nobody yet. Scan someone's QR after you have talked.",
+  "friendsSearch": "Search by name or country…",
+  "friendsMetOn": "Met on {date}",
+  "@friendsMetOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "friendsNote": "My note (only you see this)",
+  "friendsRemove": "Remove from my list",
+  "friendsOtherPrograms": "Other conferences",
+  "cardPrivacyTitle": "Sharing settings",
+  "cardWhoCanSee": "Who can open my card",
+  "cardVisToken": "People who scan my QR",
+  "cardVisProgram": "Everyone at the same conference",
+  "cardVisProgramNote": "With this on, people can open your card from the participant list without a QR. It is off by default.",
+  "cardSavedBy": "People who saved my card · {count}",
+  "@cardSavedBy": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardSavedByEmpty": "Nobody has saved your card yet.",
+  "cardRevoke": "Cut off",
+  "cardRevokeDone": "They can no longer see your card",
+  "cardSaveBack": "Save them too",
+  "cardOpenWhatsapp": "WhatsApp",
+  "cardOpenEmail": "Email",
+  "cardNoContacts": "This person did not share contact details.",
+  "homeQrShare": "QR sharing",
+  "homeQrShareSub": "Your card, your QR, and the people you met"
 }

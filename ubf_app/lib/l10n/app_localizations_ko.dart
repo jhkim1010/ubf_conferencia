@@ -1733,7 +1733,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get privacyWho =>
-      '수양회 담당자만 볼 수 있습니다. 질병 정보는 목록에 표시되지 않으며, 필요한 경우 담당자가 개인별로 확인하고 그 기록이 남습니다.';
+      '수양회 담당자입니다. 다른 참가자에게는 QR 나눔으로 직접 나눈 것만 보입니다 — 요절, 기도제목, 그리고 켜 둔 연락처입니다. 건강 정보는 참가자에게 절대 나가지 않습니다. 목록에도 나오지 않고, 담당자가 필요할 때 한 사람씩 열어 보며 그 기록이 남습니다.';
 
   @override
   String get privacyWhereTitle => '보관 위치';
@@ -1753,7 +1753,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get privacyRights =>
-      '입력하신 내용은 언제든 수정할 수 있습니다. 삭제를 원하시면 담당자에게 요청해 주세요.';
+      '적으신 내용은 언제든 고치실 수 있습니다. QR 나눔은 항목마다 끌 수 있고, 내 명함을 저장한 사람을 하나씩 끊을 수 있으며, QR 을 새로 만들면 예전 코드는 모두 막힙니다. 삭제를 원하시면 담당자에게 말씀해 주십시오.';
 
   @override
   String get privacyAgree => '위 내용을 확인했습니다';
@@ -2293,4 +2293,175 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get photoOrUrl => '또는 이미지 주소 붙여넣기';
+
+  @override
+  String get cardTitle => '내 명함';
+
+  @override
+  String get cardShareTitle => 'QR 나눔';
+
+  @override
+  String get cardShareIntro => '수양회에서 만난 분과 요절·기도제목·연락처를 나눕니다.';
+
+  @override
+  String get cardPhoto => '대표사진';
+
+  @override
+  String get cardChangePhoto => '사진 바꾸기';
+
+  @override
+  String get cardVerseRef => '요절';
+
+  @override
+  String get cardVerseRefHint => '예: 요한복음 10:10';
+
+  @override
+  String get cardVerseText => '요절 내용 (선택)';
+
+  @override
+  String get cardPrayerTopics => '기도제목 · 최대 3개';
+
+  @override
+  String get cardPrayerHint => '한 줄에 하나씩';
+
+  @override
+  String get cardContacts => '연락 — 켠 것만 보입니다';
+
+  @override
+  String get cardChannels => '채널';
+
+  @override
+  String get cardEmail => '이메일';
+
+  @override
+  String get cardWhatsapp => 'WhatsApp';
+
+  @override
+  String get cardPhone => '전화번호';
+
+  @override
+  String get cardInstagram => 'Instagram';
+
+  @override
+  String get cardX => 'X';
+
+  @override
+  String get cardYoutube => 'YouTube';
+
+  @override
+  String get cardJuniorLocked =>
+      '19세 이하는 연락처를 나누지 않습니다. 요절·기도제목·채널은 나눌 수 있습니다.';
+
+  @override
+  String get cardShowQr => '내 QR 보여주기';
+
+  @override
+  String get cardScan => 'QR 읽기';
+
+  @override
+  String get cardQrHint => '상대가 이 코드를 읽으면 내 명함이 뜹니다.';
+
+  @override
+  String get cardQrRotate => 'QR 새로 만들기';
+
+  @override
+  String get cardQrRotateWarn => '예전 코드는 그 자리에서 막힙니다. 이미 저장한 친구는 그대로 남습니다.';
+
+  @override
+  String get cardQrRotated => 'QR 을 새로 만들었습니다';
+
+  @override
+  String get cardScanUnsupported => '읽기에는 카메라가 필요합니다. 폰을 쓰시거나 브라우저에서 열어 주십시오.';
+
+  @override
+  String get cardScanPoint => '상대의 QR 을 비추세요';
+
+  @override
+  String get cardSaveFriend => '친구로 저장';
+
+  @override
+  String get cardDontSave => '저장 안 함';
+
+  @override
+  String get cardSaved => '친구 목록에 저장했습니다';
+
+  @override
+  String get cardAlreadySaved => '이미 친구 목록에 있습니다';
+
+  @override
+  String get cardSelfScan => '내 명함입니다';
+
+  @override
+  String get cardExpiredCode => '만료되었거나 없는 코드입니다';
+
+  @override
+  String get friendsTitle => '나눔 친구';
+
+  @override
+  String get friendsEmpty => '아직 없습니다. 이야기를 나눈 뒤 상대의 QR 을 읽어 보십시오.';
+
+  @override
+  String get friendsSearch => '이름·나라로 찾기…';
+
+  @override
+  String friendsMetOn(String date) {
+    return '$date 만남';
+  }
+
+  @override
+  String get friendsNote => '내 메모 (나만 봅니다)';
+
+  @override
+  String get friendsRemove => '내 목록에서 지우기';
+
+  @override
+  String get friendsOtherPrograms => '다른 수양회';
+
+  @override
+  String get cardPrivacyTitle => '나눔 설정';
+
+  @override
+  String get cardWhoCanSee => '내 명함을 볼 수 있는 사람';
+
+  @override
+  String get cardVisToken => 'QR 을 읽은 사람';
+
+  @override
+  String get cardVisProgram => '같은 수양회 참가자 전체';
+
+  @override
+  String get cardVisProgramNote =>
+      '이것을 켜면 QR 없이도 참가자 명단에서 내 명함을 열 수 있습니다. 기본은 꺼져 있습니다.';
+
+  @override
+  String cardSavedBy(int count) {
+    return '나를 저장한 사람 · $count명';
+  }
+
+  @override
+  String get cardSavedByEmpty => '아직 아무도 저장하지 않았습니다.';
+
+  @override
+  String get cardRevoke => '끊기';
+
+  @override
+  String get cardRevokeDone => '이제 그 사람은 내 명함을 볼 수 없습니다';
+
+  @override
+  String get cardSaveBack => '나도 저장';
+
+  @override
+  String get cardOpenWhatsapp => 'WhatsApp';
+
+  @override
+  String get cardOpenEmail => '메일';
+
+  @override
+  String get cardNoContacts => '이 분은 연락처를 나누지 않았습니다.';
+
+  @override
+  String get homeQrShare => 'QR 나눔';
+
+  @override
+  String get homeQrShareSub => '내 명함·QR·만난 사람들';
 }

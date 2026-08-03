@@ -3309,7 +3309,7 @@ abstract class AppLocalizations {
   /// Privacy notice on the registration flow
   ///
   /// In en, this message translates to:
-  /// **'Only the conference organizers. Medical information is not shown in lists; an organizer opens it per person when needed, and that access is logged.'**
+  /// **'Conference organizers. Other participants see only what you choose to share through QR sharing — your verse, prayer topics and the contacts you switch on. Medical information is never shared with participants; it is not shown in lists, an organizer opens it per person when needed, and that access is logged.'**
   String get privacyWho;
 
   /// Privacy notice on the registration flow
@@ -3345,7 +3345,7 @@ abstract class AppLocalizations {
   /// Privacy notice on the registration flow
   ///
   /// In en, this message translates to:
-  /// **'You can change what you entered at any time. To have it deleted, ask an organizer.'**
+  /// **'You can change what you entered at any time. For QR sharing you can switch each item off, cut off anyone who saved your card, or make a new QR so old codes stop working. To have your data deleted, ask an organizer.'**
   String get privacyRights;
 
   /// Privacy notice on the registration flow
@@ -4319,6 +4319,336 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'or paste an image address'**
   String get photoOrUrl;
+
+  /// No description provided for @cardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My card'**
+  String get cardTitle;
+
+  /// No description provided for @cardShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'QR sharing'**
+  String get cardShareTitle;
+
+  /// No description provided for @cardShareIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap verses, prayer topics and contacts with people you meet.'**
+  String get cardShareIntro;
+
+  /// No description provided for @cardPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get cardPhoto;
+
+  /// No description provided for @cardChangePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get cardChangePhoto;
+
+  /// No description provided for @cardVerseRef.
+  ///
+  /// In en, this message translates to:
+  /// **'Life verse'**
+  String get cardVerseRef;
+
+  /// No description provided for @cardVerseRefHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. John 10:10'**
+  String get cardVerseRefHint;
+
+  /// No description provided for @cardVerseText.
+  ///
+  /// In en, this message translates to:
+  /// **'Verse text (optional)'**
+  String get cardVerseText;
+
+  /// No description provided for @cardPrayerTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer topics · up to 3'**
+  String get cardPrayerTopics;
+
+  /// No description provided for @cardPrayerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One per line'**
+  String get cardPrayerHint;
+
+  /// No description provided for @cardContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts — only what you turn on is shown'**
+  String get cardContacts;
+
+  /// No description provided for @cardChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'Channels'**
+  String get cardChannels;
+
+  /// No description provided for @cardEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get cardEmail;
+
+  /// No description provided for @cardWhatsapp.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get cardWhatsapp;
+
+  /// No description provided for @cardPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get cardPhone;
+
+  /// No description provided for @cardInstagram.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram'**
+  String get cardInstagram;
+
+  /// No description provided for @cardX.
+  ///
+  /// In en, this message translates to:
+  /// **'X'**
+  String get cardX;
+
+  /// No description provided for @cardYoutube.
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube'**
+  String get cardYoutube;
+
+  /// No description provided for @cardJuniorLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'You are 19 or under, so contact details stay off. You can still share your verse, prayer topics and channels.'**
+  String get cardJuniorLocked;
+
+  /// No description provided for @cardShowQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Show my QR'**
+  String get cardShowQr;
+
+  /// No description provided for @cardScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a QR'**
+  String get cardScan;
+
+  /// No description provided for @cardQrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'When someone scans this, your card opens.'**
+  String get cardQrHint;
+
+  /// No description provided for @cardQrRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Make a new QR'**
+  String get cardQrRotate;
+
+  /// No description provided for @cardQrRotateWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'The old code stops working right away. People you already saved stay in your list.'**
+  String get cardQrRotateWarn;
+
+  /// No description provided for @cardQrRotated.
+  ///
+  /// In en, this message translates to:
+  /// **'A new QR was created'**
+  String get cardQrRotated;
+
+  /// No description provided for @cardScanUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning needs a camera. Use your phone, or open the site in a browser.'**
+  String get cardScanUnsupported;
+
+  /// No description provided for @cardScanPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point at the other person\'s QR'**
+  String get cardScanPoint;
+
+  /// No description provided for @cardSaveFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as friend'**
+  String get cardSaveFriend;
+
+  /// No description provided for @cardDontSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t save'**
+  String get cardDontSave;
+
+  /// No description provided for @cardSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to your friends'**
+  String get cardSaved;
+
+  /// No description provided for @cardAlreadySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in your friends'**
+  String get cardAlreadySaved;
+
+  /// No description provided for @cardSelfScan.
+  ///
+  /// In en, this message translates to:
+  /// **'That is your own card'**
+  String get cardSelfScan;
+
+  /// No description provided for @cardExpiredCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code has expired or does not exist'**
+  String get cardExpiredCode;
+
+  /// No description provided for @friendsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing friends'**
+  String get friendsTitle;
+
+  /// No description provided for @friendsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody yet. Scan someone\'s QR after you have talked.'**
+  String get friendsEmpty;
+
+  /// No description provided for @friendsSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or country…'**
+  String get friendsSearch;
+
+  /// No description provided for @friendsMetOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Met on {date}'**
+  String friendsMetOn(String date);
+
+  /// No description provided for @friendsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'My note (only you see this)'**
+  String get friendsNote;
+
+  /// No description provided for @friendsRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from my list'**
+  String get friendsRemove;
+
+  /// No description provided for @friendsOtherPrograms.
+  ///
+  /// In en, this message translates to:
+  /// **'Other conferences'**
+  String get friendsOtherPrograms;
+
+  /// No description provided for @cardPrivacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing settings'**
+  String get cardPrivacyTitle;
+
+  /// No description provided for @cardWhoCanSee.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can open my card'**
+  String get cardWhoCanSee;
+
+  /// No description provided for @cardVisToken.
+  ///
+  /// In en, this message translates to:
+  /// **'People who scan my QR'**
+  String get cardVisToken;
+
+  /// No description provided for @cardVisProgram.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone at the same conference'**
+  String get cardVisProgram;
+
+  /// No description provided for @cardVisProgramNote.
+  ///
+  /// In en, this message translates to:
+  /// **'With this on, people can open your card from the participant list without a QR. It is off by default.'**
+  String get cardVisProgramNote;
+
+  /// No description provided for @cardSavedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'People who saved my card · {count}'**
+  String cardSavedBy(int count);
+
+  /// No description provided for @cardSavedByEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has saved your card yet.'**
+  String get cardSavedByEmpty;
+
+  /// No description provided for @cardRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Cut off'**
+  String get cardRevoke;
+
+  /// No description provided for @cardRevokeDone.
+  ///
+  /// In en, this message translates to:
+  /// **'They can no longer see your card'**
+  String get cardRevokeDone;
+
+  /// No description provided for @cardSaveBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Save them too'**
+  String get cardSaveBack;
+
+  /// No description provided for @cardOpenWhatsapp.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get cardOpenWhatsapp;
+
+  /// No description provided for @cardOpenEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get cardOpenEmail;
+
+  /// No description provided for @cardNoContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'This person did not share contact details.'**
+  String get cardNoContacts;
+
+  /// No description provided for @homeQrShare.
+  ///
+  /// In en, this message translates to:
+  /// **'QR sharing'**
+  String get homeQrShare;
+
+  /// No description provided for @homeQrShareSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Your card, your QR, and the people you met'**
+  String get homeQrShareSub;
 }
 
 class _AppLocalizationsDelegate

@@ -25,6 +25,7 @@ import transportRouter from './routes/transport.js';
 import serviceSignupsRouter from './routes/service_signups.js';
 import mediaRouter, { mediaStatic } from './routes/media.js';
 import libraryRouter from './routes/library.js';
+import cardsRouter from './routes/cards.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -205,6 +206,7 @@ app.use('/transport', transportRouter);
 app.use('/service-signups', serviceSignupsRouter);
 app.use('/media', mediaRouter);
 app.use('/library', libraryRouter);
+app.use('/cards', cardsRouter);
 
 // 올린 이미지 내보내기. 운영에서는 nginx 가 먼저 잡으므로 여기까지 오지
 // 않는다 — 로컬(serve-web.sh)에서 사진을 확인하기 위한 경로다.

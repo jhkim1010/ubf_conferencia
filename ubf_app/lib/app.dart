@@ -21,6 +21,12 @@ import 'features/dashboard/screens/dashboard_screen.dart';
 import 'features/dashboard/screens/readiness_screen.dart';
 import 'features/dashboard/screens/meal_restrictions_screen.dart';
 import 'features/library/screens/library_screen.dart';
+import 'features/cards/screens/my_card_screen.dart';
+import 'features/cards/screens/qr_show_screen.dart';
+import 'features/cards/screens/qr_scan_screen.dart';
+import 'features/cards/screens/friends_screen.dart';
+import 'features/cards/screens/friend_detail_screen.dart';
+import 'features/cards/screens/card_privacy_screen.dart';
 import 'features/dashboard/screens/discounts_screen.dart';
 import 'features/schedule/screens/schedule_screen.dart';
 import 'features/sos/screens/sos_screen.dart';
@@ -173,6 +179,20 @@ class _UbfAppState extends ConsumerState<UbfApp> {
           path: '/program/:id/my-transport',
           builder: (_, s) =>
               MyTransportScreen(programId: s.pathParameters['id']!),
+        ),
+        // QR 나눔(031)
+        GoRoute(path: '/cards', builder: (_, _) => const FriendsScreen()),
+        GoRoute(path: '/cards/me', builder: (_, _) => const MyCardScreen()),
+        GoRoute(path: '/cards/qr', builder: (_, _) => const QrShowScreen()),
+        GoRoute(path: '/cards/scan', builder: (_, _) => const QrScanScreen()),
+        GoRoute(
+          path: '/cards/privacy',
+          builder: (_, _) => const CardPrivacyScreen(),
+        ),
+        GoRoute(
+          path: '/cards/friend',
+          builder: (_, s) =>
+              FriendDetailScreen(row: s.extra! as Map<String, dynamic>),
         ),
         GoRoute(
           path: '/registration/:id',

@@ -61,3 +61,9 @@ class PendingJoin {
 
   static bool get isPending => _programId != null;
 }
+
+/// 명함 QR 토큰(031). 서버의 TOKEN_RE 와 같은 규칙이다 —
+/// 한쪽만 고치면 멀쩡한 코드가 읽히지 않거나, 이상한 값이 그대로 요청에 실린다.
+final _cardTokenRe = RegExp(r'^[A-Za-z0-9_-]{16,64}$');
+
+bool isValidCardToken(String v) => _cardTokenRe.hasMatch(v.trim());

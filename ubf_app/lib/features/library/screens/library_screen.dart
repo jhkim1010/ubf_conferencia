@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:mana/l10n/app_localizations.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/media_url.dart';
 import '../../../core/utils/api_client.dart';
 import '../../../core/utils/file_pick.dart';
 import '../providers/library_provider.dart';
@@ -37,22 +37,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   void _refresh() => ref.invalidate(programLibraryProvider(_args));
 
-  // 파일 주소는 상대 경로(/media/…)로 저장돼 있다. API 주소가 같은 도메인일
-  // 때는 그대로 쓰면 되지만, 앱은 절대 주소로 붙으므로 앞을 채워 준다.
-  Uri _fileUri(String path) {
-    if (path.startsWith('http')) return Uri.parse(path);
-    final base = AppConstants.apiBaseUrl;
-    // apiBaseUrl 은 '…/api' 로 끝난다. 미디어는 그 바깥이다.
-    final root = base.endsWith('/api')
-        ? base.substring(0, base.length - 4)
-        : base;
-    return Uri.parse('$root$path');
-  }
-
   Future<void> _open(Map<String, dynamic> item) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final uri = _fileUri(item['file_url'] as String);
+      final uri = Uri.parse(mediaUrl(item['file_url'] as String));
       // 앱 안에 PDF 뷰어를 넣지 않는다. 기기의 기본 뷰어가 더 낫고,
       // 뷰어를 넣으면 다섯 플랫폼 빌드가 그만큼 무거워진다.
       final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);

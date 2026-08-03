@@ -1776,7 +1776,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get privacyWho =>
-      'Solo los organizadores del retiro. La información de salud no aparece en las listas; un organizador la abre por persona cuando hace falta, y ese acceso queda registrado.';
+      'Los organizadores del retiro. Los demás participantes solo ven lo que compartes por QR: tu versículo, tus motivos de oración y los contactos que actives. La información de salud nunca se comparte con participantes; no aparece en las listas, un organizador la abre por persona cuando hace falta y ese acceso queda registrado.';
 
   @override
   String get privacyWhereTitle => 'Dónde se guarda';
@@ -1797,7 +1797,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get privacyRights =>
-      'Puede modificar lo que registró en cualquier momento. Para eliminarlo, pídalo a un organizador.';
+      'Puedes modificar lo que registraste en cualquier momento. En el compartir por QR puedes desactivar cada dato, cortar a quien haya guardado tu tarjeta o crear un QR nuevo para que los códigos anteriores dejen de funcionar. Para eliminar tus datos, pídelo a un organizador.';
 
   @override
   String get privacyAgree => 'He leído esta información';
@@ -2357,4 +2357,179 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get photoOrUrl => 'o pega la dirección de una imagen';
+
+  @override
+  String get cardTitle => 'Mi tarjeta';
+
+  @override
+  String get cardShareTitle => 'Compartir por QR';
+
+  @override
+  String get cardShareIntro =>
+      'Intercambia versículos, motivos de oración y contactos con quienes conoces.';
+
+  @override
+  String get cardPhoto => 'Foto';
+
+  @override
+  String get cardChangePhoto => 'Cambiar foto';
+
+  @override
+  String get cardVerseRef => 'Versículo';
+
+  @override
+  String get cardVerseRefHint => 'ej. Juan 10:10';
+
+  @override
+  String get cardVerseText => 'Texto del versículo (opcional)';
+
+  @override
+  String get cardPrayerTopics => 'Motivos de oración · hasta 3';
+
+  @override
+  String get cardPrayerHint => 'Uno por línea';
+
+  @override
+  String get cardContacts => 'Contactos — solo se muestra lo que actives';
+
+  @override
+  String get cardChannels => 'Canales';
+
+  @override
+  String get cardEmail => 'Correo';
+
+  @override
+  String get cardWhatsapp => 'WhatsApp';
+
+  @override
+  String get cardPhone => 'Teléfono';
+
+  @override
+  String get cardInstagram => 'Instagram';
+
+  @override
+  String get cardX => 'X';
+
+  @override
+  String get cardYoutube => 'YouTube';
+
+  @override
+  String get cardJuniorLocked =>
+      'Tienes 19 años o menos, así que los datos de contacto quedan desactivados. Puedes compartir tu versículo, motivos de oración y canales.';
+
+  @override
+  String get cardShowQr => 'Mostrar mi QR';
+
+  @override
+  String get cardScan => 'Escanear un QR';
+
+  @override
+  String get cardQrHint => 'Cuando alguien lo escanea, se abre tu tarjeta.';
+
+  @override
+  String get cardQrRotate => 'Crear un QR nuevo';
+
+  @override
+  String get cardQrRotateWarn =>
+      'El código anterior deja de funcionar de inmediato. Las personas que ya guardaste siguen en tu lista.';
+
+  @override
+  String get cardQrRotated => 'Se creó un QR nuevo';
+
+  @override
+  String get cardScanUnsupported =>
+      'Escanear requiere cámara. Usa tu teléfono o abre el sitio en un navegador.';
+
+  @override
+  String get cardScanPoint => 'Apunta al QR de la otra persona';
+
+  @override
+  String get cardSaveFriend => 'Guardar como amigo';
+
+  @override
+  String get cardDontSave => 'No guardar';
+
+  @override
+  String get cardSaved => 'Guardado en tus amigos';
+
+  @override
+  String get cardAlreadySaved => 'Ya está en tus amigos';
+
+  @override
+  String get cardSelfScan => 'Esa es tu propia tarjeta';
+
+  @override
+  String get cardExpiredCode => 'Ese código expiró o no existe';
+
+  @override
+  String get friendsTitle => 'Amigos';
+
+  @override
+  String get friendsEmpty =>
+      'Todavía nadie. Escanea el QR de alguien después de conversar.';
+
+  @override
+  String get friendsSearch => 'Busca por nombre o país…';
+
+  @override
+  String friendsMetOn(String date) {
+    return 'Se conocieron el $date';
+  }
+
+  @override
+  String get friendsNote => 'Mi nota (solo tú la ves)';
+
+  @override
+  String get friendsRemove => 'Quitar de mi lista';
+
+  @override
+  String get friendsOtherPrograms => 'Otros retiros';
+
+  @override
+  String get cardPrivacyTitle => 'Ajustes de compartir';
+
+  @override
+  String get cardWhoCanSee => 'Quién puede abrir mi tarjeta';
+
+  @override
+  String get cardVisToken => 'Quienes escanean mi QR';
+
+  @override
+  String get cardVisProgram => 'Todos los del mismo retiro';
+
+  @override
+  String get cardVisProgramNote =>
+      'Con esto activado, pueden abrir tu tarjeta desde la lista de participantes sin QR. Está desactivado por defecto.';
+
+  @override
+  String cardSavedBy(int count) {
+    return 'Personas que guardaron mi tarjeta · $count';
+  }
+
+  @override
+  String get cardSavedByEmpty => 'Todavía nadie guardó tu tarjeta.';
+
+  @override
+  String get cardRevoke => 'Cortar';
+
+  @override
+  String get cardRevokeDone => 'Ya no puede ver tu tarjeta';
+
+  @override
+  String get cardSaveBack => 'Guardar también';
+
+  @override
+  String get cardOpenWhatsapp => 'WhatsApp';
+
+  @override
+  String get cardOpenEmail => 'Correo';
+
+  @override
+  String get cardNoContacts => 'Esta persona no compartió datos de contacto.';
+
+  @override
+  String get homeQrShare => 'Compartir por QR';
+
+  @override
+  String get homeQrShareSub => 'Tu tarjeta, tu QR y la gente que conociste';
 }

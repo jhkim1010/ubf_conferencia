@@ -417,7 +417,29 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
               color: Colors.grey[600],
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 20),
+          // QR 나눔(031). 수양회에 등록하지 않았어도 명함은 만들 수 있다 —
+          // 지난 수양회에서 만난 사람을 다시 보는 것이 이 기능의 절반이다.
+          Card(
+            child: ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.qr_code_2, color: Colors.purple),
+              ),
+              title: Text(
+                l10n.homeQrShare,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(l10n.homeQrShareSub),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/cards'),
+            ),
+          ),
+          const SizedBox(height: 24),
           TextField(
             controller: widget.uuidController,
             decoration: InputDecoration(

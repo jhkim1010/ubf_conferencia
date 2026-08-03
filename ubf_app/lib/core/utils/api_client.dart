@@ -265,6 +265,94 @@ class ApiClient {
     return _decode(response);
   }
 
+  // ─── QR 나눔 (031) ───────────────────────────────────────
+
+  static Future<Map<String, dynamic>> getMyCard() async {
+    final r = await http.get(_uri('/cards/me'), headers: await _headers());
+    return _decode(r);
+  }
+
+  static Future<void> saveMyCard(Map<String, dynamic> body) async {
+    final r = await http.put(
+      _uri('/cards/me'),
+      headers: await _headers(),
+      body: jsonEncode(body),
+    );
+    _decode(r);
+  }
+
+  /// QR 을 새로 만든다. 예전 코드는 그 자리에서 무효가 된다.
+  static Future<String> rotateShareToken() async {
+    final r = await http.post(
+      _uri('/cards/me/token'),
+      headers: await _headers(),
+    );
+    return _decode(r)['shareToken'] as String;
+  }
+
+  /// 읽은 QR 의 명함을 미리 본다. 저장은 따로 눌러야 한다.
+  static Future<Map<String, dynamic>> openCardByToken(String token) async {
+    final r = await http.get(
+      _uri('/cards/by-token/$token'),
+      headers: await _headers(),
+    );
+    return _decode(r);
+  }
+
+  static Future<void> saveConnection({
+    required String friendUserId,
+    String? programId,
+  }) async {
+    final r = await http.post(
+      _uri('/cards/connections'),
+      headers: await _headers(),
+      body: jsonEncode({'friendUserId': friendUserId, 'programId': ?programId}),
+    );
+    _decode(r);
+  }
+
+  static Future<List<dynamic>> getConnections() async {
+    final r = await http.get(
+      _uri('/cards/connections'),
+      headers: await _headers(),
+    );
+    return _decodeList(r);
+  }
+
+  static Future<void> updateConnectionNote(String id, String? note) async {
+    final r = await http.patch(
+      _uri('/cards/connections/$id'),
+      headers: await _headers(),
+      body: jsonEncode({'note': note}),
+    );
+    _decode(r);
+  }
+
+  static Future<void> deleteConnection(String id) async {
+    final r = await http.delete(
+      _uri('/cards/connections/$id'),
+      headers: await _headers(),
+    );
+    _decode(r);
+  }
+
+  /// 나를 저장한 사람들. 하나씩 끊을 수 있다.
+  static Future<List<dynamic>> getSavedBy() async {
+    final r = await http.get(
+      _uri('/cards/saved-by'),
+      headers: await _headers(),
+    );
+    return _decodeList(r);
+  }
+
+  static Future<void> revokeSavedBy(String id) async {
+    final r = await http.delete(
+      _uri('/cards/saved-by/$id'),
+      headers: await _headers(),
+    );
+    _decode(r);
+  }
+
   // ─── 파일 업로드 · 자료실 ────────────────────────────────
 
   /// 파일 한 개를 올리고 서버가 준 경로를 돌려준다.
