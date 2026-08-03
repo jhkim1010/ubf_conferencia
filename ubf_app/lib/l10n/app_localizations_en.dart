@@ -2253,4 +2253,95 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hotelLevelPt => 'Level (Portuguese)';
+
+  @override
+  String get libTitle => 'Library';
+
+  @override
+  String get libSubtitle =>
+      'Materials shared during the conference — open them any time';
+
+  @override
+  String get libEmpty => 'No materials yet.';
+
+  @override
+  String get libEmptyAdmin =>
+      'No materials yet. Use the button below to add a PDF.';
+
+  @override
+  String get libOpen => 'Open';
+
+  @override
+  String get libAdd => 'Add material';
+
+  @override
+  String get libPickPdf => 'Choose a PDF';
+
+  @override
+  String get libPickOnWeb =>
+      'PDFs can be added from a computer browser. Open ubf.coolsistema.com and sign in there.';
+
+  @override
+  String get libItemTitle => 'Title';
+
+  @override
+  String get libItemTitleHint => 'e.g. Lesson 1 — John 10';
+
+  @override
+  String get libItemDesc => 'Note (optional)';
+
+  @override
+  String get libPublished => 'Visible to participants';
+
+  @override
+  String get libHidden => 'Hidden';
+
+  @override
+  String get libUploading => 'Uploading…';
+
+  @override
+  String libUploadFailed(String detail) {
+    return 'Upload failed: $detail';
+  }
+
+  @override
+  String get libDeleteTitle => 'Delete this material?';
+
+  @override
+  String libDeleteBody(String title) {
+    return '\"$title\" will be removed for everyone, and the file is deleted.';
+  }
+
+  @override
+  String libSize(int kb) {
+    return '$kb KB';
+  }
+
+  @override
+  String libOpenFailed(String detail) {
+    return 'Could not open the file: $detail';
+  }
+
+  @override
+  String get libTitleRequired => 'Please enter a title';
+
+  @override
+  String get dashLibrarySubtitle => 'Share lesson PDFs with participants';
+
+  @override
+  String get homeLibrary => 'Conference library';
+
+  @override
+  String get photoPick => 'Choose from device';
+
+  @override
+  String get photoUploading => 'Uploading…';
+
+  @override
+  String photoUploadFailed(String detail) {
+    return 'Could not upload the photo: $detail';
+  }
+
+  @override
+  String get photoOrUrl => 'or paste an image address';
 }

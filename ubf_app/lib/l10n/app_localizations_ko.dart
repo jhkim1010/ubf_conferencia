@@ -2204,4 +2204,93 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get hotelLevelPt => '수준 (포르투갈어)';
+
+  @override
+  String get libTitle => '자료실';
+
+  @override
+  String get libSubtitle => '수양회에서 나눈 자료 — 언제든 다시 보실 수 있습니다';
+
+  @override
+  String get libEmpty => '아직 올라온 자료가 없습니다.';
+
+  @override
+  String get libEmptyAdmin => '아직 자료가 없습니다. 아래 버튼으로 PDF 를 올리십시오.';
+
+  @override
+  String get libOpen => '열기';
+
+  @override
+  String get libAdd => '자료 올리기';
+
+  @override
+  String get libPickPdf => 'PDF 고르기';
+
+  @override
+  String get libPickOnWeb =>
+      'PDF 는 컴퓨터 브라우저에서 올릴 수 있습니다. ubf.coolsistema.com 에 접속해 로그인하십시오.';
+
+  @override
+  String get libItemTitle => '제목';
+
+  @override
+  String get libItemTitleHint => '예: 1과 — 요한복음 10장';
+
+  @override
+  String get libItemDesc => '설명 (선택)';
+
+  @override
+  String get libPublished => '참가자에게 보임';
+
+  @override
+  String get libHidden => '숨김';
+
+  @override
+  String get libUploading => '올리는 중…';
+
+  @override
+  String libUploadFailed(String detail) {
+    return '올리지 못했습니다: $detail';
+  }
+
+  @override
+  String get libDeleteTitle => '이 자료를 지울까요?';
+
+  @override
+  String libDeleteBody(String title) {
+    return '\"$title\" 이(가) 모두에게서 사라지고 파일도 지워집니다.';
+  }
+
+  @override
+  String libSize(int kb) {
+    return '$kb KB';
+  }
+
+  @override
+  String libOpenFailed(String detail) {
+    return '파일을 열지 못했습니다: $detail';
+  }
+
+  @override
+  String get libTitleRequired => '제목을 입력하십시오';
+
+  @override
+  String get dashLibrarySubtitle => '교재 PDF 를 참가자에게 나눠 줍니다';
+
+  @override
+  String get homeLibrary => '수양회 자료실';
+
+  @override
+  String get photoPick => '기기에서 고르기';
+
+  @override
+  String get photoUploading => '올리는 중…';
+
+  @override
+  String photoUploadFailed(String detail) {
+    return '사진을 올리지 못했습니다: $detail';
+  }
+
+  @override
+  String get photoOrUrl => '또는 이미지 주소 붙여넣기';
 }

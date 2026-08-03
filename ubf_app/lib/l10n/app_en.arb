@@ -1417,5 +1417,66 @@
   "tgClearToken": "Remove the bot",
   "tgInvalidToken": "That does not look like a bot token (e.g. 123456789:AA…)",
   "tgHowTo": "In Telegram, talk to @BotFather → /newbot → copy the token. Add the bot to your group and use that group's chat ID.",
-  "hotelLevelPt": "Level (Portuguese)"
+  "hotelLevelPt": "Level (Portuguese)",
+  "libTitle": "Library",
+  "libSubtitle": "Materials shared during the conference — open them any time",
+  "libEmpty": "No materials yet.",
+  "libEmptyAdmin": "No materials yet. Use the button below to add a PDF.",
+  "libOpen": "Open",
+  "libAdd": "Add material",
+  "libPickPdf": "Choose a PDF",
+  "libPickOnWeb": "PDFs can be added from a computer browser. Open ubf.coolsistema.com and sign in there.",
+  "libItemTitle": "Title",
+  "libItemTitleHint": "e.g. Lesson 1 — John 10",
+  "libItemDesc": "Note (optional)",
+  "libPublished": "Visible to participants",
+  "libHidden": "Hidden",
+  "libUploading": "Uploading…",
+  "libUploadFailed": "Upload failed: {detail}",
+  "@libUploadFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "libDeleteTitle": "Delete this material?",
+  "libDeleteBody": "\"{title}\" will be removed for everyone, and the file is deleted.",
+  "@libDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "libSize": "{kb} KB",
+  "@libSize": {
+    "placeholders": {
+      "kb": {
+        "type": "int"
+      }
+    }
+  },
+  "libOpenFailed": "Could not open the file: {detail}",
+  "@libOpenFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "libTitleRequired": "Please enter a title",
+  "dashLibrarySubtitle": "Share lesson PDFs with participants",
+  "homeLibrary": "Conference library",
+  "photoPick": "Choose from device",
+  "photoUploading": "Uploading…",
+  "photoUploadFailed": "Could not upload the photo: {detail}",
+  "@photoUploadFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "photoOrUrl": "or paste an image address"
 }

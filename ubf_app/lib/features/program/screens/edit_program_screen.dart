@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/file_pick.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
@@ -720,6 +721,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
   DateTime? _endDate;
   DateTime? _deadline;
   final List<String> _photoUrls = [];
+  bool _photoBusy = false;
 
   @override
   void initState() {
@@ -779,7 +781,36 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
     }
   }
 
-  // 사진 URL 붙여넣기 (MVP — 실제 파일 업로드는 스토리지 도입 후)
+  // 기기에서 사진을 골라 올린다.
+  //
+  // 예전에는 주소를 손으로 붙여넣게 했다(스토리지가 없었다). 이제 서버가
+  // 파일을 받으므로 고르기만 하면 된다. 주소 붙여넣기도 남겨 둔다 —
+  // 이미 어딘가에 올려 둔 사진을 쓰는 담당자가 있다.
+  Future<void> _addPhotoFromDevice() async {
+    if (_photoUrls.length >= 6) return;
+    final l10n = AppLocalizations.of(context)!;
+    final picked = await pickImage();
+    if (picked == null || !mounted) return;
+    setState(() => _photoBusy = true);
+    try {
+      final up = await ApiClient.uploadFile(picked.bytes, 'program');
+      if (!mounted) return;
+      setState(() => _photoUrls.add(up['url'] as String));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.photoUploadFailed('$e')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
+    }
+  }
+
+  // 사진 주소 붙여넣기 (이미 어딘가에 올려 둔 사진을 쓸 때)
   Future<void> _addPhotoUrl() async {
     if (_photoUrls.length >= 6) return;
     final l10n = AppLocalizations.of(context)!;
@@ -957,7 +988,8 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               ),
             ),
             const SizedBox(height: 12),
-            // 사진 (최대 6장 — URL 붙여넣기)
+            // 사진 (최대 6장). 기기에서 고르는 것이 기본이고,
+            // 주소 붙여넣기는 이미 올려 둔 사진을 쓸 때를 위해 남겨 둔다.
             Row(
               children: [
                 Text(
@@ -968,12 +1000,26 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
                   ),
                 ),
                 const Spacer(),
-                if (_photoUrls.length < 6)
+                if (_photoUrls.length < 6) ...[
                   TextButton.icon(
-                    icon: const Icon(Icons.add_link, size: 18),
-                    label: Text(l10n.actionAdd),
-                    onPressed: _addPhotoUrl,
+                    icon: _photoBusy
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.photo_library_outlined, size: 18),
+                    label: Text(
+                      _photoBusy ? l10n.photoUploading : l10n.photoPick,
+                    ),
+                    onPressed: _photoBusy ? null : _addPhotoFromDevice,
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.add_link, size: 18),
+                    tooltip: l10n.photoOrUrl,
+                    onPressed: _photoBusy ? null : _addPhotoUrl,
+                  ),
+                ],
               ],
             ),
             if (_photoUrls.isNotEmpty)

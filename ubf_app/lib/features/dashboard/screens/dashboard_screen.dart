@@ -140,6 +140,31 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
 
+            // 자료실 — 교재 PDF (030)
+            Card(
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.deepOrange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.folder_copy_outlined,
+                    color: Colors.deepOrange,
+                  ),
+                ),
+                title: Text(
+                  l10n.libTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(l10n.dashLibrarySubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/leader/program/$programId/library'),
+              ),
+            ),
+            const SizedBox(height: 10),
+
             // 배정 — 확정 묶음·자동배정
             Card(
               child: ListTile(

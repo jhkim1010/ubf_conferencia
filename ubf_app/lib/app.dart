@@ -20,6 +20,7 @@ import 'features/registration/screens/summary_screen.dart';
 import 'features/dashboard/screens/dashboard_screen.dart';
 import 'features/dashboard/screens/readiness_screen.dart';
 import 'features/dashboard/screens/meal_restrictions_screen.dart';
+import 'features/library/screens/library_screen.dart';
 import 'features/dashboard/screens/discounts_screen.dart';
 import 'features/schedule/screens/schedule_screen.dart';
 import 'features/sos/screens/sos_screen.dart';
@@ -133,6 +134,17 @@ class _UbfAppState extends ConsumerState<UbfApp> {
           path: '/leader/program/:id/meals',
           builder: (_, s) =>
               MealRestrictionsScreen(programId: s.pathParameters['id']!),
+        ),
+        // 자료실. 담당자용(관리 가능)과 참가자용(보기)을 경로로 나눈다 —
+        // 화면은 하나지만 권한이 다르고, 참가자에게 관리 버튼이 보이면 안 된다.
+        GoRoute(
+          path: '/leader/program/:id/library',
+          builder: (_, s) =>
+              LibraryScreen(programId: s.pathParameters['id']!, isAdmin: true),
+        ),
+        GoRoute(
+          path: '/program/:id/library',
+          builder: (_, s) => LibraryScreen(programId: s.pathParameters['id']!),
         ),
         GoRoute(
           path: '/leader/program/:id/discounts',

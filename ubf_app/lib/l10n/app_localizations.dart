@@ -4163,6 +4163,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Level (Portuguese)'**
   String get hotelLevelPt;
+
+  /// No description provided for @libTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get libTitle;
+
+  /// No description provided for @libSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Materials shared during the conference — open them any time'**
+  String get libSubtitle;
+
+  /// No description provided for @libEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No materials yet.'**
+  String get libEmpty;
+
+  /// No description provided for @libEmptyAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'No materials yet. Use the button below to add a PDF.'**
+  String get libEmptyAdmin;
+
+  /// No description provided for @libOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get libOpen;
+
+  /// No description provided for @libAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add material'**
+  String get libAdd;
+
+  /// No description provided for @libPickPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a PDF'**
+  String get libPickPdf;
+
+  /// No description provided for @libPickOnWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'PDFs can be added from a computer browser. Open ubf.coolsistema.com and sign in there.'**
+  String get libPickOnWeb;
+
+  /// No description provided for @libItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get libItemTitle;
+
+  /// No description provided for @libItemTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Lesson 1 — John 10'**
+  String get libItemTitleHint;
+
+  /// No description provided for @libItemDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get libItemDesc;
+
+  /// No description provided for @libPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible to participants'**
+  String get libPublished;
+
+  /// No description provided for @libHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get libHidden;
+
+  /// No description provided for @libUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get libUploading;
+
+  /// No description provided for @libUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed: {detail}'**
+  String libUploadFailed(String detail);
+
+  /// No description provided for @libDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this material?'**
+  String get libDeleteTitle;
+
+  /// No description provided for @libDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{title}\" will be removed for everyone, and the file is deleted.'**
+  String libDeleteBody(String title);
+
+  /// No description provided for @libSize.
+  ///
+  /// In en, this message translates to:
+  /// **'{kb} KB'**
+  String libSize(int kb);
+
+  /// No description provided for @libOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the file: {detail}'**
+  String libOpenFailed(String detail);
+
+  /// No description provided for @libTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a title'**
+  String get libTitleRequired;
+
+  /// No description provided for @dashLibrarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share lesson PDFs with participants'**
+  String get dashLibrarySubtitle;
+
+  /// No description provided for @homeLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Conference library'**
+  String get homeLibrary;
+
+  /// No description provided for @photoPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from device'**
+  String get photoPick;
+
+  /// No description provided for @photoUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get photoUploading;
+
+  /// No description provided for @photoUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not upload the photo: {detail}'**
+  String photoUploadFailed(String detail);
+
+  /// No description provided for @photoOrUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'or paste an image address'**
+  String get photoOrUrl;
 }
 
 class _AppLocalizationsDelegate

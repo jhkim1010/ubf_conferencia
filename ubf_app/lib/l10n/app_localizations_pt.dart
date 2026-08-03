@@ -2266,4 +2266,96 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get hotelLevelPt => 'Nível (português)';
+
+  @override
+  String get libTitle => 'Biblioteca';
+
+  @override
+  String get libSubtitle =>
+      'Materiais compartilhados no retiro — abra quando quiser';
+
+  @override
+  String get libEmpty => 'Ainda não há materiais.';
+
+  @override
+  String get libEmptyAdmin =>
+      'Ainda não há materiais. Use o botão abaixo para adicionar um PDF.';
+
+  @override
+  String get libOpen => 'Abrir';
+
+  @override
+  String get libAdd => 'Adicionar material';
+
+  @override
+  String get libPickPdf => 'Escolher um PDF';
+
+  @override
+  String get libPickOnWeb =>
+      'Os PDFs são adicionados pelo navegador de um computador. Acesse ubf.coolsistema.com e entre por lá.';
+
+  @override
+  String get libItemTitle => 'Título';
+
+  @override
+  String get libItemTitleHint => 'ex.: Lição 1 — João 10';
+
+  @override
+  String get libItemDesc => 'Observação (opcional)';
+
+  @override
+  String get libPublished => 'Visível para os participantes';
+
+  @override
+  String get libHidden => 'Oculto';
+
+  @override
+  String get libUploading => 'Enviando…';
+
+  @override
+  String libUploadFailed(String detail) {
+    return 'Não foi possível enviar: $detail';
+  }
+
+  @override
+  String get libDeleteTitle => 'Excluir este material?';
+
+  @override
+  String libDeleteBody(String title) {
+    return '\"$title\" vai sumir para todos e o arquivo será excluído.';
+  }
+
+  @override
+  String libSize(int kb) {
+    return '$kb KB';
+  }
+
+  @override
+  String libOpenFailed(String detail) {
+    return 'Não foi possível abrir o arquivo: $detail';
+  }
+
+  @override
+  String get libTitleRequired => 'Digite um título';
+
+  @override
+  String get dashLibrarySubtitle =>
+      'Compartilhe os PDFs das lições com os participantes';
+
+  @override
+  String get homeLibrary => 'Biblioteca do retiro';
+
+  @override
+  String get photoPick => 'Escolher do aparelho';
+
+  @override
+  String get photoUploading => 'Enviando…';
+
+  @override
+  String photoUploadFailed(String detail) {
+    return 'Não foi possível enviar a foto: $detail';
+  }
+
+  @override
+  String get photoOrUrl => 'ou cole o endereço de uma imagem';
 }

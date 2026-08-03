@@ -265,6 +265,72 @@ class ApiClient {
     return _decode(response);
   }
 
+  // ─── 파일 업로드 · 자료실 ────────────────────────────────
+
+  /// 파일 한 개를 올리고 서버가 준 경로를 돌려준다.
+  ///
+  /// 바이트를 그대로 보낸다(application/octet-stream). base64 로 감싸면
+  /// 33% 가 부풀어 교재 PDF 에서 손해가 크다.
+  static Future<Map<String, dynamic>> uploadFile(
+    List<int> bytes,
+    String kind,
+  ) async {
+    final response = await http.post(
+      _uri('/media?kind=$kind'),
+      headers: {
+        ...await _headers(),
+        'Content-Type': 'application/octet-stream',
+      },
+      body: bytes,
+    );
+    return _decode(response);
+  }
+
+  /// 자료실 목록. 참가자는 공개된 것만, 담당자는 all=true 로 전부.
+  static Future<List<dynamic>> getLibrary(
+    String programId, {
+    bool all = false,
+  }) async {
+    final response = await http.get(
+      _uri('/library/$programId${all ? '/all' : ''}'),
+      headers: await _headers(),
+    );
+    return _decodeList(response);
+  }
+
+  static Future<Map<String, dynamic>?> addLibraryItem(
+    String programId,
+    Map<String, dynamic> body,
+  ) async {
+    final response = await http.post(
+      _uri('/library/$programId'),
+      headers: await _headers(),
+      body: jsonEncode(body),
+    );
+    return _decode(response);
+  }
+
+  static Future<void> updateLibraryItem(
+    String programId,
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    final response = await http.patch(
+      _uri('/library/$programId/$id'),
+      headers: await _headers(),
+      body: jsonEncode(body),
+    );
+    _decode(response);
+  }
+
+  static Future<void> deleteLibraryItem(String programId, String id) async {
+    final response = await http.delete(
+      _uri('/library/$programId/$id'),
+      headers: await _headers(),
+    );
+    _decode(response);
+  }
+
   // 식사 제한 명단 — 준비 현황의 식사 카드를 열면 나온다.
   // { program, total, skips_breakfast, people[] }
   static Future<Map<String, dynamic>?> getProgramMeals(String programId) async {

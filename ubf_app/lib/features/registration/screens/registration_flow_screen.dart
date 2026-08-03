@@ -300,6 +300,13 @@ class _RegistrationFlowScreenState
                 onPressed: () =>
                     context.push('/program/${widget.programId}/schedule'),
               ),
+              // 자료실(030). 등록 중에도 교재를 볼 일이 있다.
+              IconButton(
+                icon: const Icon(Icons.folder_copy_outlined),
+                tooltip: l10n.libTitle,
+                onPressed: () =>
+                    context.push('/program/${widget.programId}/library'),
+              ),
             ],
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(6),
