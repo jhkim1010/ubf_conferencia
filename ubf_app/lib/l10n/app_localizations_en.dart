@@ -2250,4 +2250,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tgHowTo =>
       'In Telegram, talk to @BotFather → /newbot → copy the token. Add the bot to your group and use that group\'s chat ID.';
+
+  @override
+  String get hotelLevelPt => 'Level (Portuguese)';
 }

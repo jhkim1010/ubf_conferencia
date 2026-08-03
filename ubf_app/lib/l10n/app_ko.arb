@@ -689,5 +689,6 @@
   "tgTokenHidden": "저장된 토큰은 다시 보여주지 않습니다. 비워 두면 그대로 유지되고, 새로 입력하면 교체됩니다.",
   "tgClearToken": "봇 설정 해제",
   "tgInvalidToken": "봇 토큰 형식이 아닙니다 (예: 123456789:AA…)",
-  "tgHowTo": "텔레그램에서 @BotFather 에게 /newbot → 받은 토큰을 복사합니다. 봇을 단톡방에 초대한 뒤 그 방의 채팅 ID 를 적으십시오."
+  "tgHowTo": "텔레그램에서 @BotFather 에게 /newbot → 받은 토큰을 복사합니다. 봇을 단톡방에 초대한 뒤 그 방의 채팅 ID 를 적으십시오.",
+  "hotelLevelPt": "수준 (포르투갈어)"
 }

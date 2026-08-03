@@ -689,5 +689,6 @@
   "tgTokenHidden": "El token guardado no se vuelve a mostrar. Déjalo vacío para conservarlo o escribe uno nuevo para reemplazarlo.",
   "tgClearToken": "Quitar el bot",
   "tgInvalidToken": "Eso no parece un token de bot (ej. 123456789:AA…)",
-  "tgHowTo": "En Telegram, escribe a @BotFather → /newbot → copia el token. Agrega el bot a tu grupo y usa el ID de ese grupo."
+  "tgHowTo": "En Telegram, escribe a @BotFather → /newbot → copia el token. Agrega el bot a tu grupo y usa el ID de ese grupo.",
+  "hotelLevelPt": "Nivel (portugués)"
 }

@@ -35,6 +35,7 @@ class _HotelSectionState extends State<HotelSection> {
   final _ko = TextEditingController();
   final _en = TextEditingController();
   final _es = TextEditingController();
+  final _pt = TextEditingController();
   final _price = TextEditingController();
 
   @override
@@ -42,17 +43,18 @@ class _HotelSectionState extends State<HotelSection> {
     _ko.dispose();
     _en.dispose();
     _es.dispose();
+    _pt.dispose();
     _price.dispose();
     super.dispose();
   }
 
   void _add() {
     final labels = <String, String>{
-      for (final e in {'ko': _ko, 'en': _en, 'es': _es}.entries)
+      for (final e in {'ko': _ko, 'en': _en, 'es': _es, 'pt': _pt}.entries)
         if (e.value.text.trim().isNotEmpty) e.key: e.value.text.trim(),
     };
-    // 한 칸만 채워도 만들 수 있다. 세 칸을 강제하면 한 언어만 쓰는 지부가
-    // 항목을 아예 못 만든다.
+    // 한 칸만 채워도 만들 수 있다. 네 칸을 모두 강제하면 한 언어만 쓰는
+    // 지부가 항목을 아예 못 만든다.
     if (labels.isEmpty) return;
     final label = labels['en'] ?? labels['ko'] ?? labels['es']!;
     final price = num.tryParse(_price.text.trim());
@@ -78,6 +80,7 @@ class _HotelSectionState extends State<HotelSection> {
     _ko.clear();
     _en.clear();
     _es.clear();
+    _pt.clear();
     _price.clear();
     widget.onChanged();
     setState(() {});
@@ -156,14 +159,14 @@ class _HotelSectionState extends State<HotelSection> {
           children: [
             Expanded(child: _field(_es, l10n.hotelLevelEs)),
             const SizedBox(width: 8),
-            Expanded(
-              child: _field(
-                _price,
-                '${l10n.hotelPricePerNightLabel} (${widget.currency.code})',
-                numeric: true,
-              ),
-            ),
+            Expanded(child: _field(_pt, l10n.hotelLevelPt)),
           ],
+        ),
+        const SizedBox(height: 8),
+        _field(
+          _price,
+          '${l10n.hotelPricePerNightLabel} (${widget.currency.code})',
+          numeric: true,
         ),
         const SizedBox(height: 8),
         Align(

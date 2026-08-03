@@ -8,6 +8,7 @@ import 'package:intl/intl.dart' as intl;
 import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
 import 'app_localizations_ko.dart';
+import 'app_localizations_pt.dart';
 
 // ignore_for_file: type=lint
 
@@ -98,6 +99,7 @@ abstract class AppLocalizations {
     Locale('en'),
     Locale('es'),
     Locale('ko'),
+    Locale('pt'),
   ];
 
   /// Application title, shown in the app switcher
@@ -4155,6 +4157,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In Telegram, talk to @BotFather → /newbot → copy the token. Add the bot to your group and use that group\'s chat ID.'**
   String get tgHowTo;
+
+  /// No description provided for @hotelLevelPt.
+  ///
+  /// In en, this message translates to:
+  /// **'Level (Portuguese)'**
+  String get hotelLevelPt;
 }
 
 class _AppLocalizationsDelegate
@@ -4168,7 +4176,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'es', 'ko'].contains(locale.languageCode);
+      <String>['en', 'es', 'ko', 'pt'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -4183,6 +4191,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsEs();
     case 'ko':
       return AppLocalizationsKo();
+    case 'pt':
+      return AppLocalizationsPt();
   }
 
   throw FlutterError(

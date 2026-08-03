@@ -2201,4 +2201,7 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get tgHowTo =>
       '텔레그램에서 @BotFather 에게 /newbot → 받은 토큰을 복사합니다. 봇을 단톡방에 초대한 뒤 그 방의 채팅 ID 를 적으십시오.';
+
+  @override
+  String get hotelLevelPt => '수준 (포르투갈어)';
 }

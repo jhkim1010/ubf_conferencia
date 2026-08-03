@@ -55,6 +55,7 @@ class _FeeSectionState extends State<FeeSection> {
   final _labelKo = TextEditingController();
   final _labelEn = TextEditingController();
   final _labelEs = TextEditingController();
+  final _labelPt = TextEditingController();
   final _amountController = TextEditingController();
 
   @override
@@ -62,16 +63,22 @@ class _FeeSectionState extends State<FeeSection> {
     _labelKo.dispose();
     _labelEn.dispose();
     _labelEs.dispose();
+    _labelPt.dispose();
     _amountController.dispose();
     super.dispose();
   }
 
   void _add() {
     final labels = <String, String>{
-      for (final e in {'ko': _labelKo, 'en': _labelEn, 'es': _labelEs}.entries)
+      for (final e in {
+        'ko': _labelKo,
+        'en': _labelEn,
+        'es': _labelEs,
+        'pt': _labelPt,
+      }.entries)
         if (e.value.text.trim().isNotEmpty) e.key: e.value.text.trim(),
     };
-    // 한 칸만 채워도 만들 수 있다. 세 칸을 모두 강제하면 한 언어만 쓰는
+    // 한 칸만 채워도 만들 수 있다. 네 칸을 모두 강제하면 한 언어만 쓰는
     // 지부가 항목을 아예 못 만든다. 비어 있는 언어는 기본 문구로 대체된다.
     if (labels.isEmpty) return;
     final label = labels['en'] ?? labels['ko'] ?? labels['es']!;
@@ -97,6 +104,7 @@ class _FeeSectionState extends State<FeeSection> {
     _labelKo.clear();
     _labelEn.clear();
     _labelEs.clear();
+    _labelPt.clear();
     _amountController.clear();
     widget.onDiscountsChanged();
     setState(() {});
@@ -240,6 +248,12 @@ class _FeeSectionState extends State<FeeSection> {
           controller: _labelEs,
           lang: 'Español',
           hint: 'Asisto solo un día',
+        ),
+        const SizedBox(height: 6),
+        _LangField(
+          controller: _labelPt,
+          lang: 'Português',
+          hint: 'Participo só um dia',
         ),
         const SizedBox(height: 6),
         Row(
