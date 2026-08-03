@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
 import { requireAuth, requireLeader, requireProgramAdmin } from '../middleware/auth.js';
+import { isValidBotToken } from '../services/telegram.js';
 
 const router = Router();
 
@@ -48,6 +49,17 @@ function normalizeMinTeamSize(v) {
   if (v === null || v === undefined || v === '') return null;
   const n = Number(v);
   return Number.isInteger(n) && n >= 1 && n <= 50 ? n : NaN;
+}
+
+// 텔레그램 봇 토큰 정리(029).
+//   null  → 안 보냈다(기존 값 유지)
+//   ''    → 비운다(기본 봇으로 되돌린다)
+//   NaN   → 형식 오류 (호출부에서 400)
+function normalizeBotToken(v) {
+  if (v === null || v === undefined) return null;
+  const t = String(v).trim();
+  if (t === '') return '';
+  return isValidBotToken(t) ? t : NaN;
 }
 
 // 숙박 등급 정리(028). 관리자가 "3성급 / 4성급 …" 처럼 정의한다.
@@ -119,6 +131,20 @@ function normalizeDiscountOptions(raw) {
   return out;
 }
 
+
+// 텔레그램 봇 토큰은 **어떤 응답에도 실어 보내지 않는다.**
+//
+// 토큰을 아는 사람은 그 봇으로 아무 메시지나 보낼 수 있다. 그런데 프로그램
+// 조회(GET /programs/:id)는 참가자 누구나 부를 수 있는 경로라, SELECT p.* 로
+// 그대로 내보내면 등록한 사람 전원에게 토큰이 넘어간다.
+//
+// 지우기만 하면 화면이 "설정했는지"를 알 수 없으므로 불리언 하나로 바꾼다.
+function stripBotToken(program) {
+  if (!program) return program;
+  const { telegram_bot_token: token, ...rest } = program;
+  return { ...rest, telegram_bot_configured: !!token };
+}
+
 // GET /programs/:id - 단일 프로그램 + 옵션 조회 (참가자용)
 router.get('/:id', requireAuth, async (req, res) => {
   try {
@@ -156,7 +182,7 @@ router.get('/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
     }
 
-    res.json(program);
+    res.json(stripBotToken(program));
   } catch (err) {
     console.error('프로그램 조회 오류:', err);
     res.status(500).json({ error: '서버 오류' });
@@ -178,7 +204,7 @@ router.get('/', requireAuth, requireLeader, async (req, res) => {
       ORDER BY p.created_at DESC
     `;
 
-    res.json(programs);
+    res.json(programs.map(stripBotToken));
   } catch (err) {
     console.error('프로그램 목록 오류:', err);
     res.status(500).json({ error: '서버 오류' });
@@ -193,6 +219,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
     programType, hostCountry,
     feeBasic, feePremium, feeBasicDesc, feePremiumDesc, discountOptions,
     currency, smallCohortPolicy, minTeamSize, hotelOptions,
+    telegramBotToken, telegramChatId,
   } = req.body;
 
   if (!name || !location) {
@@ -210,6 +237,18 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
   const cur = normalizeCurrency(currency);
   if (Number.isNaN(cur)) {
     return res.status(400).json({ error: '통화는 ISO 4217 코드(대문자 세 글자)여야 합니다' });
+  }
+
+
+  // 수양회 전용 텔레그램 봇(029). 안 적으면 서버 기본 봇을 쓴다.
+  //
+  // 형식만 본다. 붙여넣다 잘린 값을 그대로 저장하면 알림이 조용히 안 가고,
+  // 담당자는 그 사실을 몇 주 뒤 "왜 알림이 안 와요"로 알게 된다.
+  const botToken = normalizeBotToken(telegramBotToken);
+  if (Number.isNaN(botToken)) {
+    return res.status(400).json({
+      error: '텔레그램 봇 토큰 형식이 올바르지 않습니다 (예: 123456789:AA...)',
+    });
   }
 
   const cohortPolicy = normalizeCohortPolicy(smallCohortPolicy);
@@ -252,7 +291,8 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         nearest_airport, contact1_name, contact1_phone, contact2_name, contact2_phone,
         program_type, host_country,
         fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options,
-        currency, small_cohort_policy, min_team_size, hotel_options
+        currency, small_cohort_policy, min_team_size, hotel_options,
+        telegram_bot_token, telegram_chat_id
       )
       VALUES (
         ${name},
@@ -276,7 +316,9 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         ${currencyFor(type, cur, null)},
         ${cohortPolicy ?? 'keep'},
         ${teamMin ?? 5},
-        ${JSON.stringify(hotels)}
+        ${JSON.stringify(hotels)},
+        ${botToken || null},
+        ${telegramChatId?.toString().trim() || null}
       )
       RETURNING id
     `;
@@ -317,7 +359,7 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
     nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
     programType, options, hostCountry,
     feeBasic, feePremium, feeBasicDesc, feePremiumDesc, discountOptions,
-    currency, hotelOptions,
+    currency, hotelOptions, telegramBotToken, telegramChatId,
   } = req.body;
 
   const patchCurrency = normalizeCurrency(currency);
@@ -340,6 +382,12 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
   // 안 보냈으면 null 이 되고 아래에서 기존 값을 그대로 쓴다. 숙박 등급만
   // 고치려는 호출이 참가비를 지우지 않는 것과 같은 규칙이다.
   const hotels = normalizeHotelOptions(hotelOptions);
+  const patchBotToken = normalizeBotToken(telegramBotToken);
+  if (Number.isNaN(patchBotToken)) {
+    return res.status(400).json({
+      error: '텔레그램 봇 토큰 형식이 올바르지 않습니다 (예: 123456789:AA...)',
+    });
+  }
 
   // 본문에 없는 키는 건드리지 않는다. 참가비만 고치려는 호출이 할인 항목을
   // 지워버리면 안 된다. (기존 필드들은 덮어쓰기 방식이라 이 규칙이 없다.)
@@ -391,7 +439,18 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
         currency         = ${currencyFor(type, patchCurrency, program.currency)},
         small_cohort_policy = ${patchPolicy ?? program.small_cohort_policy ?? 'keep'},
         min_team_size       = ${patchTeamMin ?? program.min_team_size ?? 5},
-        hotel_options       = ${JSON.stringify(hotels ?? program.hotel_options ?? [])}::jsonb
+        hotel_options       = ${JSON.stringify(hotels ?? program.hotel_options ?? [])}::jsonb,
+        -- 안 보냈으면 그대로 둔다. 화면이 토큰을 못 읽으므로(응답에 없다)
+        -- 다른 항목만 고치려는 저장이 매번 토큰을 지워 버리면 안 된다.
+        telegram_bot_token  = CASE
+          WHEN ${patchBotToken === null} THEN telegram_bot_token
+          WHEN ${patchBotToken === ''}   THEN NULL
+          ELSE ${patchBotToken || null}
+        END,
+        telegram_chat_id    = CASE
+          WHEN ${telegramChatId === undefined} THEN telegram_chat_id
+          ELSE ${telegramChatId?.toString().trim() || null}
+        END
       WHERE id = ${req.params.id}
     `;
 

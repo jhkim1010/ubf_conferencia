@@ -6,6 +6,7 @@ import '../providers/program_provider.dart';
 import '../widgets/fee_section.dart';
 import '../widgets/cohort_policy_section.dart';
 import '../widgets/hotel_section.dart';
+import '../widgets/telegram_section.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 
@@ -65,6 +66,12 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
   final _feePremiumDescController = TextEditingController();
   List<Map<String, dynamic>> _discountOptions = [];
   List<Map<String, dynamic>> _hotelOptions = [];
+  final _tgTokenController = TextEditingController();
+  final _tgChatIdController = TextEditingController();
+  bool _tgConfigured = false;
+  // 해제를 누르면 빈 문자열을 보내 서버가 지우게 한다. null 은 "안 보냄"이라
+  // 기존 값이 그대로 남는다 — 그 둘을 구분해야 한다.
+  bool _tgClearRequested = false;
 
   // 이 수양회의 통화. 등록자 전원이 이 단위로 본다.
   Currency _currency = Currency.usd;
@@ -171,6 +178,9 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
           .toList();
     }
 
+    _tgConfigured = program['telegram_bot_configured'] as bool? ?? false;
+    _tgChatIdController.text = program['telegram_chat_id'] as String? ?? '';
+
     final rawHotels = program['hotel_options'];
     if (rawHotels is List) {
       _hotelOptions = rawHotels
@@ -262,6 +272,13 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
         'smallCohortPolicy': _cohortPolicy,
         'minTeamSize': _minTeamSize,
         'hotelOptions': _hotelOptions,
+        // 토큰은 화면으로 돌아오지 않으므로(서버가 안 실어 준다) 비어 있으면
+        // "안 바꿈"이다. 매번 다시 적으라고 하면 참가비만 고칠 때마다 잃는다.
+        if (_tgClearRequested)
+          'telegramBotToken': ''
+        else if (_tgTokenController.text.trim().isNotEmpty)
+          'telegramBotToken': _tgTokenController.text.trim(),
+        'telegramChatId': _tgChatIdController.text.trim(),
       });
 
       if (!mounted) return;
@@ -525,6 +542,16 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   hotelOptions: _hotelOptions,
                   onChanged: () => setState(() {}),
                   currency: _currency,
+                ),
+                const SizedBox(height: 28),
+                TelegramSection(
+                  tokenController: _tgTokenController,
+                  chatIdController: _tgChatIdController,
+                  configured: _tgConfigured && !_tgClearRequested,
+                  onClear: () => setState(() {
+                    _tgClearRequested = true;
+                    _tgTokenController.clear();
+                  }),
                 ),
                 const SizedBox(height: 28),
                 CohortPolicySection(

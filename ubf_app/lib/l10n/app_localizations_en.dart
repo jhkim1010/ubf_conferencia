@@ -2213,4 +2213,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pcLinkCopied => 'Invite link copied';
+
+  @override
+  String get tgSectionTitle => 'Telegram notifications';
+
+  @override
+  String get tgSectionHelp =>
+      'New sign-ups and edits for this conference are sent to your Telegram. Leave blank to use the default bot.';
+
+  @override
+  String get tgBotToken => 'Bot token';
+
+  @override
+  String get tgBotTokenHint => '123456789:AA…  (from @BotFather)';
+
+  @override
+  String get tgChatId => 'Chat ID';
+
+  @override
+  String get tgChatIdHint => 'e.g. -1001234567890 (group) or your user ID';
+
+  @override
+  String get tgConfigured => 'A bot is set for this conference';
+
+  @override
+  String get tgTokenHidden =>
+      'The saved token is never shown again. Leave blank to keep it; type a new one to replace it.';
+
+  @override
+  String get tgClearToken => 'Remove the bot';
+
+  @override
+  String get tgInvalidToken =>
+      'That does not look like a bot token (e.g. 123456789:AA…)';
+
+  @override
+  String get tgHowTo =>
+      'In Telegram, talk to @BotFather → /newbot → copy the token. Add the bot to your group and use that group\'s chat ID.';
 }

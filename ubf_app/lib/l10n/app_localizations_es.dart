@@ -2225,4 +2225,41 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pcLinkCopied => 'Enlace de invitación copiado';
+
+  @override
+  String get tgSectionTitle => 'Avisos por Telegram';
+
+  @override
+  String get tgSectionHelp =>
+      'Las nuevas inscripciones y los cambios de este retiro se envían a tu Telegram. Déjalo vacío para usar el bot predeterminado.';
+
+  @override
+  String get tgBotToken => 'Token del bot';
+
+  @override
+  String get tgBotTokenHint => '123456789:AA…  (de @BotFather)';
+
+  @override
+  String get tgChatId => 'ID del chat';
+
+  @override
+  String get tgChatIdHint => 'ej. -1001234567890 (grupo) o tu ID de usuario';
+
+  @override
+  String get tgConfigured => 'Este retiro ya tiene un bot configurado';
+
+  @override
+  String get tgTokenHidden =>
+      'El token guardado no se vuelve a mostrar. Déjalo vacío para conservarlo o escribe uno nuevo para reemplazarlo.';
+
+  @override
+  String get tgClearToken => 'Quitar el bot';
+
+  @override
+  String get tgInvalidToken =>
+      'Eso no parece un token de bot (ej. 123456789:AA…)';
+
+  @override
+  String get tgHowTo =>
+      'En Telegram, escribe a @BotFather → /newbot → copia el token. Agrega el bot a tu grupo y usa el ID de ese grupo.';
 }

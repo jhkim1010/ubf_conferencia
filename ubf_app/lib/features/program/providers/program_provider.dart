@@ -62,6 +62,8 @@ class ProgramService {
     String? smallCohortPolicy,
     int? minTeamSize,
     List<Map<String, dynamic>>? hotelOptions,
+    String? telegramBotToken,
+    String? telegramChatId,
   }) async {
     return ApiClient.createProgram({
       'name': name,
@@ -94,6 +96,12 @@ class ProgramService {
       'smallCohortPolicy': smallCohortPolicy ?? 'keep',
       'minTeamSize': minTeamSize ?? 5,
       'hotelOptions': hotelOptions ?? const [],
+      // 빈 값은 보내지 않는다. 서버에서 '' 는 "지운다"는 뜻이라, 새로 만들 때
+      // 굳이 보내면 의미 없는 지우기 요청이 된다.
+      if (telegramBotToken != null && telegramBotToken.isNotEmpty)
+        'telegramBotToken': telegramBotToken,
+      if (telegramChatId != null && telegramChatId.isNotEmpty)
+        'telegramChatId': telegramChatId,
     });
   }
 

@@ -678,5 +678,16 @@
   "pcInviteLink": "초대 링크",
   "pcInviteLinkHelp": "UUID 대신 이것을 보내십시오. 링크를 누르면 이 수양회로 바로 들어갑니다 — 참가자가 코드를 옮겨 적을 필요가 없습니다.",
   "pcCopyLink": "링크 복사",
-  "pcLinkCopied": "초대 링크를 복사했습니다"
+  "pcLinkCopied": "초대 링크를 복사했습니다",
+  "tgSectionTitle": "텔레그램 알림",
+  "tgSectionHelp": "이 수양회의 새 등록과 정보 수정이 텔레그램으로 전송됩니다. 비워 두면 기본 봇을 씁니다.",
+  "tgBotToken": "봇 토큰",
+  "tgBotTokenHint": "123456789:AA…  (@BotFather 에서 발급)",
+  "tgChatId": "채팅 ID",
+  "tgChatIdHint": "예: -1001234567890 (그룹) 또는 본인 사용자 ID",
+  "tgConfigured": "이 수양회에 봇이 설정되어 있습니다",
+  "tgTokenHidden": "저장된 토큰은 다시 보여주지 않습니다. 비워 두면 그대로 유지되고, 새로 입력하면 교체됩니다.",
+  "tgClearToken": "봇 설정 해제",
+  "tgInvalidToken": "봇 토큰 형식이 아닙니다 (예: 123456789:AA…)",
+  "tgHowTo": "텔레그램에서 @BotFather 에게 /newbot → 받은 토큰을 복사합니다. 봇을 단톡방에 초대한 뒤 그 방의 채팅 ID 를 적으십시오."
 }

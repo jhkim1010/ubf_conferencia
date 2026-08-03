@@ -1405,5 +1405,16 @@
   "pcInviteLink": "Invite link",
   "pcInviteLinkHelp": "Send this instead of the UUID. Opening it takes the person straight to this conference — no code to type in.",
   "pcCopyLink": "Copy link",
-  "pcLinkCopied": "Invite link copied"
+  "pcLinkCopied": "Invite link copied",
+  "tgSectionTitle": "Telegram notifications",
+  "tgSectionHelp": "New sign-ups and edits for this conference are sent to your Telegram. Leave blank to use the default bot.",
+  "tgBotToken": "Bot token",
+  "tgBotTokenHint": "123456789:AA…  (from @BotFather)",
+  "tgChatId": "Chat ID",
+  "tgChatIdHint": "e.g. -1001234567890 (group) or your user ID",
+  "tgConfigured": "A bot is set for this conference",
+  "tgTokenHidden": "The saved token is never shown again. Leave blank to keep it; type a new one to replace it.",
+  "tgClearToken": "Remove the bot",
+  "tgInvalidToken": "That does not look like a bot token (e.g. 123456789:AA…)",
+  "tgHowTo": "In Telegram, talk to @BotFather → /newbot → copy the token. Add the bot to your group and use that group's chat ID."
 }

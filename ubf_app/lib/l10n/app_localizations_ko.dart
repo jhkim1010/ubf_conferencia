@@ -2165,4 +2165,40 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get pcLinkCopied => '초대 링크를 복사했습니다';
+
+  @override
+  String get tgSectionTitle => '텔레그램 알림';
+
+  @override
+  String get tgSectionHelp =>
+      '이 수양회의 새 등록과 정보 수정이 텔레그램으로 전송됩니다. 비워 두면 기본 봇을 씁니다.';
+
+  @override
+  String get tgBotToken => '봇 토큰';
+
+  @override
+  String get tgBotTokenHint => '123456789:AA…  (@BotFather 에서 발급)';
+
+  @override
+  String get tgChatId => '채팅 ID';
+
+  @override
+  String get tgChatIdHint => '예: -1001234567890 (그룹) 또는 본인 사용자 ID';
+
+  @override
+  String get tgConfigured => '이 수양회에 봇이 설정되어 있습니다';
+
+  @override
+  String get tgTokenHidden =>
+      '저장된 토큰은 다시 보여주지 않습니다. 비워 두면 그대로 유지되고, 새로 입력하면 교체됩니다.';
+
+  @override
+  String get tgClearToken => '봇 설정 해제';
+
+  @override
+  String get tgInvalidToken => '봇 토큰 형식이 아닙니다 (예: 123456789:AA…)';
+
+  @override
+  String get tgHowTo =>
+      '텔레그램에서 @BotFather 에게 /newbot → 받은 토큰을 복사합니다. 봇을 단톡방에 초대한 뒤 그 방의 채팅 ID 를 적으십시오.';
 }

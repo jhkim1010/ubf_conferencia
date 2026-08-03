@@ -6,6 +6,7 @@ import '../../../core/utils/api_client.dart';
 import '../providers/program_provider.dart';
 import '../widgets/fee_section.dart';
 import '../widgets/hotel_section.dart';
+import '../widgets/telegram_section.dart';
 import '../widgets/cohort_policy_section.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
@@ -81,6 +82,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
   final _feePremiumDescController = TextEditingController();
   final List<Map<String, dynamic>> _discountOptions = [];
   final List<Map<String, dynamic>> _hotelOptions = [];
+  final _tgTokenController = TextEditingController();
+  final _tgChatIdController = TextEditingController();
 
   // 이 수양회의 통화. 등록자 전원이 이 단위로 본다.
   Currency _currency = Currency.usd;
@@ -184,6 +187,8 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
         feePremiumDesc: _text(_feePremiumDescController),
         discountOptions: _discountOptions,
         hotelOptions: _hotelOptions,
+        telegramBotToken: _tgTokenController.text.trim(),
+        telegramChatId: _tgChatIdController.text.trim(),
         currency: _currency.code,
         smallCohortPolicy: _cohortPolicy,
         minTeamSize: _minTeamSize,
@@ -470,6 +475,11 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
               hotelOptions: _hotelOptions,
               onChanged: () => setState(() {}),
               currency: _currency,
+            ),
+            const SizedBox(height: 28),
+            TelegramSection(
+              tokenController: _tgTokenController,
+              chatIdController: _tgChatIdController,
             ),
             const SizedBox(height: 28),
             CohortPolicySection(

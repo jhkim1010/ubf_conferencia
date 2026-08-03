@@ -4089,6 +4089,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invite link copied'**
   String get pcLinkCopied;
+
+  /// No description provided for @tgSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram notifications'**
+  String get tgSectionTitle;
+
+  /// No description provided for @tgSectionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'New sign-ups and edits for this conference are sent to your Telegram. Leave blank to use the default bot.'**
+  String get tgSectionHelp;
+
+  /// No description provided for @tgBotToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot token'**
+  String get tgBotToken;
+
+  /// No description provided for @tgBotTokenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'123456789:AA…  (from @BotFather)'**
+  String get tgBotTokenHint;
+
+  /// No description provided for @tgChatId.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat ID'**
+  String get tgChatId;
+
+  /// No description provided for @tgChatIdHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. -1001234567890 (group) or your user ID'**
+  String get tgChatIdHint;
+
+  /// No description provided for @tgConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'A bot is set for this conference'**
+  String get tgConfigured;
+
+  /// No description provided for @tgTokenHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'The saved token is never shown again. Leave blank to keep it; type a new one to replace it.'**
+  String get tgTokenHidden;
+
+  /// No description provided for @tgClearToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the bot'**
+  String get tgClearToken;
+
+  /// No description provided for @tgInvalidToken.
+  ///
+  /// In en, this message translates to:
+  /// **'That does not look like a bot token (e.g. 123456789:AA…)'**
+  String get tgInvalidToken;
+
+  /// No description provided for @tgHowTo.
+  ///
+  /// In en, this message translates to:
+  /// **'In Telegram, talk to @BotFather → /newbot → copy the token. Add the bot to your group and use that group\'s chat ID.'**
+  String get tgHowTo;
 }
 
 class _AppLocalizationsDelegate
