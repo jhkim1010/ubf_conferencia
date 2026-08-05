@@ -2586,4 +2586,33 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get cpFeeNoneWarning =>
       'Não há taxa definida, então os participantes não veem a tela de taxa. Deixe vazio só se o retiro for gratuito.';
+
+  @override
+  String get rdyFeeTier => 'Nível de taxa';
+
+  @override
+  String feeBackfillTitle(int count) {
+    return '$count pessoas não escolheram o nível de taxa';
+  }
+
+  @override
+  String get feeBackfillWhy =>
+      'Elas se inscreveram antes de a taxa ser definida, então não viram essa tela. O total delas não inclui a taxa do retiro.';
+
+  @override
+  String get feeBackfillAction => 'Definir todas como…';
+
+  @override
+  String feeBackfillConfirm(int count, String tier) {
+    return 'Definir $count pessoas como $tier e recalcular seus totais? Quem já escolheu não é alterado.';
+  }
+
+  @override
+  String feeBackfillDone(int count) {
+    return '$count pessoas atualizadas';
+  }
+
+  @override
+  String get feeBackfillNotSet =>
+      'Esse nível ainda não tem valor. Defina a taxa primeiro.';
 }

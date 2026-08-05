@@ -2573,4 +2573,33 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cpFeeNoneWarning =>
       'No fee is set, so attendees never see the fee step. Leave it empty only if this conference is free.';
+
+  @override
+  String get rdyFeeTier => 'Fee tier';
+
+  @override
+  String feeBackfillTitle(int count) {
+    return '$count people have not picked a fee tier';
+  }
+
+  @override
+  String get feeBackfillWhy =>
+      'They registered before the fee was set, so they never saw the fee step. Their total does not include the conference fee.';
+
+  @override
+  String get feeBackfillAction => 'Set them all to…';
+
+  @override
+  String feeBackfillConfirm(int count, String tier) {
+    return 'Set $count people to $tier and recalculate their totals? People who already picked a tier are not touched.';
+  }
+
+  @override
+  String feeBackfillDone(int count) {
+    return '$count people updated';
+  }
+
+  @override
+  String get feeBackfillNotSet =>
+      'That tier has no amount yet. Set the fee first.';
 }

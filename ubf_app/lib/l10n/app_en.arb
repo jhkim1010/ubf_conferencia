@@ -1569,5 +1569,36 @@
   "chapterNoticeLater": "Not now",
   "cpFeeDescHint": "e.g. shared room, 3 meals a day",
   "cpFeeDescLooksLikeAmount": "This looks like an amount. Put the number in the fee box on the left — this box is for what the fee covers.",
-  "cpFeeNoneWarning": "No fee is set, so attendees never see the fee step. Leave it empty only if this conference is free."
+  "cpFeeNoneWarning": "No fee is set, so attendees never see the fee step. Leave it empty only if this conference is free.",
+  "rdyFeeTier": "Fee tier",
+  "feeBackfillTitle": "{count} people have not picked a fee tier",
+  "@feeBackfillTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "feeBackfillWhy": "They registered before the fee was set, so they never saw the fee step. Their total does not include the conference fee.",
+  "feeBackfillAction": "Set them all to…",
+  "feeBackfillConfirm": "Set {count} people to {tier} and recalculate their totals? People who already picked a tier are not touched.",
+  "@feeBackfillConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "feeBackfillDone": "{count} people updated",
+  "@feeBackfillDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "feeBackfillNotSet": "That tier has no amount yet. Set the fee first."
 }

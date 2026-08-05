@@ -786,5 +786,12 @@
   "chapterNoticeLater": "Ahora no",
   "cpFeeDescHint": "ej. habitación compartida, 3 comidas",
   "cpFeeDescLooksLikeAmount": "Esto parece un importe. Escribe el número en el campo de cuota de la izquierda; este campo es para lo que incluye.",
-  "cpFeeNoneWarning": "No hay cuota definida, así que los participantes no ven la pantalla de cuota. Déjalo vacío solo si el retiro es gratuito."
+  "cpFeeNoneWarning": "No hay cuota definida, así que los participantes no ven la pantalla de cuota. Déjalo vacío solo si el retiro es gratuito.",
+  "rdyFeeTier": "Nivel de cuota",
+  "feeBackfillTitle": "{count} personas no eligieron nivel de cuota",
+  "feeBackfillWhy": "Se inscribieron antes de definir la cuota, así que no vieron esa pantalla. Su total no incluye la cuota del retiro.",
+  "feeBackfillAction": "Ponerlas todas en…",
+  "feeBackfillConfirm": "¿Poner a {count} personas en {tier} y recalcular sus totales? Quienes ya eligieron no se tocan.",
+  "feeBackfillDone": "Se actualizaron {count} personas",
+  "feeBackfillNotSet": "Ese nivel todavía no tiene importe. Define la cuota primero."
 }

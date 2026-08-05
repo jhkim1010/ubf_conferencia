@@ -2584,4 +2584,33 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get cpFeeNoneWarning =>
       'No hay cuota definida, así que los participantes no ven la pantalla de cuota. Déjalo vacío solo si el retiro es gratuito.';
+
+  @override
+  String get rdyFeeTier => 'Nivel de cuota';
+
+  @override
+  String feeBackfillTitle(int count) {
+    return '$count personas no eligieron nivel de cuota';
+  }
+
+  @override
+  String get feeBackfillWhy =>
+      'Se inscribieron antes de definir la cuota, así que no vieron esa pantalla. Su total no incluye la cuota del retiro.';
+
+  @override
+  String get feeBackfillAction => 'Ponerlas todas en…';
+
+  @override
+  String feeBackfillConfirm(int count, String tier) {
+    return '¿Poner a $count personas en $tier y recalcular sus totales? Quienes ya eligieron no se tocan.';
+  }
+
+  @override
+  String feeBackfillDone(int count) {
+    return 'Se actualizaron $count personas';
+  }
+
+  @override
+  String get feeBackfillNotSet =>
+      'Ese nivel todavía no tiene importe. Define la cuota primero.';
 }

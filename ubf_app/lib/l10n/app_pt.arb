@@ -772,5 +772,12 @@
   "chapterNoticeLater": "Agora não",
   "cpFeeDescHint": "ex.: quarto coletivo, 3 refeições",
   "cpFeeDescLooksLikeAmount": "Isto parece um valor. Escreva o número no campo de taxa à esquerda; este campo é para o que está incluído.",
-  "cpFeeNoneWarning": "Não há taxa definida, então os participantes não veem a tela de taxa. Deixe vazio só se o retiro for gratuito."
+  "cpFeeNoneWarning": "Não há taxa definida, então os participantes não veem a tela de taxa. Deixe vazio só se o retiro for gratuito.",
+  "rdyFeeTier": "Nível de taxa",
+  "feeBackfillTitle": "{count} pessoas não escolheram o nível de taxa",
+  "feeBackfillWhy": "Elas se inscreveram antes de a taxa ser definida, então não viram essa tela. O total delas não inclui a taxa do retiro.",
+  "feeBackfillAction": "Definir todas como…",
+  "feeBackfillConfirm": "Definir {count} pessoas como {tier} e recalcular seus totais? Quem já escolheu não é alterado.",
+  "feeBackfillDone": "{count} pessoas atualizadas",
+  "feeBackfillNotSet": "Esse nível ainda não tem valor. Defina a taxa primeiro."
 }

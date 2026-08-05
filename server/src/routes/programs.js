@@ -803,6 +803,10 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
         -- 카드를 열었을 때 나오는 명단(GET /:id/meals)이 어긋나면 안 된다.
         COUNT(*) FILTER (WHERE has_food_restriction(r.food_requirements))::int
           AS meals_restricted,
+        -- 참가비 등급을 못 고른 사람. 참가비를 나중에 정하는 수양회가 많고,
+        -- 그 사이에 등록한 사람은 참가비 화면을 아예 못 본다. 그 사실이
+        -- 어디에도 안 보이면 아무도 모르는 채로 수양회 날이 온다.
+        COUNT(*) FILTER (WHERE r.fee_tier IS NULL)::int AS fee_tier_missing,
         -- 국제 수양회의 개최국 참가자는 픽업 대상이 아니다(dispatch_engine.js
         -- isPickupExempt 와 같은 규칙). 배차판에서 빠진 사람을 여기서 계속
         -- 세면 필요 좌석이 부풀려져 밴을 과하게 잡는다.
@@ -945,6 +949,11 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
           total: counts.total,
           breakdown: Object.fromEntries(roleRows.map((r) => [r.role, r.count])),
         },
+        fees: {
+          status: counts.fee_tier_missing === 0 ? 'ok' : 'warn',
+          missing: counts.fee_tier_missing,
+          total: counts.total,
+        },
         payment: {
           status: payment.pending > 0 ? 'warn' : 'ok',
           confirmed: payment.confirmed,
@@ -965,6 +974,63 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
     });
   } catch (err) {
     console.error('준비 현황 조회 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// POST /programs/:id/fee-tier-backfill — 참가비를 못 고른 사람 맞추기
+//
+// 참가비를 나중에 정하는 수양회가 많다. 그 사이에 등록한 사람은 참가비
+// 화면을 아예 못 봐서 등급이 비어 있고, 총액에도 참가비가 안 들어간다.
+// 담당자가 나중에 금액을 적어도 이미 등록한 사람의 총액은 그대로다.
+//
+// 각자 다시 들어와 고르게 하는 것이 원칙이지만, 등급이 하나뿐이거나
+// 대부분이 같은 등급이면 담당자가 한 번에 맞추는 편이 낫다.
+//
+// **총액은 서버가 다시 계산한다**(등급 + 투어 − 승인된 할인).
+// registrations.js 의 식과 같아야 한다 — 다르면 이 버튼을 누른 사람만
+// 다른 금액이 된다.
+router.post('/:id/fee-tier-backfill', requireAuth, requireProgramAdmin, async (req, res) => {
+  const tier = req.body?.tier === 'premium' ? 'premium' : 'basic';
+  try {
+    const [program] = await sql`
+      SELECT fee_basic, fee_premium FROM programs
+      WHERE id = ${req.params.id} AND is_active = true
+    `;
+    if (!program) return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
+
+    // 금액이 없는 등급으로는 맞출 수 없다. 그대로 두면 전원이 0원이 된다.
+    const fee = tier === 'basic' ? program.fee_basic : program.fee_premium;
+    if (fee === null || fee === undefined) {
+      return res.status(422).json({
+        code: 'FEE_NOT_SET',
+        error: '그 등급의 참가비가 정해져 있지 않습니다',
+      });
+    }
+
+    const rows = await sql`
+      UPDATE registrations r SET
+        fee_tier = ${tier},
+        total_cost = GREATEST(0, ${Number(fee)}
+          + COALESCE((
+              SELECT SUM(po.cost) FROM program_options po
+              WHERE po.program_id = r.program_id AND po.id = ANY(r.selected_options)
+            ), 0)
+          - CASE WHEN r.discount_status = 'approved'
+                 THEN COALESCE(r.discount_amount, 0) ELSE 0 END),
+        updated_at = NOW()
+      WHERE r.program_id = ${req.params.id}
+        -- 이미 고른 사람은 건드리지 않는다. 고급을 고른 사람을 기본으로
+        -- 내리면 그 사람은 자기가 왜 싸졌는지 모른다.
+        AND r.fee_tier IS NULL
+      RETURNING r.id
+    `;
+    console.log(
+      `[FEE] 등급 일괄 지정 | programId=${req.params.id} tier=${tier} count=${rows.length}`,
+    );
+    res.json({ updated: rows.length, tier });
+  } catch (err) {
+    console.error('참가비 등급 일괄 지정 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });

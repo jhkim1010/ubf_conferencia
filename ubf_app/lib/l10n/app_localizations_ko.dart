@@ -2514,4 +2514,32 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get cpFeeNoneWarning =>
       '참가비가 비어 있어 참가자에게 참가비 화면이 나오지 않습니다. 무료 수양회일 때만 비워 두십시오.';
+
+  @override
+  String get rdyFeeTier => '참가비 등급';
+
+  @override
+  String feeBackfillTitle(int count) {
+    return '참가비를 안 고른 사람이 $count명 있습니다';
+  }
+
+  @override
+  String get feeBackfillWhy =>
+      '참가비를 정하기 전에 등록해서 참가비 화면을 보지 못했습니다. 그분들 총액에는 참가비가 빠져 있습니다.';
+
+  @override
+  String get feeBackfillAction => '모두 이 등급으로 맞추기';
+
+  @override
+  String feeBackfillConfirm(int count, String tier) {
+    return '$count명을 $tier 등급으로 맞추고 총액을 다시 계산할까요? 이미 고른 분은 건드리지 않습니다.';
+  }
+
+  @override
+  String feeBackfillDone(int count) {
+    return '$count명을 맞췄습니다';
+  }
+
+  @override
+  String get feeBackfillNotSet => '그 등급의 참가비가 아직 없습니다. 참가비를 먼저 정해 주십시오.';
 }

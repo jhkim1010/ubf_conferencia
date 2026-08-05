@@ -419,6 +419,17 @@ class ApiClient {
     _decode(response);
   }
 
+  /// 참가비를 못 고른 사람을 한 등급으로 맞추고 총액을 다시 계산한다.
+  /// 이미 고른 사람은 건드리지 않는다.
+  static Future<int> backfillFeeTier(String programId, String tier) async {
+    final r = await http.post(
+      _uri('/programs/$programId/fee-tier-backfill'),
+      headers: await _headers(),
+      body: jsonEncode({'tier': tier}),
+    );
+    return (_decode(r)['updated'] as num?)?.toInt() ?? 0;
+  }
+
   // 식사 제한 명단 — 준비 현황의 식사 카드를 열면 나온다.
   // { program, total, skips_breakfast, people[] }
   static Future<Map<String, dynamic>?> getProgramMeals(String programId) async {

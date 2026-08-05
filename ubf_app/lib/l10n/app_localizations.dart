@@ -4739,6 +4739,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No fee is set, so attendees never see the fee step. Leave it empty only if this conference is free.'**
   String get cpFeeNoneWarning;
+
+  /// No description provided for @rdyFeeTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Fee tier'**
+  String get rdyFeeTier;
+
+  /// No description provided for @feeBackfillTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} people have not picked a fee tier'**
+  String feeBackfillTitle(int count);
+
+  /// No description provided for @feeBackfillWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'They registered before the fee was set, so they never saw the fee step. Their total does not include the conference fee.'**
+  String get feeBackfillWhy;
+
+  /// No description provided for @feeBackfillAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set them all to…'**
+  String get feeBackfillAction;
+
+  /// No description provided for @feeBackfillConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {count} people to {tier} and recalculate their totals? People who already picked a tier are not touched.'**
+  String feeBackfillConfirm(int count, String tier);
+
+  /// No description provided for @feeBackfillDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} people updated'**
+  String feeBackfillDone(int count);
+
+  /// No description provided for @feeBackfillNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'That tier has no amount yet. Set the fee first.'**
+  String get feeBackfillNotSet;
 }
 
 class _AppLocalizationsDelegate

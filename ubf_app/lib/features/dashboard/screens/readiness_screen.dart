@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/api_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -178,6 +179,108 @@ class _Header extends StatelessWidget {
   }
 }
 
+// 참가비를 못 고른 사람을 한 등급으로 맞춘다.
+//
+// 각자 다시 들어와 고르게 하는 것이 원칙이지만, 등급이 하나뿐이거나
+// 대부분이 같은 등급이면 담당자가 한 번에 맞추는 편이 낫다.
+// **이미 고른 사람은 건드리지 않는다** — 고급을 고른 사람을 기본으로
+// 내리면 그 사람은 자기가 왜 싸졌는지 모른다.
+Future<void> _showFeeBackfill(
+  BuildContext context,
+  String programId,
+  Map<String, dynamic> fees,
+) async {
+  final l10n = AppLocalizations.of(context)!;
+  final count = (fees['missing'] as int?) ?? 0;
+
+  final tier = await showModalBottomSheet<String>(
+    context: context,
+    builder: (ctx) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.feeBackfillTitle(count),
+              style: Theme.of(
+                ctx,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(l10n.feeBackfillWhy, style: Theme.of(ctx).textTheme.bodySmall),
+            const SizedBox(height: 16),
+            Text(
+              l10n.feeBackfillAction,
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(ctx, 'basic'),
+                    child: Text(l10n.feeTierBasic),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx, 'premium'),
+                    child: Text(l10n.feeTierPremium),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l10n.actionCancel),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  if (tier == null || !context.mounted) return;
+
+  final label = tier == 'premium' ? l10n.feeTierPremium : l10n.feeTierBasic;
+  final yes = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      content: Text(l10n.feeBackfillConfirm(count, label)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(l10n.actionCancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(l10n.actionConfirm),
+        ),
+      ],
+    ),
+  );
+  if (yes != true || !context.mounted) return;
+
+  final messenger = ScaffoldMessenger.of(context);
+  try {
+    final n = await ApiClient.backfillFeeTier(programId, tier);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.feeBackfillDone(n))));
+  } on ApiException catch (e) {
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(e.statusCode == 422 ? l10n.feeBackfillNotSet : e.message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
+
 // ─── 준비 항목 ────────────────────────────────────────────────
 class _ReadinessGrid extends StatelessWidget {
   final Map<String, dynamic> readiness;
@@ -196,6 +299,7 @@ class _ReadinessGrid extends StatelessWidget {
     final flights = at('flights');
     final meals = at('meals');
     final payment = at('payment');
+    final fees = at('fees');
     final roles = at('roles');
 
     final cards = <Widget>[
@@ -226,6 +330,18 @@ class _ReadinessGrid extends StatelessWidget {
         caption: l10n.unitPeople((meals['total'] as int?) ?? 0),
         hint: l10n.mealsHint,
         onOpen: () => context.push('/leader/program/$programId/meals'),
+      ),
+      // 참가비 등급을 못 고른 사람. 참가비를 나중에 정하는 수양회가 많고,
+      // 그 사이에 등록한 사람은 참가비 화면을 아예 못 본다.
+      _ItemCard(
+        name: l10n.rdyFeeTier,
+        status: fees['status'] as String?,
+        figure: '${fees['missing'] ?? 0}',
+        caption: l10n.unitPeople((fees['total'] as int?) ?? 0),
+        hint: ((fees['missing'] as int?) ?? 0) > 0 ? l10n.mealsHint : null,
+        onOpen: ((fees['missing'] as int?) ?? 0) > 0
+            ? () => _showFeeBackfill(context, programId, fees)
+            : null,
       ),
       _ItemCard(
         name: l10n.rdyPayment,
