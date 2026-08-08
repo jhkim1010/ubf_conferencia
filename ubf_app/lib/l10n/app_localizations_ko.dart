@@ -2577,4 +2577,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get pickupFromRequired => '태울 곳을 적어 주십시오';
+
+  @override
+  String get cpFeeMoveTitle => '참가비 금액이 설명 칸에 들어가 있습니다';
+
+  @override
+  String get cpFeeMoveBody => '금액 칸이 비어 있어 참가자에게 참가비 화면이 나오지 않습니다. 옮길까요?';
+
+  @override
+  String get cpFeeMoveAction => '금액 칸으로 옮기기';
+
+  @override
+  String get cpFeeMoveDone => '옮겼습니다. 저장을 눌러 주십시오.';
 }

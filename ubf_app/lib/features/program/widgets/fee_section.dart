@@ -65,14 +65,47 @@ class _FeeSectionState extends State<FeeSection> {
     // 한다. 컨트롤러를 듣지 않으면 화면을 열 때의 상태로 굳는다.
     widget.basicController.addListener(_refresh);
     widget.premiumController.addListener(_refresh);
+    widget.basicDescController.addListener(_refresh);
+    widget.premiumDescController.addListener(_refresh);
   }
 
   void _refresh() => setState(() {});
+
+  /// 금액 칸이 비어 있고 설명 칸이 숫자뿐인 상태. 칸을 바꿔 적은 것이다.
+  bool get _amountsInDesc {
+    bool swapped(TextEditingController a, TextEditingController d) {
+      final t = d.text.trim();
+      return t.isNotEmpty && num.tryParse(t) != null && a.text.trim().isEmpty;
+    }
+
+    return swapped(widget.basicController, widget.basicDescController) ||
+        swapped(widget.premiumController, widget.premiumDescController);
+  }
+
+  /// 옮기기만 하고 저장하지 않는다. 저장은 사람이 누른다 — 화면이 마음대로
+  /// 저장하면 무엇이 바뀌었는지 모른 채 지나간다.
+  void _moveAmountsFromDesc() {
+    void move(TextEditingController a, TextEditingController d) {
+      final t = d.text.trim();
+      if (t.isEmpty || num.tryParse(t) == null || a.text.trim().isNotEmpty) {
+        return;
+      }
+      a.text = t;
+      d.clear();
+    }
+
+    move(widget.basicController, widget.basicDescController);
+    move(widget.premiumController, widget.premiumDescController);
+    widget.onDiscountsChanged();
+    setState(() {});
+  }
 
   @override
   void dispose() {
     widget.basicController.removeListener(_refresh);
     widget.premiumController.removeListener(_refresh);
+    widget.basicDescController.removeListener(_refresh);
+    widget.premiumDescController.removeListener(_refresh);
     _labelKo.dispose();
     _labelEn.dispose();
     _labelEs.dispose();
@@ -204,6 +237,54 @@ class _FeeSectionState extends State<FeeSection> {
           validator: validateFee,
           symbol: widget.currency.symbol,
         ),
+
+        // 숫자가 설명 칸에 들어간 채로 저장된 수양회가 있다. 그 상태를
+        // 알아보고 한 번에 옮겨 준다 — 어느 칸이 어느 칸인지 설명하는
+        // 것보다, 옮겨 주고 확인만 받는 편이 확실하다.
+        if (_amountsInDesc) ...[
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.errorContainer,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.cpFeeMoveTitle,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onErrorContainer,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.cpFeeMoveBody,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onErrorContainer,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      _moveAmountsFromDesc();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.cpFeeMoveDone)),
+                      );
+                    },
+                    icon: const Icon(Icons.swap_horiz, size: 18),
+                    label: Text(l10n.cpFeeMoveAction),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
 
         // 참가비를 하나도 안 적으면 참가자에게 참가비 화면이 나오지 않는다.
         // 무료 수양회면 맞는 동작이지만, 적었다고 믿는 담당자에게는 사고다.

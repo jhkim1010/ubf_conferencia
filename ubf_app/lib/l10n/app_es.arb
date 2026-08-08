@@ -804,5 +804,9 @@
   "pickupNeedNo": "Voy por mi cuenta",
   "pickupFromLabel": "¿Dónde te recogemos?",
   "pickupFromHint": "ej. terminal de Retiro, frente al capítulo",
-  "pickupFromRequired": "Escribe dónde te recogemos"
+  "pickupFromRequired": "Escribe dónde te recogemos",
+  "cpFeeMoveTitle": "Los importes están en los campos de descripción",
+  "cpFeeMoveBody": "Como los campos de importe están vacíos, los participantes no ven la pantalla de cuota. ¿Los movemos?",
+  "cpFeeMoveAction": "Mover a los campos de cuota",
+  "cpFeeMoveDone": "Listo. Pulsa Guardar para conservarlo."
 }

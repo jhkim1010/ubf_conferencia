@@ -2649,4 +2649,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pickupFromRequired => 'Escribe dónde te recogemos';
+
+  @override
+  String get cpFeeMoveTitle =>
+      'Los importes están en los campos de descripción';
+
+  @override
+  String get cpFeeMoveBody =>
+      'Como los campos de importe están vacíos, los participantes no ven la pantalla de cuota. ¿Los movemos?';
+
+  @override
+  String get cpFeeMoveAction => 'Mover a los campos de cuota';
+
+  @override
+  String get cpFeeMoveDone => 'Listo. Pulsa Guardar para conservarlo.';
 }

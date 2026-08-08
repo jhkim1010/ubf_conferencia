@@ -790,5 +790,9 @@
   "pickupNeedNo": "Vou por conta própria",
   "pickupFromLabel": "Onde buscamos você?",
   "pickupFromHint": "ex.: rodoviária do Retiro, em frente à sede",
-  "pickupFromRequired": "Escreva onde devemos buscar você"
+  "pickupFromRequired": "Escreva onde devemos buscar você",
+  "cpFeeMoveTitle": "Os valores estão nos campos de descrição",
+  "cpFeeMoveBody": "Como os campos de valor estão vazios, os participantes não veem a tela de taxa. Mover?",
+  "cpFeeMoveAction": "Mover para os campos de taxa",
+  "cpFeeMoveDone": "Pronto. Toque em Salvar para manter."
 }

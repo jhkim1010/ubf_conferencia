@@ -4847,6 +4847,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please write where we should pick you up'**
   String get pickupFromRequired;
+
+  /// No description provided for @cpFeeMoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The fee amounts are in the description boxes'**
+  String get cpFeeMoveTitle;
+
+  /// No description provided for @cpFeeMoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Because the amount boxes are empty, attendees never see the fee step. Move them?'**
+  String get cpFeeMoveBody;
+
+  /// No description provided for @cpFeeMoveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to the fee boxes'**
+  String get cpFeeMoveAction;
+
+  /// No description provided for @cpFeeMoveDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved. Press Save to keep it.'**
+  String get cpFeeMoveDone;
 }
 
 class _AppLocalizationsDelegate

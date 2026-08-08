@@ -2651,4 +2651,17 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pickupFromRequired => 'Escreva onde devemos buscar você';
+
+  @override
+  String get cpFeeMoveTitle => 'Os valores estão nos campos de descrição';
+
+  @override
+  String get cpFeeMoveBody =>
+      'Como os campos de valor estão vazios, os participantes não veem a tela de taxa. Mover?';
+
+  @override
+  String get cpFeeMoveAction => 'Mover para os campos de taxa';
+
+  @override
+  String get cpFeeMoveDone => 'Pronto. Toque em Salvar para manter.';
 }

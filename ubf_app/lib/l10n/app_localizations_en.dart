@@ -2638,4 +2638,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pickupFromRequired => 'Please write where we should pick you up';
+
+  @override
+  String get cpFeeMoveTitle => 'The fee amounts are in the description boxes';
+
+  @override
+  String get cpFeeMoveBody =>
+      'Because the amount boxes are empty, attendees never see the fee step. Move them?';
+
+  @override
+  String get cpFeeMoveAction => 'Move to the fee boxes';
+
+  @override
+  String get cpFeeMoveDone => 'Moved. Press Save to keep it.';
 }

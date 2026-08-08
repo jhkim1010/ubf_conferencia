@@ -804,5 +804,9 @@
   "pickupNeedNo": "제가 알아서 가겠습니다",
   "pickupFromLabel": "어디서 태울까요?",
   "pickupFromHint": "예: 레티로 버스터미널, 지부 앞",
-  "pickupFromRequired": "태울 곳을 적어 주십시오"
+  "pickupFromRequired": "태울 곳을 적어 주십시오",
+  "cpFeeMoveTitle": "참가비 금액이 설명 칸에 들어가 있습니다",
+  "cpFeeMoveBody": "금액 칸이 비어 있어 참가자에게 참가비 화면이 나오지 않습니다. 옮길까요?",
+  "cpFeeMoveAction": "금액 칸으로 옮기기",
+  "cpFeeMoveDone": "옮겼습니다. 저장을 눌러 주십시오."
 }

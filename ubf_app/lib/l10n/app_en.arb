@@ -1611,5 +1611,9 @@
   "pickupNeedNo": "I'll get there myself",
   "pickupFromLabel": "Where should we pick you up?",
   "pickupFromHint": "e.g. Retiro bus terminal, in front of the chapter",
-  "pickupFromRequired": "Please write where we should pick you up"
+  "pickupFromRequired": "Please write where we should pick you up",
+  "cpFeeMoveTitle": "The fee amounts are in the description boxes",
+  "cpFeeMoveBody": "Because the amount boxes are empty, attendees never see the fee step. Move them?",
+  "cpFeeMoveAction": "Move to the fee boxes",
+  "cpFeeMoveDone": "Moved. Press Save to keep it."
 }
