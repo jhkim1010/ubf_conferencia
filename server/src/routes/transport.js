@@ -34,7 +34,8 @@ async function loadDispatchPeople(programId, direction) {
   const [[program], regs, comps] = await Promise.all([
     sql`SELECT program_type, host_country FROM programs WHERE id = ${programId}`,
     sql`
-      SELECT id, real_name AS name, country, needs_pickup, arrival_flight, departure_flight
+      SELECT id, real_name AS name, country, needs_pickup, pickup_from,
+             arrival_flight, departure_flight
       FROM registrations
       WHERE program_id = ${programId} AND submitted = true
         AND real_name IS NOT NULL AND real_name <> ''
@@ -66,13 +67,21 @@ async function loadDispatchPeople(programId, direction) {
         hostCountry,
         country: r.country,
         hasFlight: hasFlightInfo({ airport, timeAt }),
+        pickupFrom: r.pickup_from,
       })
     ) {
       continue;
     }
     const key = `reg:${r.id}`;
     meta.set(key, { regId: r.id, compId: null });
-    info.set(key, { name: r.name, airport, timeAt, flight });
+    // 공항이 아닌 곳에서 태우는 사람이 있다(035). 어디서 태울지 모르면
+    // 배차판에 이름만 뜨고 담당자가 다시 물어봐야 한다.
+    info.set(key, {
+      name: r.name,
+      airport: airport ?? r.pickup_from,
+      timeAt,
+      flight,
+    });
     people.push({ id: key, airport, timeAt, needsPickup: r.needs_pickup });
   }
   for (const c of comps) {

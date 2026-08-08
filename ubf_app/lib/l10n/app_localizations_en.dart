@@ -2602,4 +2602,40 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get feeBackfillNotSet =>
       'That tier has no amount yet. Set the fee first.';
+
+  @override
+  String get studyLangMulti => 'Pick every language you can study in';
+
+  @override
+  String get studyLangPrimary => 'Main';
+
+  @override
+  String get studyLangPrimaryNote =>
+      'The first one you pick is your main language — your Bible study team is formed by it. The others help us place you when a team is too small.';
+
+  @override
+  String get regStepPickup => 'Pickup';
+
+  @override
+  String get pickupTitle => 'Do you need a ride to the venue?';
+
+  @override
+  String get pickupBody =>
+      'You are coming from within the host country, so we do not need your flight. We only need to know whether to pick you up, and from where.';
+
+  @override
+  String get pickupNeed => 'I need a ride';
+
+  @override
+  String get pickupNeedNo => 'I\'ll get there myself';
+
+  @override
+  String get pickupFromLabel => 'Where should we pick you up?';
+
+  @override
+  String get pickupFromHint =>
+      'e.g. Retiro bus terminal, in front of the chapter';
+
+  @override
+  String get pickupFromRequired => 'Please write where we should pick you up';
 }

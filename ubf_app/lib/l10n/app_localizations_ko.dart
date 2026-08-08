@@ -2542,4 +2542,39 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get feeBackfillNotSet => '그 등급의 참가비가 아직 없습니다. 참가비를 먼저 정해 주십시오.';
+
+  @override
+  String get studyLangMulti => '공부할 수 있는 언어를 모두 고르십시오';
+
+  @override
+  String get studyLangPrimary => '주 언어';
+
+  @override
+  String get studyLangPrimaryNote =>
+      '가장 먼저 고른 것이 주 언어이고, 성경공부 팀은 그것으로 정해집니다. 나머지는 팀 인원이 적을 때 자리를 찾는 데 씁니다.';
+
+  @override
+  String get regStepPickup => '픽업';
+
+  @override
+  String get pickupTitle => '수양회장까지 태워 드릴까요?';
+
+  @override
+  String get pickupBody =>
+      '개최국에서 오시므로 항공편은 필요하지 않습니다. 태워 드릴지, 태운다면 어디서인지만 알려 주십시오.';
+
+  @override
+  String get pickupNeed => '태워 주셨으면 합니다';
+
+  @override
+  String get pickupNeedNo => '제가 알아서 가겠습니다';
+
+  @override
+  String get pickupFromLabel => '어디서 태울까요?';
+
+  @override
+  String get pickupFromHint => '예: 레티로 버스터미널, 지부 앞';
+
+  @override
+  String get pickupFromRequired => '태울 곳을 적어 주십시오';
 }

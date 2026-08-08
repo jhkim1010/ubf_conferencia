@@ -38,6 +38,14 @@ class RegistrationFormState {
   /// 스페인어권 한국인 선교사가 둘 다 흔하고, 유추하면 둘 다 틀린다.
   final String? studyLanguage;
 
+  /// 공부할 수 있는 언어 전부(034). **첫 번째가 주 언어**이고
+  /// studyLanguage 와 같다 — 성경공부 팀은 그것으로 갈린다.
+  final List<String> studyLanguages;
+
+  /// 개최국에서 오는 사람에게 묻는 것(035). 항공편 대신 이것만 받는다.
+  final bool needsPickup;
+  final String? pickupFrom;
+
   /// 수양회 전후 숙박(028). 외국에서 오는 사람만 고른다 — 개최국 참가자는
   /// 전후에 집으로 간다. 박수를 함께 받아야 호텔에 방을 잡을 수 있다.
   final String? hotelOptionKey;
@@ -66,6 +74,9 @@ class RegistrationFormState {
     this.discountOptionKey,
     this.discountReason,
     this.studyLanguage,
+    this.studyLanguages = const [],
+    this.needsPickup = true,
+    this.pickupFrom,
     this.hotelOptionKey,
     this.hotelNightsBefore = 0,
     this.hotelNightsAfter = 0,
@@ -92,6 +103,9 @@ class RegistrationFormState {
     String? discountOptionKey,
     String? discountReason,
     String? studyLanguage,
+    List<String>? studyLanguages,
+    bool? needsPickup,
+    String? pickupFrom,
     String? hotelOptionKey,
     int? hotelNightsBefore,
     int? hotelNightsAfter,
@@ -128,6 +142,9 @@ class RegistrationFormState {
           ? null
           : (discountReason ?? this.discountReason),
       studyLanguage: studyLanguage ?? this.studyLanguage,
+      studyLanguages: studyLanguages ?? this.studyLanguages,
+      needsPickup: needsPickup ?? this.needsPickup,
+      pickupFrom: pickupFrom ?? this.pickupFrom,
       // 등급을 비우면 박수도 함께 비운다. "3박" 만 남으면 어느 등급으로
       // 방을 잡을지 알 수 없고 화면에도 아무것도 안 보인다.
       hotelOptionKey: clearHotel
@@ -164,6 +181,9 @@ class RegistrationFormState {
     'discountOptionKey': discountOptionKey,
     'discountReason': discountReason,
     'studyLanguage': studyLanguage,
+    'studyLanguages': studyLanguages,
+    'needsPickup': needsPickup,
+    'pickupFrom': pickupFrom,
     'hotelOptionKey': hotelOptionKey,
     'hotelNightsBefore': hotelNightsBefore,
     'hotelNightsAfter': hotelNightsAfter,
@@ -192,6 +212,9 @@ class RegistrationFormState {
         discountOptionKey: json['discountOptionKey'] as String?,
         discountReason: json['discountReason'] as String?,
         studyLanguage: json['studyLanguage'] as String?,
+        studyLanguages: List<String>.from(json['studyLanguages'] ?? []),
+        needsPickup: json['needsPickup'] as bool? ?? true,
+        pickupFrom: json['pickupFrom'] as String?,
         hotelOptionKey: json['hotelOptionKey'] as String?,
         hotelNightsBefore: json['hotelNightsBefore'] as int? ?? 0,
         hotelNightsAfter: json['hotelNightsAfter'] as int? ?? 0,
@@ -321,8 +344,26 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
   void clearDiscountRequest() => _update(state.copyWith(clearDiscount: true));
 
   /// 말씀 공부 언어(025). 배정이 이 값으로 갈리므로 참석자가 직접 고른다.
-  void selectStudyLanguage(String code) =>
-      _update(state.copyWith(studyLanguage: code));
+  /// 언어를 켜고 끈다. **목록의 첫 번째가 주 언어**다 — 고른 순서를 지킨다.
+  void toggleStudyLanguage(String code) {
+    final list = [...state.studyLanguages];
+    list.contains(code) ? list.remove(code) : list.add(code);
+    _update(
+      state.copyWith(
+        studyLanguages: list,
+        studyLanguage: list.isEmpty ? null : list.first,
+      ),
+    );
+  }
+
+  // ─── 픽업(035) ──────────────────────────────────────────────
+
+  void setNeedsPickup(bool v) => _update(
+    // 안 태운다고 하면 장소는 뜻이 없다. 남겨 두면 배차판에 유령 정류장이 뜬다.
+    state.copyWith(needsPickup: v, pickupFrom: v ? state.pickupFrom : ''),
+  );
+
+  void updatePickupFrom(String v) => _update(state.copyWith(pickupFrom: v));
 
   // ─── 수양회 전후 숙박(028) ──────────────────────────────────
 
@@ -367,6 +408,9 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       'discountOptionKey': state.discountOptionKey,
       'discountReason': state.discountReason,
       'studyLanguage': state.studyLanguage,
+      'studyLanguages': state.studyLanguages,
+      'needsPickup': state.needsPickup,
+      'pickupFrom': state.pickupFrom,
       'hotelOptionKey': state.hotelOptionKey,
       'hotelNightsBefore': state.hotelNightsBefore,
       'hotelNightsAfter': state.hotelNightsAfter,
@@ -411,6 +455,9 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       discountOptionKey: data['discount_option_key'],
       discountReason: data['discount_reason'],
       studyLanguage: data['study_language'],
+      studyLanguages: List<String>.from(data['study_languages'] ?? []),
+      needsPickup: data['needs_pickup'] as bool? ?? true,
+      pickupFrom: data['pickup_from'],
       hotelOptionKey: data['hotel_option_key'],
       hotelNightsBefore: data['hotel_nights_before'] as int? ?? 0,
       hotelNightsAfter: data['hotel_nights_after'] as int? ?? 0,

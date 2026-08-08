@@ -20,6 +20,7 @@ import 'steps/companion_step.dart';
 import 'steps/volunteer_resources_step.dart';
 import 'steps/study_language_step.dart';
 import 'steps/hotel_step.dart';
+import 'steps/pickup_step.dart';
 import 'package:mana/l10n/app_localizations.dart';
 
 // 등록 폼 - PageView 기반
@@ -192,6 +193,15 @@ class _RegistrationFlowScreenState
             title: l10n.regStepCompanion,
             widget: CompanionStep(programId: widget.programId),
           ),
+          // 개최국 참석자에게는 항공편 대신 픽업만 묻는다(035).
+          // 버스로·차로 오므로 항공편은 뜻이 없지만, 어디서 태울지는 알아야
+          // 한다 — 예전에는 아무것도 안 물어서 그 사람들이 배차 명단에서
+          // 통째로 빠졌다.
+          if (skipFlightSteps)
+            (
+              title: l10n.regStepPickup,
+              widget: PickupStep(programId: widget.programId),
+            ),
           // 개최국 참석자는 항공편 스텝 자체를 넣지 않는다. 배너에서 되살릴 수 있다.
           if (!skipFlightSteps) ...[
             (

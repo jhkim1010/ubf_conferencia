@@ -779,5 +779,16 @@
   "feeBackfillAction": "Definir todas como…",
   "feeBackfillConfirm": "Definir {count} pessoas como {tier} e recalcular seus totais? Quem já escolheu não é alterado.",
   "feeBackfillDone": "{count} pessoas atualizadas",
-  "feeBackfillNotSet": "Esse nível ainda não tem valor. Defina a taxa primeiro."
+  "feeBackfillNotSet": "Esse nível ainda não tem valor. Defina a taxa primeiro.",
+  "studyLangMulti": "Escolha todos os idiomas em que você pode estudar",
+  "studyLangPrimary": "Principal",
+  "studyLangPrimaryNote": "O primeiro que você escolher é o idioma principal: sua equipe de estudo é formada por ele. Os outros ajudam a alocar você quando uma equipe fica pequena.",
+  "regStepPickup": "Transporte",
+  "pickupTitle": "Precisa de carona até o local?",
+  "pickupBody": "Você vem de dentro do país anfitrião, então não precisamos do seu voo. Só precisamos saber se buscamos você e onde.",
+  "pickupNeed": "Preciso de carona",
+  "pickupNeedNo": "Vou por conta própria",
+  "pickupFromLabel": "Onde buscamos você?",
+  "pickupFromHint": "ex.: rodoviária do Retiro, em frente à sede",
+  "pickupFromRequired": "Escreva onde devemos buscar você"
 }

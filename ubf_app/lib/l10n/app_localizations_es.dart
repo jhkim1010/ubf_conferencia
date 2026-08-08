@@ -2613,4 +2613,40 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get feeBackfillNotSet =>
       'Ese nivel todavía no tiene importe. Define la cuota primero.';
+
+  @override
+  String get studyLangMulti =>
+      'Elige todos los idiomas en los que puedes estudiar';
+
+  @override
+  String get studyLangPrimary => 'Principal';
+
+  @override
+  String get studyLangPrimaryNote =>
+      'El primero que elijas es tu idioma principal: tu equipo de estudio se forma con ese. Los demás ayudan a ubicarte si un equipo queda pequeño.';
+
+  @override
+  String get regStepPickup => 'Traslado';
+
+  @override
+  String get pickupTitle => '¿Necesitas traslado al lugar?';
+
+  @override
+  String get pickupBody =>
+      'Vienes desde el país anfitrión, así que no necesitamos tu vuelo. Solo si te recogemos y desde dónde.';
+
+  @override
+  String get pickupNeed => 'Necesito traslado';
+
+  @override
+  String get pickupNeedNo => 'Voy por mi cuenta';
+
+  @override
+  String get pickupFromLabel => '¿Dónde te recogemos?';
+
+  @override
+  String get pickupFromHint => 'ej. terminal de Retiro, frente al capítulo';
+
+  @override
+  String get pickupFromRequired => 'Escribe dónde te recogemos';
 }

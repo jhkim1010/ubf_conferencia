@@ -252,6 +252,25 @@ describe('isPickupExempt — 국제 수양회 개최국 참가자', () => {
     }
   });
 
+  test('태워 달라고 적어 냈으면 빼지 않는다', () => {
+    // 개최국 사람도 버스터미널·지부 앞에서 태워야 할 수 있다(035).
+    // 예전에는 물어본 적이 없어서 그 사실이 어디에도 남지 않았다.
+    assert.equal(
+      isPickupExempt({ ...intl, country: 'AR', hasFlight: false, pickupFrom: 'Retiro 터미널' }),
+      false,
+    );
+  });
+
+  test('빈 문자열이나 공백만 적었으면 적지 않은 것이다', () => {
+    for (const v of ['', '   ', null, undefined]) {
+      assert.equal(
+        isPickupExempt({ ...intl, country: 'AR', hasFlight: false, pickupFrom: v }),
+        true,
+        String(v),
+      );
+    }
+  });
+
   test('다른 나라 사람은 이름이 비슷해도 빼지 않는다', () => {
     assert.equal(isPickupExempt({ ...intl, country: 'AU', hasFlight: false }), false);
   });

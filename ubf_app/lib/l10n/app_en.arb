@@ -1600,5 +1600,16 @@
       }
     }
   },
-  "feeBackfillNotSet": "That tier has no amount yet. Set the fee first."
+  "feeBackfillNotSet": "That tier has no amount yet. Set the fee first.",
+  "studyLangMulti": "Pick every language you can study in",
+  "studyLangPrimary": "Main",
+  "studyLangPrimaryNote": "The first one you pick is your main language — your Bible study team is formed by it. The others help us place you when a team is too small.",
+  "regStepPickup": "Pickup",
+  "pickupTitle": "Do you need a ride to the venue?",
+  "pickupBody": "You are coming from within the host country, so we do not need your flight. We only need to know whether to pick you up, and from where.",
+  "pickupNeed": "I need a ride",
+  "pickupNeedNo": "I'll get there myself",
+  "pickupFromLabel": "Where should we pick you up?",
+  "pickupFromHint": "e.g. Retiro bus terminal, in front of the chapter",
+  "pickupFromRequired": "Please write where we should pick you up"
 }

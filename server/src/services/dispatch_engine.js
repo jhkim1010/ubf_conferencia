@@ -16,8 +16,19 @@
 // **항공편을 실제로 적어 낸 사람은 명단에 남긴다.** 그러지 않으면 비행기로
 // 오는 사람이 조용히 사라져 아무도 공항에 나가지 않는다.
 //
+// **태워 달라고 적어 낸 사람은 빼지 않는다**(035). 개최국 사람도 버스터미널·
+// 지부 앞에서 태워야 할 수 있다. 예전에는 물어본 적이 없어서 그 사실이 어디에도
+// 남지 않았고, 항공편이 없다는 이유만으로 전부 명단에서 빠졌다.
+//
 // country 를 모르면 제외하지 않는다 — 잘못 빼는 쪽이 잘못 남기는 쪽보다 나쁘다.
-export function isPickupExempt({ programType, hostCountry, country, hasFlight }) {
+export function isPickupExempt({
+  programType,
+  hostCountry,
+  country,
+  hasFlight,
+  pickupFrom,
+}) {
+  if (typeof pickupFrom === 'string' && pickupFrom.trim() !== '') return false;
   if (programType !== 'international') return false;
   if (!hostCountry || !country || country !== hostCountry) return false;
   return !hasFlight;

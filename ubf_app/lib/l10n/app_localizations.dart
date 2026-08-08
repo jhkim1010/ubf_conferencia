@@ -4781,6 +4781,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That tier has no amount yet. Set the fee first.'**
   String get feeBackfillNotSet;
+
+  /// No description provided for @studyLangMulti.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick every language you can study in'**
+  String get studyLangMulti;
+
+  /// No description provided for @studyLangPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Main'**
+  String get studyLangPrimary;
+
+  /// No description provided for @studyLangPrimaryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The first one you pick is your main language — your Bible study team is formed by it. The others help us place you when a team is too small.'**
+  String get studyLangPrimaryNote;
+
+  /// No description provided for @regStepPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup'**
+  String get regStepPickup;
+
+  /// No description provided for @pickupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you need a ride to the venue?'**
+  String get pickupTitle;
+
+  /// No description provided for @pickupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You are coming from within the host country, so we do not need your flight. We only need to know whether to pick you up, and from where.'**
+  String get pickupBody;
+
+  /// No description provided for @pickupNeed.
+  ///
+  /// In en, this message translates to:
+  /// **'I need a ride'**
+  String get pickupNeed;
+
+  /// No description provided for @pickupNeedNo.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ll get there myself'**
+  String get pickupNeedNo;
+
+  /// No description provided for @pickupFromLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Where should we pick you up?'**
+  String get pickupFromLabel;
+
+  /// No description provided for @pickupFromHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Retiro bus terminal, in front of the chapter'**
+  String get pickupFromHint;
+
+  /// No description provided for @pickupFromRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please write where we should pick you up'**
+  String get pickupFromRequired;
 }
 
 class _AppLocalizationsDelegate

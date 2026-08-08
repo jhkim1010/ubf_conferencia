@@ -793,5 +793,16 @@
   "feeBackfillAction": "Ponerlas todas en…",
   "feeBackfillConfirm": "¿Poner a {count} personas en {tier} y recalcular sus totales? Quienes ya eligieron no se tocan.",
   "feeBackfillDone": "Se actualizaron {count} personas",
-  "feeBackfillNotSet": "Ese nivel todavía no tiene importe. Define la cuota primero."
+  "feeBackfillNotSet": "Ese nivel todavía no tiene importe. Define la cuota primero.",
+  "studyLangMulti": "Elige todos los idiomas en los que puedes estudiar",
+  "studyLangPrimary": "Principal",
+  "studyLangPrimaryNote": "El primero que elijas es tu idioma principal: tu equipo de estudio se forma con ese. Los demás ayudan a ubicarte si un equipo queda pequeño.",
+  "regStepPickup": "Traslado",
+  "pickupTitle": "¿Necesitas traslado al lugar?",
+  "pickupBody": "Vienes desde el país anfitrión, así que no necesitamos tu vuelo. Solo si te recogemos y desde dónde.",
+  "pickupNeed": "Necesito traslado",
+  "pickupNeedNo": "Voy por mi cuenta",
+  "pickupFromLabel": "¿Dónde te recogemos?",
+  "pickupFromHint": "ej. terminal de Retiro, frente al capítulo",
+  "pickupFromRequired": "Escribe dónde te recogemos"
 }

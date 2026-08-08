@@ -36,9 +36,10 @@ class StudyLanguageStep extends ConsumerWidget {
     final form = ref.watch(registrationFormProvider(programId));
     final notifier = ref.read(registrationFormProvider(programId).notifier);
 
-    // 아직 안 골랐으면 앱 언어를 기본값으로 보여준다(저장은 고른 뒤에).
-    final current =
-        form.studyLanguage ?? Localizations.localeOf(context).languageCode;
+    // 아직 안 골랐으면 앱 언어를 미리 켜 둔다(저장은 고른 뒤에).
+    final picked = form.studyLanguages.isNotEmpty
+        ? form.studyLanguages
+        : [Localizations.localeOf(context).languageCode];
 
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -62,16 +63,37 @@ class StudyLanguageStep extends ConsumerWidget {
           textAlign: TextAlign.center,
           style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
         ),
+        const SizedBox(height: 4),
+        Text(
+          l10n.studyLangMulti,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 20),
 
         for (final o in options) ...[
           _LangCard(
             label: o.label,
-            selected: current == o.code,
-            onTap: () => notifier.selectStudyLanguage(o.code),
+            selected: picked.contains(o.code),
+            // 첫 번째가 주 언어다. 어느 것이 팀을 가르는지 보여야
+            // 순서를 바꿀 생각이라도 할 수 있다.
+            badge: picked.isNotEmpty && picked.first == o.code
+                ? l10n.studyLangPrimary
+                : null,
+            onTap: () => notifier.toggleStudyLanguage(o.code),
           ),
           const SizedBox(height: 8),
         ],
+
+        const SizedBox(height: 4),
+        Text(
+          l10n.studyLangPrimaryNote,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+        ),
 
         const SizedBox(height: 8),
         Text(
@@ -87,12 +109,14 @@ class StudyLanguageStep extends ConsumerWidget {
 class _LangCard extends StatelessWidget {
   final String label;
   final bool selected;
+  final String? badge;
   final VoidCallback onTap;
 
   const _LangCard({
     required this.label,
     required this.selected,
     required this.onTap,
+    this.badge,
   });
 
   @override
@@ -115,9 +139,10 @@ class _LangCard extends StatelessWidget {
           child: Row(
             children: [
               Icon(
+                // 하나만 고르는 것이 아니므로 동그라미가 아니라 네모다.
                 selected
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
+                    ? Icons.check_box_outlined
+                    : Icons.check_box_outline_blank,
                 color: selected ? theme.colorScheme.primary : Colors.grey,
               ),
               const SizedBox(width: 12),
@@ -128,6 +153,23 @@ class _LangCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              if (badge != null) ...[
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    badge!,
+                    style: const TextStyle(color: Colors.white, fontSize: 11),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

@@ -2615,4 +2615,40 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get feeBackfillNotSet =>
       'Esse nível ainda não tem valor. Defina a taxa primeiro.';
+
+  @override
+  String get studyLangMulti =>
+      'Escolha todos os idiomas em que você pode estudar';
+
+  @override
+  String get studyLangPrimary => 'Principal';
+
+  @override
+  String get studyLangPrimaryNote =>
+      'O primeiro que você escolher é o idioma principal: sua equipe de estudo é formada por ele. Os outros ajudam a alocar você quando uma equipe fica pequena.';
+
+  @override
+  String get regStepPickup => 'Transporte';
+
+  @override
+  String get pickupTitle => 'Precisa de carona até o local?';
+
+  @override
+  String get pickupBody =>
+      'Você vem de dentro do país anfitrião, então não precisamos do seu voo. Só precisamos saber se buscamos você e onde.';
+
+  @override
+  String get pickupNeed => 'Preciso de carona';
+
+  @override
+  String get pickupNeedNo => 'Vou por conta própria';
+
+  @override
+  String get pickupFromLabel => 'Onde buscamos você?';
+
+  @override
+  String get pickupFromHint => 'ex.: rodoviária do Retiro, em frente à sede';
+
+  @override
+  String get pickupFromRequired => 'Escreva onde devemos buscar você';
 }

@@ -39,17 +39,28 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     volunteerResources, volunteerNote,
     fcmToken,
     feeTier, discountRequested, discountOptionKey, discountReason,
-    studyLanguage,
+    studyLanguage, studyLanguages,
     hotelOptionKey, hotelNightsBefore, hotelNightsAfter,
+    needsPickup, pickupFrom,
   } = req.body;
 
   // 말씀 공부 언어. 참석자가 직접 고른 값이다 — 앱 표시 언어나 국가로 유추하면
   // 틀린다(아르헨티나 한인 2세, 스페인어권 한국인 선교사 둘 다 흔하다).
   // ISO 639-1 두 글자만 받는다. 아니면 안 보낸 것으로 본다.
-  const studyLang =
-    typeof studyLanguage === 'string' && /^[a-z]{2}$/.test(studyLanguage.trim().toLowerCase())
-      ? studyLanguage.trim().toLowerCase()
+  const oneLang = (v) =>
+    typeof v === 'string' && /^[a-z]{2}$/.test(v.trim().toLowerCase())
+      ? v.trim().toLowerCase()
       : null;
+
+  // 두세 언어를 하는 사람이 흔하다(034). 고른 순서를 지키되 중복은 없앤다 —
+  // **첫 번째가 주 언어**이고, 성경공부 팀은 그것으로 갈린다.
+  const langList = Array.isArray(studyLanguages)
+    ? [...new Set(studyLanguages.map(oneLang).filter(Boolean))].slice(0, 4)
+    : null;
+
+  // 목록을 보냈으면 그 첫 번째가 주 언어다. 예전 앱은 studyLanguage 하나만
+  // 보내므로 그때는 그것을 쓴다.
+  const studyLang = langList?.[0] ?? oneLang(studyLanguage);
 
   try {
     const [program] = await sql`
@@ -176,8 +187,9 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         total_cost, fcm_token,
         fee_tier, discount_requested, discount_option_key,
         discount_option_label, discount_option_labels, discount_reason, discount_status,
-        discount_amount, discount_note, study_language,
-        hotel_option_key, hotel_nights_before, hotel_nights_after
+        discount_amount, discount_note, study_language, study_languages,
+        hotel_option_key, hotel_nights_before, hotel_nights_after,
+        needs_pickup, pickup_from
       )
       VALUES (
         ${req.params.programId}, ${req.user.userId},
@@ -205,9 +217,12 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         ${discountAmount},
         ${discountNote},
         ${studyLang},
+        ${langList ?? (studyLang ? [studyLang] : [])},
         ${hotel.key},
         ${hotel.nightsBefore},
-        ${hotel.nightsAfter}
+        ${hotel.nightsAfter},
+        ${needsPickup !== false},
+        ${pickupFrom?.toString().trim() || null}
       )
       ON CONFLICT (program_id, user_id)
       DO UPDATE SET
@@ -240,12 +255,22 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         -- 안 보냈으면 지우지 않는다. 이 화면을 안 거치는 저장(임시저장 등)이
         -- 참석자가 고른 언어를 날려 버리면 배정이 통째로 어긋난다.
         study_language = COALESCE(EXCLUDED.study_language, registrations.study_language),
+        -- 안 보냈으면 지우지 않는다. 이 화면을 안 거치는 저장(임시저장 등)이
+        -- 골라 둔 언어를 날려 버리면 배정이 통째로 어긋난다.
+        study_languages = CASE WHEN ${langList !== null}
+          THEN EXCLUDED.study_languages ELSE registrations.study_languages END,
         hotel_option_key = CASE WHEN ${sentHotel}
           THEN EXCLUDED.hotel_option_key ELSE registrations.hotel_option_key END,
         hotel_nights_before = CASE WHEN ${sentHotel}
           THEN EXCLUDED.hotel_nights_before ELSE registrations.hotel_nights_before END,
         hotel_nights_after = CASE WHEN ${sentHotel}
           THEN EXCLUDED.hotel_nights_after ELSE registrations.hotel_nights_after END,
+        -- 픽업은 이 화면 말고 "내 이동 정보" 에서도 끄고 켠다. 안 보낸
+        -- 저장이 그 설정을 덮으면 안 된다.
+        needs_pickup = CASE WHEN ${needsPickup !== undefined}
+          THEN EXCLUDED.needs_pickup ELSE registrations.needs_pickup END,
+        pickup_from = CASE WHEN ${pickupFrom !== undefined}
+          THEN EXCLUDED.pickup_from ELSE registrations.pickup_from END,
         updated_at = NOW()
       RETURNING id
     `;
