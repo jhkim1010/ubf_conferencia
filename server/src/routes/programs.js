@@ -592,7 +592,11 @@ router.get('/:id/stats', requireAuth, requireLeader, async (req, res) => {
         p.name AS program_name,
         COUNT(r.id) AS total_registrations,
         COUNT(r.id) FILTER (WHERE r.submitted = true) AS submitted_count,
-        COUNT(r.id) FILTER (WHERE r.food_requirements IS NOT NULL AND r.food_requirements != '' AND r.food_requirements != '없음') AS food_restriction_count,
+        -- 판정은 has_food_restriction(027) 하나로 모았다. 여기만 예전 조건이
+        -- 남아 있어서 대시보드 카드는 4명, 표는 2명이 됐다 — 같은 것을 두
+        -- 규칙으로 세면 어느 쪽도 믿을 수 없다.
+        COUNT(r.id) FILTER (WHERE has_food_restriction(r.food_requirements))
+          AS food_restriction_count,
         COUNT(r.id) FILTER (WHERE flight_confirmed(r.arrival_flight)) AS arrival_flight_count,
         COUNT(r.id) FILTER (WHERE flight_confirmed(r.departure_flight)) AS departure_flight_count,
         COUNT(pay.id) FILTER (WHERE pay.status = 'pending') AS pending_payment_count,
@@ -1054,7 +1058,7 @@ router.get('/:id/meals', requireAuth, requireProgramAdmin, async (req, res) => {
 
     // 제출 여부로 거르지 않는다. 아직 제출하지 않았어도 못 먹는 것은 못 먹는다.
     const people = await sql`
-      SELECT r.real_name, r.bible_name, r.country, r.branch, r.gender,
+      SELECT r.real_name, r.bible_name, r.country, r.branch, r.gender, r.age,
              r.food_requirements, r.skips_breakfast, r.submitted
       FROM registrations r
       WHERE r.program_id = ${programId}
@@ -1086,6 +1090,7 @@ router.get('/:id/meals', requireAuth, requireProgramAdmin, async (req, res) => {
         country: p.country,
         branch: p.branch,
         gender: p.gender,
+        age: p.age,
         food_requirements: p.food_requirements,
         skips_breakfast: p.skips_breakfast,
         submitted: p.submitted,

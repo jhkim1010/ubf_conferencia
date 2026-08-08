@@ -41,38 +41,11 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     RosterView.paid => l10n.dashStatConfirmedPayment,
   };
 
-  /// 식사 제한 판정은 서버(has_food_restriction, 027)와 같아야 한다.
-  /// 다르면 카드의 숫자와 표의 줄 수가 어긋나 어느 쪽도 믿을 수 없다.
-  static const _noneWords = {
-    '없음',
-    '없다',
-    '무',
-    '해당없음',
-    '특이사항 없음',
-    'none',
-    'no',
-    'nothing',
-    'n/a',
-    'na',
-    'ninguno',
-    'ninguna',
-    'nada',
-    'sin restricciones',
-    '-',
-    '--',
-    '.',
-    'x',
-  };
-
-  static bool _hasFood(Map<String, dynamic> r) {
-    final v = (r['food_requirements'] as String?)?.trim() ?? '';
-    return v.isNotEmpty && !_noneWords.contains(v.toLowerCase());
-  }
-
   bool _keep(Map<String, dynamic> r) => switch (widget.view) {
     RosterView.all => true,
     RosterView.submitted => r['submitted'] == true,
-    RosterView.meals => _hasFood(r),
+    // 식사 제한은 여기서 거르지 않는다 — 서버가 걸러 준 명단을 그대로 쓴다.
+    RosterView.meals => true,
     RosterView.pendingPayment => (r['payment'] as Map?)?['status'] == 'pending',
     RosterView.arrival => r['arrival_flight'] != null,
     RosterView.paid => (r['payment'] as Map?)?['status'] == 'confirmed',
@@ -210,7 +183,16 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final regsAsync = ref.watch(programRegistrationsProvider(widget.programId));
+    // 식사 제한만 서버가 걸러 준 명단을 쓴다.
+    //
+    // 낱말 목록('없음' / 'none' / 'ninguno' / 'nenhum' …)을 앱에도 두었더니
+    // 포르투갈어를 넣을 때 한쪽만 늘어나, 카드는 4명 표는 2명이 됐다.
+    // 판정은 한 곳(has_food_restriction, 027)에만 있어야 한다.
+    final regsAsync = widget.view == RosterView.meals
+        ? ref
+              .watch(programMealsProvider(widget.programId))
+              .whenData((d) => (d?['people'] as List?) ?? const [])
+        : ref.watch(programRegistrationsProvider(widget.programId));
     final program = ref
         .watch(programByIdProvider(widget.programId))
         .valueOrNull;

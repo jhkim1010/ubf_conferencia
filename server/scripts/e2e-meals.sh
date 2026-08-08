@@ -8,7 +8,8 @@
 # 어긋나고, 어긋난 채로 주방에 명단이 넘어간다.
 #
 # "없음"만 걸러내던 시절에는 스페인어로 "ninguno" 라고 적은 사람이 전부
-# 제한자로 잡혔다. 여기서 세 언어를 함께 확인한다.
+# 제한자로 잡혔다. 포르투갈어를 넣을 때도 화면 문구만 옮기고 판정 낱말을
+# 빠뜨려 "Nenhum" 이 제한자로 잡혔다 — 네 언어를 모두 확인한다.
 set -uo pipefail
 API="${API:-http://localhost:3000}"
 LEADER="${LEADER:-leader@test.com}"
@@ -68,6 +69,10 @@ field() { # $1=키
   curl -s "$API/programs/$P/meals" -H "Authorization: Bearer $LT" \
     | node -pe "String(JSON.parse(require('fs').readFileSync(0))['$1'])"
 }
+statCount() {
+  curl -s "$API/programs/$P/stats" -H "Authorization: Bearer $LT" \
+    | node -pe "String(JSON.parse(require('fs').readFileSync(0)).food_restriction_count ?? 'null')"
+}
 cardCount() {
   curl -s "$API/programs/$P/readiness" -H "Authorization: Bearer $LT" \
     | node -pe "const r=JSON.parse(require('fs').readFileSync(0));
@@ -80,17 +85,21 @@ enroll koNone   "없음이"   "없음"           no
 enroll esNone   "ninguno"  "ninguno"        no
 enroll enNo     "no"       "No"             no
 enroll dash     "대시"     "-"              no
+enroll ptNone   "nenhum"   "Nenhum"         no
 enroll blank    "무기재"   ""               no
 
 echo "── 명단 ──"
 eq "제한을 적은 사람만 나온다" '땅콩,비건' "$(names)"
-eq "  전체 인원도 함께 준다"   '7'         "$(field total)"
+eq "  전체 인원도 함께 준다"   '8'         "$(field total)"
 eq "  아침 거름 수를 센다"     '1'         "$(field skips_breakfast)"
 
 echo
 echo "── 카드와 명단이 같은 수를 말한다 ──"
 # 이것이 이 기능의 핵심이다. 카드는 4명, 명단은 2명이면 어느 쪽도 못 믿는다.
 eq "준비 현황 카드도 2명" '2' "$(cardCount)"
+# 대시보드 통계도 같은 판정을 써야 한다. 여기만 예전 조건이 남아 있어서
+# 카드는 4명, 표는 2명이 됐다.
+eq "대시보드 통계도 2명"  '2' "$(statCount)"
 
 echo
 echo "── 권한 ──"
