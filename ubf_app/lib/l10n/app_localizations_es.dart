@@ -2663,4 +2663,50 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cpFeeMoveDone => 'Listo. Pulsa Guardar para conservarlo.';
+
+  @override
+  String get tblTitle => 'Detalle';
+
+  @override
+  String tblCount(int count) {
+    return '$count filas';
+  }
+
+  @override
+  String get tblEmpty => 'No hay nada que mostrar.';
+
+  @override
+  String get tblExportPdf => 'PDF';
+
+  @override
+  String get tblExportExcel => 'Excel';
+
+  @override
+  String tblExportFailed(String detail) {
+    return 'No se pudo exportar: $detail';
+  }
+
+  @override
+  String get tblHint => 'Toca dos veces para ver la lista';
+
+  @override
+  String get colGenderAge => 'Sexo / Edad';
+
+  @override
+  String get colStatus => 'Estado';
+
+  @override
+  String get colFlight => 'Vuelo de llegada';
+
+  @override
+  String get colPayment => 'Pago';
+
+  @override
+  String get colFee => 'Cuota';
+
+  @override
+  String get colLanguages => 'Idiomas';
+
+  @override
+  String get tblAllAttendees => 'Todos los participantes';
 }

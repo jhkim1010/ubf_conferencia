@@ -794,5 +794,19 @@
   "cpFeeMoveTitle": "Os valores estão nos campos de descrição",
   "cpFeeMoveBody": "Como os campos de valor estão vazios, os participantes não veem a tela de taxa. Mover?",
   "cpFeeMoveAction": "Mover para os campos de taxa",
-  "cpFeeMoveDone": "Pronto. Toque em Salvar para manter."
+  "cpFeeMoveDone": "Pronto. Toque em Salvar para manter.",
+  "tblTitle": "Detalhe",
+  "tblCount": "{count} linhas",
+  "tblEmpty": "Não há nada para mostrar.",
+  "tblExportPdf": "PDF",
+  "tblExportExcel": "Excel",
+  "tblExportFailed": "Não foi possível exportar: {detail}",
+  "tblHint": "Toque duas vezes para ver a lista",
+  "colGenderAge": "Sexo / Idade",
+  "colStatus": "Situação",
+  "colFlight": "Voo de chegada",
+  "colPayment": "Pagamento",
+  "colFee": "Taxa",
+  "colLanguages": "Idiomas",
+  "tblAllAttendees": "Todos os participantes"
 }

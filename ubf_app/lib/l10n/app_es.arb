@@ -808,5 +808,19 @@
   "cpFeeMoveTitle": "Los importes están en los campos de descripción",
   "cpFeeMoveBody": "Como los campos de importe están vacíos, los participantes no ven la pantalla de cuota. ¿Los movemos?",
   "cpFeeMoveAction": "Mover a los campos de cuota",
-  "cpFeeMoveDone": "Listo. Pulsa Guardar para conservarlo."
+  "cpFeeMoveDone": "Listo. Pulsa Guardar para conservarlo.",
+  "tblTitle": "Detalle",
+  "tblCount": "{count} filas",
+  "tblEmpty": "No hay nada que mostrar.",
+  "tblExportPdf": "PDF",
+  "tblExportExcel": "Excel",
+  "tblExportFailed": "No se pudo exportar: {detail}",
+  "tblHint": "Toca dos veces para ver la lista",
+  "colGenderAge": "Sexo / Edad",
+  "colStatus": "Estado",
+  "colFlight": "Vuelo de llegada",
+  "colPayment": "Pago",
+  "colFee": "Cuota",
+  "colLanguages": "Idiomas",
+  "tblAllAttendees": "Todos los participantes"
 }

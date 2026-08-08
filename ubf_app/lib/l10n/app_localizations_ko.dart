@@ -2589,4 +2589,50 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get cpFeeMoveDone => '옮겼습니다. 저장을 눌러 주십시오.';
+
+  @override
+  String get tblTitle => '세부 내용';
+
+  @override
+  String tblCount(int count) {
+    return '$count건';
+  }
+
+  @override
+  String get tblEmpty => '보여 드릴 것이 없습니다.';
+
+  @override
+  String get tblExportPdf => 'PDF';
+
+  @override
+  String get tblExportExcel => '엑셀';
+
+  @override
+  String tblExportFailed(String detail) {
+    return '내보내지 못했습니다: $detail';
+  }
+
+  @override
+  String get tblHint => '두 번 누르면 명단이 보입니다';
+
+  @override
+  String get colGenderAge => '성별 / 나이';
+
+  @override
+  String get colStatus => '상태';
+
+  @override
+  String get colFlight => '도착 항공편';
+
+  @override
+  String get colPayment => '입금';
+
+  @override
+  String get colFee => '참가비';
+
+  @override
+  String get colLanguages => '사용 언어';
+
+  @override
+  String get tblAllAttendees => '전체 참가자';
 }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../program/providers/program_provider.dart';
 import '../../../core/utils/export_service.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import 'roster_table_screen.dart';
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/money.dart';
 
@@ -83,7 +84,7 @@ class DashboardScreen extends ConsumerWidget {
             statsAsync.when(
               loading: () => const LinearProgressIndicator(),
               error: (e, _) => Text(l10n.commonErrorDetail('$e')),
-              data: (stats) => _StatsGrid(stats: stats),
+              data: (stats) => _StatsGrid(stats: stats, programId: programId),
             ),
             const SizedBox(height: 20),
 
@@ -321,8 +322,10 @@ class DashboardScreen extends ConsumerWidget {
 // ─── 통계 그리드 ─────────────────────────────────────────────
 class _StatsGrid extends StatelessWidget {
   final Map<String, dynamic>? stats;
+  // 카드에서 표를 열려면 어느 수양회인지 알아야 한다.
+  final String programId;
 
-  const _StatsGrid({this.stats});
+  const _StatsGrid({this.stats, required this.programId});
 
   @override
   Widget build(BuildContext context) {
@@ -345,40 +348,57 @@ class _StatsGrid extends StatelessWidget {
           value: l10n.unitPeople(n('total_registrations')),
           icon: Icons.people,
           color: Colors.blue,
+          onOpen: () => _openTable(context, programId, RosterView.all),
         ),
         _StatCard(
           label: l10n.dashStatSubmitted,
           value: l10n.unitPeople(n('submitted_count')),
           icon: Icons.check_circle,
           color: Colors.green,
+          onOpen: () => _openTable(context, programId, RosterView.submitted),
         ),
         _StatCard(
           label: l10n.dashStatFoodRestriction,
           value: l10n.unitPeople(n('food_restriction_count')),
           icon: Icons.restaurant,
           color: Colors.orange,
+          onOpen: () => _openTable(context, programId, RosterView.meals),
         ),
         _StatCard(
           label: l10n.dashStatPendingPayment,
           value: l10n.unitCases(n('pending_payment_count')),
           icon: Icons.payment,
           color: Colors.red,
+          onOpen: () =>
+              _openTable(context, programId, RosterView.pendingPayment),
         ),
         _StatCard(
           label: l10n.dashStatArrival,
           value: l10n.unitPeople(n('arrival_flight_count')),
           icon: Icons.flight_land,
           color: Colors.purple,
+          onOpen: () => _openTable(context, programId, RosterView.arrival),
         ),
         _StatCard(
           label: l10n.dashStatConfirmedPayment,
           value: l10n.unitCases(n('confirmed_payment_count')),
           icon: Icons.verified,
           color: Colors.teal,
+          onOpen: () => _openTable(context, programId, RosterView.paid),
         ),
       ],
     );
   }
+}
+
+// 카드에서 표로. push 로 연다 — 라우터에 경로를 더하면 어디서든 열리는데,
+// 이 표는 대시보드를 통해서만 뜻이 있다(어느 수양회인지가 카드에서 온다).
+void _openTable(BuildContext context, String programId, RosterView view) {
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => RosterTableScreen(programId: programId, view: view),
+    ),
+  );
 }
 
 class _StatCard extends StatelessWidget {
@@ -386,42 +406,65 @@ class _StatCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final VoidCallback? onOpen;
 
   const _StatCard({
     required this.label,
     required this.value,
     required this.icon,
     required this.color,
+    this.onOpen,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(icon, color: color, size: 24),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
+    final l10n = AppLocalizations.of(context)!;
+    final body = Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 24),
+              if (onOpen != null) ...[
+                const Spacer(),
+                Icon(Icons.open_in_full, size: 13, color: Colors.grey[400]),
               ],
-            ),
-          ],
-        ),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (onOpen == null) return Card(child: body);
+
+    // 두 번 누르면 열린다. 그것만 두면 화면 낭독기 사용자와 마우스에
+    // 익숙하지 않은 사람이 들어갈 길이 없으므로 길게 누르기도 같은 곳으로
+    // 보내고, 오른쪽 위 표시로 "열 수 있다"를 알린다.
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Semantics(
+        button: true,
+        label: '$label. ${l10n.tblHint}',
+        child: InkWell(onDoubleTap: onOpen, onLongPress: onOpen, child: body),
       ),
     );
   }

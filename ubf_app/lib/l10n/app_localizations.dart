@@ -4871,6 +4871,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Moved. Press Save to keep it.'**
   String get cpFeeMoveDone;
+
+  /// No description provided for @tblTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get tblTitle;
+
+  /// No description provided for @tblCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rows'**
+  String tblCount(int count);
+
+  /// No description provided for @tblEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to show.'**
+  String get tblEmpty;
+
+  /// No description provided for @tblExportPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF'**
+  String get tblExportPdf;
+
+  /// No description provided for @tblExportExcel.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel'**
+  String get tblExportExcel;
+
+  /// No description provided for @tblExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export: {detail}'**
+  String tblExportFailed(String detail);
+
+  /// No description provided for @tblHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Double-tap to see the list'**
+  String get tblHint;
+
+  /// No description provided for @colGenderAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex / Age'**
+  String get colGenderAge;
+
+  /// No description provided for @colStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get colStatus;
+
+  /// No description provided for @colFlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival flight'**
+  String get colFlight;
+
+  /// No description provided for @colPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get colPayment;
+
+  /// No description provided for @colFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Fee'**
+  String get colFee;
+
+  /// No description provided for @colLanguages.
+  ///
+  /// In en, this message translates to:
+  /// **'Languages'**
+  String get colLanguages;
+
+  /// No description provided for @tblAllAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'All attendees'**
+  String get tblAllAttendees;
 }
 
 class _AppLocalizationsDelegate

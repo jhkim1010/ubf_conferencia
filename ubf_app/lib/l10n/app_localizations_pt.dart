@@ -2664,4 +2664,50 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get cpFeeMoveDone => 'Pronto. Toque em Salvar para manter.';
+
+  @override
+  String get tblTitle => 'Detalhe';
+
+  @override
+  String tblCount(int count) {
+    return '$count linhas';
+  }
+
+  @override
+  String get tblEmpty => 'Não há nada para mostrar.';
+
+  @override
+  String get tblExportPdf => 'PDF';
+
+  @override
+  String get tblExportExcel => 'Excel';
+
+  @override
+  String tblExportFailed(String detail) {
+    return 'Não foi possível exportar: $detail';
+  }
+
+  @override
+  String get tblHint => 'Toque duas vezes para ver a lista';
+
+  @override
+  String get colGenderAge => 'Sexo / Idade';
+
+  @override
+  String get colStatus => 'Situação';
+
+  @override
+  String get colFlight => 'Voo de chegada';
+
+  @override
+  String get colPayment => 'Pagamento';
+
+  @override
+  String get colFee => 'Taxa';
+
+  @override
+  String get colLanguages => 'Idiomas';
+
+  @override
+  String get tblAllAttendees => 'Todos os participantes';
 }

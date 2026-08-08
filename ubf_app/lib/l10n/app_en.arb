@@ -1615,5 +1615,33 @@
   "cpFeeMoveTitle": "The fee amounts are in the description boxes",
   "cpFeeMoveBody": "Because the amount boxes are empty, attendees never see the fee step. Move them?",
   "cpFeeMoveAction": "Move to the fee boxes",
-  "cpFeeMoveDone": "Moved. Press Save to keep it."
+  "cpFeeMoveDone": "Moved. Press Save to keep it.",
+  "tblTitle": "Details",
+  "tblCount": "{count} rows",
+  "@tblCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tblEmpty": "Nothing to show.",
+  "tblExportPdf": "PDF",
+  "tblExportExcel": "Excel",
+  "tblExportFailed": "Could not export: {detail}",
+  "@tblExportFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "tblHint": "Double-tap to see the list",
+  "colGenderAge": "Sex / Age",
+  "colStatus": "Status",
+  "colFlight": "Arrival flight",
+  "colPayment": "Payment",
+  "colFee": "Fee",
+  "colLanguages": "Languages",
+  "tblAllAttendees": "All attendees"
 }

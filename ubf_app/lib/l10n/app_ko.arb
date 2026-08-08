@@ -808,5 +808,19 @@
   "cpFeeMoveTitle": "참가비 금액이 설명 칸에 들어가 있습니다",
   "cpFeeMoveBody": "금액 칸이 비어 있어 참가자에게 참가비 화면이 나오지 않습니다. 옮길까요?",
   "cpFeeMoveAction": "금액 칸으로 옮기기",
-  "cpFeeMoveDone": "옮겼습니다. 저장을 눌러 주십시오."
+  "cpFeeMoveDone": "옮겼습니다. 저장을 눌러 주십시오.",
+  "tblTitle": "세부 내용",
+  "tblCount": "{count}건",
+  "tblEmpty": "보여 드릴 것이 없습니다.",
+  "tblExportPdf": "PDF",
+  "tblExportExcel": "엑셀",
+  "tblExportFailed": "내보내지 못했습니다: {detail}",
+  "tblHint": "두 번 누르면 명단이 보입니다",
+  "colGenderAge": "성별 / 나이",
+  "colStatus": "상태",
+  "colFlight": "도착 항공편",
+  "colPayment": "입금",
+  "colFee": "참가비",
+  "colLanguages": "사용 언어",
+  "tblAllAttendees": "전체 참가자"
 }
