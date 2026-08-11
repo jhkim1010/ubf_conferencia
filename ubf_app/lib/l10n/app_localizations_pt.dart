@@ -2710,4 +2710,32 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get tblAllAttendees => 'Todos os participantes';
+
+  @override
+  String epPlanDocs(int count) {
+    return 'Documentos do plano ($count)';
+  }
+
+  @override
+  String get epPlanUpload => 'Enviar um PDF';
+
+  @override
+  String get epPlanName => 'Qual é este documento?';
+
+  @override
+  String get epPlanNameHint => 'ex.: Itinerário, Custos, Inscrição';
+
+  @override
+  String get epPlanRemove => 'Remover este documento';
+
+  @override
+  String epPlanFull(int max) {
+    return 'Até $max documentos.';
+  }
+
+  @override
+  String get tourPlanOpen => 'Abrir';
+
+  @override
+  String get tourOpenFailed => 'Não foi possível abrir; o link foi copiado.';
 }

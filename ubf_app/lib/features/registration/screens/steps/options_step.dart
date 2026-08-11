@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/registration_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/utils/media_url.dart';
 import '../../../../core/utils/money.dart';
 
 class OptionsStep extends ConsumerWidget {
@@ -117,6 +119,7 @@ class _TourCard extends ConsumerWidget {
     final description = option['description'] as String?;
     final contactName = option['contactName'] as String?;
     final brochureUrl = option['brochureUrl'] as String?;
+    final planDocs = (option['planDocs'] as List?) ?? const [];
     final videoUrl = option['videoUrl'] as String?;
     final capacity = Money.parse(option['capacity'])?.toInt();
     final signupCount = Money.parse(option['signupCount'])?.toInt() ?? 0;
@@ -163,7 +166,7 @@ class _TourCard extends ConsumerWidget {
                   itemBuilder: (_, i) => ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Image.network(
-                      photoUrls[i],
+                      mediaUrl(photoUrls[i]),
                       width: photoUrls.length == 1 ? double.infinity : 200,
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => Container(
@@ -224,7 +227,17 @@ class _TourCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 10),
                   ],
-                  // 홍보물 링크
+                  // 계획서·안내 자료 (037). 담당자가 올린 PDF 를 그대로 연다.
+                  for (final d in planDocs)
+                    if (d is Map && d['url'] is String)
+                      _LinkRow(
+                        icon: Icons.picture_as_pdf_outlined,
+                        label: '${d['name'] ?? ''}'.isEmpty
+                            ? l10n.tourPlanOpen
+                            : '${d['name']}',
+                        url: d['url'] as String,
+                      ),
+                  // 붙여넣은 홍보물 링크
                   if (brochureUrl != null && brochureUrl.isNotEmpty)
                     _LinkRow(
                       icon: Icons.description_outlined,
@@ -330,13 +343,30 @@ class _LinkRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return InkWell(
+      // 연다. 예전에는 주소를 복사만 했는데, 우리가 저장한 계획서는
+      // `/media/…` 라 복사해 봐야 붙여넣을 데가 없다.
+      //
+      // 앱 안에 PDF 뷰어는 넣지 않는다 — 기기의 기본 뷰어가 낫고, 뷰어를
+      // 넣으면 다섯 플랫폼 빌드가 그만큼 무거워진다 (자료실도 같은 판단).
       onTap: () async {
-        await Clipboard.setData(ClipboardData(text: url));
+        final full = mediaUrl(url);
+        var opened = false;
+        try {
+          opened = await launchUrl(
+            Uri.parse(full),
+            mode: LaunchMode.externalApplication,
+          );
+        } catch (_) {
+          opened = false;
+        }
+        if (opened || !context.mounted) return;
+        // 못 열면 최소한 주소는 손에 쥐여 준다.
+        await Clipboard.setData(ClipboardData(text: full));
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(l10n.linkCopied),
-              duration: const Duration(seconds: 2),
+              content: Text(l10n.tourOpenFailed),
+              duration: const Duration(seconds: 3),
             ),
           );
         }

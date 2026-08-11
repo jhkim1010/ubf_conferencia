@@ -3,6 +3,7 @@ import '../../../core/utils/file_pick.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
+import '../../../core/utils/media_url.dart';
 import '../providers/program_provider.dart';
 import '../widgets/fee_section.dart';
 import '../widgets/cohort_policy_section.dart';
@@ -722,6 +723,11 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
   DateTime? _deadline;
   final List<String> _photoUrls = [];
   bool _photoBusy = false;
+  // 계획서 PDF 여러 장. [{url, name, bytes}] — 037 의 plan_docs 와 같은 모양.
+  final List<Map<String, dynamic>> _planDocs = [];
+  bool _planBusy = false;
+
+  static const _maxPlanDocs = 10;
 
   @override
   void initState() {
@@ -746,6 +752,11 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
       }
       if (e['photoUrls'] is List) {
         _photoUrls.addAll((e['photoUrls'] as List).cast<String>());
+      }
+      if (e['planDocs'] is List) {
+        for (final d in e['planDocs'] as List) {
+          if (d is Map) _planDocs.add(Map<String, dynamic>.from(d));
+        }
       }
     }
   }
@@ -808,6 +819,93 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
     } finally {
       if (mounted) setState(() => _photoBusy = false);
     }
+  }
+
+  // 계획서 PDF 올리기.
+  //
+  // 한 번에 한 장씩 고른다. 여러 장을 한꺼번에 고르게 하려면 <input multiple>
+  // 을 다루는 길이 플랫폼마다 갈리는데, 자료마다 이름을 따로 물어야 하므로
+  // 어차피 한 장씩 지나가게 된다.
+  Future<void> _addPlanDoc() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_planDocs.length >= _maxPlanDocs) {
+      _planSnack(l10n.epPlanFull(_maxPlanDocs));
+      return;
+    }
+    // PDF 고르기는 웹에서만 된다(file_pick.dart). 버튼을 눌러도 아무 일이
+    // 없으면 고장으로 읽히므로, 왜 안 되는지 말해 준다.
+    if (!canPickPdf) {
+      _planSnack(l10n.libPickOnWeb);
+      return;
+    }
+
+    final picked = await pickPdf();
+    if (picked == null || !mounted) return;
+
+    // 이름을 **먼저** 묻는다. 올린 뒤에 물으면, 이름을 안 적고 닫았을 때
+    // 아무 데도 안 붙은 파일이 서버에 남는다 (자료실도 같은 순서다).
+    final name = await _askPlanName(picked.name);
+    if (name == null || !mounted) return;
+
+    setState(() => _planBusy = true);
+    try {
+      final up = await ApiClient.uploadFile(picked.bytes, 'program');
+      if (!mounted) return;
+      setState(() {
+        _planDocs.add({'url': up['url'], 'name': name, 'bytes': up['bytes']});
+      });
+    } catch (e) {
+      if (mounted) _planSnack(l10n.libUploadFailed('$e'), error: true);
+    } finally {
+      if (mounted) setState(() => _planBusy = false);
+    }
+  }
+
+  /// 파일 크기를 사람이 읽는 단위로. 정확한 단위보다 "큰가 작은가" 가 중요하다.
+  static String _fileSize(Object? bytes) {
+    final n = bytes is num ? bytes.toInt() : int.tryParse('$bytes') ?? 0;
+    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)} MB';
+    if (n >= 1000) return '${(n / 1000).round()} KB';
+    return '$n B';
+  }
+
+  void _planSnack(String msg, {bool error = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: error ? Colors.red : null),
+    );
+  }
+
+  /// 자료 이름. 파일명을 기본값으로 준다 — 대개 그대로 쓸 만하다.
+  Future<String?> _askPlanName(String fileName) async {
+    final l10n = AppLocalizations.of(context)!;
+    final ctrl = TextEditingController(
+      text: fileName.replaceAll(RegExp(r'\.pdf$', caseSensitive: false), ''),
+    );
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.epPlanName),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: InputDecoration(hintText: l10n.epPlanNameHint),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              final t = ctrl.text.trim();
+              if (t.isEmpty) return;
+              Navigator.pop(ctx, t);
+            },
+            child: Text(l10n.actionSave),
+          ),
+        ],
+      ),
+    );
   }
 
   // 사진 주소 붙여넣기 (이미 어딘가에 올려 둔 사진을 쓸 때)
@@ -967,14 +1065,69 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               ],
             ),
             const SizedBox(height: 12),
-            // 홍보물 링크 (브로슈어 / 영상)
+            // 계획서 PDF (여러 장). 일정표·비용안내·신청서처럼 나눠 주는
+            // 자료가 보통 여러 장이라, 한 칸으로는 나머지를 둘 데가 없었다.
+            Row(
+              children: [
+                Text(
+                  l10n.epPlanDocs(_planDocs.length),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Spacer(),
+                if (_planDocs.length < _maxPlanDocs)
+                  TextButton.icon(
+                    icon: _planBusy
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                    label: Text(
+                      _planBusy ? l10n.photoUploading : l10n.epPlanUpload,
+                    ),
+                    onPressed: _planBusy ? null : _addPlanDoc,
+                  ),
+              ],
+            ),
+            for (var i = 0; i < _planDocs.length; i++)
+              ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+                leading: const Icon(Icons.picture_as_pdf, size: 20),
+                title: Text(
+                  '${_planDocs[i]['name'] ?? ''}',
+                  style: const TextStyle(fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: _planDocs[i]['bytes'] == null
+                    ? null
+                    : Text(
+                        _fileSize(_planDocs[i]['bytes']),
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: l10n.epPlanRemove,
+                  // 목록에서만 뺀다. 서버의 파일은 지우지 않는다 — 옵션을
+                  // 고치면 예전 행이 비활성으로 남고(programs.js), 그 행이
+                  // 아직 이 주소를 가리킨다.
+                  onPressed: () => setState(() => _planDocs.removeAt(i)),
+                ),
+              ),
+            const SizedBox(height: 8),
+            // 우리가 받지 않는 자료(구글 드라이브·유튜브 등)는 주소로 붙인다.
             TextField(
               controller: _brochureCtrl,
               keyboardType: TextInputType.url,
               decoration: InputDecoration(
                 labelText: l10n.epBrochureUrl,
                 hintText: 'https://...',
-                prefixIcon: const Icon(Icons.description_outlined),
+                prefixIcon: const Icon(Icons.link),
               ),
             ),
             const SizedBox(height: 12),
@@ -1034,7 +1187,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
-                          _photoUrls[i],
+                          mediaUrl(_photoUrls[i]),
                           width: 70,
                           height: 70,
                           fit: BoxFit.cover,
@@ -1093,6 +1246,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               'startDate': _startDate?.toIso8601String().split('T').first,
               'endDate': _endDate?.toIso8601String().split('T').first,
               'photoUrls': List<String>.from(_photoUrls),
+              'planDocs': List<Map<String, dynamic>>.from(_planDocs),
               'capacity': int.tryParse(_capacityCtrl.text.trim()),
               'signupDeadline': _deadline?.toIso8601String(),
               'brochureUrl': _brochureCtrl.text.trim(),

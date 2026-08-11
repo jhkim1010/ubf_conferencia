@@ -822,5 +822,13 @@
   "colPayment": "Pago",
   "colFee": "Cuota",
   "colLanguages": "Idiomas",
-  "tblAllAttendees": "Todos los participantes"
+  "tblAllAttendees": "Todos los participantes",
+  "epPlanDocs": "Documentos del plan ({count})",
+  "epPlanUpload": "Subir un PDF",
+  "epPlanName": "¿Qué es este documento?",
+  "epPlanNameHint": "p. ej. Itinerario, Costos, Inscripción",
+  "epPlanRemove": "Quitar este documento",
+  "epPlanFull": "Hasta {max} documentos.",
+  "tourPlanOpen": "Abrir",
+  "tourOpenFailed": "No se pudo abrir; se copió el enlace."
 }

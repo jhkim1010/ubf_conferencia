@@ -1643,5 +1643,27 @@
   "colPayment": "Payment",
   "colFee": "Fee",
   "colLanguages": "Languages",
-  "tblAllAttendees": "All attendees"
+  "tblAllAttendees": "All attendees",
+  "epPlanDocs": "Plan documents ({count})",
+  "@epPlanDocs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "epPlanUpload": "Upload a PDF",
+  "epPlanName": "What is this document?",
+  "epPlanNameHint": "e.g. Itinerary, Costs, Application",
+  "epPlanRemove": "Remove this document",
+  "epPlanFull": "Up to {max} documents.",
+  "@epPlanFull": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "tourPlanOpen": "Open",
+  "tourOpenFailed": "Could not open it, so the link was copied instead."
 }

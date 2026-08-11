@@ -822,5 +822,13 @@
   "colPayment": "입금",
   "colFee": "참가비",
   "colLanguages": "사용 언어",
-  "tblAllAttendees": "전체 참가자"
+  "tblAllAttendees": "전체 참가자",
+  "epPlanDocs": "계획서 · 안내 자료 ({count})",
+  "epPlanUpload": "PDF 올리기",
+  "epPlanName": "이 자료의 이름",
+  "epPlanNameHint": "예: 일정표, 비용 안내, 신청서",
+  "epPlanRemove": "이 자료 빼기",
+  "epPlanFull": "자료는 {max}개까지 올릴 수 있습니다.",
+  "tourPlanOpen": "열기",
+  "tourOpenFailed": "열지 못해 링크를 대신 복사했습니다."
 }

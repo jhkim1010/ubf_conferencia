@@ -2635,4 +2635,32 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get tblAllAttendees => '전체 참가자';
+
+  @override
+  String epPlanDocs(int count) {
+    return '계획서 · 안내 자료 ($count)';
+  }
+
+  @override
+  String get epPlanUpload => 'PDF 올리기';
+
+  @override
+  String get epPlanName => '이 자료의 이름';
+
+  @override
+  String get epPlanNameHint => '예: 일정표, 비용 안내, 신청서';
+
+  @override
+  String get epPlanRemove => '이 자료 빼기';
+
+  @override
+  String epPlanFull(int max) {
+    return '자료는 $max개까지 올릴 수 있습니다.';
+  }
+
+  @override
+  String get tourPlanOpen => '열기';
+
+  @override
+  String get tourOpenFailed => '열지 못해 링크를 대신 복사했습니다.';
 }

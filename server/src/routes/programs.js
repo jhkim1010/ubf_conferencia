@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
+import { normalizeOptions } from '../services/option_media.js';
 import { requireAuth, requireLeader, requireProgramAdmin } from '../middleware/auth.js';
 import { isValidBotToken } from '../services/telegram.js';
 
@@ -215,6 +216,7 @@ router.get('/:id', requireAuth, async (req, res) => {
             'capacity', po.capacity,
             'signupDeadline', po.signup_deadline,
             'brochureUrl', po.brochure_url,
+            'planDocs', COALESCE(po.plan_docs, '[]'::jsonb),
             'videoUrl', po.video_url,
             'signupCount', (
               SELECT COUNT(*) FROM registrations r
@@ -375,10 +377,14 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
       RETURNING id
     `;
 
+    // 사진·계획서 주소는 담당자 브라우저에서 온 값이다. 참가자 화면이
+    // 그대로 열기 때문에 저장 전에 한 번 거른다(option_media.js).
+    const options2 = normalizeOptions(options);
+
     // 옵션 일괄 삽입
-    if (Array.isArray(options) && options.length > 0) {
+    if (Array.isArray(options2) && options2.length > 0) {
       await sql`
-        INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url)
+        INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url, plan_docs)
         SELECT
           ${program.id},
           o->>'name',
@@ -391,8 +397,9 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
           NULLIF(o->>'capacity', '')::integer,
           NULLIF(o->>'signupDeadline', '')::timestamptz,
           NULLIF(o->>'brochureUrl', ''),
-          NULLIF(o->>'videoUrl', '')
-        FROM json_array_elements(${JSON.stringify(options)}::json) AS o
+          NULLIF(o->>'videoUrl', ''),
+          COALESCE(o->'planDocs', '[]'::json)::jsonb
+        FROM json_array_elements(${JSON.stringify(options2)}::json) AS o
       `;
     }
 
@@ -507,11 +514,12 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
     `;
 
     // 옵션 교체 (기존 비활성화 후 새로 삽입)
-    if (Array.isArray(options)) {
+    const options2 = normalizeOptions(options);
+    if (Array.isArray(options2)) {
       await sql`UPDATE program_options SET is_active = false WHERE program_id = ${req.params.id}`;
-      if (options.length > 0) {
+      if (options2.length > 0) {
         await sql`
-          INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url)
+          INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url, plan_docs)
           SELECT
             ${req.params.id},
             o->>'name',
@@ -524,8 +532,9 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
             NULLIF(o->>'capacity', '')::integer,
             NULLIF(o->>'signupDeadline', '')::timestamptz,
             NULLIF(o->>'brochureUrl', ''),
-            NULLIF(o->>'videoUrl', '')
-          FROM json_array_elements(${JSON.stringify(options)}::json) AS o
+            NULLIF(o->>'videoUrl', ''),
+            COALESCE(o->'planDocs', '[]'::json)::jsonb
+          FROM json_array_elements(${JSON.stringify(options2)}::json) AS o
         `;
       }
     }

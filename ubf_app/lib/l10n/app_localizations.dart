@@ -4955,6 +4955,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All attendees'**
   String get tblAllAttendees;
+
+  /// No description provided for @epPlanDocs.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan documents ({count})'**
+  String epPlanDocs(int count);
+
+  /// No description provided for @epPlanUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a PDF'**
+  String get epPlanUpload;
+
+  /// No description provided for @epPlanName.
+  ///
+  /// In en, this message translates to:
+  /// **'What is this document?'**
+  String get epPlanName;
+
+  /// No description provided for @epPlanNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Itinerary, Costs, Application'**
+  String get epPlanNameHint;
+
+  /// No description provided for @epPlanRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this document'**
+  String get epPlanRemove;
+
+  /// No description provided for @epPlanFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {max} documents.'**
+  String epPlanFull(int max);
+
+  /// No description provided for @tourPlanOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get tourPlanOpen;
+
+  /// No description provided for @tourOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open it, so the link was copied instead.'**
+  String get tourOpenFailed;
 }
 
 class _AppLocalizationsDelegate
