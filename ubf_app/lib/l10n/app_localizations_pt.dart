@@ -2771,4 +2771,140 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get tblUnfinishedNote =>
       'As linhas amarelas ainda não concluíram o cadastro.';
+
+  @override
+  String get asnTabService => 'Serviço';
+
+  @override
+  String svcNeeded(int filled, int needed) {
+    return '$filled de $needed';
+  }
+
+  @override
+  String svcNoLimit(int filled) {
+    return '$filled · sem meta';
+  }
+
+  @override
+  String svcShort(int count) {
+    return 'faltam $count';
+  }
+
+  @override
+  String get svcNobody => 'Ainda ninguém';
+
+  @override
+  String get svcNominate => 'Pedir a alguém';
+
+  @override
+  String get svcPickPerson => 'A quem vamos pedir?';
+
+  @override
+  String svcAsked(String name) {
+    return 'Pedimos a $name';
+  }
+
+  @override
+  String get svcSetLead => 'Tornar responsável';
+
+  @override
+  String get svcLead => 'Responsável';
+
+  @override
+  String get svcConfirm => 'Confirmar';
+
+  @override
+  String get svcReject => 'Recusar';
+
+  @override
+  String get svcEditRoles => 'Funções e quantidades';
+
+  @override
+  String get svcAddRole => 'Adicionar uma função';
+
+  @override
+  String get svcRoleName => 'Nome da função';
+
+  @override
+  String get svcRoleNameHint => 'ex.: Guia do ônibus para Foz';
+
+  @override
+  String get svcNeedCount => 'Quantos?';
+
+  @override
+  String get svcNeedsApproval => 'Requer aprovação';
+
+  @override
+  String get svcStatusInvited => 'Aguardando resposta';
+
+  @override
+  String get svcStatusApplied => 'Se ofereceu';
+
+  @override
+  String get svcStatusApproval => 'Aguardando aprovação';
+
+  @override
+  String get svcStatusConfirmed => 'Confirmado';
+
+  @override
+  String get svcStatusRejected => 'Recusado';
+
+  @override
+  String get svcStatusDeclined => 'Disse que não';
+
+  @override
+  String get svcRoleSpecialSong => 'Canto especial';
+
+  @override
+  String get svcRoleMc => 'Apresentador';
+
+  @override
+  String get svcRolePickup => 'Traslados';
+
+  @override
+  String get svcRoleCleaning => 'Limpeza';
+
+  @override
+  String get svcRoleTourGuide => 'Guia do tour';
+
+  @override
+  String get svcRoleMealPrep => 'Preparar refeições';
+
+  @override
+  String get svcRoleLodgingBackup => 'Apoio de hospedagem';
+
+  @override
+  String get svcRoleRegistrationDesk => 'Mesa de inscrição';
+
+  @override
+  String get svcRoleInterpreter => 'Intérprete';
+
+  @override
+  String get svcRolePhotoVideo => 'Foto e vídeo';
+
+  @override
+  String get svcRoleMedical => 'Saúde';
+
+  @override
+  String get svcRoleGroupStudyLeader => 'Líder do grupo de estudo';
+
+  @override
+  String get svcRoleOther => 'Outro';
+
+  @override
+  String get svcInviteTitle => 'Pediram sua ajuda';
+
+  @override
+  String svcInviteBody(String role) {
+    return 'Você poderia cuidar de $role?';
+  }
+
+  @override
+  String get svcAccept => 'Sim, posso';
+
+  @override
+  String get svcDecline => 'Desculpe, não posso';
+
+  @override
+  String get svcThanks => 'Obrigado.';
 }

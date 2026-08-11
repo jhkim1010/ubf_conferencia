@@ -2695,4 +2695,140 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get tblUnfinishedNote => '노란 줄은 아직 등록을 완료하지 않은 사람입니다.';
+
+  @override
+  String get asnTabService => '봉사';
+
+  @override
+  String svcNeeded(int filled, int needed) {
+    return '$needed명 중 $filled명';
+  }
+
+  @override
+  String svcNoLimit(int filled) {
+    return '$filled명 · 인원 미정';
+  }
+
+  @override
+  String svcShort(int count) {
+    return '$count명 부족';
+  }
+
+  @override
+  String get svcNobody => '아직 아무도 없습니다';
+
+  @override
+  String get svcNominate => '참가자에게 부탁하기';
+
+  @override
+  String get svcPickPerson => '누구에게 부탁할까요?';
+
+  @override
+  String svcAsked(String name) {
+    return '$name 님께 부탁했습니다';
+  }
+
+  @override
+  String get svcSetLead => '책임자로';
+
+  @override
+  String get svcLead => '책임자';
+
+  @override
+  String get svcConfirm => '확정';
+
+  @override
+  String get svcReject => '반려';
+
+  @override
+  String get svcEditRoles => '역할·필요 인원';
+
+  @override
+  String get svcAddRole => '역할 추가';
+
+  @override
+  String get svcRoleName => '역할 이름';
+
+  @override
+  String get svcRoleNameHint => '예: 이과수 버스 인솔';
+
+  @override
+  String get svcNeedCount => '필요 인원';
+
+  @override
+  String get svcNeedsApproval => '승인 필요';
+
+  @override
+  String get svcStatusInvited => '수락 대기';
+
+  @override
+  String get svcStatusApplied => '신청함';
+
+  @override
+  String get svcStatusApproval => '승인 대기';
+
+  @override
+  String get svcStatusConfirmed => '확정';
+
+  @override
+  String get svcStatusRejected => '반려';
+
+  @override
+  String get svcStatusDeclined => '어렵다고 답함';
+
+  @override
+  String get svcRoleSpecialSong => '특송';
+
+  @override
+  String get svcRoleMc => '사회';
+
+  @override
+  String get svcRolePickup => '픽업';
+
+  @override
+  String get svcRoleCleaning => '청소';
+
+  @override
+  String get svcRoleTourGuide => '투어 인솔';
+
+  @override
+  String get svcRoleMealPrep => '식사 준비';
+
+  @override
+  String get svcRoleLodgingBackup => '숙소 백업';
+
+  @override
+  String get svcRoleRegistrationDesk => '등록 접수';
+
+  @override
+  String get svcRoleInterpreter => '통역';
+
+  @override
+  String get svcRolePhotoVideo => '사진·영상';
+
+  @override
+  String get svcRoleMedical => '의무';
+
+  @override
+  String get svcRoleGroupStudyLeader => '말씀조 리더';
+
+  @override
+  String get svcRoleOther => '기타';
+
+  @override
+  String get svcInviteTitle => '봉사 부탁이 왔습니다';
+
+  @override
+  String svcInviteBody(String role) {
+    return '$role 을(를) 맡아 주시겠습니까?';
+  }
+
+  @override
+  String get svcAccept => '수락';
+
+  @override
+  String get svcDecline => '어렵습니다';
+
+  @override
+  String get svcThanks => '감사합니다.';
 }

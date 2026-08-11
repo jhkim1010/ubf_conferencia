@@ -5,20 +5,25 @@
 
 import { Router } from 'express';
 import { sql } from '../db.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
+import {
+  DEFAULT_SERVICE_ROLES,
+  isValidRoleKey,
+  normalizeServiceRoles,
+  rolesOf,
+  statusOnInvite,
+  statusOnConfirm,
+  statusOnRespond,
+  sortRoles,
+  tallyRole,
+} from '../services/service_roles.js';
+import { sendPushNotification } from '../services/fcm.js';
 
 const router = Router();
 
-// 기본 항목 구성. 프로그램에 service_options 가 비어 있으면 이것을 쓴다(D3).
-const DEFAULT_SERVICE_OPTIONS = [
-  { key: 'special_song', enabled: true, requires_approval: false },
-  { key: 'mc', enabled: true, requires_approval: false },
-  { key: 'pickup', enabled: true, requires_approval: false },
-  { key: 'cleaning', enabled: true, requires_approval: false },
-  // D7: 지부장과 코디네이터의 동의하에 확정된다
-  { key: 'group_study_leader', enabled: true, requires_approval: true },
-  { key: 'other', enabled: true, requires_approval: false },
-];
+// 기본 항목 구성은 service_roles.js 하나에 둔다(039). 예전에는 여기에도
+// 같은 목록이 있었는데, 역할을 늘리면 한쪽만 늘어난다.
+const DEFAULT_SERVICE_OPTIONS = DEFAULT_SERVICE_ROLES;
 
 const SHEPHERD_MIN_YEARS = 5;
 
@@ -213,6 +218,327 @@ router.post('/:programId/decline', requireAuth, async (req, res) => {
     res.json({ declined: true, reversible: true });
   } catch (err) {
     console.error('봉사 신청 거절 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  담당자 쪽 (039)
+//
+//  015 는 참가자가 신청하는 데까지만 만들어 뒀다. 신청을 받아도 담당자가
+//  볼 화면이 없어, 쌓이기만 하고 아무 일도 일어나지 않는 상태였다.
+// ═══════════════════════════════════════════════════════════════
+
+// 이 수양회의 봉사 신청 전부. service_signups 에는 program_id 가 없어
+// registrations 를 거친다.
+async function loadSignups(programId) {
+  return sql`
+    SELECT ss.id, ss.registration_id, ss.service_key, ss.status, ss.note,
+           ss.is_lead, ss.invited_at, ss.responded_at,
+           ss.can_provide_vehicle, ss.vehicle_seats, ss.contact_window,
+           r.real_name, r.bible_name, r.country, r.branch, r.gender, r.age,
+           r.submitted
+    FROM service_signups ss
+    JOIN registrations r ON r.id = ss.registration_id
+    WHERE r.program_id = ${programId}
+      AND has_registrant_name(r.real_name)
+    ORDER BY r.country NULLS LAST, r.real_name
+  `;
+}
+
+function personOf(s) {
+  return {
+    id: s.id,
+    registration_id: s.registration_id,
+    real_name: s.real_name,
+    bible_name: s.bible_name,
+    country: s.country,
+    branch: s.branch,
+    gender: s.gender,
+    age: s.age,
+    submitted: s.submitted,
+    status: s.status,
+    is_lead: s.is_lead,
+    note: s.note,
+    invited_at: s.invited_at,
+    responded_at: s.responded_at,
+    can_provide_vehicle: s.can_provide_vehicle,
+    vehicle_seats: s.vehicle_seats,
+    contact_window: s.contact_window,
+  };
+}
+
+// GET /service-signups/:programId/board — 역할별 배정 현황 (담당자 전용)
+router.get(
+  '/:programId/board',
+  requireAuth,
+  requireProgramAdmin,
+  async (req, res) => {
+    const programId = req.params.programId;
+    try {
+      const [program] = await sql`
+        SELECT id, name, service_options
+        FROM programs WHERE id = ${programId} AND is_active = true
+      `;
+      if (!program) {
+        return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
+      }
+
+      const signups = await loadSignups(programId);
+      const roles = rolesOf(program.service_options).filter(
+        (r) => r.enabled !== false,
+      );
+
+      res.json({
+        program: { id: program.id, name: program.name },
+        // 모자란 역할이 위로 온다 — 담당자가 화면을 열자마자 할 일을 본다.
+        roles: sortRoles(roles, signups).map((role) => ({
+          ...role,
+          ...tallyRole(role, signups),
+          people: signups
+            .filter((s) => s.service_key === role.key)
+            .map(personOf),
+        })),
+      });
+    } catch (err) {
+      console.error('봉사 배정 현황 조회 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// PUT /service-signups/:programId/roles — 역할 구성 저장 (담당자 전용)
+router.put(
+  '/:programId/roles',
+  requireAuth,
+  requireProgramAdmin,
+  async (req, res) => {
+    try {
+      const roles = normalizeServiceRoles(req.body?.roles);
+      await sql`
+        UPDATE programs SET service_options = ${JSON.stringify(roles)}::jsonb
+        WHERE id = ${req.params.programId}
+      `;
+      res.json({ ok: true, roles });
+    } catch (err) {
+      console.error('봉사 역할 구성 저장 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// 지명·확정·반려에 쓸 역할 정의를 찾는다.
+async function findRole(programId, serviceKey) {
+  const [program] = await sql`
+    SELECT service_options FROM programs
+    WHERE id = ${programId} AND is_active = true
+  `;
+  if (!program) return null;
+  return rolesOf(program.service_options).find((r) => r.key === serviceKey) ?? null;
+}
+
+// POST /service-signups/:programId/invite — 참가자를 역할에 지명 (담당자 전용)
+//
+// 지명은 부탁이지 확정이 아니다. 본인이 수락해야 확정된다.
+router.post(
+  '/:programId/invite',
+  requireAuth,
+  requireProgramAdmin,
+  async (req, res) => {
+    const programId = req.params.programId;
+    const { registrationId, serviceKey } = req.body ?? {};
+
+    if (!isValidRoleKey(serviceKey)) {
+      return res.status(400).json({ error: '역할이 올바르지 않습니다' });
+    }
+    if (!registrationId) {
+      return res.status(400).json({ error: 'registrationId 가 없습니다' });
+    }
+
+    try {
+      const role = await findRole(programId, serviceKey);
+      if (!role) {
+        return res.status(400).json({ error: '이 수양회에 없는 역할입니다' });
+      }
+
+      // 다른 수양회의 등록을 지명할 수 없다.
+      const [reg] = await sql`
+        SELECT id, real_name, fcm_token FROM registrations
+        WHERE id = ${registrationId} AND program_id = ${programId}
+          AND has_registrant_name(real_name)
+      `;
+      if (!reg) {
+        return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+      }
+
+      // 이미 있으면 다시 지명한다. 거절했던 사람에게 다시 부탁하는 일은
+      // 실제로 흔하다.
+      const [row] = await sql`
+        INSERT INTO service_signups (registration_id, service_key, status,
+                                     invited_by, invited_at)
+        VALUES (${registrationId}, ${serviceKey}, ${statusOnInvite()},
+                ${req.user.leaderId ?? null}, NOW())
+        ON CONFLICT (registration_id, service_key) DO UPDATE
+          SET status = ${statusOnInvite()},
+              invited_by = ${req.user.leaderId ?? null},
+              invited_at = NOW(),
+              responded_at = NULL,
+              updated_at = NOW()
+        RETURNING id, status
+      `;
+
+      // 알림이 실패해도 지명은 남는다. 알림 때문에 배정이 막히면 안 된다.
+      if (reg.fcm_token) {
+        sendPushNotification(
+          [reg.fcm_token],
+          '봉사 부탁',
+          `${reg.real_name} 님, 봉사를 부탁드립니다. 앱에서 수락 여부를 알려 주십시오.`,
+          { type: 'service_invite', programId, serviceKey },
+        ).catch((e) => console.error('봉사 지명 알림 실패:', e));
+      }
+
+      console.log(`[SERVICE] 지명 | programId=${programId} key=${serviceKey} registrationId=${registrationId} leaderId=${req.user.leaderId}`);
+      res.status(201).json({ id: row.id, status: row.status });
+    } catch (err) {
+      console.error('봉사 지명 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// PATCH /service-signups/:programId/:signupId — 확정 · 반려 · 책임자 (담당자 전용)
+router.patch(
+  '/:programId/:signupId',
+  requireAuth,
+  requireProgramAdmin,
+  async (req, res) => {
+    const { programId, signupId } = req.params;
+    const { action, isLead } = req.body ?? {};
+
+    try {
+      const [row] = await sql`
+        SELECT ss.id, ss.service_key, ss.status
+        FROM service_signups ss
+        JOIN registrations r ON r.id = ss.registration_id
+        WHERE ss.id = ${signupId} AND r.program_id = ${programId}
+      `;
+      if (!row) return res.status(404).json({ error: '신청을 찾을 수 없습니다' });
+
+      if (typeof isLead === 'boolean') {
+        // 책임자는 역할마다 한 명이다. 새로 세우면 기존 책임자를 내린다.
+        if (isLead) {
+          await sql`
+            UPDATE service_signups ss
+            SET is_lead = false, updated_at = NOW()
+            FROM registrations r
+            WHERE r.id = ss.registration_id
+              AND r.program_id = ${programId}
+              AND ss.service_key = ${row.service_key}
+          `;
+        }
+        await sql`
+          UPDATE service_signups
+          SET is_lead = ${isLead}, updated_at = NOW()
+          WHERE id = ${signupId}
+        `;
+      }
+
+      if (action) {
+        if (!['confirm', 'reject'].includes(action)) {
+          return res.status(400).json({ error: 'action 은 confirm 또는 reject 여야 합니다' });
+        }
+        const role = await findRole(programId, row.service_key);
+        const next = action === 'confirm'
+          ? statusOnConfirm(role)
+          : 'rejected';
+        await sql`
+          UPDATE service_signups
+          SET status = ${next}, updated_at = NOW()
+          WHERE id = ${signupId}
+        `;
+        console.log(`[SERVICE] ${action} | programId=${programId} signupId=${signupId} → ${next} leaderId=${req.user.leaderId}`);
+        return res.json({ ok: true, status: next });
+      }
+
+      const [after] = await sql`
+        SELECT status, is_lead FROM service_signups WHERE id = ${signupId}
+      `;
+      res.json({ ok: true, status: after.status, is_lead: after.is_lead });
+    } catch (err) {
+      console.error('봉사 배정 변경 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// GET /service-signups/:programId/invites — 나에게 온 부탁 (참가자)
+router.get('/:programId/invites', requireAuth, async (req, res) => {
+  try {
+    const rows = await sql`
+      SELECT ss.id, ss.service_key, ss.status, ss.is_lead
+      FROM service_signups ss
+      JOIN registrations r ON r.id = ss.registration_id
+      WHERE r.program_id = ${req.params.programId}
+        AND r.user_id = ${req.user.userId}
+      ORDER BY ss.invited_at DESC NULLS LAST
+    `;
+
+    // 자유 역할(custom:)의 이름을 함께 준다. 키만 주면 화면이 "기타" 라고
+    // 부른다 — 무엇을 부탁받았는지 모른 채 수락하게 된다.
+    const [program] = await sql`
+      SELECT service_options FROM programs
+      WHERE id = ${req.params.programId} AND is_active = true
+    `;
+    const byKey = new Map(
+      rolesOf(program?.service_options).map((r) => [r.key, r]),
+    );
+
+    res.json(rows.map((r) => ({
+      ...r,
+      label: byKey.get(r.service_key)?.label ?? null,
+      requires_approval: byKey.get(r.service_key)?.requires_approval === true,
+    })));
+  } catch (err) {
+    console.error('봉사 부탁 조회 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// POST /service-signups/:programId/:signupId/respond — 수락 · 거절 (본인)
+router.post('/:programId/:signupId/respond', requireAuth, async (req, res) => {
+  const { programId, signupId } = req.params;
+  const accepted = req.body?.accepted === true;
+
+  try {
+    // **본인 것만** 답할 수 있다. registration 을 거쳐 사용자까지 확인한다.
+    const [row] = await sql`
+      SELECT ss.id, ss.service_key, ss.status
+      FROM service_signups ss
+      JOIN registrations r ON r.id = ss.registration_id
+      WHERE ss.id = ${signupId}
+        AND r.program_id = ${programId}
+        AND r.user_id = ${req.user.userId}
+    `;
+    if (!row) return res.status(404).json({ error: '부탁을 찾을 수 없습니다' });
+
+    if (row.status !== 'invited') {
+      return res.status(409).json({
+        error: '이미 처리된 부탁입니다',
+        status: row.status,
+      });
+    }
+
+    const role = await findRole(programId, row.service_key);
+    const next = statusOnRespond(role, accepted);
+    await sql`
+      UPDATE service_signups
+      SET status = ${next}, responded_at = NOW(), updated_at = NOW()
+      WHERE id = ${signupId}
+    `;
+    console.log(`[SERVICE] 응답 | programId=${programId} signupId=${signupId} accepted=${accepted} → ${next}`);
+    res.json({ ok: true, status: next });
+  } catch (err) {
+    console.error('봉사 응답 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });

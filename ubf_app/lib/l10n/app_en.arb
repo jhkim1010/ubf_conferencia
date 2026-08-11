@@ -1685,5 +1685,85 @@
       }
     }
   },
-  "tblUnfinishedNote": "Yellow rows have not finished registering yet."
+  "tblUnfinishedNote": "Yellow rows have not finished registering yet.",
+  "asnTabService": "Service",
+  "svcNeeded": "{filled} of {needed}",
+  "@svcNeeded": {
+    "placeholders": {
+      "filled": {
+        "type": "int"
+      },
+      "needed": {
+        "type": "int"
+      }
+    }
+  },
+  "svcNoLimit": "{filled} · no target",
+  "@svcNoLimit": {
+    "placeholders": {
+      "filled": {
+        "type": "int"
+      }
+    }
+  },
+  "svcShort": "{count} still needed",
+  "@svcShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "svcNobody": "Nobody yet",
+  "svcNominate": "Ask someone",
+  "svcPickPerson": "Who should we ask?",
+  "svcAsked": "Asked {name}",
+  "@svcAsked": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "svcSetLead": "Make lead",
+  "svcLead": "Lead",
+  "svcConfirm": "Confirm",
+  "svcReject": "Turn down",
+  "svcEditRoles": "Roles and numbers",
+  "svcAddRole": "Add a role",
+  "svcRoleName": "Role name",
+  "svcRoleNameHint": "e.g. Bus guide for Iguazú",
+  "svcNeedCount": "How many?",
+  "svcNeedsApproval": "Needs approval",
+  "svcStatusInvited": "Waiting for a reply",
+  "svcStatusApplied": "Volunteered",
+  "svcStatusApproval": "Waiting for approval",
+  "svcStatusConfirmed": "Confirmed",
+  "svcStatusRejected": "Turned down",
+  "svcStatusDeclined": "Said no",
+  "svcRoleSpecialSong": "Special song",
+  "svcRoleMc": "MC",
+  "svcRolePickup": "Airport pickup",
+  "svcRoleCleaning": "Cleaning",
+  "svcRoleTourGuide": "Tour guide",
+  "svcRoleMealPrep": "Meal prep",
+  "svcRoleLodgingBackup": "Lodging backup",
+  "svcRoleRegistrationDesk": "Registration desk",
+  "svcRoleInterpreter": "Interpreter",
+  "svcRolePhotoVideo": "Photo and video",
+  "svcRoleMedical": "Medical",
+  "svcRoleGroupStudyLeader": "Bible study group leader",
+  "svcRoleOther": "Other",
+  "svcInviteTitle": "A request for you",
+  "svcInviteBody": "Could you take care of {role}?",
+  "@svcInviteBody": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "svcAccept": "Yes, I can",
+  "svcDecline": "Sorry, I cannot",
+  "svcThanks": "Thank you."
 }

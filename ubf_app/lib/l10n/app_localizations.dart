@@ -5063,6 +5063,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yellow rows have not finished registering yet.'**
   String get tblUnfinishedNote;
+
+  /// No description provided for @asnTabService.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get asnTabService;
+
+  /// No description provided for @svcNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'{filled} of {needed}'**
+  String svcNeeded(int filled, int needed);
+
+  /// No description provided for @svcNoLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'{filled} · no target'**
+  String svcNoLimit(int filled);
+
+  /// No description provided for @svcShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} still needed'**
+  String svcShort(int count);
+
+  /// No description provided for @svcNobody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody yet'**
+  String get svcNobody;
+
+  /// No description provided for @svcNominate.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask someone'**
+  String get svcNominate;
+
+  /// No description provided for @svcPickPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Who should we ask?'**
+  String get svcPickPerson;
+
+  /// No description provided for @svcAsked.
+  ///
+  /// In en, this message translates to:
+  /// **'Asked {name}'**
+  String svcAsked(String name);
+
+  /// No description provided for @svcSetLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Make lead'**
+  String get svcSetLead;
+
+  /// No description provided for @svcLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Lead'**
+  String get svcLead;
+
+  /// No description provided for @svcConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get svcConfirm;
+
+  /// No description provided for @svcReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn down'**
+  String get svcReject;
+
+  /// No description provided for @svcEditRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'Roles and numbers'**
+  String get svcEditRoles;
+
+  /// No description provided for @svcAddRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a role'**
+  String get svcAddRole;
+
+  /// No description provided for @svcRoleName.
+  ///
+  /// In en, this message translates to:
+  /// **'Role name'**
+  String get svcRoleName;
+
+  /// No description provided for @svcRoleNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Bus guide for Iguazú'**
+  String get svcRoleNameHint;
+
+  /// No description provided for @svcNeedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'How many?'**
+  String get svcNeedCount;
+
+  /// No description provided for @svcNeedsApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs approval'**
+  String get svcNeedsApproval;
+
+  /// No description provided for @svcStatusInvited.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a reply'**
+  String get svcStatusInvited;
+
+  /// No description provided for @svcStatusApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Volunteered'**
+  String get svcStatusApplied;
+
+  /// No description provided for @svcStatusApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for approval'**
+  String get svcStatusApproval;
+
+  /// No description provided for @svcStatusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get svcStatusConfirmed;
+
+  /// No description provided for @svcStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Turned down'**
+  String get svcStatusRejected;
+
+  /// No description provided for @svcStatusDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Said no'**
+  String get svcStatusDeclined;
+
+  /// No description provided for @svcRoleSpecialSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Special song'**
+  String get svcRoleSpecialSong;
+
+  /// No description provided for @svcRoleMc.
+  ///
+  /// In en, this message translates to:
+  /// **'MC'**
+  String get svcRoleMc;
+
+  /// No description provided for @svcRolePickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Airport pickup'**
+  String get svcRolePickup;
+
+  /// No description provided for @svcRoleCleaning.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning'**
+  String get svcRoleCleaning;
+
+  /// No description provided for @svcRoleTourGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour guide'**
+  String get svcRoleTourGuide;
+
+  /// No description provided for @svcRoleMealPrep.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal prep'**
+  String get svcRoleMealPrep;
+
+  /// No description provided for @svcRoleLodgingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Lodging backup'**
+  String get svcRoleLodgingBackup;
+
+  /// No description provided for @svcRoleRegistrationDesk.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration desk'**
+  String get svcRoleRegistrationDesk;
+
+  /// No description provided for @svcRoleInterpreter.
+  ///
+  /// In en, this message translates to:
+  /// **'Interpreter'**
+  String get svcRoleInterpreter;
+
+  /// No description provided for @svcRolePhotoVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo and video'**
+  String get svcRolePhotoVideo;
+
+  /// No description provided for @svcRoleMedical.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical'**
+  String get svcRoleMedical;
+
+  /// No description provided for @svcRoleGroupStudyLeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Bible study group leader'**
+  String get svcRoleGroupStudyLeader;
+
+  /// No description provided for @svcRoleOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get svcRoleOther;
+
+  /// No description provided for @svcInviteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A request for you'**
+  String get svcInviteTitle;
+
+  /// No description provided for @svcInviteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Could you take care of {role}?'**
+  String svcInviteBody(String role);
+
+  /// No description provided for @svcAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, I can'**
+  String get svcAccept;
+
+  /// No description provided for @svcDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorry, I cannot'**
+  String get svcDecline;
+
+  /// No description provided for @svcThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you.'**
+  String get svcThanks;
 }
 
 class _AppLocalizationsDelegate

@@ -1,5 +1,7 @@
 import 'dart:convert';
 import '../../../core/utils/api_client.dart';
+import '../../../core/utils/service_role_label.dart';
+import '../../assignment/providers/assignment_provider.dart';
 import '../../program/providers/program_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -479,6 +481,13 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
       children: [
         const SizedBox(height: 12),
         const _ChapterNotice(),
+        // 봉사 부탁(039). 담당자가 지명하면 여기로 온다 — 수락해야 확정된다.
+        //
+        // 최근에 연 수양회 세 개까지만 본다. 부탁은 지금 준비 중인 수양회에서
+        // 오지, 몇 해 전 것에서 오지 않는다. 전부 물으면 홈을 열 때마다
+        // 요청이 그만큼 늘어난다.
+        for (final prog in _recentPrograms.take(3))
+          _ServiceInviteNotice(programId: prog['uuid'] as String),
         if (!widget.embedded) ...[
           const SizedBox(height: 20),
           Text(
@@ -596,6 +605,118 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
 //
 // 처음 오는 사람에게는 아무것도 안 나온다 — 나라·지부를 알 방법이 없고,
 // 그때는 UUID 가 유일한 길이다.
+// 나에게 온 봉사 부탁. 답하지 않은 것만 뜬다.
+//
+// 지명은 부탁이지 확정이 아니다. 본인이 여기서 답해야 담당자 화면의
+// "수락 대기" 가 풀린다.
+class _ServiceInviteNotice extends ConsumerWidget {
+  final String programId;
+
+  const _ServiceInviteNotice({required this.programId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final async = ref.watch(myServiceInvitesProvider(programId));
+
+    return async.maybeWhen(
+      orElse: () => const SizedBox.shrink(),
+      data: (rows) {
+        final pending = rows
+            .cast<Map<String, dynamic>>()
+            .where((r) => r['status'] == 'invited')
+            .toList();
+        if (pending.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          children: [
+            for (final inv in pending)
+              Card(
+                color: const Color(0xFFFFF6CC),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.volunteer_activism,
+                            size: 18,
+                            color: Colors.orange[900],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.svcInviteTitle,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Colors.orange[900],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.svcInviteBody(
+                          serviceRoleLabel(l10n, {
+                            'key': inv['service_key'],
+                            'label': inv['label'],
+                          }),
+                        ),
+                        style: const TextStyle(fontSize: 13.5),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => _respond(context, ref, inv, false),
+                            child: Text(l10n.svcDecline),
+                          ),
+                          FilledButton(
+                            onPressed: () => _respond(context, ref, inv, true),
+                            child: Text(l10n.svcAccept),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _respond(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> invite,
+    bool accepted,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ApiClient.respondToServiceInvite(
+        programId,
+        invite['id'] as String,
+        accepted: accepted,
+      );
+      ref.invalidate(myServiceInvitesProvider(programId));
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.svcThanks)));
+      }
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+}
+
 class _ChapterNotice extends ConsumerWidget {
   const _ChapterNotice();
 

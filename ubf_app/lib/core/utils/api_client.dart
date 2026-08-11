@@ -449,6 +449,86 @@ class ApiClient {
     return _decode(response) as Map<String, dynamic>?;
   }
 
+  // ── 봉사 담당자 배정 (039) ─────────────────────────────────
+
+  /// 역할별 배정 현황 (담당자 전용).
+  static Future<Map<String, dynamic>?> getServiceBoard(String programId) async {
+    final response = await http.get(
+      _uri('/service-signups/$programId/board'),
+      headers: await _headers(),
+    );
+    return _decode(response) as Map<String, dynamic>?;
+  }
+
+  /// 역할·필요 인원 구성 저장.
+  static Future<Map<String, dynamic>> saveServiceRoles(
+    String programId,
+    List<Map<String, dynamic>> roles,
+  ) async {
+    final response = await http.put(
+      _uri('/service-signups/$programId/roles'),
+      headers: await _headers(),
+      body: jsonEncode({'roles': roles}),
+    );
+    return _decode(response);
+  }
+
+  /// 참가자를 역할에 지명한다. 부탁이지 확정이 아니다 — 본인이 수락해야 한다.
+  static Future<Map<String, dynamic>> inviteToService(
+    String programId, {
+    required String registrationId,
+    required String serviceKey,
+  }) async {
+    final response = await http.post(
+      _uri('/service-signups/$programId/invite'),
+      headers: await _headers(),
+      body: jsonEncode({
+        'registrationId': registrationId,
+        'serviceKey': serviceKey,
+      }),
+    );
+    return _decode(response);
+  }
+
+  /// 확정 · 반려 · 책임자 지정.
+  static Future<Map<String, dynamic>> patchServiceSignup(
+    String programId,
+    String signupId,
+    Map<String, dynamic> body,
+  ) async {
+    final response = await http.patch(
+      _uri('/service-signups/$programId/$signupId'),
+      headers: await _headers(),
+      body: jsonEncode(body),
+    );
+    return _decode(response);
+  }
+
+  /// 나에게 온 봉사 부탁.
+  static Future<List<dynamic>> getMyServiceInvites(String programId) async {
+    final response = await http.get(
+      _uri('/service-signups/$programId/invites'),
+      headers: await _headers(),
+    );
+    // 목록은 _decodeList 로 받는다. _decode 는 Map 을 돌려주므로 캐스트가
+    // 통과해도 실행할 때 터진다.
+    return _decodeList(response);
+  }
+
+  /// 수락 · 거절 (본인).
+  static Future<Map<String, dynamic>> respondToServiceInvite(
+    String programId,
+    String signupId, {
+    required bool accepted,
+  }) async {
+    final response = await http.post(
+      _uri('/service-signups/$programId/$signupId/respond'),
+      headers: await _headers(),
+      body: jsonEncode({'accepted': accepted}),
+    );
+    return _decode(response);
+  }
+
   static Future<List<dynamic>> getProgramRegistrations(String programId) async {
     final response = await http.get(
       _uri('/programs/$programId/registrations'),
