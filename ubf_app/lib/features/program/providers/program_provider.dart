@@ -25,6 +25,12 @@ final programReadinessProvider =
     );
 
 // 식사 제한 명단 — 준비 현황의 식사 카드를 두 번 누르면 열린다
+// 투어별 신청 상황. 대시보드의 "등록 완료" 카드를 대신한다.
+final programTourSignupsProvider =
+    FutureProvider.family<Map<String, dynamic>?, String>(
+      (_, programId) => ApiClient.getTourSignups(programId),
+    );
+
 final programMealsProvider =
     FutureProvider.family<Map<String, dynamic>?, String>(
       (_, programId) => ApiClient.getProgramMeals(programId),

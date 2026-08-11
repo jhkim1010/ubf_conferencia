@@ -1665,5 +1665,25 @@
     }
   },
   "tourPlanOpen": "Open",
-  "tourOpenFailed": "Could not open it, so the link was copied instead."
+  "tourOpenFailed": "Could not open it, so the link was copied instead.",
+  "dashStatTours": "Tour signups",
+  "tblTourSignups": "Tour signups",
+  "colTour": "Tour",
+  "colSignups": "Signed up",
+  "colRemaining": "Left",
+  "colDeadline": "Closes",
+  "tourNoLimit": "no limit",
+  "tourNobody": "Nobody has signed up yet",
+  "tourSignupSummary": "{signed} signed up · {done} finished registering",
+  "@tourSignupSummary": {
+    "placeholders": {
+      "signed": {
+        "type": "int"
+      },
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "tblUnfinishedNote": "Yellow rows have not finished registering yet."
 }

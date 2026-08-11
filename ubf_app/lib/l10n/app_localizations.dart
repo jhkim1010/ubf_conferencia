@@ -5003,6 +5003,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open it, so the link was copied instead.'**
   String get tourOpenFailed;
+
+  /// No description provided for @dashStatTours.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour signups'**
+  String get dashStatTours;
+
+  /// No description provided for @tblTourSignups.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour signups'**
+  String get tblTourSignups;
+
+  /// No description provided for @colTour.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour'**
+  String get colTour;
+
+  /// No description provided for @colSignups.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed up'**
+  String get colSignups;
+
+  /// No description provided for @colRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get colRemaining;
+
+  /// No description provided for @colDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Closes'**
+  String get colDeadline;
+
+  /// No description provided for @tourNoLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'no limit'**
+  String get tourNoLimit;
+
+  /// No description provided for @tourNobody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has signed up yet'**
+  String get tourNobody;
+
+  /// No description provided for @tourSignupSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{signed} signed up · {done} finished registering'**
+  String tourSignupSummary(int signed, int done);
+
+  /// No description provided for @tblUnfinishedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Yellow rows have not finished registering yet.'**
+  String get tblUnfinishedNote;
 }
 
 class _AppLocalizationsDelegate

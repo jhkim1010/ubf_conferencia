@@ -8,7 +8,7 @@ import '../../../core/utils/table_export.dart';
 import '../../program/providers/program_provider.dart';
 
 /// 대시보드 카드에서 열리는 표. 카드마다 무엇을 보여 줄지가 다르다.
-enum RosterView { all, submitted, meals, pendingPayment, arrival, paid }
+enum RosterView { all, meals, pendingPayment, arrival, paid }
 
 // 카드의 숫자만으로는 아무것도 못 한다. 두 번 누르면 그 숫자가 누구인지
 // 표로 보이고, 그대로 PDF·엑셀로 내보내 나눌 수 있다.
@@ -34,7 +34,6 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
 
   String _title(AppLocalizations l10n) => switch (widget.view) {
     RosterView.all => l10n.tblAllAttendees,
-    RosterView.submitted => l10n.dashStatSubmitted,
     RosterView.meals => l10n.dashStatFoodRestriction,
     RosterView.pendingPayment => l10n.dashStatPendingPayment,
     RosterView.arrival => l10n.dashStatArrival,
@@ -43,7 +42,6 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
 
   bool _keep(Map<String, dynamic> r) => switch (widget.view) {
     RosterView.all => true,
-    RosterView.submitted => r['submitted'] == true,
     // 식사 제한은 여기서 거르지 않는다 — 서버가 걸러 준 명단을 그대로 쓴다.
     RosterView.meals => true,
     RosterView.pendingPayment => (r['payment'] as Map?)?['status'] == 'pending',
@@ -69,6 +67,13 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     RosterView.meals => [0.5, 2.0, 1.3, 1.3, 0.9, 3.6],
     _ => [0.5, 2.2, 1.4, 1.5, 1.0, 2.0],
   };
+
+  /// 아직 등록을 완료하지 않은 사람의 배경색. 어두운 화면에서도 읽혀야
+  /// 하므로 밝은 노랑을 그대로 쓰지 않는다.
+  static Color _unfinishedColor(ThemeData theme) =>
+      theme.brightness == Brightness.dark
+      ? const Color(0xFF4A3F1A)
+      : const Color(0xFFFFF6CC);
 
   List<List<String>> _rows(
     AppLocalizations l10n,
@@ -220,9 +225,21 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        l10n.tblCount(rows.length),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.tblCount(rows.length),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          Text(
+                            l10n.tblUnfinishedNote,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     OutlinedButton.icon(
@@ -269,10 +286,16 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                             ),
                         ],
                         rows: [
-                          for (final r in rows)
+                          for (var ri = 0; ri < rows.length; ri++)
                             DataRow(
+                              // 완료하지 않은 사람은 줄 전체를 노랗게.
+                              color: data[ri]['submitted'] == true
+                                  ? null
+                                  : WidgetStatePropertyAll(
+                                      _unfinishedColor(theme),
+                                    ),
                               cells: [
-                                for (final cell in r)
+                                for (final cell in rows[ri])
                                   DataCell(
                                     ConstrainedBox(
                                       constraints: const BoxConstraints(

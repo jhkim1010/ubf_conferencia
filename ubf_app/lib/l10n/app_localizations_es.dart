@@ -2737,4 +2737,37 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tourOpenFailed => 'No se pudo abrir; se copió el enlace.';
+
+  @override
+  String get dashStatTours => 'Inscripciones a tours';
+
+  @override
+  String get tblTourSignups => 'Inscripciones a tours';
+
+  @override
+  String get colTour => 'Tour';
+
+  @override
+  String get colSignups => 'Inscritos';
+
+  @override
+  String get colRemaining => 'Quedan';
+
+  @override
+  String get colDeadline => 'Cierra';
+
+  @override
+  String get tourNoLimit => 'sin límite';
+
+  @override
+  String get tourNobody => 'Todavía nadie se inscribió';
+
+  @override
+  String tourSignupSummary(int signed, int done) {
+    return '$signed inscritos · $done completaron el registro';
+  }
+
+  @override
+  String get tblUnfinishedNote =>
+      'Las filas amarillas aún no terminaron el registro.';
 }

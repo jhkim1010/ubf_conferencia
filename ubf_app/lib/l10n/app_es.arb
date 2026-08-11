@@ -830,5 +830,15 @@
   "epPlanRemove": "Quitar este documento",
   "epPlanFull": "Hasta {max} documentos.",
   "tourPlanOpen": "Abrir",
-  "tourOpenFailed": "No se pudo abrir; se copió el enlace."
+  "tourOpenFailed": "No se pudo abrir; se copió el enlace.",
+  "dashStatTours": "Inscripciones a tours",
+  "tblTourSignups": "Inscripciones a tours",
+  "colTour": "Tour",
+  "colSignups": "Inscritos",
+  "colRemaining": "Quedan",
+  "colDeadline": "Cierra",
+  "tourNoLimit": "sin límite",
+  "tourNobody": "Todavía nadie se inscribió",
+  "tourSignupSummary": "{signed} inscritos · {done} completaron el registro",
+  "tblUnfinishedNote": "Las filas amarillas aún no terminaron el registro."
 }

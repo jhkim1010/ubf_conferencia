@@ -440,6 +440,15 @@ class ApiClient {
     return _decode(response);
   }
 
+  /// 투어별 신청 상황 (담당자 전용).
+  static Future<Map<String, dynamic>?> getTourSignups(String programId) async {
+    final response = await http.get(
+      _uri('/programs/$programId/tour-signups'),
+      headers: await _headers(),
+    );
+    return _decode(response) as Map<String, dynamic>?;
+  }
+
   static Future<List<dynamic>> getProgramRegistrations(String programId) async {
     final response = await http.get(
       _uri('/programs/$programId/registrations'),

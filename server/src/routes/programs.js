@@ -601,6 +601,11 @@ router.get('/:id/stats', requireAuth, requireLeader, async (req, res) => {
         p.name AS program_name,
         COUNT(r.id) AS total_registrations,
         COUNT(r.id) FILTER (WHERE r.submitted = true) AS submitted_count,
+        -- 투어를 하나라도 신청한 사람. 신청 건수가 아니라 사람 수다 —
+        -- 카드가 "n명" 이라고 말하기 때문이다.
+        COUNT(r.id) FILTER (
+          WHERE COALESCE(array_length(r.selected_options, 1), 0) > 0
+        ) AS tour_signup_count,
         -- 판정은 has_food_restriction(027) 하나로 모았다. 여기만 예전 조건이
         -- 남아 있어서 대시보드 카드는 4명, 표는 2명이 됐다 — 같은 것을 두
         -- 규칙으로 세면 어느 쪽도 믿을 수 없다.
@@ -1116,5 +1121,104 @@ router.get('/:id/meals', requireAuth, requireProgramAdmin, async (req, res) => {
     res.status(500).json({ error: '서버 오류' });
   }
 });
+
+// GET /programs/:id/tour-signups - 투어별 신청 상황 (담당자 전용)
+//
+// 대시보드의 "등록 완료" 카드를 대신한다. 완료 여부는 참가자 표 안에서
+// 한 사람씩 보이므로 카드 하나를 통째로 쓸 일이 아니었고, 담당자가 정작
+// 급히 알아야 하는 것은 **어느 투어가 얼마나 찼는가** 였다.
+//
+// 신청자가 없는 투어도 함께 준다. 아무도 신청하지 않은 투어가 목록에서
+// 사라지면, 그것이야말로 담당자가 봐야 할 상황인데 보이지 않는다.
+router.get(
+  '/:id/tour-signups',
+  requireAuth,
+  requireProgramAdmin,
+  async (req, res) => {
+    const programId = req.params.id;
+    try {
+      const [program] = await sql`
+        SELECT id, name, location, start_date, end_date, currency
+        FROM programs WHERE id = ${programId} AND is_active = true
+      `;
+      if (!program) {
+        return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
+      }
+
+      const options = await sql`
+        SELECT id, name, cost, start_date, end_date, capacity,
+               signup_deadline, contact_name
+        FROM program_options
+        WHERE program_id = ${programId} AND is_active = true
+        ORDER BY start_date NULLS LAST, name
+      `;
+
+      // 신청자. 제출 여부로 거르지 않는다 — 아직 제출하지 않았어도 자리는
+      // 잡아 둔 것이고, 담당자는 그 사람을 챙겨야 한다. 대신 완료 여부를
+      // 함께 줘서 표에서 구분한다.
+      const people = await sql`
+        SELECT o.id AS option_id,
+               r.id AS registration_id,
+               r.real_name, r.bible_name, r.country, r.branch,
+               r.gender, r.age, r.submitted
+        FROM program_options o
+        JOIN registrations r
+          ON r.program_id = ${programId} AND o.id = ANY(r.selected_options)
+        WHERE o.program_id = ${programId} AND o.is_active = true
+          AND has_registrant_name(r.real_name)
+        ORDER BY r.country NULLS LAST, r.real_name
+      `;
+
+      const byOption = new Map();
+      for (const p of people) {
+        if (!byOption.has(p.option_id)) byOption.set(p.option_id, []);
+        byOption.get(p.option_id).push({
+          registration_id: p.registration_id,
+          real_name: p.real_name,
+          bible_name: p.bible_name,
+          country: p.country,
+          branch: p.branch,
+          gender: p.gender,
+          age: p.age,
+          submitted: p.submitted,
+        });
+      }
+
+      res.json({
+        program: {
+          id: program.id,
+          name: program.name,
+          location: program.location,
+          start_date: program.start_date,
+          end_date: program.end_date,
+          currency: program.currency,
+        },
+        tours: options.map((o) => {
+          const list = byOption.get(o.id) ?? [];
+          return {
+            id: o.id,
+            name: o.name,
+            cost: o.cost,
+            start_date: o.start_date,
+            end_date: o.end_date,
+            capacity: o.capacity,
+            signup_deadline: o.signup_deadline,
+            contact_name: o.contact_name,
+            signup_count: list.length,
+            submitted_count: list.filter((x) => x.submitted).length,
+            // 정원이 없으면 잔여도 없다. 0 으로 주면 "다 찼다"로 읽힌다.
+            remaining: o.capacity == null
+              ? null
+              : Math.max(0, o.capacity - list.length),
+            people: list,
+          };
+        }),
+      });
+    } catch (err) {
+      console.error('투어 신청 상황 조회 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
 
 export default router;

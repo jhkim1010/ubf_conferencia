@@ -830,5 +830,15 @@
   "epPlanRemove": "이 자료 빼기",
   "epPlanFull": "자료는 {max}개까지 올릴 수 있습니다.",
   "tourPlanOpen": "열기",
-  "tourOpenFailed": "열지 못해 링크를 대신 복사했습니다."
+  "tourOpenFailed": "열지 못해 링크를 대신 복사했습니다.",
+  "dashStatTours": "투어 신청 상황",
+  "tblTourSignups": "투어 신청 상황",
+  "colTour": "투어",
+  "colSignups": "신청",
+  "colRemaining": "잔여",
+  "colDeadline": "마감",
+  "tourNoLimit": "제한 없음",
+  "tourNobody": "아직 신청자가 없습니다",
+  "tourSignupSummary": "신청 {signed}명 · 등록 완료 {done}명",
+  "tblUnfinishedNote": "노란 줄은 아직 등록을 완료하지 않은 사람입니다."
 }

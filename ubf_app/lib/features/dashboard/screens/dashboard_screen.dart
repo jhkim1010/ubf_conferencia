@@ -5,6 +5,7 @@ import '../../program/providers/program_provider.dart';
 import '../../../core/utils/export_service.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import 'roster_table_screen.dart';
+import 'tour_signups_screen.dart';
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/money.dart';
 
@@ -350,12 +351,19 @@ class _StatsGrid extends StatelessWidget {
           color: Colors.blue,
           onOpen: () => _openTable(context, programId, RosterView.all),
         ),
+        // "등록 완료" 카드가 있던 자리. 완료 여부는 참가자 표 안에서 한
+        // 사람씩 노란 줄로 보이므로 카드 하나를 통째로 쓸 일이 아니었고,
+        // 담당자가 급히 알아야 하는 것은 어느 투어가 얼마나 찼는가였다.
         _StatCard(
-          label: l10n.dashStatSubmitted,
-          value: l10n.unitPeople(n('submitted_count')),
-          icon: Icons.check_circle,
+          label: l10n.dashStatTours,
+          value: l10n.unitPeople(n('tour_signup_count')),
+          icon: Icons.tour,
           color: Colors.green,
-          onOpen: () => _openTable(context, programId, RosterView.submitted),
+          onOpen: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => TourSignupsScreen(programId: programId),
+            ),
+          ),
         ),
         _StatCard(
           label: l10n.dashStatFoodRestriction,

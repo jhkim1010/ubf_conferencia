@@ -2663,4 +2663,36 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get tourOpenFailed => '열지 못해 링크를 대신 복사했습니다.';
+
+  @override
+  String get dashStatTours => '투어 신청 상황';
+
+  @override
+  String get tblTourSignups => '투어 신청 상황';
+
+  @override
+  String get colTour => '투어';
+
+  @override
+  String get colSignups => '신청';
+
+  @override
+  String get colRemaining => '잔여';
+
+  @override
+  String get colDeadline => '마감';
+
+  @override
+  String get tourNoLimit => '제한 없음';
+
+  @override
+  String get tourNobody => '아직 신청자가 없습니다';
+
+  @override
+  String tourSignupSummary(int signed, int done) {
+    return '신청 $signed명 · 등록 완료 $done명';
+  }
+
+  @override
+  String get tblUnfinishedNote => '노란 줄은 아직 등록을 완료하지 않은 사람입니다.';
 }
