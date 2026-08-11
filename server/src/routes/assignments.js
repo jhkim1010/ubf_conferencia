@@ -9,7 +9,7 @@ const router = Router();
 async function loadPeople(programId) {
   return sql`
     SELECT id, gender, age, study_language AS "studyLanguage" FROM registrations
-    WHERE program_id = ${programId} AND real_name IS NOT NULL AND real_name <> ''
+    WHERE program_id = ${programId} AND has_registrant_name(real_name)
   `;
 }
 async function loadAcceptedEdges(programId, kind) {
@@ -51,7 +51,7 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, async (req, re
     const unassigned = await sql`
       SELECT id AS "registrationId", real_name AS name, gender
       FROM registrations
-      WHERE program_id = ${programId} AND real_name IS NOT NULL AND real_name <> ''
+      WHERE program_id = ${programId} AND has_registrant_name(real_name)
         AND id NOT IN (SELECT registration_id FROM room_assignments WHERE registration_id IS NOT NULL)
       ORDER BY real_name
     `;
@@ -82,7 +82,7 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, async (req, r
     const unassigned = await sql`
       SELECT id AS "registrationId", real_name AS name, gender, age
       FROM registrations
-      WHERE program_id = ${programId} AND real_name IS NOT NULL AND real_name <> ''
+      WHERE program_id = ${programId} AND has_registrant_name(real_name)
         AND id NOT IN (SELECT registration_id FROM group_members)
       ORDER BY real_name
     `;

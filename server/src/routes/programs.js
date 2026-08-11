@@ -611,7 +611,10 @@ router.get('/:id/stats', requireAuth, requireLeader, async (req, res) => {
         COUNT(pay.id) FILTER (WHERE pay.status = 'pending') AS pending_payment_count,
         COUNT(pay.id) FILTER (WHERE pay.status = 'confirmed') AS confirmed_payment_count
       FROM programs p
-      LEFT JOIN registrations r ON r.program_id = p.id
+      -- 이름을 적기 전의 행은 세지 않는다(038). 앱을 열면 등록 행이 먼저
+      -- 생기므로, 열어만 보고 만 사람이 참가자 수에 섞인다.
+      LEFT JOIN registrations r
+        ON r.program_id = p.id AND has_registrant_name(r.real_name)
       LEFT JOIN payments pay ON pay.registration_id = r.id
       WHERE p.id = ${req.params.id}
       GROUP BY p.id, p.name
@@ -670,7 +673,10 @@ router.get('/:id/registrations', requireAuth, requireLeader, async (req, res) =>
         ) AS payment
       FROM registrations r
       LEFT JOIN payments pay ON pay.registration_id = r.id
+      -- 이름이 없으면 아직 참가자가 아니다(038). 카드의 숫자도 같은 판정을
+      -- 쓴다 — 한쪽만 거르면 "10명인데 9명만 보인다" 가 된다.
       WHERE r.program_id = ${req.params.id}
+        AND has_registrant_name(r.real_name)
       ORDER BY r.created_at ASC
     `;
 
@@ -871,7 +877,7 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
       SELECT
         (r.country IS NOT DISTINCT FROM ${host}) AS is_domestic,
         COUNT(*)::int AS total,
-        COUNT(*) FILTER (WHERE r.real_name IS NOT NULL AND r.real_name <> '')::int AS personal,
+        COUNT(*) FILTER (WHERE has_registrant_name(r.real_name))::int AS personal,
         COUNT(*) FILTER (WHERE r.food_requirements IS NOT NULL)::int AS meals,
         COUNT(*) FILTER (WHERE flight_confirmed(r.arrival_flight))::int AS flight,
         COUNT(*) FILTER (WHERE ra.id IS NOT NULL)::int AS lodging,
@@ -905,7 +911,7 @@ router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
         (r.country IS NOT DISTINCT FROM ${host}) AS is_domestic,
         r.updated_at,
         CASE
-          WHEN r.real_name IS NULL OR r.real_name = '' THEN 'personal'
+          WHEN NOT has_registrant_name(r.real_name) THEN 'personal'
           WHEN r.food_requirements IS NULL THEN 'meals'
           WHEN r.country IS DISTINCT FROM ${host} AND NOT flight_confirmed(r.arrival_flight) THEN 'flight'
           WHEN ra.id IS NULL THEN 'lodging'
