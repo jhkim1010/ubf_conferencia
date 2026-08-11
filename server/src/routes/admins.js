@@ -1,20 +1,40 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
-import { requireAuth, requireDirector } from '../middleware/auth.js';
+import {
+  requireAuth,
+  requireDirector,
+  requireProgramOwner,
+} from '../middleware/auth.js';
 
 const router = Router();
 
-// ─── Director 전용: 프로그램 관리자 관리 ──────────────────────────
+// ─── 프로그램 관리자 관리 ─────────────────────────────────────────
+//
+// 예전에는 director 만 부를 수 있었고 앱에는 화면이 아예 없었다. 그래서
+// 수양회를 만든 사람은 명단을 함께 볼 사람을 세울 방법이 없었다.
+//
+// 이제 **만든 사람**도 세울 수 있다(requireProgramOwner). 공동 관리자로
+// 들어온 사람은 명단·배정을 다 보지만 관리자를 더 세우지는 못한다.
 
 // GET /admins/programs/:programId - 특정 프로그램의 관리자 목록
-router.get('/programs/:programId', requireAuth, requireDirector, async (req, res) => {
+router.get('/programs/:programId', requireAuth, requireProgramOwner, async (req, res) => {
   try {
+    // 만든 사람도 함께 준다. 화면은 "누가 이 수양회를 볼 수 있는가" 를
+    // 보여 주는 것이지 program_admins 표를 보여 주는 것이 아니다.
     const admins = await sql`
-      SELECT u.id, u.email, u.name, u.role, u.telegram_chat_id, pa.assigned_at
+      SELECT u.id, u.email, u.name, u.role, u.telegram_chat_id,
+             pa.assigned_at, false AS is_owner
       FROM program_admins pa
       JOIN users u ON u.id = pa.user_id
       WHERE pa.program_id = ${req.params.programId}
-      ORDER BY pa.assigned_at
+      UNION ALL
+      SELECT u.id, u.email, u.name, u.role, u.telegram_chat_id,
+             p.created_at AS assigned_at, true AS is_owner
+      FROM programs p
+      JOIN leaders l ON l.id = p.leader_id
+      JOIN users u ON u.id = l.user_id
+      WHERE p.id = ${req.params.programId}
+      ORDER BY is_owner DESC, assigned_at
     `;
     res.json(admins);
   } catch (err) {
@@ -24,14 +44,36 @@ router.get('/programs/:programId', requireAuth, requireDirector, async (req, res
 });
 
 // POST /admins/programs/:programId - 관리자 지정 (이메일로 사용자 검색 후 추가)
-router.post('/programs/:programId', requireAuth, requireDirector, async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'email이 필요합니다' });
+router.post('/programs/:programId', requireAuth, requireProgramOwner, async (req, res) => {
+  const { email, registrationId } = req.body ?? {};
+  if (!email && !registrationId) {
+    return res.status(400).json({ error: 'email 또는 registrationId 가 필요합니다' });
+  }
 
   try {
-    // 사용자 확인
-    const [user] = await sql`SELECT id, name FROM users WHERE email = ${email}`;
-    if (!user) return res.status(404).json({ error: '해당 이메일의 사용자를 찾을 수 없습니다' });
+    // 참가자 명단에서 고른 경우. 이메일을 몰라도 되고, 오타로 엉뚱한
+    // 사람을 세울 일이 없다.
+    let user;
+    if (registrationId) {
+      [user] = await sql`
+        SELECT u.id, u.name
+        FROM registrations r
+        JOIN users u ON u.id = r.user_id
+        WHERE r.id = ${registrationId} AND r.program_id = ${req.params.programId}
+      `;
+      if (!user) {
+        return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+      }
+    } else {
+      // 목록에 없는 사람은 이메일로. 구글 로그인에 쓰는 주소여야 한다 —
+      // 한 번도 로그인한 적이 없으면 계정 자체가 없다.
+      [user] = await sql`
+        SELECT id, name FROM users WHERE lower(email) = lower(${email})
+      `;
+      if (!user) {
+        return res.status(404).json({ error: '해당 이메일의 사용자를 찾을 수 없습니다' });
+      }
+    }
 
     // role을 admin으로 승격 (participant → admin)
     await sql`
@@ -46,6 +88,7 @@ router.post('/programs/:programId', requireAuth, requireDirector, async (req, re
       ON CONFLICT (program_id, user_id) DO NOTHING
     `;
 
+    console.log(`[ADMIN] 지정 | programId=${req.params.programId} userId=${user.id} by=${req.user.userId}`);
     res.json({ success: true, userId: user.id, name: user.name });
   } catch (err) {
     console.error('관리자 지정 오류:', err);
@@ -54,8 +97,21 @@ router.post('/programs/:programId', requireAuth, requireDirector, async (req, re
 });
 
 // DELETE /admins/programs/:programId/:userId - 관리자 제거
-router.delete('/programs/:programId/:userId', requireAuth, requireDirector, async (req, res) => {
+router.delete('/programs/:programId/:userId', requireAuth, requireProgramOwner, async (req, res) => {
   try {
+    // 만든 사람은 뺄 수 없다. 빼고 나면 아무도 관리자를 세울 수 없어
+    // 수양회가 잠긴다 — 되돌릴 방법이 화면에 없다.
+    const [owner] = await sql`
+      SELECT 1 FROM programs p
+      JOIN leaders l ON l.id = p.leader_id
+      WHERE p.id = ${req.params.programId} AND l.user_id = ${req.params.userId}
+    `;
+    if (owner) {
+      return res
+        .status(409)
+        .json({ error: '수양회를 만든 사람은 뺄 수 없습니다' });
+    }
+
     await sql`
       DELETE FROM program_admins
       WHERE program_id = ${req.params.programId}

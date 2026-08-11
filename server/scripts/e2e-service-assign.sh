@@ -87,9 +87,15 @@ eq "  자유 역할의 이름은 공백이 정리된다" '이과수 버스 인�
 
 echo
 echo "── 지명은 부탁이지 확정이 아니다 ──"
+invBody() { printf '{"registrationId":"%s","serviceKey":"%s"}' "$1" "$2"; }
 inv() { curl -s -X POST "$API/service-signups/$P/invite" -H "Authorization: Bearer $LT" \
-  -H 'Content-Type: application/json' \
-  -d "{\"registrationId\":\"$1\",\"serviceKey\":\"$2\"}"; }
+  -H 'Content-Type: application/json' --data-binary "$(invBody "$1" "$2")"; }
+# 코드만 필요할 때. 토큰을 골라 쓸 수 있어야 한다(권한 검사).
+invCode() { # $1=등록id $2=역할 $3=토큰
+  curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/invite" \
+    -H "Authorization: Bearer $3" -H 'Content-Type: application/json' \
+    --data-binary "$(invBody "$1" "$2")"
+}
 S1=$(inv "$R1" pickup | jq_ "r.id")
 eq "지명하면 수락 대기" 'invited' "$(role pickup "people.find(p => p.registration_id === '$R1').status")"
 eq "  아직 확정은 0" '0' "$(role pickup 'confirmed')"
@@ -162,22 +168,13 @@ eq "  반려된 사람은 자리를 비운다" '1' "$(role pickup 'filled')"
 
 echo
 echo "── 막아야 하는 것 ──"
-eq "없는 역할로 지명하면 400" '400' \
-   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/invite" \
-      -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-      -d "{\"registrationId\":\"$R1\",\"serviceKey\":\"nope\"}")"
+eq "없는 역할로 지명하면 400" '400' "$(invCode "$R1" nope "$LT")"
 # 켜 두지 않은 역할로는 지명할 수 없다. 화면에 없는 자리가 생긴다.
-eq "이 수양회에 없는 역할이면 400" '400' \
-   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/invite" \
-      -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-      -d "{\"registrationId\":\"$R1\",\"serviceKey\":\"cleaning\"}")"
+eq "이 수양회에 없는 역할이면 400" '400' "$(invCode "$R1" cleaning "$LT")"
 eq "담당자가 아니면 현황을 못 본다" '403' \
    "$(curl -s -o /dev/null -w '%{http_code}' "$API/service-signups/$P/board" \
       -H "Authorization: Bearer $T1")"
-eq "담당자가 아니면 지명도 못 한다" '403' \
-   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/invite" \
-      -H "Authorization: Bearer $T1" -H 'Content-Type: application/json' \
-      -d "{\"registrationId\":\"$R3\",\"serviceKey\":\"pickup\"}")"
+eq "담당자가 아니면 지명도 못 한다" '403' "$(invCode "$R3" pickup "$T1")"
 eq "로그인 없으면 401" '401' \
    "$(curl -s -o /dev/null -w '%{http_code}' "$API/service-signups/$P/board")"
 
@@ -200,10 +197,7 @@ BLANK=$(login "svc-blank-$$@test.local")
 curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $BLANK" \
   -H 'Content-Type: application/json' -d '{"country":"KR"}' > /dev/null
 BR=$(curl -s "$API/registrations/$P/me" -H "Authorization: Bearer $BLANK" | jq_ "r.id")
-eq "이름 없는 사람은 지명할 수 없다" '404' \
-   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/invite" \
-      -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-      -d "{\"registrationId\":\"$BR\",\"serviceKey\":\"pickup\"}")"
+eq "이름 없는 사람은 지명할 수 없다" '404' "$(invCode "$BR" pickup "$LT")"
 
 echo
 echo "통과 $pass · 실패 $fail"

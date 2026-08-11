@@ -2906,4 +2906,48 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get svcThanks => 'Gracias.';
+
+  @override
+  String get admTitle => 'Quién puede administrarla';
+
+  @override
+  String get admSubtitle =>
+      'Ven el panel, la lista de participantes y las asignaciones.';
+
+  @override
+  String get admOwner => 'La creó';
+
+  @override
+  String get admAdd => 'Agregar a alguien';
+
+  @override
+  String get admPickPerson => 'Elegir de la lista';
+
+  @override
+  String get admByEmail => '¿No está en la lista? Usa su correo';
+
+  @override
+  String get admEmailLabel => 'El correo con el que inicia sesión';
+
+  @override
+  String get admRemove => 'Quitar';
+
+  @override
+  String admRemoveAsk(String name) {
+    return '¿Quitar a $name de los administradores?';
+  }
+
+  @override
+  String admAdded(String name) {
+    return '$name ya puede administrarla';
+  }
+
+  @override
+  String get admOwnerLocked => 'Quien la creó no puede ser quitado.';
+
+  @override
+  String get dashAdmins => 'Administradores';
+
+  @override
+  String get dashAdminsSub => 'Da acceso a la lista y las asignaciones';
 }

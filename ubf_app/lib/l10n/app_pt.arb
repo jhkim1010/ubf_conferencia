@@ -868,5 +868,18 @@
   "svcInviteBody": "Você poderia cuidar de {role}?",
   "svcAccept": "Sim, posso",
   "svcDecline": "Desculpe, não posso",
-  "svcThanks": "Obrigado."
+  "svcThanks": "Obrigado.",
+  "admTitle": "Quem pode administrar",
+  "admSubtitle": "Veem o painel, a lista de participantes e as atribuições.",
+  "admOwner": "Criou",
+  "admAdd": "Adicionar alguém",
+  "admPickPerson": "Escolher da lista",
+  "admByEmail": "Não está na lista? Use o e-mail",
+  "admEmailLabel": "O e-mail com que faz login",
+  "admRemove": "Remover",
+  "admRemoveAsk": "Remover {name} dos administradores?",
+  "admAdded": "{name} já pode administrar",
+  "admOwnerLocked": "Quem criou não pode ser removido.",
+  "dashAdmins": "Administradores",
+  "dashAdminsSub": "Dê acesso à lista e às atribuições"
 }

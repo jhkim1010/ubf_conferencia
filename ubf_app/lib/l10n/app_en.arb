@@ -1765,5 +1765,32 @@
   },
   "svcAccept": "Yes, I can",
   "svcDecline": "Sorry, I cannot",
-  "svcThanks": "Thank you."
+  "svcThanks": "Thank you.",
+  "admTitle": "Who can manage this",
+  "admSubtitle": "They see the dashboard, the roster and the assignment screens.",
+  "admOwner": "Created it",
+  "admAdd": "Add someone",
+  "admPickPerson": "Pick from the roster",
+  "admByEmail": "Not on the list? Use their email",
+  "admEmailLabel": "The email they sign in with",
+  "admRemove": "Remove",
+  "admRemoveAsk": "Remove {name} from the managers?",
+  "@admRemoveAsk": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "admAdded": "{name} can manage this now",
+  "@admAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "admOwnerLocked": "The person who created it cannot be removed.",
+  "dashAdmins": "Managers",
+  "dashAdminsSub": "Let someone else see the roster and assignments"
 }

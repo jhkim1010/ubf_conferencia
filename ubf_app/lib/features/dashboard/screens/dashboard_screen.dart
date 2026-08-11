@@ -194,6 +194,32 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
 
+            // 관리자 — 명단·배정을 함께 볼 사람을 세운다.
+            // 수양회를 만든 사람에게만 보인다(서버도 같은 규칙이다).
+            Card(
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.indigo.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.admin_panel_settings_outlined,
+                    color: Colors.indigo,
+                  ),
+                ),
+                title: Text(
+                  l10n.dashAdmins,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(l10n.dashAdminsSub),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/leader/program/$programId/admins'),
+              ),
+            ),
+            const SizedBox(height: 10),
+
             // 배정 — 확정 묶음·자동배정
             Card(
               child: ListTile(

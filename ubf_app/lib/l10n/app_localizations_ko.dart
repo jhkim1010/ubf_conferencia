@@ -2831,4 +2831,47 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get svcThanks => '감사합니다.';
+
+  @override
+  String get admTitle => '이 수양회를 관리할 사람';
+
+  @override
+  String get admSubtitle => '대시보드·참가자 명단·배정 화면을 함께 봅니다.';
+
+  @override
+  String get admOwner => '만든 사람';
+
+  @override
+  String get admAdd => '관리자 추가';
+
+  @override
+  String get admPickPerson => '참가자 명단에서 고르기';
+
+  @override
+  String get admByEmail => '목록에 없으면 이메일로';
+
+  @override
+  String get admEmailLabel => '구글 로그인에 쓰는 이메일';
+
+  @override
+  String get admRemove => '빼기';
+
+  @override
+  String admRemoveAsk(String name) {
+    return '$name 님을 관리자에서 뺄까요?';
+  }
+
+  @override
+  String admAdded(String name) {
+    return '$name 님이 함께 관리합니다';
+  }
+
+  @override
+  String get admOwnerLocked => '만든 사람은 뺄 수 없습니다.';
+
+  @override
+  String get dashAdmins => '관리자';
+
+  @override
+  String get dashAdminsSub => '명단·배정을 함께 볼 사람을 세웁니다';
 }

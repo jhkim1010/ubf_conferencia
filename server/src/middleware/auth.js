@@ -199,6 +199,39 @@ export function requireDirector(req, res, next) {
   next();
 }
 
+// 수양회를 **만든 사람**(또는 director) 확인.
+//
+// requireProgramAdmin 과 다르다. 공동 관리자로 추가된 사람은 명단도 배정도
+// 다 볼 수 있지만, **관리자를 더 세우거나 빼지는 못한다.** 그것까지 되면
+// 한 번 들어온 사람이 다른 사람을 계속 불러들일 수 있고, 만든 사람이 그
+// 사실을 모른 채 지나간다.
+export async function requireProgramOwner(req, res, next) {
+  const { role, userId } = req.user ?? {};
+  if (!userId) return res.status(401).json({ error: '인증이 필요합니다' });
+  if (role === 'director') return next();
+
+  const programId = req.params.programId ?? req.params.id;
+  if (!programId) return res.status(400).json({ error: 'programId가 없습니다' });
+
+  try {
+    const [owner] = await sql`
+      SELECT 1
+      FROM programs p
+      JOIN leaders l ON l.id = p.leader_id
+      WHERE p.id = ${programId} AND l.user_id = ${userId}
+    `;
+    if (!owner) {
+      return res
+        .status(403)
+        .json({ error: '수양회를 만든 사람만 관리자를 세울 수 있습니다' });
+    }
+    next();
+  } catch (err) {
+    console.error('수양회 소유자 확인 오류:', err);
+    return res.status(500).json({ error: '서버 오류' });
+  }
+}
+
 // 특정 프로그램의 admin 이상 확인 미들웨어 팩토리
 // router.get('/route', requireAuth, requireProgramAdmin, handler) 형식으로 사용
 // req.params.programId 또는 req.params.id 에서 프로그램 ID 추출

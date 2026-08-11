@@ -5315,6 +5315,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Thank you.'**
   String get svcThanks;
+
+  /// No description provided for @admTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can manage this'**
+  String get admTitle;
+
+  /// No description provided for @admSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'They see the dashboard, the roster and the assignment screens.'**
+  String get admSubtitle;
+
+  /// No description provided for @admOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Created it'**
+  String get admOwner;
+
+  /// No description provided for @admAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add someone'**
+  String get admAdd;
+
+  /// No description provided for @admPickPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick from the roster'**
+  String get admPickPerson;
+
+  /// No description provided for @admByEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Not on the list? Use their email'**
+  String get admByEmail;
+
+  /// No description provided for @admEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'The email they sign in with'**
+  String get admEmailLabel;
+
+  /// No description provided for @admRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get admRemove;
+
+  /// No description provided for @admRemoveAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from the managers?'**
+  String admRemoveAsk(String name);
+
+  /// No description provided for @admAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} can manage this now'**
+  String admAdded(String name);
+
+  /// No description provided for @admOwnerLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'The person who created it cannot be removed.'**
+  String get admOwnerLocked;
+
+  /// No description provided for @dashAdmins.
+  ///
+  /// In en, this message translates to:
+  /// **'Managers'**
+  String get dashAdmins;
+
+  /// No description provided for @dashAdminsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Let someone else see the roster and assignments'**
+  String get dashAdminsSub;
 }
 
 class _AppLocalizationsDelegate

@@ -2895,4 +2895,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get svcThanks => 'Thank you.';
+
+  @override
+  String get admTitle => 'Who can manage this';
+
+  @override
+  String get admSubtitle =>
+      'They see the dashboard, the roster and the assignment screens.';
+
+  @override
+  String get admOwner => 'Created it';
+
+  @override
+  String get admAdd => 'Add someone';
+
+  @override
+  String get admPickPerson => 'Pick from the roster';
+
+  @override
+  String get admByEmail => 'Not on the list? Use their email';
+
+  @override
+  String get admEmailLabel => 'The email they sign in with';
+
+  @override
+  String get admRemove => 'Remove';
+
+  @override
+  String admRemoveAsk(String name) {
+    return 'Remove $name from the managers?';
+  }
+
+  @override
+  String admAdded(String name) {
+    return '$name can manage this now';
+  }
+
+  @override
+  String get admOwnerLocked => 'The person who created it cannot be removed.';
+
+  @override
+  String get dashAdmins => 'Managers';
+
+  @override
+  String get dashAdminsSub => 'Let someone else see the roster and assignments';
 }

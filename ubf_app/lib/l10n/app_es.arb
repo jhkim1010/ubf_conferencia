@@ -882,5 +882,18 @@
   "svcInviteBody": "¿Podrías encargarte de {role}?",
   "svcAccept": "Sí, puedo",
   "svcDecline": "Lo siento, no puedo",
-  "svcThanks": "Gracias."
+  "svcThanks": "Gracias.",
+  "admTitle": "Quién puede administrarla",
+  "admSubtitle": "Ven el panel, la lista de participantes y las asignaciones.",
+  "admOwner": "La creó",
+  "admAdd": "Agregar a alguien",
+  "admPickPerson": "Elegir de la lista",
+  "admByEmail": "¿No está en la lista? Usa su correo",
+  "admEmailLabel": "El correo con el que inicia sesión",
+  "admRemove": "Quitar",
+  "admRemoveAsk": "¿Quitar a {name} de los administradores?",
+  "admAdded": "{name} ya puede administrarla",
+  "admOwnerLocked": "Quien la creó no puede ser quitado.",
+  "dashAdmins": "Administradores",
+  "dashAdminsSub": "Da acceso a la lista y las asignaciones"
 }

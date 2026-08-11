@@ -123,3 +123,8 @@ class ProgramService {
     return program != null;
   }
 }
+
+// 이 수양회를 관리할 사람. 만든 사람도 함께 온다(is_owner).
+final programAdminsProvider = FutureProvider.family<List<dynamic>, String>(
+  (_, programId) => ApiClient.getProgramAdmins(programId),
+);

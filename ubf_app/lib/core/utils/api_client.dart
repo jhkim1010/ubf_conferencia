@@ -460,6 +460,42 @@ class ApiClient {
     return _decode(response) as Map<String, dynamic>?;
   }
 
+  // ── 수양회 관리자 ─────────────────────────────────────────
+
+  /// 이 수양회를 관리할 사람. 만든 사람도 함께 온다(is_owner).
+  static Future<List<dynamic>> getProgramAdmins(String programId) async {
+    final response = await http.get(
+      _uri('/admins/programs/$programId'),
+      headers: await _headers(),
+    );
+    return _decodeList(response);
+  }
+
+  /// 관리자 추가. registrationId(명단에서 고름) 또는 email 중 하나.
+  static Future<Map<String, dynamic>> addProgramAdmin(
+    String programId,
+    Map<String, dynamic> body,
+  ) async {
+    final response = await http.post(
+      _uri('/admins/programs/$programId'),
+      headers: await _headers(),
+      body: jsonEncode(body),
+    );
+    return _decode(response);
+  }
+
+  /// 관리자 제거. 만든 사람은 서버가 막는다.
+  static Future<Map<String, dynamic>> removeProgramAdmin(
+    String programId,
+    String userId,
+  ) async {
+    final response = await http.delete(
+      _uri('/admins/programs/$programId/$userId'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
   /// 역할·필요 인원 구성 저장.
   static Future<Map<String, dynamic>> saveServiceRoles(
     String programId,

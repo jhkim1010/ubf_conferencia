@@ -587,13 +587,14 @@ router.delete('/:id', requireAuth, requireLeader, async (req, res) => {
 });
 
 // GET /programs/:id/stats - 대시보드 통계 (리더 전용)
-router.get('/:id/stats', requireAuth, requireLeader, async (req, res) => {
+router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
   try {
-    // 리더 소유권 확인
+    // 권한은 requireProgramAdmin 이 이미 봤다(만든 사람 · 공동 관리자 ·
+    // director). 여기서 leader_id 로 다시 좁히면 공동 관리자가 막힌다.
     const [program] = await sql`
-      SELECT id FROM programs WHERE id = ${req.params.id} AND leader_id = ${req.user.leaderId}
+      SELECT id FROM programs WHERE id = ${req.params.id} AND is_active = true
     `;
-    if (!program) return res.status(403).json({ error: '권한 없음' });
+    if (!program) return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
 
     const [stats] = await sql`
       SELECT
@@ -633,12 +634,13 @@ router.get('/:id/stats', requireAuth, requireLeader, async (req, res) => {
 });
 
 // GET /programs/:id/registrations - 참가자 전체 목록 (리더 전용)
-router.get('/:id/registrations', requireAuth, requireLeader, async (req, res) => {
+router.get('/:id/registrations', requireAuth, requireProgramAdmin, async (req, res) => {
   try {
+    // 권한은 requireProgramAdmin 이 봤다(공동 관리자 포함).
     const [program] = await sql`
-      SELECT id FROM programs WHERE id = ${req.params.id} AND leader_id = ${req.user.leaderId}
+      SELECT id FROM programs WHERE id = ${req.params.id} AND is_active = true
     `;
-    if (!program) return res.status(403).json({ error: '권한 없음' });
+    if (!program) return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
 
     // 질병 정보(medical_conditions)는 목록에 싣지 않는다.
     //
@@ -800,16 +802,16 @@ function daysBetween(from, to) {
   return Math.floor((new Date(to) - new Date(from)) / 86400000);
 }
 
-router.get('/:id/readiness', requireAuth, requireLeader, async (req, res) => {
+router.get('/:id/readiness', requireAuth, requireProgramAdmin, async (req, res) => {
   const programId = req.params.id;
   try {
     const [program] = await sql`
       SELECT id, name, location, start_date, end_date, host_country, program_type,
              registration_deadline, capacity, base_fee
       FROM programs
-      WHERE id = ${programId} AND leader_id = ${req.user.leaderId}
+      WHERE id = ${programId} AND is_active = true
     `;
-    if (!program) return res.status(403).json({ error: '권한 없음' });
+    if (!program) return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
 
     const host = program.host_country;
     const isInternational = program.program_type === 'international';

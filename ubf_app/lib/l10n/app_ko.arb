@@ -882,5 +882,18 @@
   "svcInviteBody": "{role} 을(를) 맡아 주시겠습니까?",
   "svcAccept": "수락",
   "svcDecline": "어렵습니다",
-  "svcThanks": "감사합니다."
+  "svcThanks": "감사합니다.",
+  "admTitle": "이 수양회를 관리할 사람",
+  "admSubtitle": "대시보드·참가자 명단·배정 화면을 함께 봅니다.",
+  "admOwner": "만든 사람",
+  "admAdd": "관리자 추가",
+  "admPickPerson": "참가자 명단에서 고르기",
+  "admByEmail": "목록에 없으면 이메일로",
+  "admEmailLabel": "구글 로그인에 쓰는 이메일",
+  "admRemove": "빼기",
+  "admRemoveAsk": "{name} 님을 관리자에서 뺄까요?",
+  "admAdded": "{name} 님이 함께 관리합니다",
+  "admOwnerLocked": "만든 사람은 뺄 수 없습니다.",
+  "dashAdmins": "관리자",
+  "dashAdminsSub": "명단·배정을 함께 볼 사람을 세웁니다"
 }
