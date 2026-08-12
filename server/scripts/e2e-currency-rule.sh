@@ -20,7 +20,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   curl -s -X POST "$API/auth/dev-login" -H 'Content-Type: application/json' \
-    -d "{\"email\":\"$1\"}" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
+    --data-binary "$(printf '{"email":"%s"}' "$1")" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
 }
 
 LT=$(login "$LEADER")
@@ -40,8 +40,8 @@ NEW_LT=$(curl -s -X POST "$API/leaders/register" \
 mk() { # $1=이름 $2=programType $3=currency → programId
   curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
     -H 'Content-Type: application/json' \
-    -d "{\"name\":\"$1\",\"location\":\"통화검증\",\"startDate\":\"2027-06-01\",
-         \"programType\":\"$2\",\"currency\":\"$3\",\"feeBasic\":100}" \
+    --data-binary "$(printf '{"name":"%s","location":"통화검증","startDate":"2027-06-01",
+         "programType":"%s","currency":"%s","feeBasic":100}' "$1" "$2" "$3")" \
     | node -pe "const r=JSON.parse(require('fs').readFileSync(0)); r.id||r.existingId||''"
 }
 cur() { # $1=programId → 저장된 통화
@@ -51,12 +51,12 @@ cur() { # $1=programId → 저장된 통화
 patch() { # $1=programId $2=programType $3=currency → http code
   curl -s -o /dev/null -w '%{http_code}' -X PATCH "$API/programs/$1" \
     -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-    -d "{\"programType\":\"$2\",\"currency\":\"$3\"}"
+    --data-binary "$(printf '{"programType":"%s","currency":"%s"}' "$2" "$3")"
 }
 cleanup() { # $1=programId $2=name — 등록자가 있으면 이름 확인이 필요하다(428)
   curl -s -o /dev/null -X DELETE "$API/programs/$1" \
     -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-    -d "{\"confirmName\":\"$2\"}"; }
+    --data-binary "$(printf '{"confirmName":"%s"}' "$2")"; }
 
 echo "── 국제 수양회 ──"
 I=$(mk "통화검증-국제-$$" international ARS)

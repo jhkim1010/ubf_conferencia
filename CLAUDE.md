@@ -212,6 +212,7 @@ UI 문자열을 Dart 코드에 하드코딩하지 마십시오.
 | `migration-safety` | 비멱등·파괴적 SQL (`IF NOT EXISTS` 누락, `WHERE` 없는 `DELETE`/`UPDATE`) |
 | `secrets` | 추적 파일 내 커넥션 문자열·`.env` |
 | `artifacts` | 빌드 산출물 추적, ARB 없이 생성물만 손편집 |
+| `e2e-json-bodies` | e2e 스크립트의 겹따옴표 JSON 본문 (조각나 도착해도 검사가 통과함) |
 | `server-smoke` | 서버 기동 + `/health` 응답 |
 
 종료 코드는 0(전부 통과) / 1(하나 이상 실패)입니다. 전제가 없어 건너뛴 검사(SKIP)는
@@ -243,7 +244,7 @@ UI 문자열을 Dart 코드에 하드코딩하지 마십시오.
 
 편집 직후 훅은 파일 종류로 검사를 고릅니다 — `.arb`→`arb-parity`,
 `server/src/routes/*.js`→`server-syntax`+`route-parity`, `migrations/*.sql`→
-`migration-numbers`+`migration-safety`, `.dart`→`dart-format`. `secrets`는 항상 돕니다.
+`migration-numbers`+`migration-safety`, `.dart`→`dart-format`. `server/scripts/e2e-*.sh`→`e2e-json-bodies`. `secrets`는 항상 돕니다.
 
 훅이 실패를 알려오면 고친 뒤 진행하십시오. 훅을 우회하려 하지 말고, 오탐이라고 판단되면
 사용자에게 확인을 요청하십시오. 훅 구현은 `.claude/hooks/`에 있습니다.

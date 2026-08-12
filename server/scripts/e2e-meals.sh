@@ -26,7 +26,7 @@ eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 # 보고했다 — 규칙을 일부러 깨고 확인하던 중 실제로 그렇게 속았다.
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -47,8 +47,8 @@ NEW_LT=$(curl -s -X POST "$API/leaders/register" \
 
 P=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"식단검증-$$\",\"location\":\"주방\",\"startDate\":\"2027-07-01\",
-       \"programType\":\"international\",\"hostCountry\":\"AR\",\"feeBasic\":100}" \
+  --data-binary "$(printf '{"name":"식단검증-%s","location":"주방","startDate":"2027-07-01",
+       "programType":"international","hostCountry":"AR","feeBasic":100}' "$$")" \
   | node -pe "const r=JSON.parse(require('fs').readFileSync(0)); r.id||r.existingId||''")
 [ -n "$P" ] || { echo "생성 실패"; exit 1; }
 
@@ -57,8 +57,8 @@ enroll() { # $1=토큰별칭 $2=이름 $3=식사제한 $4=아침거름(yes/no)
   local skip=false; [ "$4" = yes ] && skip=true
   curl -s -o /dev/null -X PUT "$API/registrations/$P/me" \
     -H "Authorization: Bearer $tk" -H 'Content-Type: application/json' \
-    -d "{\"realName\":\"$2\",\"country\":\"KR\",\"branch\":\"검증\",\"feeTier\":\"basic\",
-         \"foodRequirements\":\"$3\",\"skipsBreakfast\":$skip}"
+    --data-binary "$(printf '{"realName":"%s","country":"KR","branch":"검증","feeTier":"basic",
+         "foodRequirements":"%s","skipsBreakfast":%s}' "$2" "$3" "$skip")"
 }
 names() {
   curl -s "$API/programs/$P/meals" -H "Authorization: Bearer $LT" \
@@ -111,7 +111,7 @@ eq "로그인 없으면 401" '401' \
 
 curl -s -o /dev/null -X DELETE "$API/programs/$P" \
   -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-  -d "{\"confirmName\":\"식단검증-$$\"}"
+  --data-binary "$(printf '{"confirmName":"식단검증-%s"}' "$$")"
 
 echo
 echo "통과 $pass · 실패 $fail"

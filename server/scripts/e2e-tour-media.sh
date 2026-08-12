@@ -17,7 +17,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -102,8 +102,8 @@ JSON
 )
 P=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"투어자료검증-$$\",\"location\":\"이과수\",\"startDate\":\"2027-07-01\",
-       \"programType\":\"international\",\"feeBasic\":100,\"options\":$OPTS}" \
+  --data-binary "$(printf '{"name":"투어자료검증-%s","location":"이과수","startDate":"2027-07-01",
+       "programType":"international","feeBasic":100,"options":%s}' "$$" "$OPTS")" \
   | jq_ ".id || r.existingId")
 [ -n "$P" ] || { echo "수양회를 만들지 못했습니다"; exit 1; }
 
@@ -135,7 +135,7 @@ MANY=$(node -pe "
     Array.from({length:25},(_,i)=>({url:'/media/program/'+String(i).padStart(8,'0')+'-d9cb-469f-a165-70867728950e.pdf',name:'p'+i}))}])")
 eq "옵션 고치기가 통한다" '200' "$(curl -s -o /dev/null -w '%{http_code}' \
   -X PATCH "$API/programs/$P" -H "Authorization: Bearer $LT" \
-  -H 'Content-Type: application/json' -d "{\"options\":$MANY}")"
+  -H 'Content-Type: application/json' --data-binary "$(printf '{"options":%s}' "$MANY")")"
 eq "계획서는 열 장까지만 저장된다" '10' "$(GET | jq_ ".program_options[0].planDocs.length")"
 
 echo
@@ -146,7 +146,7 @@ KEEP=$(cat <<JSON
 JSON
 )
 curl -s -X PATCH "$API/programs/$P" -H "Authorization: Bearer $LT" \
-  -H 'Content-Type: application/json' -d "{\"options\":$KEEP}" > /dev/null
+  -H 'Content-Type: application/json' --data-binary "$(printf '{"options":%s}' "$KEEP")" > /dev/null
 eq "고친 뒤에도 계획서가 남는다" '일정표' "$(GET | jq_ ".program_options[0].planDocs[0].name")"
 eq "  파일도 그대로 받아진다"   '200' \
    "$(curl -s -o /dev/null -w '%{http_code}' "$API$PDF1")"

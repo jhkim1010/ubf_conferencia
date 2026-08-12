@@ -183,6 +183,25 @@ check_migration_numbers() {
   fi
 }
 
+# e2e 스크립트의 JSON 본문 검사.
+#
+# `"$(curl ... -d "{\"k\":\"$v\"}")"` 처럼 겹따옴표를 겹쳐 쓰면 본문이 조각나
+# 서버에 도착한다. 그런데도 검사는 통과할 수 있다 — 파싱 실패로 나온 코드가
+# 기대하던 코드와 우연히 같으면 그렇다. 실제로 네 검사가 그렇게 통과하고
+# 있었다.
+#
+# 본문은 printf 로 먼저 만들어 넘긴다:
+#   --data-binary "$(printf '{"k":"%s"}' "$v")"
+check_e2e_json_bodies() {
+  local hits
+  hits="$(grep -n -- '-d "{\\"' "$SRV"/scripts/e2e-*.sh 2>/dev/null || true)"
+  if [ -z "$hits" ]; then
+    pass e2e-json-bodies
+  else
+    fail e2e-json-bodies "겹따옴표 JSON 본문: $(echo "$hits" | head -3 | tr '\n' ' ') — printf 로 만들어 --data-binary 로 넘길 것"
+  fi
+}
+
 # 마이그레이션 안전성 정적 검사.
 # migrate.js 는 적용 이력을 추적하지 않아 매 실행마다 전체를 재적용한다.
 # 따라서 비멱등·파괴적 구문은 두 번째 실행에서 데이터를 파괴한다.
@@ -303,6 +322,7 @@ ALL_CHECKS=(
   route-parity
   migration-numbers
   migration-safety
+  e2e-json-bodies
   secrets
   artifacts
   server-smoke
@@ -335,6 +355,7 @@ select_by_changes() {
   grep -qE '^ubf_app/(scripts/(countries_table|gen_countries|check_countries)\.py|assets/ubf_chapters\.json|lib/core/constants/world_countries\.dart)$' \
                                            <<<"$files" && sel+=(country-mapping)
   grep -qE '^server/(src|test)/.*\.js$'     <<<"$files" && sel+=(server-syntax unit-tests route-parity server-smoke)
+  grep -qE '^server/scripts/e2e-.*\.sh$'    <<<"$files" && sel+=(e2e-json-bodies)
   grep -qE '^ubf_app/supabase/migrations/' <<<"$files" && sel+=(migration-numbers migration-safety)
   sel+=(secrets artifacts)
   printf '%s\n' "${sel[@]}" | awk '!seen[$0]++'

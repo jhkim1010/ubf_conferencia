@@ -20,7 +20,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -47,8 +47,8 @@ NEW_LT=$(curl -s -X POST "$API/leaders/register" \
 
 P=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"관리자검증-$$\",\"location\":\"어딘가\",\"startDate\":\"2027-07-01\",
-       \"programType\":\"international\",\"feeBasic\":100}" \
+  --data-binary "$(printf '{"name":"관리자검증-%s","location":"어딘가","startDate":"2027-07-01",
+       "programType":"international","feeBasic":100}' "$$")" \
   | jq_ "r.id || r.existingId")
 [ -n "$P" ] && [ "$P" != "ERR" ] || { echo "수양회를 만들지 못했습니다"; exit 1; }
 
@@ -58,7 +58,7 @@ enroll() { # $1=이메일 $2=이름 → 토큰
   local t; t=$(login "$1")
   curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $t" \
     -H 'Content-Type: application/json' \
-    -d "{\"realName\":\"$2\",\"country\":\"KR\",\"gender\":\"M\",\"age\":30}" > /dev/null
+    --data-binary "$(printf '{"realName":"%s","country":"KR","gender":"M","age":30}' "$2")" > /dev/null
   printf '%s' "$t"
 }
 TA=$(enroll "$MAIL_A" 김요한)
@@ -81,7 +81,7 @@ echo "── 참가자 명단에서 골라 세운다 ──"
 eq "명단에서 고르면 세워진다" 'true' \
    "$(curl -s -X POST "$API/admins/programs/$P" -H "Authorization: Bearer $LT" \
       -H 'Content-Type: application/json' \
-      -d "{\"registrationId\":\"$RA\"}" | jq_ 'r.success')"
+      --data-binary "$(printf '{"registrationId":"%s"}' "$RA")" | jq_ 'r.success')"
 eq "  목록이 두 명" '2' "$(LIST | jq_ 'r.length')"
 eq "  만든 사람이 맨 위" 'true' "$(LIST | jq_ 'r[0].is_owner')"
 
@@ -90,7 +90,7 @@ echo "── 목록에 없는 사람은 이메일로 ──"
 eq "이메일로 세운다" 'true' \
    "$(curl -s -X POST "$API/admins/programs/$P" -H "Authorization: Bearer $LT" \
       -H 'Content-Type: application/json' \
-      -d "{\"email\":\"$MAIL_B\"}" | jq_ 'r.success')"
+      --data-binary "$(printf '{"email":"%s"}' "$MAIL_B")" | jq_ 'r.success')"
 # 대소문자가 달라도 같은 사람이다. 구글 주소를 손으로 옮겨 적으면 흔하다.
 eq "  대소문자가 달라도 같은 사람" '3' "$(LIST | jq_ 'r.length')"
 eq "없는 이메일이면 404" '404' \
@@ -121,7 +121,7 @@ eq "목록도 못 본다" '403' \
 eq "세우지도 못한다" '403' \
    "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/admins/programs/$P" \
       -H "Authorization: Bearer $TA" -H 'Content-Type: application/json' \
-      -d "{\"email\":\"$MAIL_B\"}")"
+      --data-binary "$(printf '{"email":"%s"}' "$MAIL_B")")"
 
 echo
 echo "── 만든 사람은 뺄 수 없다 ──"

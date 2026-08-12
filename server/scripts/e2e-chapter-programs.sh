@@ -15,7 +15,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -26,8 +26,12 @@ login() {
   printf '%s' "$tok"
 }
 jq_() { node -pe "const r=JSON.parse(require('fs').readFileSync(0)); String((r$1) ?? '')"; }
+RUN="-$$"
 names() { curl -s "$API/programs/for-my-chapter" -H "Authorization: Bearer $1" \
-  | node -pe "JSON.parse(require('fs').readFileSync(0)).map(p=>p.name).sort().join(',')"; }
+  | RUN="$RUN" node -pe "JSON.parse(require('fs').readFileSync(0))
+      .map(p => p.name)
+      .filter(n => n.endsWith(process.env.RUN))
+      .sort().join(',')"; }
 
 # 지부장 두 명 — 같은 나라의 다른 지부
 L1=$(login "chp-lead1-$$@test.local")
@@ -48,8 +52,8 @@ NL2=$(reg "$L2" "코르도바 지부장" "CORDOBA");     [ -n "$NL2" ] && L2="$N
 mk() { # $1=리더토큰 $2=이름 → id
   curl -s -X POST "$API/programs" -H "Authorization: Bearer $1" \
     -H 'Content-Type: application/json' \
-    -d "{\"name\":\"$2\",\"location\":\"검증\",\"startDate\":\"2027-07-01\",
-         \"endDate\":\"2027-07-05\",\"programType\":\"local\",\"feeBasic\":10}" \
+    --data-binary "$(printf '{"name":"%s","location":"검증","startDate":"2027-07-01",
+         "endDate":"2027-07-05","programType":"local","feeBasic":10}' "$2")" \
     | jq_ ".id || r.existingId"
 }
 P1=$(mk "$L1" "부에노스수양회-$$")
@@ -82,7 +86,10 @@ echo "── 앱이 지부를 우길 수 없다 ──"
 eq "지부를 보내도 무시된다" '' \
   "$(curl -s "$API/programs/for-my-chapter?branch=CORDOBA&country=AR" \
       -H "Authorization: Bearer $M1" \
-      | node -pe "JSON.parse(require('fs').readFileSync(0)).map(p=>p.name).join(',')")"
+      | RUN="$RUN" node -pe "JSON.parse(require('fs').readFileSync(0))
+          .map(p => p.name)
+          .filter(n => n.endsWith(process.env.RUN))
+          .join(',')")"
 eq "로그인 없으면 401" '401' \
   "$(curl -s -o /dev/null -w '%{http_code}' "$API/programs/for-my-chapter")"
 
@@ -92,10 +99,17 @@ echo "── 경로가 /:id 에 먹히지 않는다 ──"
 eq "200 으로 목록을 준다" '200' \
   "$(curl -s -o /dev/null -w '%{http_code}' "$API/programs/for-my-chapter" -H "Authorization: Bearer $M1")"
 
-for id in "$P1" "$P2" "$OTHER"; do
-  curl -s -o /dev/null -X DELETE "$API/programs/$id" -H "Authorization: Bearer $L1" \
-    -H 'Content-Type: application/json' -d '{"confirmName":"x"}' 2>/dev/null
-done
+# 뒷정리. confirmName 은 **수양회 이름과 같아야** 서버가 지운다 —
+# "x" 로 보내던 동안 아무것도 지워지지 않아 스테이지에 쌓였다.
+# 만든 사람의 토큰으로 지운다(L1 은 L2 의 것을 못 지운다).
+del() { # $1=id $2=이름 $3=토큰
+  curl -s -o /dev/null -X DELETE "$API/programs/$1" -H "Authorization: Bearer $3" \
+    -H 'Content-Type: application/json' \
+    --data-binary "$(printf '{"confirmName":"%s"}' "$2")" 2>/dev/null
+}
+del "$P1" "부에노스수양회-$$" "$L1"
+del "$P2" "코르도바수양회-$$" "$L2"
+del "$OTHER" "지난수양회-$$" "$L2"
 
 echo
 echo "통과 $pass · 실패 $fail"

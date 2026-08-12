@@ -12,7 +12,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   curl -s -X POST "$API/auth/dev-login" -H 'Content-Type: application/json' \
-    -d "{\"email\":\"$1\"}" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
+    --data-binary "$(printf '{"email":"%s"}' "$1")" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
 }
 jqf() { node -pe "const r=JSON.parse(require('fs').readFileSync(0)); JSON.stringify($1)"; }
 
@@ -33,9 +33,9 @@ PT=$(login "sl-p-$$@test.local")
 
 PROG=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"말씀언어검증-$$\",\"location\":\"검증\",\"startDate\":\"2027-08-01\",
-       \"programType\":\"international\",\"hostCountry\":\"AR\",
-       \"smallCohortPolicy\":\"absorb\",\"minTeamSize\":6}" \
+  --data-binary "$(printf '{"name":"말씀언어검증-%s","location":"검증","startDate":"2027-08-01",
+       "programType":"international","hostCountry":"AR",
+       "smallCohortPolicy":"absorb","minTeamSize":6}' "$$")" \
   | node -pe "const r=JSON.parse(require('fs').readFileSync(0)); r.id||r.existingId||''")
 [ -n "$PROG" ] || { echo "생성 실패"; exit 1; }
 

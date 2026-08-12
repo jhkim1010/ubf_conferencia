@@ -20,7 +20,7 @@ eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 # "undefined" 를 들고 진행하면 레이트 리밋을 기능 실패로 보고하게 된다.
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -47,9 +47,9 @@ HOTELS='[{"key":"h1","labels":{"ko":"3성급","en":"3-star","es":"3 estrellas"},
 
 P=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"숙박검증-$$\",\"location\":\"호텔\",\"startDate\":\"2027-07-01\",
-       \"programType\":\"international\",\"hostCountry\":\"AR\",\"feeBasic\":200,
-       \"hotelOptions\":$HOTELS}" \
+  --data-binary "$(printf '{"name":"숙박검증-%s","location":"호텔","startDate":"2027-07-01",
+       "programType":"international","hostCountry":"AR","feeBasic":200,
+       "hotelOptions":%s}' "$$" "$HOTELS")" \
   | node -pe "const r=JSON.parse(require('fs').readFileSync(0)); r.id||r.existingId||''")
 [ -n "$P" ] || { echo "생성 실패"; exit 1; }
 
@@ -111,7 +111,7 @@ eq "  선택이 지워진다"     'null/0/0' "$(mine "$KR")"
 
 curl -s -o /dev/null -X DELETE "$API/programs/$P" \
   -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-  -d "{\"confirmName\":\"숙박검증-$$\"}"
+  --data-binary "$(printf '{"confirmName":"숙박검증-%s"}' "$$")"
 
 echo
 echo "통과 $pass · 실패 $fail"

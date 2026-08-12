@@ -16,7 +16,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -50,8 +50,8 @@ mk() { # $1=이름 $2=봇토큰(빈 값이면 안 보냄) → id 또는 http 코
 mkCode() { # $1=이름 $2=봇토큰 → http 코드
   curl -s -o /dev/null -w '%{http_code}' -X POST "$API/programs" \
     -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-    -d "{\"name\":\"$1\",\"location\":\"텔레그램\",\"startDate\":\"2027-07-01\",
-         \"programType\":\"international\",\"feeBasic\":100,\"telegramBotToken\":\"$2\"}"
+    --data-binary "$(printf '{"name":"%s","location":"텔레그램","startDate":"2027-07-01",
+         "programType":"international","feeBasic":100,"telegramBotToken":"%s"}' "$1" "$2")"
 }
 # 응답 어디에도 토큰 문자열이 없어야 한다. 키 이름이 아니라 값으로 찾는다 —
 # 이름을 바꿔 담아도 새는 것은 마찬가지다.
@@ -77,7 +77,7 @@ patch() { # $1=programId $2=json 조각 → http 코드
 }
 cleanup() { curl -s -o /dev/null -X DELETE "$API/programs/$1" \
   -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-  -d "{\"confirmName\":\"$2\"}"; }
+  --data-binary "$(printf '{"confirmName":"%s"}' "$2")"; }
 
 NAME="텔레그램검증-$$"
 P=$(mk "$NAME" "$TOKEN")

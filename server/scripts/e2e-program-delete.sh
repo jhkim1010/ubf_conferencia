@@ -17,7 +17,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   curl -s -X POST "$API/auth/dev-login" -H 'Content-Type: application/json' \
-    -d "{\"email\":\"$1\"}" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
+    --data-binary "$(printf '{"email":"%s"}' "$1")" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
 }
 
 LT=$(login "$LEADER")
@@ -39,7 +39,7 @@ PT=$(login deltest@test.com)        # 등록자
 mk() { # $1=이름 → programId
   curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
     -H 'Content-Type: application/json' \
-    -d "{\"name\":\"$1\",\"location\":\"테스트\",\"startDate\":\"2027-06-01\"}" \
+    --data-binary "$(printf '{"name":"%s","location":"테스트","startDate":"2027-06-01"}' "$1")" \
     | node -pe "const r=JSON.parse(require('fs').readFileSync(0)); r.id||r.existingId||''"
 }
 del() { # $1=programId $2=token $3=confirmName → http code

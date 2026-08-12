@@ -25,7 +25,7 @@ eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 
 login() {
   curl -s -X POST "$API/auth/dev-login" -H 'Content-Type: application/json' \
-    -d "{\"email\":\"$1\"}" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
+    --data-binary "$(printf '{"email":"%s"}' "$1")" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
 }
 jqf() { node -pe "const r=JSON.parse(require('fs').readFileSync(0)); const v=$1; v===undefined?'undefined':JSON.stringify(v)"; }
 
@@ -63,7 +63,7 @@ cleanup_program() {
   [ -n "${PROG:-}" ] || return 0
   curl -s -o /dev/null -X DELETE "$API/programs/$PROG" \
     -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-    -d "{\"confirmName\":\"참가비검증용(e2e)\"}"
+    -d '{"confirmName":"참가비검증용(e2e)"}'
 }
 trap cleanup_program EXIT
 

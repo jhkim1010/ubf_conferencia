@@ -26,7 +26,7 @@ eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 # 보고했다 — 규칙을 일부러 깨고 확인하던 중 실제로 그렇게 속았다.
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -56,9 +56,9 @@ mk() { # $1=이름 $2=programType $3=hostCountry(빈 값이면 없음)
   local host="null"; [ -n "$3" ] && host="\"$3\""
   curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
     -H 'Content-Type: application/json' \
-    -d "{\"name\":\"$1\",\"location\":\"픽업제외검증\",\"startDate\":\"2027-07-01\",
-         \"programType\":\"$2\",\"hostCountry\":$host,\"nearestAirport\":\"EZE\",
-         \"feeBasic\":200}" \
+    --data-binary "$(printf '{"name":"%s","location":"픽업제외검증","startDate":"2027-07-01",
+         "programType":"%s","hostCountry":%s,"nearestAirport":"EZE",
+         "feeBasic":200}' "$1" "$2" "$host")" \
     | node -pe "const r=JSON.parse(require('fs').readFileSync(0)); r.id||r.existingId||''"
 }
 # 미배차 목록은 submitted=true 인 사람만 본다. 저장만 하고 제출을 빠뜨리면
@@ -88,7 +88,7 @@ pickupNeeded() { # $1=programId → 준비 현황이 세는 픽업 인원
 cleanup() { # $1=programId $2=name
   curl -s -o /dev/null -X DELETE "$API/programs/$1" \
     -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-    -d "{\"confirmName\":\"$2\"}"; }
+    --data-binary "$(printf '{"confirmName":"%s"}' "$2")"; }
 
 echo "── 국제 수양회 (개최국 AR) ──"
 I=$(mk "픽업제외-국제-$$" international AR)

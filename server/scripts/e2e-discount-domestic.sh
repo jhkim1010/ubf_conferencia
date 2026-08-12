@@ -19,7 +19,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   curl -s -X POST "$API/auth/dev-login" -H 'Content-Type: application/json' \
-    -d "{\"email\":\"$1\"}" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
+    --data-binary "$(printf '{"email":"%s"}' "$1")" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
 }
 
 LT=$(login "$LEADER")
@@ -44,9 +44,9 @@ mk() { # $1=이름 $2=programType $3=hostCountry(빈 값이면 없음)
   local host="null"; [ -n "$3" ] && host="\"$3\""
   curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
     -H 'Content-Type: application/json' \
-    -d "{\"name\":\"$1\",\"location\":\"할인자격검증\",\"startDate\":\"2027-07-01\",
-         \"programType\":\"$2\",\"hostCountry\":$host,
-         \"feeBasic\":200,\"discountOptions\":$DISCOUNTS}" \
+    --data-binary "$(printf '{"name":"%s","location":"할인자격검증","startDate":"2027-07-01",
+         "programType":"%s","hostCountry":%s,
+         "feeBasic":200,"discountOptions":%s}' "$1" "$2" "$host" "$DISCOUNTS")" \
     | node -pe "const r=JSON.parse(require('fs').readFileSync(0)); r.id||r.existingId||''"
 }
 save() { # $1=programId $2=token $3=country $4=할인신청여부 → http code
@@ -64,7 +64,7 @@ requested() { # $1=programId $2=token → 저장된 신청 여부
 cleanup() { # $1=programId $2=name
   curl -s -o /dev/null -X DELETE "$API/programs/$1" \
     -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-    -d "{\"confirmName\":\"$2\"}"; }
+    --data-binary "$(printf '{"confirmName":"%s"}' "$2")"; }
 
 echo "── 국제 수양회 (개최국 AR) ──"
 I=$(mk "할인자격-국제-$$" international AR)

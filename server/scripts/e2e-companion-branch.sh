@@ -18,7 +18,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -40,8 +40,8 @@ U=$(login "cb-$$@test.local")
 NAME="동반지부검증-$$"
 P=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"$NAME\",\"location\":\"검증\",\"startDate\":\"2027-07-01\",
-       \"programType\":\"international\",\"feeBasic\":100}" | jq_ ".id || r.existingId")
+  --data-binary "$(printf '{"name":"%s","location":"검증","startDate":"2027-07-01",
+       "programType":"international","feeBasic":100}' "$NAME")" | jq_ ".id || r.existingId")
 [ ${#P} -eq 36 ] || { echo "생성 실패: $P"; exit 1; }
 
 # 등록자는 'São Paulo UBF' 지부다.
@@ -83,7 +83,7 @@ curl -s -o /dev/null -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer
 eq "동반자 지부도 바뀐다" 'Campinas UBF' "$(get | jq_ "[0].effective_branch")"
 
 curl -s -o /dev/null -X DELETE "$API/programs/$P" -H "Authorization: Bearer $LT" \
-  -H 'Content-Type: application/json' -d "{\"confirmName\":\"$NAME\"}"
+  -H 'Content-Type: application/json' --data-binary "$(printf '{"confirmName":"%s"}' "$NAME")"
 
 echo
 echo "통과 $pass · 실패 $fail"

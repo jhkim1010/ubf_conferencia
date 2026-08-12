@@ -17,7 +17,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -36,7 +36,7 @@ J=$(login "card-j-$$@test.local")   # 19세 이하
 # 나이는 프로필에 있다. 잠금 판정이 이 값을 본다.
 setAge() { curl -s -o /dev/null -X PATCH "$API/auth/profile" \
   -H "Authorization: Bearer $1" -H 'Content-Type: application/json' \
-  -d "{\"name\":\"$2\",\"age\":$3,\"region\":\"AR\"}"; }
+  --data-binary "$(printf '{"name":"%s","age":%s,"region":"AR"}' "$2" "$3")"; }
 setAge "$A" "명함A" 34
 setAge "$B" "명함B" 41
 setAge "$J" "주니어" 16

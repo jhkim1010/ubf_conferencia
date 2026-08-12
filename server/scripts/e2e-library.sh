@@ -16,7 +16,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -55,8 +55,8 @@ jq_() { node -pe "const r=JSON.parse(require('fs').readFileSync(0)); String((r$1
 
 P=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"자료실검증-$$\",\"location\":\"도서관\",\"startDate\":\"2027-07-01\",
-       \"programType\":\"international\",\"feeBasic\":100}" \
+  --data-binary "$(printf '{"name":"자료실검증-%s","location":"도서관","startDate":"2027-07-01",
+       "programType":"international","feeBasic":100}' "$$")" \
   | jq_ ".id || r.existingId")
 [ ${#P} -eq 36 ] || { echo "생성 실패: $P"; exit 1; }
 
@@ -136,7 +136,7 @@ LEFT="$MEDIA/library/$(basename "$PDF_URL")"
 [ -f "$LEFT" ] && bad "파일도 지워진다" "없음" "$LEFT 남아 있음" || ok "파일도 함께 지워진다"
 
 curl -s -o /dev/null -X DELETE "$API/programs/$P" -H "Authorization: Bearer $LT" \
-  -H 'Content-Type: application/json' -d "{\"confirmName\":\"자료실검증-$$\"}"
+  -H 'Content-Type: application/json' --data-binary "$(printf '{"confirmName":"자료실검증-%s"}' "$$")"
 rm -rf "$TMP"
 
 echo

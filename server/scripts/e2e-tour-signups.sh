@@ -18,7 +18,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -46,10 +46,10 @@ NEW_LT=$(curl -s -X POST "$API/leaders/register" \
 
 P=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"투어신청검증-$$\",\"location\":\"이과수\",\"startDate\":\"2027-07-01\",
-       \"programType\":\"international\",\"feeBasic\":100,
-       \"options\":[{\"name\":\"가 이과수\",\"cost\":120,\"capacity\":2},
-                    {\"name\":\"나 아무도\",\"cost\":50}]}" \
+  --data-binary "$(printf '{"name":"투어신청검증-%s","location":"이과수","startDate":"2027-07-01",
+       "programType":"international","feeBasic":100,
+       "options":[{"name":"가 이과수","cost":120,"capacity":2},
+                    {"name":"나 아무도","cost":50}]}' "$$")" \
   | jq_ "r.id || r.existingId")
 [ -n "$P" ] && [ "$P" != "ERR" ] || { echo "수양회를 만들지 못했습니다"; exit 1; }
 
@@ -62,8 +62,8 @@ join() { # $1=이름 $2=제출여부 $3=투어신청여부
   [ "$3" = yes ] && opts="[\"$OPT\"]"
   curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $t" \
     -H 'Content-Type: application/json' \
-    -d "{\"realName\":\"$1\",\"country\":\"KR\",\"gender\":\"M\",\"age\":30,
-         \"selectedOptions\":$opts}" > /dev/null
+    --data-binary "$(printf '{"realName":"%s","country":"KR","gender":"M","age":30,
+         "selectedOptions":%s}' "$1" "$opts")" > /dev/null
   [ "$2" = yes ] && curl -s -X POST "$API/registrations/$P/me/submit" \
     -H "Authorization: Bearer $t" > /dev/null
   printf '%s' "$t"
@@ -112,7 +112,7 @@ echo "── 이름 없는 등록은 여기에도 안 나온다 ──"
 BLANK=$(login "ts-blank-$$@test.local")
 curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $BLANK" \
   -H 'Content-Type: application/json' \
-  -d "{\"country\":\"KR\",\"selectedOptions\":[\"$OPT\"]}" > /dev/null
+  --data-binary "$(printf '{"country":"KR","selectedOptions":["%s"]}' "$OPT")" > /dev/null
 eq "명단은 그대로 두 명" '2' "$(tour '가 이과수' 'signup_count')"
 
 echo

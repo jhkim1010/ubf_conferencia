@@ -19,7 +19,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -47,8 +47,8 @@ NEW_LT=$(curl -s -X POST "$API/leaders/register" \
 
 P=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"이름없음검증-$$\",\"location\":\"어딘가\",\"startDate\":\"2027-07-01\",
-       \"programType\":\"international\",\"feeBasic\":100}" \
+  --data-binary "$(printf '{"name":"이름없음검증-%s","location":"어딘가","startDate":"2027-07-01",
+       "programType":"international","feeBasic":100}' "$$")" \
   | jq_ "r.id || r.existingId")
 [ -n "$P" ] && [ "$P" != "ERR" ] || { echo "수양회를 만들지 못했습니다"; exit 1; }
 
@@ -58,7 +58,7 @@ enroll() { # $1=이메일꼬리 $2=이름(비면 안 적은 것) $3=제출여부
   if [ -n "$2" ]; then
     curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $t" \
       -H 'Content-Type: application/json' \
-      -d "{\"realName\":\"$2\",\"country\":\"KR\",\"gender\":\"M\",\"age\":30}" > /dev/null
+      --data-binary "$(printf '{"realName":"%s","country":"KR","gender":"M","age":30}' "$2")" > /dev/null
   else
     # 이름 없이 저장 — 앱이 화면을 넘어가며 만드는 빈 행과 같은 모양이다.
     curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $t" \

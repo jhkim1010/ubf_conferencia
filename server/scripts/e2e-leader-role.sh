@@ -21,7 +21,7 @@ WHO="rolecheck-$$@test.local"
 
 login() {
   curl -s -X POST "$API/auth/dev-login" -H 'Content-Type: application/json' \
-    -d "{\"email\":\"$1\"}" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
+    --data-binary "$(printf '{"email":"%s"}' "$1")" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
 }
 me() { # $1=token $2=필드
   curl -s "$API/auth/me" -H "Authorization: Bearer $1" \

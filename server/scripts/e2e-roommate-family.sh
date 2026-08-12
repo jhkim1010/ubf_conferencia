@@ -19,7 +19,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   curl -s -X POST "$API/auth/dev-login" -H 'Content-Type: application/json' \
-    -d "{\"email\":\"$1\"}" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
+    --data-binary "$(printf '{"email":"%s"}' "$1")" | node -pe "JSON.parse(require('fs').readFileSync(0)).token"
 }
 
 LT=$(login "$LEADER")
@@ -58,7 +58,7 @@ cleanup_program() {
   [ -n "${PROG:-}" ] || return 0
   curl -s -o /dev/null -X DELETE "$API/programs/$PROG" \
     -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-    -d "{\"confirmName\":\"룸메이트검증용(e2e)\"}"
+    -d '{"confirmName":"룸메이트검증용(e2e)"}'
 }
 trap cleanup_program EXIT
 
@@ -66,7 +66,7 @@ trap cleanup_program EXIT
 reg() { # $1=token $2=이름 $3=성별
   curl -s -X PUT "$API/registrations/$PROG/me" -H "Authorization: Bearer $1" \
     -H 'Content-Type: application/json' \
-    -d "{\"realName\":\"$2\",\"gender\":\"$3\",\"country\":\"KR\",\"branch\":\"서울\"}" >/dev/null
+    --data-binary "$(printf '{"realName":"%s","gender":"%s","country":"KR","branch":"서울"}' "$2" "$3")" >/dev/null
 }
 reg "$HT" 남편 M
 reg "$WT" 아내 F

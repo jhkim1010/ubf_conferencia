@@ -19,7 +19,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -47,8 +47,8 @@ NEW_LT=$(curl -s -X POST "$API/leaders/register" \
 
 P=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"봉사배정검증-$$\",\"location\":\"어딘가\",\"startDate\":\"2027-07-01\",
-       \"programType\":\"international\",\"feeBasic\":100}" \
+  --data-binary "$(printf '{"name":"봉사배정검증-%s","location":"어딘가","startDate":"2027-07-01",
+       "programType":"international","feeBasic":100}' "$$")" \
   | jq_ "r.id || r.existingId")
 [ -n "$P" ] && [ "$P" != "ERR" ] || { echo "수양회를 만들지 못했습니다"; exit 1; }
 
@@ -56,7 +56,7 @@ enroll() { # $1=이름 → 토큰
   local t; t=$(login "svc-$1-$$@test.local")
   curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $t" \
     -H 'Content-Type: application/json' \
-    -d "{\"realName\":\"$1\",\"country\":\"KR\",\"gender\":\"M\",\"age\":30}" > /dev/null
+    --data-binary "$(printf '{"realName":"%s","country":"KR","gender":"M","age":30}' "$1")" > /dev/null
   printf '%s' "$t"
 }
 regId() { # $1=참가자토큰
@@ -80,7 +80,7 @@ ROLES='[{"key":"pickup","enabled":true,"needed":3},
 eq "역할 구성이 저장된다" '200' \
    "$(curl -s -o /dev/null -w '%{http_code}' -X PUT "$API/service-signups/$P/roles" \
       -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
-      -d "{\"roles\":$ROLES}")"
+      --data-binary "$(printf '{"roles":%s}' "$ROLES")")"
 eq "  모르는 키와 이름 없는 자유 역할은 버린다" '4' "$(BOARD | jq_ 'r.roles.length')"
 eq "  자유 역할의 이름은 공백이 정리된다" '이과수 버스 인솔' \
    "$(role 'custom:iguazu-bus-01' 'label')"
@@ -106,7 +106,7 @@ eq "  3명 중 2명 부족" '2' "$(role pickup 'short')"
 echo
 echo "── 본인이 답한다 ──"
 resp() { curl -s -X POST "$API/service-signups/$P/$1/respond" -H "Authorization: Bearer $2" \
-  -H 'Content-Type: application/json' -d "{\"accepted\":$3}"; }
+  -H 'Content-Type: application/json' --data-binary "$(printf '{"accepted":%s}' "$3")"; }
 eq "수락하면 확정" 'confirmed' "$(resp "$S1" "$T1" true | jq_ 'r.status')"
 eq "  이미 답한 부탁에는 다시 못 답한다" '409' \
    "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/$S1/respond" \
@@ -138,7 +138,7 @@ eq "  담당자가 확정을 눌러도 승인 대기" 'awaiting_approval' \
 echo
 echo "── 책임자는 역할마다 한 명 ──"
 lead() { curl -s -X PATCH "$API/service-signups/$P/$1" -H "Authorization: Bearer $LT" \
-  -H 'Content-Type: application/json' -d "{\"isLead\":$2}" > /dev/null; }
+  -H 'Content-Type: application/json' --data-binary "$(printf '{"isLead":%s}' "$2")" > /dev/null; }
 lead "$S1" true
 eq "책임자 한 명" '김요한' \
    "$(role pickup "people.filter(p => p.is_lead).map(p => p.real_name).join(',')")"

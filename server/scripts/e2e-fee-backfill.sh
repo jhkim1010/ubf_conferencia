@@ -21,7 +21,7 @@ bad() { echo "  ✗ $1"; echo "      기대: $2"; echo "      실제: $3"; fail=
 eq()  { [ "$2" = "$3" ] && ok "$1" || bad "$1" "$2" "$3"; }
 login() {
   local body; body=$(curl -s -X POST "$API/auth/dev-login" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$1\"}")
+    -H 'Content-Type: application/json' --data-binary "$(printf '{"email":"%s"}' "$1")")
   local tok; tok=$(printf '%s' "$body" \
     | node -pe "JSON.parse(require('fs').readFileSync(0)).token || ''" 2>/dev/null)
   if [ -z "$tok" ]; then
@@ -45,13 +45,13 @@ NAME="참가비검증-$$"
 # 참가비를 아직 안 정한 채로 만든다 — 실제로 그렇게 시작한다.
 P=$(curl -s -X POST "$API/programs" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"$NAME\",\"location\":\"검증\",\"startDate\":\"2027-07-01\",
-       \"programType\":\"international\"}" | jq_ ".id || r.existingId")
+  --data-binary "$(printf '{"name":"%s","location":"검증","startDate":"2027-07-01",
+       "programType":"international"}' "$NAME")" | jq_ ".id || r.existingId")
 [ ${#P} -eq 36 ] || { echo "생성 실패: $P"; exit 1; }
 
 save() { curl -s -o /dev/null -X PUT "$API/registrations/$P/me" \
   -H "Authorization: Bearer $1" -H 'Content-Type: application/json' \
-  -d "{\"realName\":\"$2\",\"country\":\"KR\",\"branch\":\"검증\"}"; }
+  --data-binary "$(printf '{"realName":"%s","country":"KR","branch":"검증"}' "$2")"; }
 # total_cost 는 numeric 이라 드라이버에 따라 "200" 도 "200.00" 도 온다.
 # 표기로 비교하면 값이 맞아도 실패한다 — 숫자로 맞춰 본다.
 total() { curl -s "$API/registrations/$P/me" -H "Authorization: Bearer $1" \
@@ -61,7 +61,7 @@ missing() { curl -s "$API/programs/$P/readiness" -H "Authorization: Bearer $LT" 
   | node -pe "const r=JSON.parse(require('fs').readFileSync(0));
               String(r?.readiness?.fees?.missing ?? 'null')"; }
 backfill() { curl -s -o /dev/null -w '%{http_code}' -X POST "$API/programs/$P/fee-tier-backfill" \
-  -H "Authorization: Bearer $1" -H 'Content-Type: application/json' -d "{\"tier\":\"$2\"}"; }
+  -H "Authorization: Bearer $1" -H 'Content-Type: application/json' --data-binary "$(printf '{"tier":"%s"}' "$2")"; }
 
 save "$A" "가나"
 save "$B" "다라"
@@ -105,7 +105,7 @@ echo "── 권한 ──"
 eq "참가자는 못 누른다 403" '403' "$(backfill "$A" basic)"
 
 curl -s -o /dev/null -X DELETE "$API/programs/$P" -H "Authorization: Bearer $LT" \
-  -H 'Content-Type: application/json' -d "{\"confirmName\":\"$NAME\"}"
+  -H 'Content-Type: application/json' --data-binary "$(printf '{"confirmName":"%s"}' "$NAME")"
 
 echo
 echo "통과 $pass · 실패 $fail"
