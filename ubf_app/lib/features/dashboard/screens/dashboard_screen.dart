@@ -361,66 +361,101 @@ class _StatsGrid extends StatelessWidget {
       return Center(child: Text(l10n.dashNoStats));
     }
     int n(String key) => ((stats![key] ?? 0) as num).toInt();
+    // 미리보기는 숫자와 같은 응답에서 온다. 따로 조회하면 카드 숫자와
+    // 미리보기가 어긋날 자리가 또 생긴다 — 이미 두 번 겪었다.
+    final preview = (stats!['preview'] as Map?) ?? const {};
+    List<Map<String, dynamic>> rows(String key) =>
+        ((preview[key] as List?) ?? const [])
+            .cast<Map<String, dynamic>>()
+            .toList();
 
-    return GridView.count(
-      crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1.5,
-      children: [
-        _StatCard(
-          label: l10n.dashStatTotal,
-          value: l10n.unitPeople(n('total_registrations')),
-          icon: Icons.people,
-          color: Colors.blue,
-          onOpen: () => _openTable(context, programId, RosterView.all),
-        ),
-        // "등록 완료" 카드가 있던 자리. 완료 여부는 참가자 표 안에서 한
-        // 사람씩 노란 줄로 보이므로 카드 하나를 통째로 쓸 일이 아니었고,
-        // 담당자가 급히 알아야 하는 것은 어느 투어가 얼마나 찼는가였다.
-        _StatCard(
-          label: l10n.dashStatTours,
-          value: l10n.unitPeople(n('tour_signup_count')),
-          icon: Icons.tour,
-          color: Colors.green,
-          onOpen: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => TourSignupsScreen(programId: programId),
+    // 카드 크기를 화면 너비에 비례해 늘리지 않는다.
+    //
+    // 예전에는 2열 고정에 childAspectRatio 로 높이를 정했더니, 컴퓨터
+    // 브라우저에서 카드 하나가 화면 절반(940×620)이 됐다. 숫자 하나 보여
+    // 주는 칸이 그만큼 클 이유가 없다.
+    //
+    // 이제 열 수만 너비에 맞춰 늘리고 **높이는 어디서나 116** 이다.
+    // 너비는 MediaQuery 가 아니라 실제 제약을 쓴다 — 바깥 여백만큼 어긋난다.
+    return LayoutBuilder(
+      builder: (context, box) {
+        const gap = 12.0;
+        const cardHeight = 196.0;
+        final columns = (box.maxWidth / 300).floor().clamp(1, 4);
+        final cardWidth = (box.maxWidth - (columns - 1) * gap) / columns;
+
+        return GridView.count(
+          crossAxisCount: columns,
+          crossAxisSpacing: gap,
+          mainAxisSpacing: gap,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: cardWidth / cardHeight,
+          children: [
+            _StatCard(
+              label: l10n.dashStatTotal,
+              total: n('total_registrations'),
+              preview: rows('recent'),
+              value: l10n.unitPeople(n('total_registrations')),
+              icon: Icons.people,
+              color: Colors.blue,
+              onOpen: () => _openTable(context, programId, RosterView.all),
             ),
-          ),
-        ),
-        _StatCard(
-          label: l10n.dashStatFoodRestriction,
-          value: l10n.unitPeople(n('food_restriction_count')),
-          icon: Icons.restaurant,
-          color: Colors.orange,
-          onOpen: () => _openTable(context, programId, RosterView.meals),
-        ),
-        _StatCard(
-          label: l10n.dashStatPendingPayment,
-          value: l10n.unitCases(n('pending_payment_count')),
-          icon: Icons.payment,
-          color: Colors.red,
-          onOpen: () =>
-              _openTable(context, programId, RosterView.pendingPayment),
-        ),
-        _StatCard(
-          label: l10n.dashStatArrival,
-          value: l10n.unitPeople(n('arrival_flight_count')),
-          icon: Icons.flight_land,
-          color: Colors.purple,
-          onOpen: () => _openTable(context, programId, RosterView.arrival),
-        ),
-        _StatCard(
-          label: l10n.dashStatConfirmedPayment,
-          value: l10n.unitCases(n('confirmed_payment_count')),
-          icon: Icons.verified,
-          color: Colors.teal,
-          onOpen: () => _openTable(context, programId, RosterView.paid),
-        ),
-      ],
+            // "등록 완료" 카드가 있던 자리. 완료 여부는 참가자 표 안에서 한
+            // 사람씩 노란 줄로 보이므로 카드 하나를 통째로 쓸 일이 아니었고,
+            // 담당자가 급히 알아야 하는 것은 어느 투어가 얼마나 찼는가였다.
+            _StatCard(
+              label: l10n.dashStatTours,
+              tourPreview: rows('tours'),
+              value: l10n.unitPeople(n('tour_signup_count')),
+              icon: Icons.tour,
+              color: Colors.green,
+              onOpen: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => TourSignupsScreen(programId: programId),
+                ),
+              ),
+            ),
+            _StatCard(
+              label: l10n.dashStatFoodRestriction,
+              total: n('food_restriction_count'),
+              preview: rows('meals'),
+              value: l10n.unitPeople(n('food_restriction_count')),
+              icon: Icons.restaurant,
+              color: Colors.orange,
+              onOpen: () => _openTable(context, programId, RosterView.meals),
+            ),
+            _StatCard(
+              label: l10n.dashStatPendingPayment,
+              total: n('pending_payment_count'),
+              preview: rows('pending'),
+              value: l10n.unitCases(n('pending_payment_count')),
+              icon: Icons.payment,
+              color: Colors.red,
+              onOpen: () =>
+                  _openTable(context, programId, RosterView.pendingPayment),
+            ),
+            _StatCard(
+              label: l10n.dashStatArrival,
+              total: n('arrival_flight_count'),
+              preview: rows('arrival'),
+              value: l10n.unitPeople(n('arrival_flight_count')),
+              icon: Icons.flight_land,
+              color: Colors.purple,
+              onOpen: () => _openTable(context, programId, RosterView.arrival),
+            ),
+            _StatCard(
+              label: l10n.dashStatConfirmedPayment,
+              total: n('confirmed_payment_count'),
+              preview: rows('paid'),
+              value: l10n.unitCases(n('confirmed_payment_count')),
+              icon: Icons.verified,
+              color: Colors.teal,
+              onOpen: () => _openTable(context, programId, RosterView.paid),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -442,57 +477,186 @@ class _StatCard extends StatelessWidget {
   final Color color;
   final VoidCallback? onOpen;
 
+  /// 카드 안에 보여 줄 사람 몇 줄. [{name, country, submitted, detail}]
+  final List<Map<String, dynamic>> preview;
+
+  /// 투어 카드만 사람 대신 투어별 줄을 보여 준다 — 담당자가 먼저 보는 것이
+  /// "어느 투어가 찼나" 이기 때문이다. [{name, signup_count, capacity}]
+  final List<Map<String, dynamic>> tourPreview;
+
+  /// 미리보기에 다 못 담은 나머지 수. "나머지 n명 보기" 로 쓴다.
+  final int total;
+
   const _StatCard({
     required this.label,
     required this.value,
     required this.icon,
     required this.color,
     this.onOpen,
+    this.preview = const [],
+    this.tourPreview = const [],
+    this.total = 0,
   });
+
+  /// 아직 등록을 완료하지 않은 사람의 배경. 표·투어 명단과 같은 크림색이다.
+  static Color _cream(ThemeData theme) => theme.brightness == Brightness.dark
+      ? const Color(0xFF3E3524)
+      : const Color(0xFFFFF8E7);
+
+  Widget _line(
+    BuildContext context, {
+    required String who,
+    String where = '',
+    String state = '',
+    bool cream = false,
+    bool good = true,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: cream
+          ? BoxDecoration(
+              color: _cream(theme),
+              borderRadius: BorderRadius.circular(6),
+            )
+          : null,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              who,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12.5),
+            ),
+          ),
+          if (where.isNotEmpty) ...[
+            const SizedBox(width: 6),
+            Text(
+              where,
+              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+            ),
+          ],
+          if (state.isNotEmpty) ...[
+            const SizedBox(width: 6),
+            Text(
+              state,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: good ? Colors.green[700] : Colors.orange[900],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isTour = tourPreview.isNotEmpty;
+    final shown = isTour ? tourPreview.length : preview.length;
+    final rest = total - shown;
+
     final body = Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              Icon(icon, color: color, size: 24),
+              Icon(icon, color: color, size: 22),
               if (onOpen != null) ...[
                 const Spacer(),
                 Icon(Icons.open_in_full, size: 13, color: Colors.grey[400]),
               ],
             ],
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+          const SizedBox(height: 6),
+          // 남는 자리에 미리보기를 넣는다. 넘치면 잘라 낸다 — 카드 높이는
+          // 어디서나 같아야 한다.
+          Expanded(
+            child: ClipRect(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isTour)
+                    for (final t in tourPreview)
+                      Builder(
+                        builder: (ctx) {
+                          final n = (t['signup_count'] as num?)?.toInt() ?? 0;
+                          final cap = (t['capacity'] as num?)?.toInt();
+                          final full = cap != null && n >= cap;
+                          return _line(
+                            ctx,
+                            who: '${t['name'] ?? ''}',
+                            where: l10n.dashUnitPeopleShort(n),
+                            state: n == 0
+                                ? l10n.dashTourNobody
+                                : (full
+                                      ? l10n.dashTourFull
+                                      : l10n.dashTourRoom),
+                            cream: n == 0,
+                            good: !full && n > 0,
+                          );
+                        },
+                      )
+                  else if (preview.isEmpty)
+                    Text(
+                      l10n.dashPreviewEmpty,
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    )
+                  else
+                    for (final p in preview)
+                      _line(
+                        context,
+                        who: '${p['name'] ?? ''}',
+                        where:
+                            WorldCountries.display(p['country'] as String?) ??
+                            '',
+                        state: '${p['detail'] ?? ''}',
+                        cream: p['submitted'] == false,
+                        good: p['submitted'] != false,
+                      ),
+                ],
+              ),
+            ),
+          ),
+          if (onOpen != null)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: onOpen,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 28),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  isTour
+                      ? l10n.dashByTour
+                      : (rest > 0 ? l10n.dashMoreCount(rest) : l10n.dashSeeAll),
+                  style: const TextStyle(fontSize: 12),
                 ),
               ),
-              Text(
-                label,
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-              ),
-            ],
-          ),
+            ),
         ],
       ),
     );
 
     if (onOpen == null) return Card(child: body);
 
-    // 두 번 누르면 열린다. 그것만 두면 화면 낭독기 사용자와 마우스에
-    // 익숙하지 않은 사람이 들어갈 길이 없으므로 길게 누르기도 같은 곳으로
-    // 보내고, 오른쪽 위 표시로 "열 수 있다"를 알린다.
+    // 두 번 누르기·길게 누르기는 그대로 두고, 아래 "더 보기" 를 더했다.
+    // 두 번 누르기만 있으면 그 사실을 아는 사람만 열 수 있다.
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Semantics(

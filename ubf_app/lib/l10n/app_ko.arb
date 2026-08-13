@@ -902,5 +902,13 @@
   "svcSectionBuiltIn": "기본 역할",
   "svcRoleFull": "역할은 {max}개까지 만들 수 있습니다.",
   "svcDeleteRole": "이 역할 지우기",
-  "svcNeedShort": "필요"
+  "svcNeedShort": "필요",
+  "dashMoreCount": "나머지 {count}명 보기 →",
+  "dashSeeAll": "표로 보기 →",
+  "dashByTour": "투어별로 보기 →",
+  "dashPreviewEmpty": "아직 없습니다",
+  "dashTourNobody": "신청 없음",
+  "dashTourRoom": "정원 여유",
+  "dashTourFull": "정원 참",
+  "dashUnitPeopleShort": "{count}명"
 }

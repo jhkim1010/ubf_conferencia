@@ -1813,5 +1813,27 @@
     }
   },
   "svcDeleteRole": "Delete this role",
-  "svcNeedShort": "need"
+  "svcNeedShort": "need",
+  "dashMoreCount": "See the other {count} →",
+  "@dashMoreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashSeeAll": "Open the table →",
+  "dashByTour": "See it tour by tour →",
+  "dashPreviewEmpty": "Nothing yet",
+  "dashTourNobody": "nobody yet",
+  "dashTourRoom": "room left",
+  "dashTourFull": "full",
+  "dashUnitPeopleShort": "{count}",
+  "@dashUnitPeopleShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

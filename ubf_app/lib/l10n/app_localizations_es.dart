@@ -2975,4 +2975,32 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get svcNeedShort => 'faltan';
+
+  @override
+  String dashMoreCount(int count) {
+    return 'Ver los otros $count →';
+  }
+
+  @override
+  String get dashSeeAll => 'Abrir la tabla →';
+
+  @override
+  String get dashByTour => 'Ver tour por tour →';
+
+  @override
+  String get dashPreviewEmpty => 'Todavía nada';
+
+  @override
+  String get dashTourNobody => 'sin inscritos';
+
+  @override
+  String get dashTourRoom => 'hay lugar';
+
+  @override
+  String get dashTourFull => 'lleno';
+
+  @override
+  String dashUnitPeopleShort(int count) {
+    return '$count';
+  }
 }

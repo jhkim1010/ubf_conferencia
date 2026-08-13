@@ -902,5 +902,13 @@
   "svcSectionBuiltIn": "Roles predefinidos",
   "svcRoleFull": "Hasta {max} roles.",
   "svcDeleteRole": "Eliminar este rol",
-  "svcNeedShort": "faltan"
+  "svcNeedShort": "faltan",
+  "dashMoreCount": "Ver los otros {count} →",
+  "dashSeeAll": "Abrir la tabla →",
+  "dashByTour": "Ver tour por tour →",
+  "dashPreviewEmpty": "Todavía nada",
+  "dashTourNobody": "sin inscritos",
+  "dashTourRoom": "hay lugar",
+  "dashTourFull": "lleno",
+  "dashUnitPeopleShort": "{count}"
 }

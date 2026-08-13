@@ -2899,4 +2899,32 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get svcNeedShort => '필요';
+
+  @override
+  String dashMoreCount(int count) {
+    return '나머지 $count명 보기 →';
+  }
+
+  @override
+  String get dashSeeAll => '표로 보기 →';
+
+  @override
+  String get dashByTour => '투어별로 보기 →';
+
+  @override
+  String get dashPreviewEmpty => '아직 없습니다';
+
+  @override
+  String get dashTourNobody => '신청 없음';
+
+  @override
+  String get dashTourRoom => '정원 여유';
+
+  @override
+  String get dashTourFull => '정원 참';
+
+  @override
+  String dashUnitPeopleShort(int count) {
+    return '$count명';
+  }
 }

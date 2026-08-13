@@ -5435,6 +5435,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'need'**
   String get svcNeedShort;
+
+  /// No description provided for @dashMoreCount.
+  ///
+  /// In en, this message translates to:
+  /// **'See the other {count} →'**
+  String dashMoreCount(int count);
+
+  /// No description provided for @dashSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the table →'**
+  String get dashSeeAll;
+
+  /// No description provided for @dashByTour.
+  ///
+  /// In en, this message translates to:
+  /// **'See it tour by tour →'**
+  String get dashByTour;
+
+  /// No description provided for @dashPreviewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing yet'**
+  String get dashPreviewEmpty;
+
+  /// No description provided for @dashTourNobody.
+  ///
+  /// In en, this message translates to:
+  /// **'nobody yet'**
+  String get dashTourNobody;
+
+  /// No description provided for @dashTourRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'room left'**
+  String get dashTourRoom;
+
+  /// No description provided for @dashTourFull.
+  ///
+  /// In en, this message translates to:
+  /// **'full'**
+  String get dashTourFull;
+
+  /// No description provided for @dashUnitPeopleShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}'**
+  String dashUnitPeopleShort(int count);
 }
 
 class _AppLocalizationsDelegate

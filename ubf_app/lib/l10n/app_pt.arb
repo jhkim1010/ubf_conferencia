@@ -888,5 +888,13 @@
   "svcSectionBuiltIn": "Funções prontas",
   "svcRoleFull": "Até {max} funções.",
   "svcDeleteRole": "Excluir esta função",
-  "svcNeedShort": "precisa"
+  "svcNeedShort": "precisa",
+  "dashMoreCount": "Ver os outros {count} →",
+  "dashSeeAll": "Abrir a tabela →",
+  "dashByTour": "Ver tour a tour →",
+  "dashPreviewEmpty": "Ainda nada",
+  "dashTourNobody": "sem inscritos",
+  "dashTourRoom": "há vaga",
+  "dashTourFull": "lotado",
+  "dashUnitPeopleShort": "{count}"
 }

@@ -675,7 +675,75 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
       GROUP BY p.id, p.name
     `;
 
-    res.json(stats ?? {});
+    // 카드 안에 보여 줄 최근 몇 줄.
+    //
+    // **숫자와 같은 요청에서 온다.** 따로 조회하면 카드는 4명인데 미리보기는
+    // 둘, 같은 어긋남이 또 생긴다 — 식사 제한과 투어에서 이미 두 번 겪었다.
+    const id = req.params.id;
+    const LIMIT = 3;
+
+    const [recent, tours, meals, arrival, pending, paid] = await Promise.all([
+      sql`
+        SELECT r.real_name AS name, r.country, r.submitted
+        FROM registrations r
+        WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+        ORDER BY r.created_at DESC LIMIT ${LIMIT}
+      `,
+      // 투어는 사람이 아니라 투어별 줄을 보여 준다 — 담당자가 먼저 보는 것이
+      // "어느 투어가 찼나" 이기 때문이다. 신청자가 없는 투어도 남긴다.
+      sql`
+        SELECT o.name, o.capacity,
+               COUNT(r.id)::int AS signup_count
+        FROM program_options o
+        LEFT JOIN registrations r
+          ON r.program_id = ${id} AND o.id = ANY(r.selected_options)
+             AND has_registrant_name(r.real_name)
+        WHERE o.program_id = ${id} AND o.is_active
+        GROUP BY o.id, o.name, o.capacity
+        ORDER BY COUNT(r.id) DESC, o.name
+        LIMIT ${LIMIT}
+      `,
+      sql`
+        SELECT r.real_name AS name, r.country, r.food_requirements AS detail,
+               r.submitted
+        FROM registrations r
+        WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+          AND has_food_restriction(r.food_requirements)
+        ORDER BY r.country NULLS LAST, r.real_name LIMIT ${LIMIT}
+      `,
+      sql`
+        SELECT r.real_name AS name, r.country,
+               COALESCE(r.arrival_flight->>'flight_no', '') AS detail,
+               r.submitted
+        FROM registrations r
+        WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+          AND flight_confirmed(r.arrival_flight)
+        ORDER BY r.arrival_flight->>'scheduled_arrival' LIMIT ${LIMIT}
+      `,
+      sql`
+        SELECT r.real_name AS name, r.country, pay.amount::text AS detail,
+               r.submitted
+        FROM payments pay
+        JOIN registrations r ON r.id = pay.registration_id
+        WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+          AND pay.status = 'pending'
+        ORDER BY pay.created_at DESC LIMIT ${LIMIT}
+      `,
+      sql`
+        SELECT r.real_name AS name, r.country, pay.amount::text AS detail,
+               r.submitted
+        FROM payments pay
+        JOIN registrations r ON r.id = pay.registration_id
+        WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+          AND pay.status = 'confirmed'
+        ORDER BY pay.created_at DESC LIMIT ${LIMIT}
+      `,
+    ]);
+
+    res.json({
+      ...(stats ?? {}),
+      preview: { recent, tours, meals, arrival, pending, paid },
+    });
   } catch (err) {
     console.error('통계 조회 오류:', err);
     res.status(500).json({ error: '서버 오류' });
