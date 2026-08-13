@@ -2689,12 +2689,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get tourNobody => '아직 신청자가 없습니다';
 
   @override
-  String tourSignupSummary(int signed, int done) {
-    return '신청 $signed명 · 등록 완료 $done명';
+  String tourSignupSummary(int signed) {
+    return '신청 $signed명';
   }
 
   @override
-  String get tblUnfinishedNote => '노란 줄은 아직 등록을 완료하지 않은 사람입니다.';
+  String get tblUnfinishedNote => '크림색 줄은 아직 등록을 완료하지 않은 사람입니다.';
 
   @override
   String get asnTabService => '봉사';

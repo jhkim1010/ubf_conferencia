@@ -632,7 +632,7 @@ class _ServiceInviteNotice extends ConsumerWidget {
           children: [
             for (final inv in pending)
               Card(
-                color: const Color(0xFFFFF6CC),
+                color: const Color(0xFFFFF8E7),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
                   child: Column(

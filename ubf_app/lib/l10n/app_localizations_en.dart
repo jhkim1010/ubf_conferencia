@@ -2752,13 +2752,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tourNobody => 'Nobody has signed up yet';
 
   @override
-  String tourSignupSummary(int signed, int done) {
-    return '$signed signed up · $done finished registering';
+  String tourSignupSummary(int signed) {
+    return '$signed signed up';
   }
 
   @override
   String get tblUnfinishedNote =>
-      'Yellow rows have not finished registering yet.';
+      'A cream row means they have not finished registering.';
 
   @override
   String get asnTabService => 'Service';

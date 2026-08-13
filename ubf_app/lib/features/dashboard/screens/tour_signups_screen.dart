@@ -207,8 +207,8 @@ class _TourSignupsScreenState extends ConsumerState<TourSignupsScreen> {
 /// 아직 등록을 완료하지 않은 사람의 배경색. 어두운 화면에서도 읽혀야 하므로
 /// 밝은 노랑을 그대로 쓰지 않는다.
 Color _unfinishedColor(ThemeData theme) => theme.brightness == Brightness.dark
-    ? const Color(0xFF4A3F1A)
-    : const Color(0xFFFFF6CC);
+    ? const Color(0xFF3E3524)
+    : const Color(0xFFFFF8E7);
 
 class _TourCard extends StatelessWidget {
   final Map<String, dynamic> tour;
@@ -228,7 +228,6 @@ class _TourCard extends StatelessWidget {
     final people = (tour['people'] as List?) ?? const [];
     final capacity = Money.parse(tour['capacity'])?.toInt();
     final signed = Money.parse(tour['signup_count'])?.toInt() ?? 0;
-    final done = Money.parse(tour['submitted_count'])?.toInt() ?? 0;
     final remaining = Money.parse(tour['remaining'])?.toInt();
     final isFull = capacity != null && signed >= capacity;
 
@@ -283,7 +282,7 @@ class _TourCard extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              l10n.tourSignupSummary(signed, done),
+              l10n.tourSignupSummary(signed),
               style: const TextStyle(fontSize: 12),
             ),
             if (capacity != null) ...[

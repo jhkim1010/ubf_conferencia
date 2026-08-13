@@ -1674,18 +1674,15 @@
   "colDeadline": "Closes",
   "tourNoLimit": "no limit",
   "tourNobody": "Nobody has signed up yet",
-  "tourSignupSummary": "{signed} signed up · {done} finished registering",
+  "tourSignupSummary": "{signed} signed up",
   "@tourSignupSummary": {
     "placeholders": {
       "signed": {
         "type": "int"
-      },
-      "done": {
-        "type": "int"
       }
     }
   },
-  "tblUnfinishedNote": "Yellow rows have not finished registering yet.",
+  "tblUnfinishedNote": "A cream row means they have not finished registering.",
   "asnTabService": "Service",
   "svcNeeded": "{filled} of {needed}",
   "@svcNeeded": {

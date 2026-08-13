@@ -74,8 +74,8 @@ class ServiceAssignTab extends ConsumerWidget {
 /// 아직 답이 없는 사람의 배경색. 어두운 화면에서도 읽혀야 하므로 밝은
 /// 노랑을 그대로 쓰지 않는다 — 참가자 표와 같은 색이다.
 Color _waitingColor(ThemeData theme) => theme.brightness == Brightness.dark
-    ? const Color(0xFF4A3F1A)
-    : const Color(0xFFFFF6CC);
+    ? const Color(0xFF3E3524)
+    : const Color(0xFFFFF8E7);
 
 class _RoleCard extends ConsumerWidget {
   final String programId;

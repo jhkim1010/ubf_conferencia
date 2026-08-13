@@ -2764,13 +2764,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get tourNobody => 'Ainda ninguém se inscreveu';
 
   @override
-  String tourSignupSummary(int signed, int done) {
-    return '$signed inscritos · $done concluíram o cadastro';
+  String tourSignupSummary(int signed) {
+    return '$signed inscritos';
   }
 
   @override
   String get tblUnfinishedNote =>
-      'As linhas amarelas ainda não concluíram o cadastro.';
+      'Uma linha creme significa que ainda não concluiu o cadastro.';
 
   @override
   String get asnTabService => 'Serviço';

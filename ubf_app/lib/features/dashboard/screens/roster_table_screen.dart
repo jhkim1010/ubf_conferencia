@@ -72,8 +72,8 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
   /// 하므로 밝은 노랑을 그대로 쓰지 않는다.
   static Color _unfinishedColor(ThemeData theme) =>
       theme.brightness == Brightness.dark
-      ? const Color(0xFF4A3F1A)
-      : const Color(0xFFFFF6CC);
+      ? const Color(0xFF3E3524)
+      : const Color(0xFFFFF8E7);
 
   List<List<String>> _rows(
     AppLocalizations l10n,

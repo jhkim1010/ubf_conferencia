@@ -162,7 +162,11 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
       : tier === 'premium' ? Number(program.fee_premium ?? 0)
       : 0;
 
-    const picked_ids = Array.isArray(selectedOptions) ? selectedOptions : [];
+    // 같은 투어를 두 번 담지 않는다. 화면이 잘못 보내도 여기서 정리한다 —
+    // 운영에 같은 투어가 세 번 들어간 등록이 있었다.
+    const picked_ids = Array.isArray(selectedOptions)
+      ? [...new Set(selectedOptions.filter((v) => typeof v === 'string'))]
+      : [];
     const optionRows = picked_ids.length
       ? await sql`
           SELECT COALESCE(SUM(cost), 0)::numeric AS sum
@@ -201,7 +205,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         ${foodRequirements ?? null},
         ${medicalConditions ?? null},
         ${skipsBreakfast ?? false},
-        ${selectedOptions ?? []},
+        ${picked_ids},
         ${roommatePreference ?? null},
         ${volunteerResources ?? []},
         ${volunteerNote ?? null},

@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
 import { normalizeOptions } from '../services/option_media.js';
+
+// 옵션 id 는 우리가 만든 uuid 만 받는다.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import { requireAuth, requireLeader, requireProgramAdmin } from '../middleware/auth.js';
 import { isValidBotToken } from '../services/telegram.js';
 
@@ -513,30 +516,70 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
       WHERE id = ${req.params.id}
     `;
 
-    // 옵션 교체 (기존 비활성화 후 새로 삽입)
+    // 옵션 저장.
+    //
+    // 예전에는 전부 비활성화하고 새로 넣었다. 그러면 저장할 때마다 옵션의
+    // id 가 바뀌고, **이미 신청한 사람의 selected_options 는 죽은 id 를
+    // 가리키게 된다.** 그 선택은 투어 화면에서 사라지는데 대시보드 카드에는
+    // 남아, 카드는 4명인데 안에는 2명이 됐다. 운영에서 실제로 그랬다.
+    //
+    // 이제 id 를 그대로 둔다 — 있는 것은 고치고, 새 것만 넣고, 빠진 것만
+    // 내린다.
     const options2 = normalizeOptions(options);
     if (Array.isArray(options2)) {
-      await sql`UPDATE program_options SET is_active = false WHERE program_id = ${req.params.id}`;
-      if (options2.length > 0) {
-        await sql`
-          INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url, plan_docs)
-          SELECT
-            ${req.params.id},
-            o->>'name',
-            o->>'description',
-            (o->>'cost')::numeric,
-            NULLIF(o->>'startDate', '')::date,
-            NULLIF(o->>'endDate', '')::date,
-            o->>'contactName',
-            COALESCE((SELECT array_agg(v) FROM json_array_elements_text(o->'photoUrls') AS v), '{}'),
-            NULLIF(o->>'capacity', '')::integer,
-            NULLIF(o->>'signupDeadline', '')::timestamptz,
-            NULLIF(o->>'brochureUrl', ''),
-            NULLIF(o->>'videoUrl', ''),
-            COALESCE(o->'planDocs', '[]'::json)::jsonb
-          FROM json_array_elements(${JSON.stringify(options2)}::json) AS o
-        `;
-      }
+      const keep = options2
+        .map((o) => o?.id)
+        .filter((v) => typeof v === 'string' && UUID_RE.test(v));
+
+      await sql.transaction(async (client) => {
+        // 화면에서 지운 것만 내린다.
+        await client.query(
+          `UPDATE program_options SET is_active = false
+           WHERE program_id = $1 AND NOT (id = ANY($2::uuid[]))`,
+          [req.params.id, keep],
+        );
+
+        for (const o of options2) {
+          const vals = [
+            req.params.id,
+            o.name ?? null,
+            o.description ?? null,
+            o.cost ?? 0,
+            o.startDate || null,
+            o.endDate || null,
+            o.contactName ?? null,
+            o.photoUrls ?? [],
+            o.capacity ?? null,
+            o.signupDeadline || null,
+            o.brochureUrl || null,
+            o.videoUrl || null,
+            JSON.stringify(o.planDocs ?? []),
+          ];
+          const hasId = typeof o.id === 'string' && UUID_RE.test(o.id);
+          if (hasId) {
+            const r = await client.query(
+              `UPDATE program_options SET
+                 name = $2, description = $3, cost = $4,
+                 start_date = $5, end_date = $6, contact_name = $7,
+                 photo_urls = $8, capacity = $9, signup_deadline = $10,
+                 brochure_url = $11, video_url = $12, plan_docs = $13::jsonb,
+                 is_active = true
+               WHERE id = $14 AND program_id = $1`,
+              [...vals, o.id],
+            );
+            if (r.rowCount > 0) continue;
+            // 남의 수양회 id 를 보냈거나 이미 지워진 것. 새로 넣는다.
+          }
+          await client.query(
+            `INSERT INTO program_options
+               (program_id, name, description, cost, start_date, end_date,
+                contact_name, photo_urls, capacity, signup_deadline,
+                brochure_url, video_url, plan_docs)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb)`,
+            vals,
+          );
+        }
+      });
     }
 
     console.log(`[PROGRAM] 수정 | programId=${req.params.id} leaderId=${req.user.leaderId} email=${req.user.email}`);
@@ -604,9 +647,15 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
         COUNT(r.id) FILTER (WHERE r.submitted = true) AS submitted_count,
         -- 투어를 하나라도 신청한 사람. 신청 건수가 아니라 사람 수다 —
         -- 카드가 "n명" 이라고 말하기 때문이다.
-        COUNT(r.id) FILTER (
-          WHERE COALESCE(array_length(r.selected_options, 1), 0) > 0
-        ) AS tour_signup_count,
+        --
+        -- **살아 있는 옵션만 센다.** 예전에는 저장할 때마다 옵션 id 가 바뀌어
+        -- 죽은 id 를 가리키는 선택이 남았는데, 그것까지 세는 바람에 카드는
+        -- 4명인데 투어 화면에는 2명이었다.
+        COUNT(r.id) FILTER (WHERE EXISTS (
+          SELECT 1 FROM program_options po
+          WHERE po.program_id = p.id AND po.is_active
+            AND po.id = ANY(r.selected_options)
+        )) AS tour_signup_count,
         -- 판정은 has_food_restriction(027) 하나로 모았다. 여기만 예전 조건이
         -- 남아 있어서 대시보드 카드는 4명, 표는 2명이 됐다 — 같은 것을 두
         -- 규칙으로 세면 어느 쪽도 믿을 수 없다.

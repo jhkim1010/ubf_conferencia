@@ -5055,13 +5055,13 @@ abstract class AppLocalizations {
   /// No description provided for @tourSignupSummary.
   ///
   /// In en, this message translates to:
-  /// **'{signed} signed up · {done} finished registering'**
-  String tourSignupSummary(int signed, int done);
+  /// **'{signed} signed up'**
+  String tourSignupSummary(int signed);
 
   /// No description provided for @tblUnfinishedNote.
   ///
   /// In en, this message translates to:
-  /// **'Yellow rows have not finished registering yet.'**
+  /// **'A cream row means they have not finished registering.'**
   String get tblUnfinishedNote;
 
   /// No description provided for @asnTabService.
