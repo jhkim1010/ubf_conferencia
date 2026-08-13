@@ -93,6 +93,21 @@ eq "  이름도 그대로"   '김요한' "$(tour 시티투어 "people.map(p => p
 eq "  카드와 화면이 같다" "$(tour 시티투어 signup_count)" "$(card)"
 
 echo
+echo "── 화면이 id 를 빠뜨리면 (앱의 편집 다이얼로그가 그랬다) ──"
+# 가격만 고쳤는데 신청자가 0명이 되는 일이 실제로 있었다. 서버는 id 를
+# 지키게 고쳤지만, 화면이 id 를 안 보내면 여전히 새 투어가 된다.
+# 그 경우 카드와 화면이 **함께** 0 이 되어야 한다 — 어긋나서는 안 된다.
+BODYX=$(printf '{"options":[{"name":"시티투어","cost":70},{"id":"%s","name":"이과수","cost":120}]}' "$IGZ")
+curl -s -o /dev/null -X PATCH "$API/programs/$P" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' --data-binary "$BODYX"
+eq "화면에서 0명" '0' "$(tour 시티투어 signup_count)"
+eq "  카드도 0명"  '0' "$(card)"
+# 되살린다
+node scripts/repair-orphan-tour-choices.js --yes > /dev/null 2>&1
+eq "  고치는 스크립트로 되살아난다" '1' "$(tour 시티투어 signup_count)"
+CITY=$(optId 시티투어)
+
+echo
 echo "── 투어를 하나 지운다 ──"
 BODY2=$(printf '{"options":[{"id":"%s","name":"시티투어","cost":60}]}' "$CITY")
 curl -s -o /dev/null -X PATCH "$API/programs/$P" -H "Authorization: Bearer $LT" \

@@ -1239,6 +1239,11 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
             final name = _nameCtrl.text.trim();
             if (name.isEmpty) return;
             Navigator.pop(context, {
+              // **id 를 그대로 들려 보낸다.** 이것이 빠지면 서버가 새 투어로
+              // 알고 새 id 로 넣는다. 그러면 이미 신청한 사람의 선택이 죽은
+              // id 를 가리키게 되어 명단에서 사라진다 — 가격만 고쳤는데
+              // 신청자가 0명이 되는 일이 실제로 있었다.
+              if (widget.existing?['id'] != null) 'id': widget.existing!['id'],
               'name': name,
               'cost': double.tryParse(_costCtrl.text.trim()) ?? 0,
               'description': _descCtrl.text.trim(),

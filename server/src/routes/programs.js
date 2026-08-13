@@ -1,6 +1,11 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
 import { normalizeOptions } from '../services/option_media.js';
+import {
+  contactsOf,
+  contactsFromBody,
+  legacyPair,
+} from '../services/program_contacts.js';
 
 // 옵션 id 는 우리가 만든 uuid 만 받는다.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -239,7 +244,9 @@ router.get('/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
     }
 
-    res.json(stripBotToken(program));
+    // 연락처는 늘 목록으로 내보낸다(040). 이 기능이 생기기 전 수양회는
+    // 005 의 두 컬럼에만 있으므로 읽을 때 만들어 준다.
+    res.json({ ...stripBotToken(program), contacts: contactsOf(program) });
   } catch (err) {
     console.error('프로그램 조회 오류:', err);
     res.status(500).json({ error: '서버 오류' });
@@ -315,6 +322,12 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
   }
 
   try {
+    // 현장 대표 연락처(040). 새 앱은 contacts 목록을, 옛 앱은 두 명분
+    // 네 칸을 보낸다. 앞의 두 명은 옛 컬럼에도 함께 적는다 — 옛 앱이 깔린
+    // 기기가 아직 그 컬럼을 읽는다.
+    const contactList = contactsFromBody(req.body) ?? [];
+    const newContacts = legacyPair(contactList);
+
     // 중복 체크: 같은 리더가 같은 이름+시작일 프로그램을 이미 만든 경우
     const [existing] = await sql`
       SELECT id FROM programs
@@ -346,6 +359,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
       INSERT INTO programs (
         name, location, leader_id, start_date, end_date, enabled_sections,
         nearest_airport, contact1_name, contact1_phone, contact2_name, contact2_phone,
+        contacts,
         program_type, host_country,
         fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options,
         currency, small_cohort_policy, min_team_size, hotel_options,
@@ -359,10 +373,11 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         ${endDate ?? null},
         ${JSON.stringify(sections)},
         ${nearestAirport ?? null},
-        ${contact1Name ?? null},
-        ${contact1Phone ?? null},
-        ${contact2Name ?? null},
-        ${contact2Phone ?? null},
+        ${newContacts.contact1Name},
+        ${newContacts.contact1Phone},
+        ${newContacts.contact2Name},
+        ${newContacts.contact2Phone},
+        ${JSON.stringify(contactList ?? [])}::jsonb,
         ${type},
         ${hostCountry ?? null},
         ${basic},
@@ -451,6 +466,12 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
     });
   }
 
+  // 현장 대표 연락처(040). 본문에 없으면 null 이고, 그러면 손대지 않는다.
+  const contactList2 = contactsFromBody(req.body);
+  const patchContacts = contactList2 === null
+    ? null
+    : { list: contactList2, pair: legacyPair(contactList2) };
+
   // 본문에 없는 키는 건드리지 않는다. 참가비만 고치려는 호출이 할인 항목을
   // 지워버리면 안 된다. (기존 필드들은 덮어쓰기 방식이라 이 규칙이 없다.)
   const has = (k) => Object.prototype.hasOwnProperty.call(req.body, k);
@@ -487,10 +508,16 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
         end_date         = ${endDate ?? null},
         enabled_sections = COALESCE(${enabledSections ? JSON.stringify(enabledSections) : null}::jsonb, enabled_sections),
         nearest_airport  = ${nearestAirport ?? null},
-        contact1_name    = ${contact1Name ?? null},
-        contact1_phone   = ${contact1Phone ?? null},
-        contact2_name    = ${contact2Name ?? null},
-        contact2_phone   = ${contact2Phone ?? null},
+        -- 연락처를 건드리지 않는 저장(예: 참가비만 고치기)이 목록을
+        -- 지워 버리면 안 된다. 본문에 없으면 그대로 둔다.
+        contact1_name    = ${patchContacts ? patchContacts.pair.contact1Name : null},
+        contact1_phone   = ${patchContacts ? patchContacts.pair.contact1Phone : null},
+        contact2_name    = ${patchContacts ? patchContacts.pair.contact2Name : null},
+        contact2_phone   = ${patchContacts ? patchContacts.pair.contact2Phone : null},
+        contacts         = CASE
+          WHEN ${patchContacts === null} THEN contacts
+          ELSE ${JSON.stringify(patchContacts?.list ?? [])}::jsonb
+        END,
         program_type     = ${type},
         host_country     = ${hostCountry ?? null},
         fee_basic        = ${has('feeBasic') ? basic : program.fee_basic},
