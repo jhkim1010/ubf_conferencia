@@ -2741,7 +2741,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get svcReject => '반려';
 
   @override
-  String get svcEditRoles => '역할·필요 인원';
+  String get svcEditRoles => '역할 추가 · 인원 설정';
 
   @override
   String get svcAddRole => '역할 추가';
@@ -2874,4 +2874,29 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get dashAdminsSub => '명단·배정을 함께 볼 사람을 세웁니다';
+
+  @override
+  String get svcRolesTitle => '이 수양회의 봉사 역할';
+
+  @override
+  String svcRoleCount(int count, int max) {
+    return '역할 $count/$max';
+  }
+
+  @override
+  String get svcSectionCustom => '직접 만든 역할';
+
+  @override
+  String get svcSectionBuiltIn => '기본 역할';
+
+  @override
+  String svcRoleFull(int max) {
+    return '역할은 $max개까지 만들 수 있습니다.';
+  }
+
+  @override
+  String get svcDeleteRole => '이 역할 지우기';
+
+  @override
+  String get svcNeedShort => '필요';
 }

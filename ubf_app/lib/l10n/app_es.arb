@@ -853,7 +853,7 @@
   "svcLead": "Responsable",
   "svcConfirm": "Confirmar",
   "svcReject": "Rechazar",
-  "svcEditRoles": "Roles y cantidades",
+  "svcEditRoles": "Agregar roles · fijar cantidades",
   "svcAddRole": "Agregar un rol",
   "svcRoleName": "Nombre del rol",
   "svcRoleNameHint": "p. ej. Guía del bus a Iguazú",
@@ -895,5 +895,12 @@
   "admAdded": "{name} ya puede administrarla",
   "admOwnerLocked": "Quien la creó no puede ser quitado.",
   "dashAdmins": "Administradores",
-  "dashAdminsSub": "Da acceso a la lista y las asignaciones"
+  "dashAdminsSub": "Da acceso a la lista y las asignaciones",
+  "svcRolesTitle": "Roles de esta conferencia",
+  "svcRoleCount": "{count} de {max} roles",
+  "svcSectionCustom": "Roles que creaste",
+  "svcSectionBuiltIn": "Roles predefinidos",
+  "svcRoleFull": "Hasta {max} roles.",
+  "svcDeleteRole": "Eliminar este rol",
+  "svcNeedShort": "faltan"
 }

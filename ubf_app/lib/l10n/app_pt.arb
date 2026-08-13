@@ -839,7 +839,7 @@
   "svcLead": "Responsável",
   "svcConfirm": "Confirmar",
   "svcReject": "Recusar",
-  "svcEditRoles": "Funções e quantidades",
+  "svcEditRoles": "Adicionar funções · definir quantidades",
   "svcAddRole": "Adicionar uma função",
   "svcRoleName": "Nome da função",
   "svcRoleNameHint": "ex.: Guia do ônibus para Foz",
@@ -881,5 +881,12 @@
   "admAdded": "{name} já pode administrar",
   "admOwnerLocked": "Quem criou não pode ser removido.",
   "dashAdmins": "Administradores",
-  "dashAdminsSub": "Dê acesso à lista e às atribuições"
+  "dashAdminsSub": "Dê acesso à lista e às atribuições",
+  "svcRolesTitle": "Funções desta conferência",
+  "svcRoleCount": "{count} de {max} funções",
+  "svcSectionCustom": "Funções que você criou",
+  "svcSectionBuiltIn": "Funções prontas",
+  "svcRoleFull": "Até {max} funções.",
+  "svcDeleteRole": "Excluir esta função",
+  "svcNeedShort": "precisa"
 }

@@ -86,6 +86,35 @@ eq "  자유 역할의 이름은 공백이 정리된다" '이과수 버스 인�
    "$(role 'custom:iguazu-bus-01' 'label')"
 
 echo
+echo "── 기본 13개 위로 더 만들 수 있다 ──"
+# 담당자가 수양회마다 필요한 역할을 직접 만든다. 상한은 30개.
+MANY=$(node -pe "
+  const base = ['special_song','mc','pickup','cleaning','tour_guide','meal_prep',
+    'lodging_backup','registration_desk','interpreter','photo_video','medical',
+    'group_study_leader','other'].map(k => ({key:k, enabled:true, needed:0}));
+  const mine = Array.from({length:12}, (_,i) => ({
+    key: 'custom:mine-' + String(i).padStart(4,'0'),
+    label: '내가 만든 역할 ' + i, enabled: true, needed: 1}));
+  JSON.stringify([...base, ...mine])")
+curl -s -o /dev/null -X PUT "$API/service-signups/$P/roles" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' --data-binary "$(printf '{"roles":%s}' "$MANY")"
+eq "13개 + 직접 만든 12개 = 25개" '25' "$(BOARD | jq_ 'r.roles.length')"
+eq "  직접 만든 것이 이름 그대로 온다" '내가 만든 역할 0' \
+   "$(BOARD | jq_ "r.roles.find(x => x.key === 'custom:mine-0000').label")"
+# 상한을 넘겨 보내면 서버가 자른다 — 화면이 잘못 보내도 DB 가 부풀지 않는다.
+MORE=$(node -pe "
+  JSON.stringify(Array.from({length:40}, (_,i) => ({
+    key: 'custom:over-' + String(i).padStart(4,'0'),
+    label: '넘침 ' + i, enabled: true, needed: 0})))")
+curl -s -o /dev/null -X PUT "$API/service-signups/$P/roles" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' --data-binary "$(printf '{"roles":%s}' "$MORE")"
+eq "  30개에서 잘린다" '30' "$(BOARD | jq_ 'r.roles.length')"
+# 원래 구성으로 되돌린다 (뒤 검사들이 이 구성을 쓴다)
+curl -s -o /dev/null -X PUT "$API/service-signups/$P/roles" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' --data-binary "$(printf '{"roles":%s}' "$ROLES")"
+eq "  되돌아온다" '4' "$(BOARD | jq_ 'r.roles.length')"
+
+echo
 echo "── 지명은 부탁이지 확정이 아니다 ──"
 invBody() { printf '{"registrationId":"%s","serviceKey":"%s"}' "$1" "$2"; }
 inv() { curl -s -X POST "$API/service-signups/$P/invite" -H "Authorization: Bearer $LT" \

@@ -853,7 +853,7 @@
   "svcLead": "책임자",
   "svcConfirm": "확정",
   "svcReject": "반려",
-  "svcEditRoles": "역할·필요 인원",
+  "svcEditRoles": "역할 추가 · 인원 설정",
   "svcAddRole": "역할 추가",
   "svcRoleName": "역할 이름",
   "svcRoleNameHint": "예: 이과수 버스 인솔",
@@ -895,5 +895,12 @@
   "admAdded": "{name} 님이 함께 관리합니다",
   "admOwnerLocked": "만든 사람은 뺄 수 없습니다.",
   "dashAdmins": "관리자",
-  "dashAdminsSub": "명단·배정을 함께 볼 사람을 세웁니다"
+  "dashAdminsSub": "명단·배정을 함께 볼 사람을 세웁니다",
+  "svcRolesTitle": "이 수양회의 봉사 역할",
+  "svcRoleCount": "역할 {count}/{max}",
+  "svcSectionCustom": "직접 만든 역할",
+  "svcSectionBuiltIn": "기본 역할",
+  "svcRoleFull": "역할은 {max}개까지 만들 수 있습니다.",
+  "svcDeleteRole": "이 역할 지우기",
+  "svcNeedShort": "필요"
 }

@@ -358,6 +358,9 @@ class _RoleConfigDialog extends StatefulWidget {
 }
 
 class _RoleConfigDialogState extends State<_RoleConfigDialog> {
+  /// 서버(service_roles.js MAX_ROLES)와 같은 수. 넘겨 보내면 서버가 자른다.
+  static const _maxRoles = 30;
+
   /// 기본 역할. 서버(service_roles.js)의 목록과 같은 차례로 둔다.
   static const _builtIn = [
     'special_song',
@@ -491,46 +494,53 @@ class _RoleConfigDialogState extends State<_RoleConfigDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final custom = [
+      for (var i = 0; i < _rows.length; i++)
+        if ((_rows[i]['key'] as String).startsWith('custom:')) i,
+    ];
+    final builtIn = [
+      for (var i = 0; i < _rows.length; i++)
+        if (!(_rows[i]['key'] as String).startsWith('custom:')) i,
+    ];
+    final on = _rows.where((r) => r['enabled'] == true).length;
+
     return AlertDialog(
-      title: Text(l10n.svcEditRoles),
+      title: Text(l10n.svcRolesTitle),
       content: SizedBox(
-        width: 420,
+        width: 460,
         child: ListView(
           shrinkWrap: true,
           children: [
-            for (var i = 0; i < _rows.length; i++)
-              Row(
-                children: [
-                  Checkbox(
-                    value: _rows[i]['enabled'] == true,
-                    onChanged: (v) =>
-                        setState(() => _rows[i]['enabled'] = v == true),
+            // 만들기를 맨 위에 둔다. 기본 역할 열세 개 밑에 있으면 스크롤을
+            // 내려야 보이고, 그러면 없는 기능이나 마찬가지다.
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.svcRoleCount(on, _maxRoles),
+                    style: const TextStyle(fontSize: 12.5),
                   ),
-                  Expanded(
-                    child: Text(
-                      serviceRoleLabel(l10n, _rows[i]),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 64,
-                    child: TextFormField(
-                      initialValue: '${_rows[i]['needed']}',
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.end,
-                      decoration: const InputDecoration(isDense: true),
-                      onChanged: (v) =>
-                          _rows[i]['needed'] = int.tryParse(v.trim()) ?? 0,
-                    ),
-                  ),
-                ],
-              ),
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: _addCustom,
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(l10n.svcAddRole),
+                ),
+                FilledButton.icon(
+                  onPressed: on >= _maxRoles ? null : _addCustom,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: Text(l10n.svcAddRole),
+                ),
+              ],
             ),
+            if (on >= _maxRoles)
+              Text(
+                l10n.svcRoleFull(_maxRoles),
+                style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+              ),
+            if (custom.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              _sectionLabel(l10n.svcSectionCustom),
+              for (final i in custom) _roleRow(l10n, i, deletable: true),
+            ],
+            const SizedBox(height: 10),
+            _sectionLabel(l10n.svcSectionBuiltIn),
+            for (final i in builtIn) _roleRow(l10n, i),
           ],
         ),
       ),
@@ -543,6 +553,59 @@ class _RoleConfigDialogState extends State<_RoleConfigDialog> {
           onPressed: _busy ? null : _save,
           child: Text(l10n.actionSave),
         ),
+      ],
+    );
+  }
+
+  Widget _sectionLabel(String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 2),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 11.5,
+        fontWeight: FontWeight.w700,
+        color: Colors.grey[700],
+      ),
+    ),
+  );
+
+  Widget _roleRow(AppLocalizations l10n, int i, {bool deletable = false}) {
+    return Row(
+      children: [
+        Checkbox(
+          value: _rows[i]['enabled'] == true,
+          onChanged: (v) => setState(() => _rows[i]['enabled'] = v == true),
+        ),
+        Expanded(
+          child: Text(
+            serviceRoleLabel(l10n, _rows[i]),
+            style: const TextStyle(fontSize: 13),
+          ),
+        ),
+        Text(
+          l10n.svcNeedShort,
+          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+        ),
+        const SizedBox(width: 4),
+        SizedBox(
+          width: 52,
+          child: TextFormField(
+            initialValue: '${_rows[i]['needed']}',
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.end,
+            decoration: const InputDecoration(isDense: true),
+            onChanged: (v) => _rows[i]['needed'] = int.tryParse(v.trim()) ?? 0,
+          ),
+        ),
+        // 직접 만든 역할만 지운다. 기본 역할은 체크를 풀면 화면에서 빠진다.
+        if (deletable)
+          IconButton(
+            icon: const Icon(Icons.close, size: 18),
+            tooltip: l10n.svcDeleteRole,
+            onPressed: () => setState(() => _rows.removeAt(i)),
+          )
+        else
+          const SizedBox(width: 40),
       ],
     );
   }

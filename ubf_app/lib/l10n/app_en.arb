@@ -1726,7 +1726,7 @@
   "svcLead": "Lead",
   "svcConfirm": "Confirm",
   "svcReject": "Turn down",
-  "svcEditRoles": "Roles and numbers",
+  "svcEditRoles": "Add roles · set numbers",
   "svcAddRole": "Add a role",
   "svcRoleName": "Role name",
   "svcRoleNameHint": "e.g. Bus guide for Iguazú",
@@ -1789,5 +1789,29 @@
   },
   "admOwnerLocked": "The person who created it cannot be removed.",
   "dashAdmins": "Managers",
-  "dashAdminsSub": "Let someone else see the roster and assignments"
+  "dashAdminsSub": "Let someone else see the roster and assignments",
+  "svcRolesTitle": "Roles for this conference",
+  "svcRoleCount": "{count} of {max} roles",
+  "@svcRoleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "svcSectionCustom": "Roles you made",
+  "svcSectionBuiltIn": "Ready-made roles",
+  "svcRoleFull": "Up to {max} roles.",
+  "@svcRoleFull": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "svcDeleteRole": "Delete this role",
+  "svcNeedShort": "need"
 }

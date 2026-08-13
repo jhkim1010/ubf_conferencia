@@ -2816,7 +2816,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get svcReject => 'Rechazar';
 
   @override
-  String get svcEditRoles => 'Roles y cantidades';
+  String get svcEditRoles => 'Agregar roles · fijar cantidades';
 
   @override
   String get svcAddRole => 'Agregar un rol';
@@ -2950,4 +2950,29 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get dashAdminsSub => 'Da acceso a la lista y las asignaciones';
+
+  @override
+  String get svcRolesTitle => 'Roles de esta conferencia';
+
+  @override
+  String svcRoleCount(int count, int max) {
+    return '$count de $max roles';
+  }
+
+  @override
+  String get svcSectionCustom => 'Roles que creaste';
+
+  @override
+  String get svcSectionBuiltIn => 'Roles predefinidos';
+
+  @override
+  String svcRoleFull(int max) {
+    return 'Hasta $max roles.';
+  }
+
+  @override
+  String get svcDeleteRole => 'Eliminar este rol';
+
+  @override
+  String get svcNeedShort => 'faltan';
 }

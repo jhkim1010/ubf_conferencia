@@ -5139,7 +5139,7 @@ abstract class AppLocalizations {
   /// No description provided for @svcEditRoles.
   ///
   /// In en, this message translates to:
-  /// **'Roles and numbers'**
+  /// **'Add roles · set numbers'**
   String get svcEditRoles;
 
   /// No description provided for @svcAddRole.
@@ -5393,6 +5393,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Let someone else see the roster and assignments'**
   String get dashAdminsSub;
+
+  /// No description provided for @svcRolesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Roles for this conference'**
+  String get svcRolesTitle;
+
+  /// No description provided for @svcRoleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {max} roles'**
+  String svcRoleCount(int count, int max);
+
+  /// No description provided for @svcSectionCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Roles you made'**
+  String get svcSectionCustom;
+
+  /// No description provided for @svcSectionBuiltIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready-made roles'**
+  String get svcSectionBuiltIn;
+
+  /// No description provided for @svcRoleFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {max} roles.'**
+  String svcRoleFull(int max);
+
+  /// No description provided for @svcDeleteRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this role'**
+  String get svcDeleteRole;
+
+  /// No description provided for @svcNeedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'need'**
+  String get svcNeedShort;
 }
 
 class _AppLocalizationsDelegate
