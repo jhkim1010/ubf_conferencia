@@ -111,8 +111,11 @@ echo "── 비어 있을 때 ──"
 # 빈 배열이어야 한다. null 이 오면 앱의 `as List?` 가 그대로 빈 화면이 된다.
 eq "항공편 미리보기는 빈 배열" '[]' \
    "$(STATS | node -pe "JSON.stringify(JSON.parse(require('fs').readFileSync(0)).preview.arrival)")"
-eq "입금 대기도 빈 배열"       '[]' \
-   "$(STATS | node -pe "JSON.stringify(JSON.parse(require('fs').readFileSync(0)).preview.pending)")"
+# 입금은 아직 낸 적 없는 사람까지 한 목록으로 온다 — 받을 돈이 남은 사람이
+# 담당자가 봐야 할 줄이다.
+eq "입금은 사람 수만큼 (아직 안 낸 사람도)" '3' \
+   "$(STATS | jq_ 'r.preview.payments.length')"
+eq "  아직 낸 적 없으면 none"  'none' "$(STATS | jq_ 'r.preview.payments[0].status')"
 
 echo
 echo "── 이름 없는 등록은 미리보기에도 안 나온다 ──"
@@ -121,6 +124,26 @@ curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $BLANK" \
   -H 'Content-Type: application/json' -d '{"country":"KR"}' > /dev/null
 eq "맨 위가 그대로" '정바울' "$(STATS | jq_ 'r.preview.recent[0].name')"
 eq "  숫자도 그대로" '5'     "$(STATS | jq_ 'r.total_registrations')"
+
+echo
+echo "── 입금 카드를 보여 줄지 ──"
+# 전액을 현장에서 받는 수양회에는 늘 0 인 칸 두 개가 자리만 차지한다.
+eq "기본은 보여 준다" 'true' "$(STATS | jq_ 'r.needs_payment_card')"
+curl -s -o /dev/null -X PATCH "$API/programs/$P" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' -d '{"feePayment":"onsite"}'
+eq "  참가비만 현장이면 아직 필요하다 (투어비가 선불)" 'true' \
+   "$(STATS | jq_ 'r.needs_payment_card')"
+curl -s -o /dev/null -X PATCH "$API/programs/$P" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' -d '{"tourPayment":"onsite"}'
+eq "둘 다 현장이면 필요 없다" 'false' "$(STATS | jq_ 'r.needs_payment_card')"
+# 다른 것만 고치는 저장이 이 설정을 되돌리면 안 된다.
+curl -s -o /dev/null -X PATCH "$API/programs/$P" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' -d '{"feeBasic":333}'
+eq "  다른 것을 고쳐도 그대로" 'false' "$(STATS | jq_ 'r.needs_payment_card')"
+# 모르는 값이 오면 선불로 본다 — 카드가 조용히 사라지는 쪽이 더 나쁘다.
+curl -s -o /dev/null -X PATCH "$API/programs/$P" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' -d '{"feePayment":"현금"}'
+eq "  모르는 값은 선불로 본다" 'true' "$(STATS | jq_ 'r.needs_payment_card')"
 
 echo
 echo "── 권한 ──"

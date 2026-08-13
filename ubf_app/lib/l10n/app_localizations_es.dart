@@ -3003,4 +3003,60 @@ class AppLocalizationsEs extends AppLocalizations {
   String dashUnitPeopleShort(int count) {
     return '$count';
   }
+
+  @override
+  String epContacts(int count) {
+    return 'Contactos en el lugar ($count)';
+  }
+
+  @override
+  String get epAddContact => 'Agregar contacto';
+
+  @override
+  String get epContactName => 'Nombre';
+
+  @override
+  String get epContactPhone => 'Teléfono';
+
+  @override
+  String get epRemoveContact => 'Quitar este contacto';
+
+  @override
+  String epContactsFull(int max) {
+    return 'Hasta $max contactos.';
+  }
+
+  @override
+  String get epPaymentWhen => '¿Cuándo se paga?';
+
+  @override
+  String get epFeeWhen => 'Cuota de la conferencia';
+
+  @override
+  String get epTourWhen => 'Costo de los tours';
+
+  @override
+  String get epPrepaid => 'Por adelantado';
+
+  @override
+  String get epOnsite => 'Al llegar';
+
+  @override
+  String get epPaymentNote =>
+      'Si ambos se pagan al llegar, la tarjeta de pagos se oculta del panel.';
+
+  @override
+  String get dashStatPayments => 'Pagos';
+
+  @override
+  String get dashPayConfirmed => 'pagado';
+
+  @override
+  String get dashPayPending => 'esperando';
+
+  @override
+  String get dashPayNone => 'sin pagar';
+
+  @override
+  String get tblPayments => 'Pagos';
 }

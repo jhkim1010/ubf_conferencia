@@ -8,7 +8,7 @@ import '../../../core/utils/table_export.dart';
 import '../../program/providers/program_provider.dart';
 
 /// 대시보드 카드에서 열리는 표. 카드마다 무엇을 보여 줄지가 다르다.
-enum RosterView { all, meals, pendingPayment, arrival, paid }
+enum RosterView { all, meals, payments, arrival }
 
 // 카드의 숫자만으로는 아무것도 못 한다. 두 번 누르면 그 숫자가 누구인지
 // 표로 보이고, 그대로 PDF·엑셀로 내보내 나눌 수 있다.
@@ -35,18 +35,24 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
   String _title(AppLocalizations l10n) => switch (widget.view) {
     RosterView.all => l10n.tblAllAttendees,
     RosterView.meals => l10n.dashStatFoodRestriction,
-    RosterView.pendingPayment => l10n.dashStatPendingPayment,
+    RosterView.payments => l10n.tblPayments,
     RosterView.arrival => l10n.dashStatArrival,
-    RosterView.paid => l10n.dashStatConfirmedPayment,
+  };
+
+  /// 이 줄이 "끝난" 줄인가. 크림색을 입힐지 정한다.
+  bool _done(Map<String, dynamic> r) => switch (widget.view) {
+    RosterView.payments => (r['payment'] as Map?)?['status'] == 'confirmed',
+    _ => r['submitted'] == true,
   };
 
   bool _keep(Map<String, dynamic> r) => switch (widget.view) {
     RosterView.all => true,
     // 식사 제한은 여기서 거르지 않는다 — 서버가 걸러 준 명단을 그대로 쓴다.
     RosterView.meals => true,
-    RosterView.pendingPayment => (r['payment'] as Map?)?['status'] == 'pending',
+    // 입금 현황은 전원을 보여 준다 — 아직 낸 적이 없는 사람이야말로
+    // 담당자가 봐야 할 줄이다.
+    RosterView.payments => true,
     RosterView.arrival => r['arrival_flight'] != null,
-    RosterView.paid => (r['payment'] as Map?)?['status'] == 'confirmed',
   };
 
   List<String> _headers(AppLocalizations l10n) => [
@@ -58,7 +64,7 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     switch (widget.view) {
       RosterView.meals => l10n.mealsRestriction,
       RosterView.arrival => l10n.colFlight,
-      RosterView.pendingPayment || RosterView.paid => l10n.colPayment,
+      RosterView.payments => l10n.colPayment,
       _ => l10n.colStatus,
     },
   ];
@@ -98,13 +104,22 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
             f['arrival_airport'] ?? '',
             when.length >= 16 ? when.substring(0, 16).replaceAll('T', ' ') : '',
           ].where((s) => '$s'.isNotEmpty).join(' · ');
-        case RosterView.pendingPayment:
-        case RosterView.paid:
+        case RosterView.payments:
+          // 낸 돈 / 낼 돈 에 상태를 붙인다. 표에는 전원이 나오므로
+          // 아직 못 받은 사람이 누구인지가 한 칸에 보여야 한다.
           final amount = Money.parse((r['payment'] as Map?)?['amount']);
+          final status = switch ((r['payment'] as Map?)?['status']) {
+            'confirmed' => l10n.dashPayConfirmed,
+            'pending' => l10n.dashPayPending,
+            _ => l10n.dashPayNone,
+          };
           return [
-            amount == null ? '' : currency.format(amount),
-            currency.format(Money.parse(r['total_cost']) ?? 0),
-          ].where((s) => s.isNotEmpty).join(' / ');
+            status,
+            [
+              amount == null ? '' : currency.format(amount),
+              currency.format(Money.parse(r['total_cost']) ?? 0),
+            ].where((s) => s.isNotEmpty).join(' / '),
+          ].where((s) => s.isNotEmpty).join(' · ');
         default:
           return r['submitted'] == true
               ? l10n.dashStatusDone
@@ -289,7 +304,9 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                           for (var ri = 0; ri < rows.length; ri++)
                             DataRow(
                               // 완료하지 않은 사람은 줄 전체를 노랗게.
-                              color: data[ri]['submitted'] == true
+                              // 크림색은 늘 "아직 안 끝난 사람". 입금 표에서는
+                              // 등록 완료가 아니라 **입금** 이 기준이다.
+                              color: _done(data[ri])
                                   ? null
                                   : WidgetStatePropertyAll(
                                       _unfinishedColor(theme),

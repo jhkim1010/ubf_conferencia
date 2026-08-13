@@ -369,6 +369,22 @@ class _StatsGrid extends StatelessWidget {
             .cast<Map<String, dynamic>>()
             .toList();
 
+    /// 입금 줄은 상태를 말로 바꾸고, **아직 못 받은 사람**을 크림색으로
+    /// 만든다 — 다른 화면과 같은 뜻이다(크림색 = 아직 안 끝난 사람).
+    List<Map<String, dynamic>> paymentRows() => [
+      for (final p in rows('payments'))
+        {
+          'name': p['name'],
+          'country': p['country'],
+          'detail': switch (p['status']) {
+            'confirmed' => l10n.dashPayConfirmed,
+            'pending' => l10n.dashPayPending,
+            _ => l10n.dashPayNone,
+          },
+          'submitted': p['status'] == 'confirmed',
+        },
+    ];
+
     // 카드 크기를 화면 너비에 비례해 늘리지 않는다.
     //
     // 예전에는 2열 고정에 childAspectRatio 로 높이를 정했더니, 컴퓨터
@@ -380,7 +396,7 @@ class _StatsGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, box) {
         const gap = 12.0;
-        const cardHeight = 196.0;
+        const cardHeight = 214.0;
         final columns = (box.maxWidth / 300).floor().clamp(1, 4);
         final cardWidth = (box.maxWidth - (columns - 1) * gap) / columns;
 
@@ -425,16 +441,22 @@ class _StatsGrid extends StatelessWidget {
               color: Colors.orange,
               onOpen: () => _openTable(context, programId, RosterView.meals),
             ),
-            _StatCard(
-              label: l10n.dashStatPendingPayment,
-              total: n('pending_payment_count'),
-              preview: rows('pending'),
-              value: l10n.unitCases(n('pending_payment_count')),
-              icon: Icons.payment,
-              color: Colors.red,
-              onOpen: () =>
-                  _openTable(context, programId, RosterView.pendingPayment),
-            ),
+            // 입금 현황. 대기·확인을 카드 둘로 나눠 두면 담당자가 둘을
+            // 머릿속에서 더해야 하고, 전액을 현장에서 받는 수양회에서는
+            // 늘 0 인 칸 둘이 자리만 차지한다. 하나로 합치고, 필요 없으면
+            // 아예 내보내지 않는다 — 필요 여부는 서버가 정한다.
+            if (stats!['needs_payment_card'] != false)
+              _StatCard(
+                label: l10n.dashStatPayments,
+                total: n('total_registrations'),
+                preview: paymentRows(),
+                value:
+                    '${n('confirmed_payment_count')} / ${n('total_registrations')}',
+                icon: Icons.payments_outlined,
+                color: Colors.red,
+                onOpen: () =>
+                    _openTable(context, programId, RosterView.payments),
+              ),
             _StatCard(
               label: l10n.dashStatArrival,
               total: n('arrival_flight_count'),
@@ -443,15 +465,6 @@ class _StatsGrid extends StatelessWidget {
               icon: Icons.flight_land,
               color: Colors.purple,
               onOpen: () => _openTable(context, programId, RosterView.arrival),
-            ),
-            _StatCard(
-              label: l10n.dashStatConfirmedPayment,
-              total: n('confirmed_payment_count'),
-              preview: rows('paid'),
-              value: l10n.unitCases(n('confirmed_payment_count')),
-              icon: Icons.verified,
-              color: Colors.teal,
-              onOpen: () => _openTable(context, programId, RosterView.paid),
             ),
           ],
         );

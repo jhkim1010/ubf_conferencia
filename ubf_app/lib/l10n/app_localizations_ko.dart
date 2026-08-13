@@ -2927,4 +2927,59 @@ class AppLocalizationsKo extends AppLocalizations {
   String dashUnitPeopleShort(int count) {
     return '$count명';
   }
+
+  @override
+  String epContacts(int count) {
+    return '현장 대표 연락처 ($count명)';
+  }
+
+  @override
+  String get epAddContact => '연락처 추가';
+
+  @override
+  String get epContactName => '이름';
+
+  @override
+  String get epContactPhone => '전화번호';
+
+  @override
+  String get epRemoveContact => '이 연락처 빼기';
+
+  @override
+  String epContactsFull(int max) {
+    return '연락처는 $max명까지 넣을 수 있습니다.';
+  }
+
+  @override
+  String get epPaymentWhen => '언제 받습니까?';
+
+  @override
+  String get epFeeWhen => '수양회 참가비';
+
+  @override
+  String get epTourWhen => '투어 비용';
+
+  @override
+  String get epPrepaid => '선불';
+
+  @override
+  String get epOnsite => '현장';
+
+  @override
+  String get epPaymentNote => '둘 다 현장에서 받으면 대시보드에서 입금 현황 카드를 감춥니다.';
+
+  @override
+  String get dashStatPayments => '입금 현황';
+
+  @override
+  String get dashPayConfirmed => '확인';
+
+  @override
+  String get dashPayPending => '대기';
+
+  @override
+  String get dashPayNone => '미납';
+
+  @override
+  String get tblPayments => '입금 현황';
 }

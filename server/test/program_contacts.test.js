@@ -141,3 +141,39 @@ test('본문 — contacts 가 있으면 옛 네 칸은 무시한다', () => {
   });
   assert.deepEqual(out, [{ name: '새', phone: '9' }]);
 });
+
+// ── 입금 시점 (041) ──────────────────────────────────────────────
+
+test('입금 시점 — 아는 값만 받는다', async () => {
+  const { normalizePaymentTiming } = await import('../src/services/program_contacts.js');
+  assert.equal(normalizePaymentTiming('onsite'), 'onsite');
+  assert.equal(normalizePaymentTiming('prepaid'), 'prepaid');
+});
+
+test('입금 시점 — 모르는 값은 선불로 본다', async () => {
+  const { normalizePaymentTiming } = await import('../src/services/program_contacts.js');
+  // 사라지는 쪽보다 남는 쪽이 안전하다. 카드가 조용히 없어지면 담당자는
+  // 받을 돈이 있다는 사실 자체를 화면에서 잃는다.
+  for (const v of ['현금', '', null, undefined, 7, {}]) {
+    assert.equal(normalizePaymentTiming(v), 'prepaid');
+  }
+});
+
+test('입금 카드 — 하나라도 선불이면 필요하다', async () => {
+  const { needsPaymentCard } = await import('../src/services/program_contacts.js');
+  assert.equal(needsPaymentCard({ fee_payment: 'prepaid', tour_payment: 'prepaid' }), true);
+  assert.equal(needsPaymentCard({ fee_payment: 'onsite', tour_payment: 'prepaid' }), true);
+  assert.equal(needsPaymentCard({ fee_payment: 'prepaid', tour_payment: 'onsite' }), true);
+});
+
+test('입금 카드 — 둘 다 현장이면 필요 없다', async () => {
+  const { needsPaymentCard } = await import('../src/services/program_contacts.js');
+  assert.equal(needsPaymentCard({ fee_payment: 'onsite', tour_payment: 'onsite' }), false);
+});
+
+test('입금 카드 — 값이 없는 예전 수양회는 필요하다고 본다', async () => {
+  const { needsPaymentCard } = await import('../src/services/program_contacts.js');
+  // 041 이전에 만든 수양회는 입금 카드를 보고 있었다.
+  assert.equal(needsPaymentCard({}), true);
+  assert.equal(needsPaymentCard(null), true);
+});

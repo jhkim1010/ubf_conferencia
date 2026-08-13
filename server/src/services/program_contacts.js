@@ -70,3 +70,22 @@ export function contactsFromBody(body) {
   const list = normalizeContacts(pair);
   return list.length > 0 ? list : null; // null = 손대지 않는다
 }
+
+// ── 입금 시점 (041) ──────────────────────────────────────────────
+
+/// 참가비·투어비를 미리 받는가, 와서 받는가.
+export const PAYMENT_TIMINGS = ['prepaid', 'onsite'];
+
+/// 모르는 값이 오면 'prepaid' 로 본다.
+///
+/// 잘못된 값 때문에 입금 카드가 조용히 사라지면, 담당자는 받을 돈이 있다는
+/// 사실 자체를 화면에서 잃는다. 사라지는 쪽보다 남는 쪽이 안전하다.
+export function normalizePaymentTiming(v) {
+  return PAYMENT_TIMINGS.includes(v) ? v : 'prepaid';
+}
+
+/// 입금 현황 카드가 필요한가. 둘 중 하나라도 미리 받으면 필요하다.
+export function needsPaymentCard(row) {
+  return normalizePaymentTiming(row?.fee_payment) === 'prepaid'
+    || normalizePaymentTiming(row?.tour_payment) === 'prepaid';
+}

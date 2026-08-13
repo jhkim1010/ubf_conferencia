@@ -896,5 +896,22 @@
   "dashTourNobody": "sem inscritos",
   "dashTourRoom": "há vaga",
   "dashTourFull": "lotado",
-  "dashUnitPeopleShort": "{count}"
+  "dashUnitPeopleShort": "{count}",
+  "epContacts": "Contatos no local ({count})",
+  "epAddContact": "Adicionar contato",
+  "epContactName": "Nome",
+  "epContactPhone": "Telefone",
+  "epRemoveContact": "Remover este contato",
+  "epContactsFull": "Até {max} contatos.",
+  "epPaymentWhen": "Quando é pago?",
+  "epFeeWhen": "Taxa da conferência",
+  "epTourWhen": "Custo dos tours",
+  "epPrepaid": "Antecipado",
+  "epOnsite": "Na chegada",
+  "epPaymentNote": "Se ambos forem pagos na chegada, o cartão de pagamentos some do painel.",
+  "dashStatPayments": "Pagamentos",
+  "dashPayConfirmed": "pago",
+  "dashPayPending": "aguardando",
+  "dashPayNone": "não pago",
+  "tblPayments": "Pagamentos"
 }

@@ -5,6 +5,8 @@ import {
   contactsOf,
   contactsFromBody,
   legacyPair,
+  normalizePaymentTiming,
+  needsPaymentCard,
 } from '../services/program_contacts.js';
 
 // 옵션 id 는 우리가 만든 uuid 만 받는다.
@@ -359,7 +361,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
       INSERT INTO programs (
         name, location, leader_id, start_date, end_date, enabled_sections,
         nearest_airport, contact1_name, contact1_phone, contact2_name, contact2_phone,
-        contacts,
+        contacts, fee_payment, tour_payment,
         program_type, host_country,
         fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options,
         currency, small_cohort_policy, min_team_size, hotel_options,
@@ -378,6 +380,8 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         ${newContacts.contact2Name},
         ${newContacts.contact2Phone},
         ${JSON.stringify(contactList ?? [])}::jsonb,
+        ${normalizePaymentTiming(req.body?.feePayment)},
+        ${normalizePaymentTiming(req.body?.tourPayment)},
         ${type},
         ${hostCountry ?? null},
         ${basic},
@@ -517,6 +521,15 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
         contacts         = CASE
           WHEN ${patchContacts === null} THEN contacts
           ELSE ${JSON.stringify(patchContacts?.list ?? [])}::jsonb
+        END,
+        -- 참가비만 고치는 저장이 입금 시점을 되돌리면 안 된다.
+        fee_payment      = CASE
+          WHEN ${!has('feePayment')} THEN fee_payment
+          ELSE ${normalizePaymentTiming(req.body?.feePayment)}
+        END,
+        tour_payment     = CASE
+          WHEN ${!has('tourPayment')} THEN tour_payment
+          ELSE ${normalizePaymentTiming(req.body?.tourPayment)}
         END,
         program_type     = ${type},
         host_country     = ${hostCountry ?? null},
@@ -691,7 +704,10 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
         COUNT(r.id) FILTER (WHERE flight_confirmed(r.arrival_flight)) AS arrival_flight_count,
         COUNT(r.id) FILTER (WHERE flight_confirmed(r.departure_flight)) AS departure_flight_count,
         COUNT(pay.id) FILTER (WHERE pay.status = 'pending') AS pending_payment_count,
-        COUNT(pay.id) FILTER (WHERE pay.status = 'confirmed') AS confirmed_payment_count
+        COUNT(pay.id) FILTER (WHERE pay.status = 'confirmed') AS confirmed_payment_count,
+        -- 입금 현황 카드는 "확인 n / 전체 m" 한 줄로 말한다. 대기와 확인을
+        -- 카드 둘로 나눠 두면 담당자가 둘을 머릿속에서 더해야 한다.
+        p.fee_payment, p.tour_payment
       FROM programs p
       -- 이름을 적기 전의 행은 세지 않는다(038). 앱을 열면 등록 행이 먼저
       -- 생기므로, 열어만 보고 만 사람이 참가자 수에 섞인다.
@@ -699,7 +715,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
         ON r.program_id = p.id AND has_registrant_name(r.real_name)
       LEFT JOIN payments pay ON pay.registration_id = r.id
       WHERE p.id = ${req.params.id}
-      GROUP BY p.id, p.name
+      GROUP BY p.id, p.name, p.fee_payment, p.tour_payment
     `;
 
     // 카드 안에 보여 줄 최근 몇 줄.
@@ -709,7 +725,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
     const id = req.params.id;
     const LIMIT = 3;
 
-    const [recent, tours, meals, arrival, pending, paid] = await Promise.all([
+    const [recent, tours, meals, arrival, payments] = await Promise.all([
       sql`
         SELECT r.real_name AS name, r.country, r.submitted
         FROM registrations r
@@ -747,29 +763,26 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
           AND flight_confirmed(r.arrival_flight)
         ORDER BY r.arrival_flight->>'scheduled_arrival' LIMIT ${LIMIT}
       `,
+      // 입금은 대기·확인을 한 목록으로 준다. 아직 낸 적이 없는 사람도
+      // 넣는다 — 받을 돈이 남은 사람이야말로 담당자가 봐야 할 줄이다.
       sql`
-        SELECT r.real_name AS name, r.country, pay.amount::text AS detail,
-               r.submitted
-        FROM payments pay
-        JOIN registrations r ON r.id = pay.registration_id
+        SELECT r.real_name AS name, r.country,
+               COALESCE(pay.status, 'none') AS status,
+               pay.amount::text AS detail
+        FROM registrations r
+        LEFT JOIN payments pay ON pay.registration_id = r.id
         WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
-          AND pay.status = 'pending'
-        ORDER BY pay.created_at DESC LIMIT ${LIMIT}
-      `,
-      sql`
-        SELECT r.real_name AS name, r.country, pay.amount::text AS detail,
-               r.submitted
-        FROM payments pay
-        JOIN registrations r ON r.id = pay.registration_id
-        WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
-          AND pay.status = 'confirmed'
-        ORDER BY pay.created_at DESC LIMIT ${LIMIT}
+        ORDER BY (COALESCE(pay.status, 'none') = 'confirmed'), r.real_name
+        LIMIT ${LIMIT}
       `,
     ]);
 
     res.json({
       ...(stats ?? {}),
-      preview: { recent, tours, meals, arrival, pending, paid },
+      // 입금 카드를 보여 줄지 여기서 정한다. 앱이 따로 판단하면 규칙이
+      // 두 곳에 생긴다.
+      needs_payment_card: needsPaymentCard(stats ?? {}),
+      preview: { recent, tours, meals, arrival, payments },
     });
   } catch (err) {
     console.error('통계 조회 오류:', err);

@@ -1835,5 +1835,36 @@
         "type": "int"
       }
     }
-  }
+  },
+  "epContacts": "On-site contacts ({count})",
+  "@epContacts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "epAddContact": "Add a contact",
+  "epContactName": "Name",
+  "epContactPhone": "Phone",
+  "epRemoveContact": "Remove this contact",
+  "epContactsFull": "Up to {max} contacts.",
+  "@epContactsFull": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "epPaymentWhen": "When is it paid?",
+  "epFeeWhen": "Conference fee",
+  "epTourWhen": "Tour fee",
+  "epPrepaid": "In advance",
+  "epOnsite": "On arrival",
+  "epPaymentNote": "If both are paid on arrival, the payment card is hidden from the dashboard.",
+  "dashStatPayments": "Payments",
+  "dashPayConfirmed": "paid",
+  "dashPayPending": "waiting",
+  "dashPayNone": "not yet",
+  "tblPayments": "Payments"
 }

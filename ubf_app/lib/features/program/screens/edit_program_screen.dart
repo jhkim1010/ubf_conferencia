@@ -26,10 +26,16 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
   final _airportController = TextEditingController();
-  final _contact1NameController = TextEditingController();
-  final _contact1PhoneController = TextEditingController();
-  final _contact2NameController = TextEditingController();
-  final _contact2PhoneController = TextEditingController();
+
+  /// 현장 대표 연락처(040). 두 명 고정이었는데, 공항·숙소·차량을 나눠 맡는
+  /// 사람이 그보다 많고 참가자가 급할 때 닿아야 할 번호가 둘로 끝나지 않는다.
+  final List<({TextEditingController name, TextEditingController phone})>
+  _contacts = [];
+  static const _maxContacts = 10;
+
+  /// 입금 시점(041). 둘 다 현장이면 대시보드에서 입금 카드를 감춘다.
+  String _feePayment = 'prepaid';
+  String _tourPayment = 'prepaid';
   final _hostCountryController = TextEditingController();
 
   DateTime? _startDate;
@@ -105,10 +111,10 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _nameController.dispose();
     _locationController.dispose();
     _airportController.dispose();
-    _contact1NameController.dispose();
-    _contact1PhoneController.dispose();
-    _contact2NameController.dispose();
-    _contact2PhoneController.dispose();
+    for (final c in _contacts) {
+      c.name.dispose();
+      c.phone.dispose();
+    }
     _hostCountryController.dispose();
     super.dispose();
   }
@@ -121,10 +127,23 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _nameController.text = program['name'] ?? '';
     _locationController.text = program['location'] ?? '';
     _airportController.text = program['nearest_airport'] ?? '';
-    _contact1NameController.text = program['contact1_name'] ?? '';
-    _contact1PhoneController.text = program['contact1_phone'] ?? '';
-    _contact2NameController.text = program['contact2_name'] ?? '';
-    _contact2PhoneController.text = program['contact2_phone'] ?? '';
+    // 서버는 늘 목록으로 준다 — 040 이전 수양회는 옛 두 칸에서 만들어 준다.
+    for (final c in _contacts) {
+      c.name.dispose();
+      c.phone.dispose();
+    }
+    _contacts.clear();
+    for (final c in (program['contacts'] as List? ?? const [])) {
+      if (c is! Map) continue;
+      _contacts.add((
+        name: TextEditingController(text: '${c['name'] ?? ''}'),
+        phone: TextEditingController(text: '${c['phone'] ?? ''}'),
+      ));
+    }
+    if (_contacts.isEmpty) _addContactRow();
+
+    _feePayment = program['fee_payment'] as String? ?? 'prepaid';
+    _tourPayment = program['tour_payment'] as String? ?? 'prepaid';
 
     if (program['start_date'] != null) {
       _startDate = DateTime.tryParse(program['start_date'] as String);
@@ -261,10 +280,14 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
         'enabledSections': Map<String, bool>.from(_enabledSections),
         'options': _options,
         'nearestAirport': _airportController.text.trim(),
-        'contact1Name': _contact1NameController.text.trim(),
-        'contact1Phone': _contact1PhoneController.text.trim(),
-        'contact2Name': _contact2NameController.text.trim(),
-        'contact2Phone': _contact2PhoneController.text.trim(),
+        // 빈 줄은 서버가 버린다. 여기서도 보내지 않는다.
+        'contacts': [
+          for (final c in _contacts)
+            if (c.name.text.trim().isNotEmpty || c.phone.text.trim().isNotEmpty)
+              {'name': c.name.text.trim(), 'phone': c.phone.text.trim()},
+        ],
+        'feePayment': _feePayment,
+        'tourPayment': _tourPayment,
         'feeBasic': _fee(_feeBasicController),
         'feePremium': _fee(_feePremiumController),
         'feeBasicDesc': _text(_feeBasicDescController),
@@ -299,6 +322,40 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _addContactRow() {
+    _contacts.add((
+      name: TextEditingController(),
+      phone: TextEditingController(),
+    ));
+  }
+
+  Widget _paymentRow(
+    String label,
+    String value,
+    void Function(String) onChanged,
+    AppLocalizations l10n,
+  ) {
+    return Row(
+      children: [
+        Expanded(child: Text(label, style: const TextStyle(fontSize: 13.5))),
+        SegmentedButton<String>(
+          segments: [
+            ButtonSegment(value: 'prepaid', label: Text(l10n.epPrepaid)),
+            ButtonSegment(value: 'onsite', label: Text(l10n.epOnsite)),
+          ],
+          selected: {value},
+          // 체크 표시를 빼면 글자가 접히지 않는다 — "선불" 이 두 줄이 됐다.
+          showSelectedIcon: false,
+          onSelectionChanged: (s) => onChanged(s.first),
+          style: ButtonStyle(
+            visualDensity: VisualDensity.compact,
+            textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12.5)),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -449,52 +506,94 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    l10n.cpContacts,
+                    l10n.epContacts(_contacts.length),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: TextFormField(
-                          controller: _contact1NameController,
-                          decoration: InputDecoration(labelText: l10n.cpName1),
-                        ),
+                  for (var i = 0; i < _contacts.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: TextFormField(
+                              controller: _contacts[i].name,
+                              decoration: InputDecoration(
+                                labelText: l10n.epContactName,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            flex: 3,
+                            child: TextFormField(
+                              controller: _contacts[i].phone,
+                              keyboardType: TextInputType.phone,
+                              decoration: InputDecoration(
+                                labelText: l10n.epContactPhone,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 18),
+                            tooltip: l10n.epRemoveContact,
+                            onPressed: () => setState(() {
+                              _contacts[i].name.dispose();
+                              _contacts[i].phone.dispose();
+                              _contacts.removeAt(i);
+                              if (_contacts.isEmpty) _addContactRow();
+                            }),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 3,
-                        child: TextFormField(
-                          controller: _contact1PhoneController,
-                          keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(labelText: l10n.cpPhone1),
-                        ),
-                      ),
-                    ],
+                    ),
+                  // (+) 는 마지막 줄 아래에 둔다 — 적다가 하나 더 필요할 때
+                  // 손이 가 있는 자리다.
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: _contacts.length >= _maxContacts
+                          ? null
+                          : () => setState(_addContactRow),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: Text(l10n.epAddContact),
+                    ),
+                  ),
+                  if (_contacts.length >= _maxContacts)
+                    Text(
+                      l10n.epContactsFull(_maxContacts),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                    ),
+
+                  const SizedBox(height: 20),
+                  // 입금 시점(041)
+                  Text(
+                    l10n.epPaymentWhen,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: TextFormField(
-                          controller: _contact2NameController,
-                          decoration: InputDecoration(labelText: l10n.cpName2),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 3,
-                        child: TextFormField(
-                          controller: _contact2PhoneController,
-                          keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(labelText: l10n.cpPhone2),
-                        ),
-                      ),
-                    ],
+                  _paymentRow(
+                    l10n.epFeeWhen,
+                    _feePayment,
+                    (v) => setState(() => _feePayment = v),
+                    l10n,
+                  ),
+                  const SizedBox(height: 8),
+                  _paymentRow(
+                    l10n.epTourWhen,
+                    _tourPayment,
+                    (v) => setState(() => _tourPayment = v),
+                    l10n,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.epPaymentNote,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                   ),
                   const SizedBox(height: 28),
                 ],

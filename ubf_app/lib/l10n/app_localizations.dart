@@ -5483,6 +5483,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count}'**
   String dashUnitPeopleShort(int count);
+
+  /// No description provided for @epContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'On-site contacts ({count})'**
+  String epContacts(int count);
+
+  /// No description provided for @epAddContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a contact'**
+  String get epAddContact;
+
+  /// No description provided for @epContactName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get epContactName;
+
+  /// No description provided for @epContactPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get epContactPhone;
+
+  /// No description provided for @epRemoveContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this contact'**
+  String get epRemoveContact;
+
+  /// No description provided for @epContactsFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {max} contacts.'**
+  String epContactsFull(int max);
+
+  /// No description provided for @epPaymentWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'When is it paid?'**
+  String get epPaymentWhen;
+
+  /// No description provided for @epFeeWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Conference fee'**
+  String get epFeeWhen;
+
+  /// No description provided for @epTourWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour fee'**
+  String get epTourWhen;
+
+  /// No description provided for @epPrepaid.
+  ///
+  /// In en, this message translates to:
+  /// **'In advance'**
+  String get epPrepaid;
+
+  /// No description provided for @epOnsite.
+  ///
+  /// In en, this message translates to:
+  /// **'On arrival'**
+  String get epOnsite;
+
+  /// No description provided for @epPaymentNote.
+  ///
+  /// In en, this message translates to:
+  /// **'If both are paid on arrival, the payment card is hidden from the dashboard.'**
+  String get epPaymentNote;
+
+  /// No description provided for @dashStatPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get dashStatPayments;
+
+  /// No description provided for @dashPayConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'paid'**
+  String get dashPayConfirmed;
+
+  /// No description provided for @dashPayPending.
+  ///
+  /// In en, this message translates to:
+  /// **'waiting'**
+  String get dashPayPending;
+
+  /// No description provided for @dashPayNone.
+  ///
+  /// In en, this message translates to:
+  /// **'not yet'**
+  String get dashPayNone;
+
+  /// No description provided for @tblPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get tblPayments;
 }
 
 class _AppLocalizationsDelegate
