@@ -5855,6 +5855,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'no van yet'**
   String get dspUnassignedFlight;
+
+  /// No description provided for @schServiceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service needed for this (optional)'**
+  String get schServiceLabel;
+
+  /// No description provided for @schServiceNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get schServiceNone;
+
+  /// No description provided for @schServiceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The reminder will say how many are still needed, and only when some are.'**
+  String get schServiceHint;
 }
 
 class _AppLocalizationsDelegate

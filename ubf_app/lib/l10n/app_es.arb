@@ -972,5 +972,8 @@
   "dspPlanPeople": "{count} personas",
   "dspMakeVans": "Crear {count} van(s)",
   "dspPlanNone": "Todavía no hay horarios",
-  "dspUnassignedFlight": "sin van"
+  "dspUnassignedFlight": "sin van",
+  "schServiceLabel": "Servicio necesario (opcional)",
+  "schServiceNone": "Ninguno",
+  "schServiceHint": "El recordatorio dirá cuántos faltan, solo si faltan."
 }

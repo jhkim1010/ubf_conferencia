@@ -9,6 +9,7 @@ import jwt from 'jsonwebtoken';
 import { googleLogin, kakaoLogin, requireAuth, effectiveRole } from './middleware/auth.js';
 import { sendDailySummary } from './services/telegram.js';
 import { notifyProgramParticipants, sendPushNotification } from './services/fcm.js';
+import { rolesOf, tallyRole } from './services/service_roles.js';
 import programsRouter from './routes/programs.js';
 import registrationsRouter from './routes/registrations.js';
 import leadersRouter from './routes/leaders.js';
@@ -226,7 +227,8 @@ app.use((err, req, res, _next) => {
 cron.schedule('* * * * *', async () => {
   try {
     const due = await sql`
-      SELECT ps.id, ps.program_id, ps.title, ps.description, p.name AS program_name
+      SELECT ps.id, ps.program_id, ps.title, ps.description, ps.service_key,
+             p.name AS program_name, p.service_options
       FROM program_schedules ps
       JOIN programs p ON p.id = ps.program_id
       WHERE ps.notification_sent = false
@@ -242,11 +244,56 @@ cron.schedule('* * * * *', async () => {
         ? `5분 후 시작 · ${schedule.description} · ${schedule.program_name}`
         : `5분 후 시작 · ${schedule.program_name}`;
 
+      // 이 순서에 이어 둔 봉사가 아직 모자라면 한 줄을 얹는다(045).
+      //
+      // 사람들이 그 일을 가장 떠올리는 순간이 바로 이때다. 알림을 하나 더
+      // 만드는 것보다 낫다 — 알림이 늘어날수록 사람들은 알림 자체를 끈다.
+      //
+      // **모자랄 때만 붙인다.** 다 찬 역할까지 알리면 정작 급한 일정 알림도
+      // 무시당한다.
+      let extra = '';
+      if (schedule.service_key) {
+        try {
+          const signups = await sql`
+            SELECT ss.service_key, ss.status
+            FROM service_signups ss
+            JOIN registrations r ON r.id = ss.registration_id
+            WHERE r.program_id = ${schedule.program_id}
+              AND has_registrant_name(r.real_name)
+          `;
+          const role = rolesOf(schedule.service_options).find(
+            (x) => x.key === schedule.service_key,
+          );
+          const tally = role ? tallyRole(role, signups) : null;
+          if (tally && tally.short > 0) {
+            extra = ` · 봉사자 ${tally.short}명이 아직 부족합니다`;
+            // 참가자 홈에 "제가 하겠습니다" 가 뜨도록 열린 요청을 만든다.
+            // 이미 열려 있으면 그대로 둔다 — 같은 자리를 두 줄로 만들 이유가 없다.
+            await sql`
+              INSERT INTO service_calls (program_id, service_key, message,
+                                         short_at_send)
+              SELECT ${schedule.program_id}, ${schedule.service_key},
+                     ${schedule.title}, ${tally.short}
+              WHERE NOT EXISTS (
+                SELECT 1 FROM service_calls
+                WHERE program_id = ${schedule.program_id}
+                  AND service_key = ${schedule.service_key}
+                  AND closed_at IS NULL
+              )
+            `;
+          }
+        } catch (e) {
+          // 봉사 한 줄 때문에 일정 알림 자체가 안 나가면 안 된다.
+          console.error('[schedule] 봉사 안내 실패:', e.message);
+        }
+      }
+
       // FCM으로 참가자 전체에게 알림
-      await notifyProgramParticipants(sql, schedule.program_id, title, body, {
+      await notifyProgramParticipants(sql, schedule.program_id, title, body + extra, {
         type: 'schedule',
         scheduleId: schedule.id,
         programId: schedule.program_id,
+        serviceKey: schedule.service_key ?? '',
       });
 
       // 발송 완료 표시

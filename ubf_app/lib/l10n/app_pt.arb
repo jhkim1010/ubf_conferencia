@@ -958,5 +958,8 @@
   "dspPlanPeople": "{count} pessoas",
   "dspMakeVans": "Criar {count} van(s)",
   "dspPlanNone": "Ainda não há horários",
-  "dspUnassignedFlight": "sem van"
+  "dspUnassignedFlight": "sem van",
+  "schServiceLabel": "Serviço necessário (opcional)",
+  "schServiceNone": "Nenhum",
+  "schServiceHint": "O lembrete dirá quantos faltam, só quando faltarem."
 }

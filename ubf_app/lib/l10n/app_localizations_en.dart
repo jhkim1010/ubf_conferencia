@@ -3207,4 +3207,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dspUnassignedFlight => 'no van yet';
+
+  @override
+  String get schServiceLabel => 'Service needed for this (optional)';
+
+  @override
+  String get schServiceNone => 'None';
+
+  @override
+  String get schServiceHint =>
+      'The reminder will say how many are still needed, and only when some are.';
 }

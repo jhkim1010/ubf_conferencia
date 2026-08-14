@@ -2003,5 +2003,8 @@
     }
   },
   "dspPlanNone": "No arrival times yet",
-  "dspUnassignedFlight": "no van yet"
+  "dspUnassignedFlight": "no van yet",
+  "schServiceLabel": "Service needed for this (optional)",
+  "schServiceNone": "None",
+  "schServiceHint": "The reminder will say how many are still needed, and only when some are."
 }

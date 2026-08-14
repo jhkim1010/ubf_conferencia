@@ -3218,4 +3218,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get dspUnassignedFlight => 'sin van';
+
+  @override
+  String get schServiceLabel => 'Servicio necesario (opcional)';
+
+  @override
+  String get schServiceNone => 'Ninguno';
+
+  @override
+  String get schServiceHint =>
+      'El recordatorio dirá cuántos faltan, solo si faltan.';
 }

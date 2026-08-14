@@ -972,5 +972,8 @@
   "dspPlanPeople": "{count}명",
   "dspMakeVans": "밴 {count}대 만들기",
   "dspPlanNone": "아직 도착 시각이 없습니다",
-  "dspUnassignedFlight": "배차 없음"
+  "dspUnassignedFlight": "배차 없음",
+  "schServiceLabel": "이 순서에 필요한 봉사 (선택)",
+  "schServiceNone": "없음",
+  "schServiceHint": "시작 5분 전 알림에 \"아직 n명 부족\" 이 함께 갑니다. 다 찼으면 붙지 않습니다."
 }

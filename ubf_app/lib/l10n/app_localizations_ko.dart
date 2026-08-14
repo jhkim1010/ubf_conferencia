@@ -3139,4 +3139,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get dspUnassignedFlight => '배차 없음';
+
+  @override
+  String get schServiceLabel => '이 순서에 필요한 봉사 (선택)';
+
+  @override
+  String get schServiceNone => '없음';
+
+  @override
+  String get schServiceHint =>
+      '시작 5분 전 알림에 \"아직 n명 부족\" 이 함께 갑니다. 다 찼으면 붙지 않습니다.';
 }

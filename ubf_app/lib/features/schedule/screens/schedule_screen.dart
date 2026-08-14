@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../../core/utils/api_client.dart';
 import '../../auth/providers/auth_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import '../../assignment/providers/assignment_provider.dart';
+import '../../../core/utils/service_role_label.dart';
 
 // 프로그램 일정 화면
 // - 관리자(admin/director): 일정 추가/삭제/타임존 변경 가능
@@ -49,7 +51,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.schLoadFailed('$e'))),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.schLoadFailed('$e')),
+          ),
         );
       }
     } finally {
@@ -60,10 +64,14 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   Future<void> _showAddDialog() async {
     final l10n = AppLocalizations.of(context)!;
     final titleCtrl = TextEditingController();
-    final descCtrl  = TextEditingController();
-    final tzCtrl    = TextEditingController(text: _deviceTimezone);
+    final descCtrl = TextEditingController();
+    final tzCtrl = TextEditingController(text: _deviceTimezone);
     DateTime? pickedDate;
     TimeOfDay? pickedTime;
+    // 이 순서에 필요한 봉사(045). 이어 두면 시작 5분 전 알림에 "아직 n명
+    // 부족" 이 함께 가고, 그 자리에서 손을 들 수 있다. 하나만 잇는다 —
+    // 여럿을 붙이면 알림 한 통이 길어지고 버튼이 여럿이 된다.
+    String? serviceKey;
 
     await showDialog(
       context: context,
@@ -76,24 +84,76 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               children: [
                 TextField(
                   controller: titleCtrl,
-                  decoration: InputDecoration(labelText: l10n.schTitleLabel, hintText: l10n.schTitleHint),
+                  decoration: InputDecoration(
+                    labelText: l10n.schTitleLabel,
+                    hintText: l10n.schTitleHint,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: descCtrl,
                   decoration: InputDecoration(labelText: l10n.schDescLabel),
                 ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.schServiceLabel,
+                    style: const TextStyle(fontSize: 12.5),
+                  ),
+                ),
+                Consumer(
+                  builder: (_, ref, _) {
+                    final board = ref
+                        .watch(serviceBoardProvider(widget.programId))
+                        .valueOrNull;
+                    final roles = ((board?['roles'] as List?) ?? const [])
+                        .cast<Map<String, dynamic>>();
+                    return Wrap(
+                      spacing: 5,
+                      runSpacing: 2,
+                      children: [
+                        ChoiceChip(
+                          label: Text(
+                            l10n.schServiceNone,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          selected: serviceKey == null,
+                          onSelected: (_) => setS(() => serviceKey = null),
+                        ),
+                        for (final r in roles)
+                          ChoiceChip(
+                            label: Text(
+                              serviceRoleLabel(l10n, r),
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            selected: serviceKey == r['key'],
+                            onSelected: (_) =>
+                                setS(() => serviceKey = r['key'] as String),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+                Text(
+                  l10n.schServiceHint,
+                  style: TextStyle(fontSize: 11.5, color: Colors.grey[700]),
+                ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today, size: 18),
-                  label: Text(pickedDate == null
-                      ? l10n.epPickDate
-                      : DateFormat('yyyy.MM.dd').format(pickedDate!)),
+                  label: Text(
+                    pickedDate == null
+                        ? l10n.epPickDate
+                        : DateFormat('yyyy.MM.dd').format(pickedDate!),
+                  ),
                   onPressed: () async {
                     final d = await showDatePicker(
                       context: ctx,
                       initialDate: DateTime.now(),
-                      firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                      firstDate: DateTime.now().subtract(
+                        const Duration(days: 1),
+                      ),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
                     if (d != null) setS(() => pickedDate = d);
@@ -102,9 +162,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   icon: const Icon(Icons.access_time, size: 18),
-                  label: Text(pickedTime == null
-                      ? l10n.schPickTime
-                      : pickedTime!.format(ctx)),
+                  label: Text(
+                    pickedTime == null
+                        ? l10n.schPickTime
+                        : pickedTime!.format(ctx),
+                  ),
                   onPressed: () async {
                     final t = await showTimePicker(
                       context: ctx,
@@ -139,22 +201,32 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (titleCtrl.text.trim().isEmpty || pickedDate == null || pickedTime == null) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text(l10n.schAllRequired)),
-                  );
+                if (titleCtrl.text.trim().isEmpty ||
+                    pickedDate == null ||
+                    pickedTime == null) {
+                  ScaffoldMessenger.of(
+                    ctx,
+                  ).showSnackBar(SnackBar(content: Text(l10n.schAllRequired)));
                   return;
                 }
                 final dt = DateTime(
-                  pickedDate!.year, pickedDate!.month, pickedDate!.day,
-                  pickedTime!.hour, pickedTime!.minute,
+                  pickedDate!.year,
+                  pickedDate!.month,
+                  pickedDate!.day,
+                  pickedTime!.hour,
+                  pickedTime!.minute,
                 );
                 try {
                   await ApiClient.createSchedule(widget.programId, {
                     'title': titleCtrl.text.trim(),
-                    'description': descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim(),
+                    'description': descCtrl.text.trim().isEmpty
+                        ? null
+                        : descCtrl.text.trim(),
                     'scheduledAt': dt.toUtc().toIso8601String(),
-                    'timezone': tzCtrl.text.trim().isEmpty ? _deviceTimezone : tzCtrl.text.trim(),
+                    'timezone': tzCtrl.text.trim().isEmpty
+                        ? _deviceTimezone
+                        : tzCtrl.text.trim(),
+                    'serviceKey': serviceKey ?? '',
                   });
                   if (ctx.mounted) Navigator.pop(ctx);
                   await _load();
@@ -177,7 +249,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   // 관리자: 타임존 변경 다이얼로그
   Future<void> _showTimezoneEditDialog(Map<String, dynamic> schedule) async {
     final l10n = AppLocalizations.of(context)!;
-    final tzCtrl = TextEditingController(text: schedule['timezone'] as String? ?? 'UTC');
+    final tzCtrl = TextEditingController(
+      text: schedule['timezone'] as String? ?? 'UTC',
+    );
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -232,14 +306,20 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     if (newTz.isEmpty || newTz == schedule['timezone']) return;
 
     try {
-      await ApiClient.updateSchedule(widget.programId, schedule['id'] as String, {
-        'timezone': newTz,
-      });
+      await ApiClient.updateSchedule(
+        widget.programId,
+        schedule['id'] as String,
+        {'timezone': newTz},
+      );
       await _load();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.schTzChangeFailed('$e'))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.schTzChangeFailed('$e'),
+            ),
+          ),
         );
       }
     }
@@ -253,7 +333,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         title: Text(l10n.schDeleteTitle),
         content: Text(l10n.schDeleteConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.actionCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.actionCancel),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -270,7 +353,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.schDeleteFailed('$e'))),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.schDeleteFailed('$e')),
+          ),
         );
       }
     }
@@ -280,7 +365,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   Widget build(BuildContext context) {
     final isAdmin = ref.watch(currentUserProvider).isAdmin;
     final l10n = AppLocalizations.of(context)!;
-    final fmt = DateFormat('MM/dd(E) HH:mm', Localizations.localeOf(context).languageCode);
+    final fmt = DateFormat(
+      'MM/dd(E) HH:mm',
+      Localizations.localeOf(context).languageCode,
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.regScheduleTooltip)),
@@ -305,7 +393,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.event_note, size: 64, color: Colors.grey[400]),
+                                Icon(
+                                  Icons.event_note,
+                                  size: 64,
+                                  color: Colors.grey[400],
+                                ),
                                 const SizedBox(height: 12),
                                 Text(
                                   l10n.schEmpty,
@@ -322,7 +414,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                       itemCount: _schedules.length,
                       itemBuilder: (_, i) {
                         final s = _schedules[i] as Map<String, dynamic>;
-                        final scheduledAt = DateTime.parse(s['scheduled_at']).toLocal();
+                        final scheduledAt = DateTime.parse(
+                          s['scheduled_at'],
+                        ).toLocal();
                         final isPast = scheduledAt.isBefore(DateTime.now());
                         final timezone = s['timezone'] as String? ?? 'UTC';
 
@@ -335,7 +429,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                               decoration: BoxDecoration(
                                 color: isPast
                                     ? Colors.grey[200]
-                                    : Theme.of(context).colorScheme.primaryContainer,
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.primaryContainer,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Column(
@@ -345,7 +441,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                                     '${scheduledAt.month}/${scheduledAt.day}',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: isPast ? Colors.grey : Theme.of(context).colorScheme.onPrimaryContainer,
+                                      color: isPast
+                                          ? Colors.grey
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.onPrimaryContainer,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -353,7 +453,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                                     '${scheduledAt.hour.toString().padLeft(2, '0')}:${scheduledAt.minute.toString().padLeft(2, '0')}',
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: isPast ? Colors.grey : Theme.of(context).colorScheme.primary,
+                                      color: isPast
+                                          ? Colors.grey
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -365,7 +469,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 color: isPast ? Colors.grey[500] : null,
-                                decoration: isPast ? TextDecoration.lineThrough : null,
+                                decoration: isPast
+                                    ? TextDecoration.lineThrough
+                                    : null,
                               ),
                             ),
                             subtitle: Column(
@@ -375,23 +481,39 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                                   Text(s['description'] as String),
                                 Text(
                                   fmt.format(scheduledAt),
-                                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                  style: TextStyle(
+                                    color: Colors.grey[500],
+                                    fontSize: 12,
+                                  ),
                                 ),
                                 // 타임존 표시 (관리자는 탭으로 변경 가능)
                                 GestureDetector(
-                                  onTap: isAdmin ? () => _showTimezoneEditDialog(s) : null,
+                                  onTap: isAdmin
+                                      ? () => _showTimezoneEditDialog(s)
+                                      : null,
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.public, size: 11, color: Colors.grey[400]),
+                                      Icon(
+                                        Icons.public,
+                                        size: 11,
+                                        color: Colors.grey[400],
+                                      ),
                                       const SizedBox(width: 3),
                                       Text(
                                         timezone,
-                                        style: TextStyle(fontSize: 11, color: Colors.grey[400]),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey[400],
+                                        ),
                                       ),
                                       if (isAdmin) ...[
                                         const SizedBox(width: 3),
-                                        Icon(Icons.edit, size: 11, color: Colors.grey[400]),
+                                        Icon(
+                                          Icons.edit,
+                                          size: 11,
+                                          color: Colors.grey[400],
+                                        ),
                                       ],
                                     ],
                                   ),
@@ -401,13 +523,19 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                             isThreeLine: true,
                             trailing: isAdmin
                                 ? IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      color: Colors.red,
+                                    ),
                                     onPressed: () => _delete(s['id'] as String),
                                   )
                                 : (s['notification_sent'] == true
-                                    ? const Icon(Icons.notifications_active,
-                                        color: Colors.green, size: 18)
-                                    : null),
+                                      ? const Icon(
+                                          Icons.notifications_active,
+                                          color: Colors.green,
+                                          size: 18,
+                                        )
+                                      : null),
                           ),
                         );
                       },
