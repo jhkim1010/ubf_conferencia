@@ -22,8 +22,14 @@ class SetupScreen extends StatelessWidget {
           title: Text(l10n.setupTitle),
           bottom: TabBar(
             tabs: [
-              Tab(icon: const Icon(Icons.meeting_room_outlined), text: l10n.setupTabRooms),
-              Tab(icon: const Icon(Icons.groups_outlined), text: l10n.setupTabGroups),
+              Tab(
+                icon: const Icon(Icons.meeting_room_outlined),
+                text: l10n.setupTabRooms,
+              ),
+              Tab(
+                icon: const Icon(Icons.groups_outlined),
+                text: l10n.setupTabGroups,
+              ),
             ],
           ),
         ),
@@ -64,8 +70,10 @@ class _RoomsTab extends ConsumerWidget {
               children: [
                 _ReconcileCard(summary: summary),
                 const SizedBox(height: 20),
-                Text(l10n.setupRoomsMade(rooms.length),
-                    style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  l10n.setupRoomsMade(rooms.length),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
                 const SizedBox(height: 8),
                 if (rooms.isEmpty)
                   _EmptyHint(
@@ -73,11 +81,13 @@ class _RoomsTab extends ConsumerWidget {
                     message: l10n.setupRoomsEmpty,
                   )
                 else
-                  ...rooms.map((r) => _RoomTile(
-                        programId: programId,
-                        room: r,
-                        onChanged: () => ref.invalidate(roomsProvider(programId)),
-                      )),
+                  ...rooms.map(
+                    (r) => _RoomTile(
+                      programId: programId,
+                      room: r,
+                      onChanged: () => ref.invalidate(roomsProvider(programId)),
+                    ),
+                  ),
               ],
             ),
           );
@@ -103,7 +113,9 @@ class _RoomsTab extends ConsumerWidget {
       ref.invalidate(roomsProvider(programId));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.setupRoomsAdded(n))),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.setupRoomsAdded(n)),
+          ),
         );
       }
     } on ApiException catch (e) {
@@ -140,11 +152,12 @@ class _ReconcileCard extends StatelessWidget {
               children: [
                 const Icon(Icons.insights, size: 20, color: AppTheme.primary),
                 const SizedBox(width: 8),
-                Text(l10n.setupReconcileTitle,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  l10n.setupReconcileTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 14),
@@ -167,10 +180,16 @@ class _ReconcileCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  const Icon(Icons.family_restroom, size: 16, color: Color(0xFF7A6BB5)),
+                  const Icon(
+                    Icons.family_restroom,
+                    size: 16,
+                    color: Color(0xFF7A6BB5),
+                  ),
                   const SizedBox(width: 6),
-                  Text(l10n.setupMixedSeats(mixedSeats),
-                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text(
+                    l10n.setupMixedSeats(mixedSeats),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                 ],
               ),
             ],
@@ -205,8 +224,10 @@ class _GenderReconcileRow extends StatelessWidget {
           children: [
             Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
             const Spacer(),
-            Text(l10n.setupRegVsSeats(regs, seats),
-                style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(
+              l10n.setupRegVsSeats(regs, seats),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
             if (over) ...[
               const SizedBox(width: 8),
               Container(
@@ -215,11 +236,14 @@ class _GenderReconcileRow extends StatelessWidget {
                   color: Colors.red[50],
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(l10n.setupSeatShortage(shortage),
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red[700])),
+                child: Text(
+                  l10n.setupSeatShortage(shortage),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red[700],
+                  ),
+                ),
               ),
             ],
           ],
@@ -254,7 +278,11 @@ class _RoomTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final type = room['room_type'] as String;
     final gender = room['gender'] as String;
-    final (typeLabel, genderLabel, genderColor) = _roomBadges(type, gender, l10n);
+    final (typeLabel, genderLabel, genderColor) = _roomBadges(
+      type,
+      gender,
+      l10n,
+    );
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -268,10 +296,14 @@ class _RoomTile extends StatelessWidget {
           ),
           child: Icon(Icons.meeting_room, color: genderColor, size: 20),
         ),
-        title: Text(room['name'] as String,
-            style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(
+          room['name'] as String,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         subtitle: Text(
-          '${room['floor'] ?? ''} · $typeLabel · ${l10n.setupRoomCapacity((room['capacity'] as num).toInt())} · $genderLabel'
+          '${room['floor'] ?? ''} · $typeLabel · ${l10n.setupRoomCapacity((room['capacity'] as num).toInt())}'
+                  '${((room['extra_capacity'] as num?)?.toInt() ?? 0) > 0 ? ' +${(room['extra_capacity'] as num).toInt()}' : ''}'
+                  ' · $genderLabel'
               .replaceFirst(RegExp(r'^ · '), ''),
         ),
         trailing: IconButton(
@@ -287,7 +319,11 @@ class _RoomTile extends StatelessWidget {
   }
 }
 
-(String, String, Color) _roomBadges(String type, String gender, AppLocalizations l10n) {
+(String, String, Color) _roomBadges(
+  String type,
+  String gender,
+  AppLocalizations l10n,
+) {
   final typeLabel = switch (type) {
     'couple' => l10n.setupCouple,
     'family' => l10n.setupFamily,
@@ -321,6 +357,10 @@ class _RoomBulkSheetState extends State<_RoomBulkSheet> {
   final _startCtrl = TextEditingController(text: '1');
   final _countCtrl = TextEditingController(text: '1');
   final _capCtrl = TextEditingController(text: '8');
+
+  /// 여유 자리(042). 2인실에 간이침대 하나를 더 놓는 식이다.
+  /// 자동 배정은 정원이 다 찬 뒤에만 쓴다.
+  bool _extraBed = false;
 
   @override
   void dispose() {
@@ -361,10 +401,15 @@ class _RoomBulkSheetState extends State<_RoomBulkSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.setupBulkAddRooms,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              l10n.setupBulkAddRooms,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
-            Text(l10n.setupRoomType, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(
+              l10n.setupRoomType,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
             const SizedBox(height: 6),
             Row(
               children: [
@@ -428,8 +473,28 @@ class _RoomBulkSheetState extends State<_RoomBulkSheet> {
                 ),
               ],
             ),
+            const SizedBox(height: 4),
+            // 여유 자리. 정원을 3인·5인으로 적어 버리면 자동 배정이 처음부터
+            // 그 자리를 정상 자리로 보고 채운다.
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              value: _extraBed,
+              onChanged: (v) => setState(() => _extraBed = v),
+              title: Text(
+                l10n.setupExtraBed,
+                style: const TextStyle(fontSize: 14),
+              ),
+              subtitle: Text(
+                l10n.setupExtraBedHint,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
             const SizedBox(height: 16),
-            Text(l10n.regGender, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(
+              l10n.regGender,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
             const SizedBox(height: 6),
             if (_isDorm)
               Row(
@@ -472,17 +537,21 @@ class _RoomBulkSheetState extends State<_RoomBulkSheet> {
           decoration: BoxDecoration(
             color: on ? AppTheme.primary.withValues(alpha: 0.08) : null,
             border: Border.all(
-                color: on ? AppTheme.primary : Colors.grey[300]!,
-                width: on ? 1.5 : 1),
+              color: on ? AppTheme.primary : Colors.grey[300]!,
+              width: on ? 1.5 : 1,
+            ),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
             children: [
-              Text(label,
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: on ? AppTheme.primary : Colors.black87)),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: on ? AppTheme.primary : Colors.black87,
+                ),
+              ),
               Text(sub, style: TextStyle(fontSize: 9, color: Colors.grey[600])),
             ],
           ),
@@ -502,14 +571,18 @@ class _RoomBulkSheetState extends State<_RoomBulkSheet> {
           decoration: BoxDecoration(
             color: on ? AppTheme.primary.withValues(alpha: 0.08) : null,
             border: Border.all(
-                color: on ? AppTheme.primary : Colors.grey[300]!,
-                width: on ? 1.5 : 1),
+              color: on ? AppTheme.primary : Colors.grey[300]!,
+              width: on ? 1.5 : 1,
+            ),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Text(label,
-              style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: on ? AppTheme.primary : Colors.black87)),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: on ? AppTheme.primary : Colors.black87,
+            ),
+          ),
         ),
       ),
     );
@@ -523,8 +596,10 @@ class _RoomBulkSheetState extends State<_RoomBulkSheet> {
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(label,
-          style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+      ),
     );
   }
 
@@ -534,7 +609,9 @@ class _RoomBulkSheetState extends State<_RoomBulkSheet> {
     final cap = int.tryParse(_capCtrl.text) ?? 0;
     if (name.isEmpty || count < 1 || cap < 1) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.setupBulkValidation)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.setupBulkValidation),
+        ),
       );
       return;
     }
@@ -545,6 +622,7 @@ class _RoomBulkSheetState extends State<_RoomBulkSheet> {
       'capacity': cap,
       'roomType': _type,
       'gender': _gender,
+      'extraCapacity': _extraBed ? 1 : 0,
       if (_floorCtrl.text.trim().isNotEmpty) 'floor': _floorCtrl.text.trim(),
     });
   }
@@ -576,8 +654,10 @@ class _GroupsTab extends ConsumerWidget {
               children: [
                 _GroupSummaryCard(summary: summary),
                 const SizedBox(height: 20),
-                Text(l10n.setupGroupsMade(groups.length),
-                    style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  l10n.setupGroupsMade(groups.length),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
                 const SizedBox(height: 8),
                 if (groups.isEmpty)
                   _EmptyHint(
@@ -585,11 +665,14 @@ class _GroupsTab extends ConsumerWidget {
                     message: l10n.setupGroupsEmpty,
                   )
                 else
-                  ...groups.map((g) => _GroupTile(
-                        programId: programId,
-                        group: g,
-                        onChanged: () => ref.invalidate(groupsProvider(programId)),
-                      )),
+                  ...groups.map(
+                    (g) => _GroupTile(
+                      programId: programId,
+                      group: g,
+                      onChanged: () =>
+                          ref.invalidate(groupsProvider(programId)),
+                    ),
+                  ),
               ],
             ),
           );
@@ -619,14 +702,21 @@ class _GroupsTab extends ConsumerWidget {
               controller: countCtrl,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(labelText: l10n.setupGroupCount, suffixText: l10n.setupGroupCountSuffix),
+              decoration: InputDecoration(
+                labelText: l10n.setupGroupCount,
+                suffixText: l10n.setupGroupCountSuffix,
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.actionCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.actionCancel),
+          ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, int.tryParse(countCtrl.text) ?? 0),
+            onPressed: () =>
+                Navigator.pop(context, int.tryParse(countCtrl.text) ?? 0),
             child: Text(l10n.setupMake),
           ),
         ],
@@ -638,7 +728,9 @@ class _GroupsTab extends ConsumerWidget {
       ref.invalidate(groupsProvider(programId));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.setupGroupsCreated(n))),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.setupGroupsCreated(n)),
+          ),
         );
       }
     } on ApiException catch (e) {
@@ -669,8 +761,8 @@ class _GroupSummaryCard extends StatelessWidget {
     final preview = groupCount == 0
         ? l10n.setupMakeGroupsFirst
         : rem == 0
-            ? l10n.setupEvenPerGroup(base)
-            : l10n.setupUnevenPerGroup(rem, base + 1, base);
+        ? l10n.setupEvenPerGroup(base)
+        : l10n.setupUnevenPerGroup(rem, base + 1, base);
 
     return Card(
       child: Padding(
@@ -682,23 +774,31 @@ class _GroupSummaryCard extends StatelessWidget {
               children: [
                 const Icon(Icons.balance, size: 20, color: AppTheme.primary),
                 const SizedBox(width: 8),
-                Text(l10n.setupGroupSummary,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  l10n.setupGroupSummary,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            Text(l10n.setupRegAndGroups(total, groupCount),
-                style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(
+              l10n.setupRegAndGroups(total, groupCount),
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 4),
-            Text(l10n.setupBalancePreview(preview),
-                style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+            Text(
+              l10n.setupBalancePreview(preview),
+              style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+            ),
             if (leaderless > 0) ...[
               const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.amber[50],
                   borderRadius: BorderRadius.circular(8),
@@ -706,14 +806,20 @@ class _GroupSummaryCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.warning_amber_rounded,
-                        size: 16, color: Colors.amber[800]),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      size: 16,
+                      color: Colors.amber[800],
+                    ),
                     const SizedBox(width: 6),
-                    Text(l10n.setupLeaderless(leaderless),
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.amber[900])),
+                    Text(
+                      l10n.setupLeaderless(leaderless),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.amber[900],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -754,11 +860,16 @@ class _GroupTile extends StatelessWidget {
           backgroundColor: hasLeader
               ? AppTheme.primary.withValues(alpha: 0.12)
               : Colors.grey[200],
-          child: Icon(Icons.groups,
-              color: hasLeader ? AppTheme.primary : Colors.grey, size: 20),
+          child: Icon(
+            Icons.groups,
+            color: hasLeader ? AppTheme.primary : Colors.grey,
+            size: 20,
+          ),
         ),
         title: Text(
-          hasLeader ? '${group['name']} · $leaderName' : group['name'] as String,
+          hasLeader
+              ? '${group['name']} · $leaderName'
+              : group['name'] as String,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
@@ -791,16 +902,21 @@ class _GroupTile extends StatelessWidget {
 
   Future<void> _editGroup(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
-    final nameCtrl =
-        TextEditingController(text: group['name'] as String? ?? '');
-    final leaderCtrl =
-        TextEditingController(text: group['leader_name'] as String? ?? '');
-    final phoneCtrl =
-        TextEditingController(text: group['leader_phone'] as String? ?? '');
-    final passageCtrl =
-        TextEditingController(text: group['passage'] as String? ?? '');
-    final locationCtrl =
-        TextEditingController(text: group['location'] as String? ?? '');
+    final nameCtrl = TextEditingController(
+      text: group['name'] as String? ?? '',
+    );
+    final leaderCtrl = TextEditingController(
+      text: group['leader_name'] as String? ?? '',
+    );
+    final phoneCtrl = TextEditingController(
+      text: group['leader_phone'] as String? ?? '',
+    );
+    final passageCtrl = TextEditingController(
+      text: group['passage'] as String? ?? '',
+    );
+    final locationCtrl = TextEditingController(
+      text: group['location'] as String? ?? '',
+    );
 
     final saved = await showDialog<bool>(
       context: context,
@@ -839,11 +955,13 @@ class _GroupTile extends StatelessWidget {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(l10n.actionCancel)),
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.actionCancel),
+          ),
           ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(l10n.actionSave)),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.actionSave),
+          ),
         ],
       ),
     );
@@ -874,9 +992,11 @@ class _EmptyHint extends StatelessWidget {
         children: [
           Icon(icon, size: 48, color: Colors.grey[400]),
           const SizedBox(height: 12),
-          Text(message,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600])),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey[600]),
+          ),
         ],
       ),
     );

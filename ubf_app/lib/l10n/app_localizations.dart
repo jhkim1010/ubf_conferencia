@@ -5585,6 +5585,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payments'**
   String get tblPayments;
+
+  /// No description provided for @setupExtraBed.
+  ///
+  /// In en, this message translates to:
+  /// **'Spare spot'**
+  String get setupExtraBed;
+
+  /// No description provided for @setupExtraBedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One more person can squeeze in. Used only when the normal beds run out.'**
+  String get setupExtraBedHint;
+
+  /// No description provided for @asnRoomWithExtra.
+  ///
+  /// In en, this message translates to:
+  /// **'{used}/{cap} (+{extra})'**
+  String asnRoomWithExtra(int used, int cap, int extra);
+
+  /// No description provided for @setupExtraSeats.
+  ///
+  /// In en, this message translates to:
+  /// **'spare {count}'**
+  String setupExtraSeats(int count);
 }
 
 class _AppLocalizationsDelegate

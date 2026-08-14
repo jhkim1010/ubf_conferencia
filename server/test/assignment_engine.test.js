@@ -548,3 +548,89 @@ describe('assignGroups — 인원이 적은 칸', () => {
     }
   });
 });
+
+// ── 여유 자리 (042) ──────────────────────────────────────────────
+
+test('여유 자리는 정원이 다 찬 뒤에 쓴다', () => {
+  // 2인실 둘, 여유 각 1. 세 사람이면 한 방에 셋을 몰지 않고 2+1 로 나눈다 —
+  // 안 깔아도 될 간이침대가 첫 방부터 깔리면 안 된다.
+  const rooms = [
+    { id: 'A', capacity: 2, extraCapacity: 1, gender: 'M', roomType: 'dorm' },
+    { id: 'B', capacity: 2, extraCapacity: 1, gender: 'M', roomType: 'dorm' },
+  ];
+  const people = [
+    { id: 'p1', gender: 'M' }, { id: 'p2', gender: 'M' }, { id: 'p3', gender: 'M' },
+  ];
+  const { assignments, unplaced } = assignRooms({ rooms, people, roommateEdges: [] });
+  assert.equal(unplaced.length, 0);
+  const perRoom = {};
+  for (const a of assignments) perRoom[a.roomId] = (perRoom[a.roomId] ?? 0) + 1;
+  assert.deepEqual(perRoom, { A: 2, B: 1 });
+});
+
+test('정원이 모자라면 그때 여유를 연다', () => {
+  // 2인실 하나에 여유 1. 셋이면 셋 다 들어간다.
+  const rooms = [
+    { id: 'A', capacity: 2, extraCapacity: 1, gender: 'M', roomType: 'dorm' },
+  ];
+  const people = [
+    { id: 'p1', gender: 'M' }, { id: 'p2', gender: 'M' }, { id: 'p3', gender: 'M' },
+  ];
+  const { assignments, unplaced } = assignRooms({ rooms, people, roommateEdges: [] });
+  assert.equal(assignments.length, 3);
+  assert.equal(unplaced.length, 0);
+});
+
+test('여유까지 써도 모자라면 남긴다', () => {
+  const rooms = [
+    { id: 'A', capacity: 2, extraCapacity: 1, gender: 'M', roomType: 'dorm' },
+  ];
+  const people = [
+    { id: 'p1', gender: 'M' }, { id: 'p2', gender: 'M' },
+    { id: 'p3', gender: 'M' }, { id: 'p4', gender: 'M' },
+  ];
+  const { assignments, unplaced } = assignRooms({ rooms, people, roommateEdges: [] });
+  assert.equal(assignments.length, 3);
+  assert.deepEqual(unplaced.map((u) => u.reason), ['no_space']);
+});
+
+test('여유를 안 두면 예전과 똑같다', () => {
+  // extraCapacity 를 안 준 방은 042 이전과 같이 동작해야 한다.
+  const rooms = [{ id: 'A', capacity: 2, gender: 'M', roomType: 'dorm' }];
+  const people = [
+    { id: 'p1', gender: 'M' }, { id: 'p2', gender: 'M' }, { id: 'p3', gender: 'M' },
+  ];
+  const { assignments, unplaced } = assignRooms({ rooms, people, roommateEdges: [] });
+  assert.equal(assignments.length, 2);
+  assert.equal(unplaced.length, 1);
+});
+
+test('여유 자리에 묶음을 통째로 넣는다', () => {
+  // 짝은 쪼개지 않는다. 2인실 하나(여유 1)에 셋짜리 묶음이면 셋 다 들어간다.
+  const rooms = [
+    { id: 'A', capacity: 2, extraCapacity: 1, gender: 'M', roomType: 'dorm' },
+    { id: 'B', capacity: 2, extraCapacity: 0, gender: 'M', roomType: 'dorm' },
+  ];
+  const people = [
+    { id: 'p1', gender: 'M' }, { id: 'p2', gender: 'M' }, { id: 'p3', gender: 'M' },
+  ];
+  const { assignments } = assignRooms({
+    rooms, people, roommateEdges: [['p1', 'p2'], ['p2', 'p3']],
+  });
+  const perRoom = {};
+  for (const a of assignments) perRoom[a.roomId] = (perRoom[a.roomId] ?? 0) + 1;
+  assert.deepEqual(perRoom, { A: 3 });
+});
+
+test('여유 값이 이상하면 없는 것으로 본다', () => {
+  const rooms = [
+    { id: 'A', capacity: 1, extraCapacity: -5, gender: 'M', roomType: 'dorm' },
+    { id: 'B', capacity: 1, extraCapacity: 'x', gender: 'M', roomType: 'dorm' },
+  ];
+  const people = [
+    { id: 'p1', gender: 'M' }, { id: 'p2', gender: 'M' }, { id: 'p3', gender: 'M' },
+  ];
+  const { assignments, unplaced } = assignRooms({ rooms, people, roommateEdges: [] });
+  assert.equal(assignments.length, 2);
+  assert.equal(unplaced.length, 1);
+});

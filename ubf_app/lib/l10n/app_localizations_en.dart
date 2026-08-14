@@ -3048,4 +3048,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tblPayments => 'Payments';
+
+  @override
+  String get setupExtraBed => 'Spare spot';
+
+  @override
+  String get setupExtraBedHint =>
+      'One more person can squeeze in. Used only when the normal beds run out.';
+
+  @override
+  String asnRoomWithExtra(int used, int cap, int extra) {
+    return '$used/$cap (+$extra)';
+  }
+
+  @override
+  String setupExtraSeats(int count) {
+    return 'spare $count';
+  }
 }

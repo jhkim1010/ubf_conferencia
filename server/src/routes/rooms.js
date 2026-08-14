@@ -39,7 +39,7 @@ router.get('/:programId', requireAuth, async (req, res) => {
   const { programId } = req.params;
   try {
     const rooms = await sql`
-      SELECT id, name, floor, room_type, capacity, gender, created_at
+      SELECT id, name, floor, room_type, capacity, extra_capacity, gender, created_at
       FROM rooms
       WHERE program_id = ${programId}
       ORDER BY floor NULLS FIRST, name ASC
@@ -51,7 +51,10 @@ router.get('/:programId', requireAuth, async (req, res) => {
         COALESCE(SUM(capacity) FILTER (WHERE gender = 'M'), 0)     AS male_seats,
         COALESCE(SUM(capacity) FILTER (WHERE gender = 'F'), 0)     AS female_seats,
         COALESCE(SUM(capacity) FILTER (WHERE gender = 'mixed'), 0) AS mixed_seats,
-        COALESCE(SUM(capacity), 0)                                 AS total_seats
+        COALESCE(SUM(capacity), 0)                                 AS total_seats,
+        -- 여유는 따로 센다. 정원에 더해 버리면 "정원 대비 등록" 이 부풀어,
+        -- 실제로는 간이침대를 깔아야 하는 상황이 여유 있는 것처럼 보인다.
+        COALESCE(SUM(extra_capacity), 0)                           AS extra_seats
       FROM rooms
       WHERE program_id = ${programId}
     `;
@@ -71,6 +74,9 @@ router.get('/:programId', requireAuth, async (req, res) => {
       femaleSeats: Number(seatAgg.female_seats),
       mixedSeats: Number(seatAgg.mixed_seats),
       totalSeats: Number(seatAgg.total_seats),
+      // 여유는 정원과 따로 준다. 더해 버리면 "정원 대비 등록" 이 부풀어,
+      // 실제로는 간이침대를 깔아야 하는 상황이 여유 있는 것처럼 보인다.
+      extraSeats: Number(seatAgg.extra_seats),
       maleRegs: Number(regAgg.male_regs),
       femaleRegs: Number(regAgg.female_regs),
       totalRegs: Number(regAgg.total_regs),
@@ -86,9 +92,19 @@ router.get('/:programId', requireAuth, async (req, res) => {
   }
 });
 
+/// 여유 자리(042). 2인실에 간이침대 하나를 더 놓는 식이다.
+/// 0~3 을 벗어나면 0 으로 본다 — 2인실에 다섯을 넣는 것은 여유가 아니라
+/// 정원을 잘못 적은 것이다.
+function normalizeExtra(v) {
+  const n = Number.parseInt(v, 10);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(3, n);
+}
+
 // POST /rooms/:programId — 방 1개 생성 (admin 이상)
 router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
   const { name, floor, roomType, capacity, gender } = req.body;
+  const extra = normalizeExtra(req.body?.extraCapacity);
   if (!name || !capacity) {
     return res.status(400).json({ error: 'name과 capacity가 필요합니다' });
   }
@@ -100,9 +116,12 @@ router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) =>
 
   try {
     const [room] = await sql`
-      INSERT INTO rooms (program_id, name, floor, room_type, capacity, gender)
-      VALUES (${req.params.programId}, ${name}, ${floor ?? null}, ${type}, ${capacity}, ${g})
-      RETURNING id, name, floor, room_type, capacity, gender, created_at
+      INSERT INTO rooms (program_id, name, floor, room_type, capacity, gender,
+                         extra_capacity)
+      VALUES (${req.params.programId}, ${name}, ${floor ?? null}, ${type},
+              ${capacity}, ${g}, ${extra})
+      RETURNING id, name, floor, room_type, capacity, extra_capacity, gender,
+                created_at
     `;
     res.status(201).json(room);
   } catch (err) {
@@ -115,6 +134,7 @@ router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) =>
 // body: { namePattern, startNumber, count, floor, roomType, capacity, gender }
 router.post('/:programId/bulk', requireAuth, requireProgramAdmin, async (req, res) => {
   const { namePattern, startNumber, count, floor, roomType, capacity, gender } = req.body;
+  const extra = normalizeExtra(req.body?.extraCapacity);
   if (!namePattern || !count || !capacity) {
     return res.status(400).json({ error: 'namePattern, count, capacity가 필요합니다' });
   }
@@ -134,10 +154,12 @@ router.post('/:programId/bulk', requireAuth, requireProgramAdmin, async (req, re
       const rows = [];
       for (const name of names) {
         const { rows: [room] } = await client.query(
-          `INSERT INTO rooms (program_id, name, floor, room_type, capacity, gender)
-           VALUES ($1, $2, $3, $4, $5, $6)
-           RETURNING id, name, floor, room_type, capacity, gender, created_at`,
-          [req.params.programId, name, floor ?? null, type, capacity, g],
+          `INSERT INTO rooms (program_id, name, floor, room_type, capacity, gender,
+                              extra_capacity)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           RETURNING id, name, floor, room_type, capacity, extra_capacity,
+                     gender, created_at`,
+          [req.params.programId, name, floor ?? null, type, capacity, g, extra],
         );
         rows.push(room);
       }

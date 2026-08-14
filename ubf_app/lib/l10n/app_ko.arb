@@ -927,5 +927,9 @@
   "dashPayConfirmed": "확인",
   "dashPayPending": "대기",
   "dashPayNone": "미납",
-  "tblPayments": "입금 현황"
+  "tblPayments": "입금 현황",
+  "setupExtraBed": "여유 자리",
+  "setupExtraBedHint": "한 명 더 들어갈 수 있습니다. 정원이 다 찼을 때에만 씁니다.",
+  "asnRoomWithExtra": "{used}/{cap} (+{extra})",
+  "setupExtraSeats": "여유 {count}석"
 }

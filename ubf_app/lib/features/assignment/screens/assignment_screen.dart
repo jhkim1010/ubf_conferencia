@@ -140,8 +140,10 @@ class _RoomsAssignTab extends ConsumerWidget {
     Map<String, dynamic> room,
     VoidCallback refresh,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final members = (room['members'] as List).cast<Map<String, dynamic>>();
     final cap = (room['capacity'] as num).toInt();
+    final extra = (room['extra_capacity'] as num?)?.toInt() ?? 0;
     final g = room['gender'] as String;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -165,12 +167,17 @@ class _RoomsAssignTab extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  '${members.length}/$cap',
+                  extra > 0
+                      ? l10n.asnRoomWithExtra(members.length, cap, extra)
+                      : '${members.length}/$cap',
                   style: TextStyle(
                     fontSize: 12,
-                    color: members.length >= cap
-                        ? Colors.green
-                        : Colors.grey[600],
+                    // 여유까지 쓰고 있으면 그 사실이 눈에 띄어야 한다.
+                    color: members.length > cap
+                        ? Colors.orange[800]
+                        : (members.length >= cap
+                              ? Colors.green
+                              : Colors.grey[600]),
                   ),
                 ),
               ],

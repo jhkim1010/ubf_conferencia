@@ -2982,4 +2982,20 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get tblPayments => '입금 현황';
+
+  @override
+  String get setupExtraBed => '여유 자리';
+
+  @override
+  String get setupExtraBedHint => '한 명 더 들어갈 수 있습니다. 정원이 다 찼을 때에만 씁니다.';
+
+  @override
+  String asnRoomWithExtra(int used, int cap, int extra) {
+    return '$used/$cap (+$extra)';
+  }
+
+  @override
+  String setupExtraSeats(int count) {
+    return '여유 $count석';
+  }
 }

@@ -37,7 +37,8 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, async (req, re
   const { programId } = req.params;
   try {
     const rooms = await sql`
-      SELECT r.id, r.name, r.floor, r.room_type, r.capacity, r.gender,
+      SELECT r.id, r.name, r.floor, r.room_type, r.capacity,
+             r.extra_capacity, r.gender,
         COALESCE(json_agg(
           json_build_object('registrationId', reg.id, 'name', reg.real_name, 'gender', reg.gender)
         ) FILTER (WHERE reg.id IS NOT NULL), '[]') AS members
@@ -98,7 +99,9 @@ router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, async (r
   const { programId } = req.params;
   try {
     const [rooms, people, roommateEdges] = await Promise.all([
-      sql`SELECT id, capacity, gender, room_type AS "roomType" FROM rooms WHERE program_id = ${programId}`,
+      sql`SELECT id, capacity, extra_capacity AS "extraCapacity", gender,
+                 room_type AS "roomType"
+            FROM rooms WHERE program_id = ${programId}`,
       loadPeople(programId),
       loadAcceptedEdges(programId, 'roommate'),
     ]);
@@ -184,7 +187,7 @@ router.post('/:programId/rooms/assign', requireAuth, requireProgramAdmin, async 
   }
   try {
     const [room] = await sql`
-      SELECT r.capacity, r.gender, r.room_type,
+      SELECT r.capacity, r.extra_capacity, r.gender, r.room_type,
              (SELECT COUNT(*) FROM room_assignments WHERE room_id = r.id) AS occupied
       FROM rooms r WHERE r.id = ${roomId} AND r.program_id = ${programId}
     `;
@@ -198,7 +201,9 @@ router.post('/:programId/rooms/assign', requireAuth, requireProgramAdmin, async 
     if (room.room_type === 'dorm' && person.gender && room.gender !== person.gender) {
       return res.status(422).json({ error: '단체실은 같은 성별만 배정할 수 있습니다' });
     }
-    if (Number(room.occupied) >= room.capacity) {
+    // 여유 자리까지 허용한다(042). 담당자가 직접 넣는 것은 "간이침대를
+    // 하나 더 놓겠다" 는 뜻이므로 막지 않는다.
+    if (Number(room.occupied) >= room.capacity + Number(room.extra_capacity ?? 0)) {
       return res.status(422).json({ error: '방 정원이 가득 찼습니다' });
     }
 

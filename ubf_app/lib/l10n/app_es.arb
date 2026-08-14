@@ -927,5 +927,9 @@
   "dashPayConfirmed": "pagado",
   "dashPayPending": "esperando",
   "dashPayNone": "sin pagar",
-  "tblPayments": "Pagos"
+  "tblPayments": "Pagos",
+  "setupExtraBed": "Lugar extra",
+  "setupExtraBedHint": "Cabe una persona más. Solo se usa cuando se llenan las camas normales.",
+  "asnRoomWithExtra": "{used}/{cap} (+{extra})",
+  "setupExtraSeats": "extra {count}"
 }

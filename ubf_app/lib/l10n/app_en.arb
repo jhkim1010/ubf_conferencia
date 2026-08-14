@@ -1866,5 +1866,29 @@
   "dashPayConfirmed": "paid",
   "dashPayPending": "waiting",
   "dashPayNone": "not yet",
-  "tblPayments": "Payments"
+  "tblPayments": "Payments",
+  "setupExtraBed": "Spare spot",
+  "setupExtraBedHint": "One more person can squeeze in. Used only when the normal beds run out.",
+  "asnRoomWithExtra": "{used}/{cap} (+{extra})",
+  "@asnRoomWithExtra": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "cap": {
+        "type": "int"
+      },
+      "extra": {
+        "type": "int"
+      }
+    }
+  },
+  "setupExtraSeats": "spare {count}",
+  "@setupExtraSeats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

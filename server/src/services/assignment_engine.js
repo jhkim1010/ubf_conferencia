@@ -40,7 +40,12 @@ export function connectedComponents(nodeIds, edges) {
 // 묶음은 쪼개지 않고, 큰 묶음부터 채운다(FFD). 자리가 없으면 억지로 넣지 않고
 // 사유와 함께 남긴다 — 담당자가 보고 방을 늘리는 편이 낫다.
 //
-// rooms: [{id, capacity, gender('M'|'F'|'mixed'), roomType('dorm'|'couple'|'family')}]
+// **여유 자리(extraCapacity)는 마지막에 쓴다.** 2인실에 간이침대를 하나 더
+// 놓을 수 있다 해도, 다른 방에 정상 자리가 남아 있는 동안에는 깔지 않는다.
+// 그래서 배치를 두 번 돈다 — 먼저 정원까지만, 그래도 남는 사람이 있으면
+// 그때 여유를 연다.
+//
+// rooms: [{id, capacity, extraCapacity?, gender('M'|'F'|'mixed'), roomType(...)}]
 // people: [{id, gender('M'|'F'|null)}]
 // roommateEdges: [fromId, toId][] (수락된 것만)
 // familyEdges:   [fromId, toId][] (수락 + 동행 관계. roommateEdges 의 부분집합)
@@ -76,23 +81,46 @@ export function assignRooms({ rooms, people, roommateEdges, familyEdges = [] }) 
   const pool = rooms.map((r) => ({
     id: r.id,
     remaining: r.capacity,
+    // 간이침대. 정원이 다 찼을 때에만 연다.
+    extra: Math.max(0, Number(r.extraCapacity ?? 0) || 0),
     gender: r.gender,
     roomType: r.roomType,
   }));
 
+  const fits = (d, unit, mixed, genders, useExtra) => {
+    const room = d.remaining + (useExtra ? d.extra : 0);
+    if (room < unit.length) return false;
+    if (mixed) return d.gender === 'mixed';
+    // 단일 성별 묶음은 그 성별의 단체실에 넣는다. mixed 방은 동행용으로
+    // 남겨 둔다 — 부부용 2인실을 혼자 온 사람으로 채우면 정작 필요한 짝이
+    // 들어갈 자리가 없어진다.
+    return d.roomType === 'dorm' && d.gender === [...genders][0];
+  };
+
+  const take = (d, n) => {
+    const fromNormal = Math.min(d.remaining, n);
+    d.remaining -= fromNormal;
+    d.extra -= n - fromNormal;
+  };
+
+  const leftover = [];
   for (const unit of units) {
     const genders = new Set(unit.map((id) => genderOf.get(id)));
     const mixed = genders.size > 1;
 
-    const room = pool.find((d) => {
-      if (d.remaining < unit.length) return false;
-      if (mixed) return d.gender === 'mixed';
-      // 단일 성별 묶음은 그 성별의 단체실에 넣는다. mixed 방은 동행용으로
-      // 남겨 둔다 — 부부용 2인실을 혼자 온 사람으로 채우면 정작 필요한 짝이
-      // 들어갈 자리가 없어진다.
-      return d.roomType === 'dorm' && d.gender === [...genders][0];
-    });
+    // 1차: 정원 안에서만 찾는다.
+    const room = pool.find((d) => fits(d, unit, mixed, genders, false));
+    if (!room) {
+      leftover.push({ unit, mixed, genders });
+      continue;
+    }
+    take(room, unit.length);
+    for (const id of unit) assignments.push({ roomId: room.id, registrationId: id });
+  }
 
+  // 2차: 남은 사람에게만 여유 자리를 연다.
+  for (const { unit, mixed, genders } of leftover) {
+    const room = pool.find((d) => fits(d, unit, mixed, genders, true));
     if (!room) {
       for (const id of unit) {
         unplaced.push({
@@ -106,7 +134,7 @@ export function assignRooms({ rooms, people, roommateEdges, familyEdges = [] }) 
       }
       continue;
     }
-    room.remaining -= unit.length;
+    take(room, unit.length);
     for (const id of unit) assignments.push({ roomId: room.id, registrationId: id });
   }
 
