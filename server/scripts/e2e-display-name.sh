@@ -106,5 +106,15 @@ curl -s -o /dev/null -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer
 eq "  지우면 본명으로 돌아간다" "$WANT" "$(RECENT)"
 
 echo
+echo "── 두 이름이 같으면 ──"
+# 같은 이름을 양쪽에 적어 두는 사람이 있다. 그대로 두면 "Joseph (Joseph)".
+D=$(login "dn-d-$$@test.local")
+curl -s -o /dev/null -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $D" \
+  -H 'Content-Type: application/json' \
+  -d '{"realName":"Joseph","bibleName":"joseph","country":"KR","gender":"M","age":30}'
+eq "한 번만 보인다" 'true' \
+   "$(RECENT | node -pe "const s=require('fs').readFileSync(0,'utf8'); s.includes('Joseph') && !s.includes('(joseph)') && !s.includes('(Joseph)')")"
+
+echo
 echo "통과 $pass · 실패 $fail"
 [ "$fail" -eq 0 ]

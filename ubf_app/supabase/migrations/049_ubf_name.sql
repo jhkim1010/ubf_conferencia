@@ -45,6 +45,10 @@ AS $$
       THEN legal
     WHEN btrim(COALESCE(legal, '')) = ''
       THEN btrim(bible)
+    -- 같은 이름을 두 번 적어 두는 사람이 있다("Joseph", "Joseph").
+    -- 그대로 두면 명단에 "Joseph (Joseph)" 이라고 나온다.
+    WHEN lower(btrim(bible)) = lower(btrim(legal))
+      THEN btrim(legal)
     ELSE btrim(bible) || ' (' || btrim(legal) || ')'
   END;
 $$;
