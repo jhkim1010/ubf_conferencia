@@ -750,6 +750,31 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
       .filter((x) => x.needed > 0 || x.filled > 0)
       .slice(0, LIMIT);
 
+    // 자원한 사람 몇 줄. 역할별 부족만 내보내다가, 필요 인원을 아직 아무
+    // 역할에도 안 잡아 둔 수양회에서 카드가 "5명" 위에 "아직 없습니다" 를
+    // 띄웠다 — 자원자가 없다는 뜻으로 읽힌다. 보여 줄 역할 줄이 없으면
+    // 자원한 사람을 대신 보여 준다.
+    //
+    // 많이 적어 낸 사람이 먼저다. 담당자가 카드에서 찾는 것은 "누구에게
+    // 부탁할 수 있나" 이기 때문이다.
+    // `assigned` 는 **자원과 다른 것**이다. 자원은 "할 수 있다" 이고 이것은
+    // 실제로 맡은 자리다. 카드가 둘을 구별해 말하지 않으면 "자원자 5명" 옆의
+    // 빈 줄이 자원자가 없다는 뜻으로 읽힌다. 거절·반려는 맡은 것이 아니다.
+    const volunteers = await sql`
+      SELECT r.real_name AS name, r.country,
+             r.volunteer_resources AS resources,
+             (
+               SELECT COUNT(*)::int FROM service_signups ss
+               WHERE ss.registration_id = r.id
+                 AND ss.status NOT IN ('declined', 'rejected')
+             ) AS assigned
+      FROM registrations r
+      WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+        AND COALESCE(array_length(r.volunteer_resources, 1), 0) > 0
+      ORDER BY array_length(r.volunteer_resources, 1) DESC, r.real_name
+      LIMIT ${LIMIT}
+    `;
+
     const [recent, tours, meals, arrival, payments] = await Promise.all([
       sql`
         SELECT r.real_name AS name, r.country, r.submitted
@@ -807,7 +832,15 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
       // 입금 카드를 보여 줄지 여기서 정한다. 앱이 따로 판단하면 규칙이
       // 두 곳에 생긴다.
       needs_payment_card: needsPaymentCard(stats ?? {}),
-      preview: { recent, tours, meals, arrival, payments, services: serviceRoles },
+      preview: {
+        recent,
+        tours,
+        meals,
+        arrival,
+        payments,
+        services: serviceRoles,
+        volunteers,
+      },
     });
   } catch (err) {
     console.error('통계 조회 오류:', err);

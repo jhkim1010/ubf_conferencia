@@ -3217,4 +3217,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get schServiceHint =>
       'The reminder will say how many are still needed, and only when some are.';
+
+  @override
+  String svcAssignTo(String name) {
+    return 'Ask $name to help with';
+  }
+
+  @override
+  String get svcSuggested => 'matches what they offered';
+
+  @override
+  String get dashNotAssigned => 'not assigned yet';
+
+  @override
+  String dashAssignedCount(int count) {
+    return 'assigned to $count';
+  }
 }

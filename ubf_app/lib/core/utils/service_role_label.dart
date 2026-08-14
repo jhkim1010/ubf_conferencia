@@ -61,5 +61,30 @@ String volunteerResourceLabel(AppLocalizations l10n, String key) =>
       'childcare' => l10n.volChildcare,
       'cooking' => l10n.volCooking,
       'driving' => l10n.volDriving,
+      // 등록 화면에는 있는데 여기 빠져 있어서, 봉사 화면에 'medical' 이
+      // 영문 키 그대로 나왔다.
+      'medical' => l10n.volMedical,
       _ => key,
     };
+
+/// 적어 낸 자원에 어울리는 역할.
+///
+/// **추천일 뿐이다.** 누구에게 무엇을 맡길지는 담당자가 정한다 — 여기서
+/// 하는 일은 고를 때 그 역할을 위로 올려 주는 것뿐이고, 나머지 역할도
+/// 그대로 고를 수 있다.
+String? suggestedRoleFor(String resourceKey) => switch (resourceKey) {
+  'piano' ||
+  'guitar' ||
+  'bass' ||
+  'drums' ||
+  'violin' ||
+  'vocals' ||
+  'worship_lead' ||
+  'sound' => 'special_song',
+  'translation' => 'interpreter',
+  'photography' => 'photo_video',
+  'cooking' => 'meal_prep',
+  'driving' => 'pickup',
+  'medical' => 'medical',
+  _ => null,
+};

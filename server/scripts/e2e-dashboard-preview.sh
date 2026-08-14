@@ -133,6 +133,19 @@ curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $VT" \
   -d '{"realName":"한자원","country":"KR","gender":"F","age":28,
        "volunteerResources":["driving","cooking"]}' > /dev/null
 eq "자원자 수를 센다" '1' "$(STATS | jq_ 'r.volunteer_count')"
+# 역할에 필요 인원을 아직 아무것도 안 잡아 둔 상태다. 이때 미리보기가 비면
+# 카드가 "1명" 위에 "아직 없습니다" 를 띄워 자원자가 없는 것으로 읽힌다 —
+# 운영에서 실제로 그렇게 읽혔다. 그래서 **자원한 사람**을 대신 싣는다.
+eq "역할을 안 정했으면 역할 줄이 없다" '0' "$(STATS | jq_ 'r.preview.services.length')"
+eq "  대신 자원한 사람이 온다"        '1' "$(STATS | jq_ 'r.preview.volunteers.length')"
+eq "  이름이 함께"               '한자원' "$(STATS | jq_ 'r.preview.volunteers[0].name')"
+eq "  무엇을 할 수 있는지도"    'driving' "$(STATS | jq_ 'r.preview.volunteers[0].resources[0]')"
+# **자원했다 ≠ 맡았다.** 줄마다 이것을 말하지 않으면 카드의 빈 자리가
+# "자원자가 없다" 로 읽힌다. 자원만 했을 때는 0 이어야 한다.
+eq "  자원만 했으면 맡은 것 0"        '0' "$(STATS | jq_ 'r.preview.volunteers[0].assigned')"
+# 자원하지 않은 사람은 이 줄에 없다. 있으면 카드가 거짓말을 한다.
+eq "  자원 안 한 사람은 없다"         '1' \
+   "$(STATS | jq_ 'r.preview.volunteers.filter(v => v.resources && v.resources.length).length')"
 # 역할 구성을 정하면 부족이 보인다.
 curl -s -o /dev/null -X PUT "$API/service-signups/$P/roles" -H "Authorization: Bearer $LT" \
   -H 'Content-Type: application/json' \
@@ -144,6 +157,29 @@ eq "  아직 아무도 없다"     '0'      "$(STATS | jq_ 'r.preview.services[0
 # 자원했다고 역할이 채워지면 안 된다.
 eq "자원만으로는 역할이 안 찬다" '0' \
    "$(STATS | jq_ 'r.preview.services.reduce((n, x) => n + x.filled, 0)')"
+
+# 담당자가 맡기면 그 사람 줄의 표시가 바뀌어야 한다. 안 바뀌면 카드는
+# 영원히 "아직 맡은 일 없음" 이라고 말한다.
+VREG=$(curl -s "$API/programs/$P/registrations" -H "Authorization: Bearer $LT" \
+       | jq_ "r.find(x => x.real_name === '한자원').id")
+# 빈 값이면 아래 요청이 조용히 실패하고, 검사는 "안 올랐다" 를 버그로 오해한다.
+[ -n "$VREG" ] && [ "$VREG" != "ERR" ] || { echo "  ✗ 자원자 등록 id 를 못 찾았습니다"; fail=$((fail+1)); }
+eq "맡기기 요청이 통한다" '201' \
+   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/invite" \
+      -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+      --data-binary "$(printf '{"registrationId":"%s","serviceKey":"pickup"}' "$VREG")")"
+# 역할 줄이 생긴 뒤라 자원자 줄은 미리보기에서 빠진다. 값 자체를 본다.
+eq "맡기면 맡은 수가 오른다" '1' \
+   "$(curl -s "$API/programs/$P/stats" -H "Authorization: Bearer $LT" \
+      | jq_ "(r.preview.volunteers.find(v => v.name === '한자원') || {}).assigned")"
+# 지명은 부탁이지 확정이 아니다. 답을 기다리는 동안 자리는 잡아 두므로
+# filled 는 1 이 되지만(같은 자리에 둘을 부르지 않기 위함), confirmed 는
+# 본인이 수락해야 오른다. 둘을 같은 것으로 세면 아무도 대답하지 않은 역할이
+# 다 찬 것으로 보인다.
+eq "  자리는 잡아 둔다"         '1' \
+   "$(STATS | jq_ "r.preview.services.find(x => x.key === 'pickup').filled")"
+eq "  그러나 확정은 아니다"     '0' \
+   "$(STATS | jq_ "r.preview.services.find(x => x.key === 'pickup').confirmed")"
 
 echo
 echo "── 입금 카드를 보여 줄지 ──"

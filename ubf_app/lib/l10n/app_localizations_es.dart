@@ -3228,4 +3228,20 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get schServiceHint =>
       'El recordatorio dirá cuántos faltan, solo si faltan.';
+
+  @override
+  String svcAssignTo(String name) {
+    return 'Pedir a $name que ayude con';
+  }
+
+  @override
+  String get svcSuggested => 'coincide con lo que ofreció';
+
+  @override
+  String get dashNotAssigned => 'sin tarea todavía';
+
+  @override
+  String dashAssignedCount(int count) {
+    return 'asignado a $count';
+  }
 }

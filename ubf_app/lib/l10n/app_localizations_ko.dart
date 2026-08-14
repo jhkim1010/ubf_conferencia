@@ -3149,4 +3149,20 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get schServiceHint =>
       '시작 5분 전 알림에 \"아직 n명 부족\" 이 함께 갑니다. 다 찼으면 붙지 않습니다.';
+
+  @override
+  String svcAssignTo(String name) {
+    return '$name 님에게 부탁할 일';
+  }
+
+  @override
+  String get svcSuggested => '적어 낸 것과 맞음';
+
+  @override
+  String get dashNotAssigned => '아직 맡은 일 없음';
+
+  @override
+  String dashAssignedCount(int count) {
+    return '$count곳 맡음';
+  }
 }

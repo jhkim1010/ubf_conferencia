@@ -398,18 +398,47 @@ class _StatsGrid extends StatelessWidget {
 
     /// 봉사 줄은 역할 이름과 확정/필요를 보여 준다. 다 채운 역할은
     /// 크림색을 쓰지 않는다 — 크림색은 "아직 안 끝난" 쪽이다.
-    List<Map<String, dynamic>> serviceRows() => [
-      for (final x in rows('services'))
-        {
-          'name': serviceRoleLabel(l10n, x),
-          'country': null,
-          'detail': l10n.dashRoleFilled(
-            ((x['filled'] ?? 0) as num).toInt(),
-            ((x['needed'] ?? 0) as num).toInt(),
-          ),
-          'submitted': ((x['short'] ?? 0) as num).toInt() == 0,
-        },
-    ];
+    ///
+    /// 역할에 필요 인원을 아직 아무것도 안 잡아 뒀으면 보여 줄 역할 줄이
+    /// 없다. 그때 미리보기를 비워 두면 카드가 "5명" 위에 "아직 없습니다" 를
+    /// 띄워, 자원자가 없다는 뜻으로 읽힌다 — 실제로 그렇게 읽혔다.
+    /// 그런 경우에는 **자원한 사람**을 대신 보여 준다.
+    List<Map<String, dynamic>> serviceRows() {
+      final roles = rows('services');
+      if (roles.isNotEmpty) {
+        return [
+          for (final x in roles)
+            {
+              'name': serviceRoleLabel(l10n, x),
+              'country': null,
+              'detail': l10n.dashRoleFilled(
+                ((x['filled'] ?? 0) as num).toInt(),
+                ((x['needed'] ?? 0) as num).toInt(),
+              ),
+              'submitted': ((x['short'] ?? 0) as num).toInt() == 0,
+            },
+        ];
+      }
+      return [
+        for (final v in rows('volunteers'))
+          () {
+            final assigned = ((v['assigned'] ?? 0) as num).toInt();
+            return {
+              'name': v['name'],
+              'country': v['country'],
+              // "자원했다" 와 "맡았다" 는 다른 말이다. 줄마다 분명히 하지
+              // 않으면, 자원자 5명 옆의 빈 자리가 자원자가 없다는 뜻으로
+              // 읽힌다.
+              'detail': assigned > 0
+                  ? l10n.dashAssignedCount(assigned)
+                  : l10n.dashNotAssigned,
+              // 아직 아무것도 안 맡은 사람이 크림색이다 — 다른 화면과 같은
+              // 뜻으로, 담당자가 손대야 할 줄이다.
+              'submitted': assigned > 0,
+            };
+          }(),
+      ];
+    }
 
     /// 입금 줄은 상태를 말로 바꾸고, **아직 못 받은 사람**을 크림색으로
     /// 만든다 — 다른 화면과 같은 뜻이다(크림색 = 아직 안 끝난 사람).

@@ -5873,6 +5873,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The reminder will say how many are still needed, and only when some are.'**
   String get schServiceHint;
+
+  /// 자원자 명단에서 사람을 눌렀을 때의 역할 고르기 제목
+  ///
+  /// In en, this message translates to:
+  /// **'Ask {name} to help with'**
+  String svcAssignTo(String name);
+
+  /// 적어 낸 자원과 어울리는 역할이라는 표시
+  ///
+  /// In en, this message translates to:
+  /// **'matches what they offered'**
+  String get svcSuggested;
+
+  /// 자원했지만 아직 어느 역할도 맡지 않은 사람
+  ///
+  /// In en, this message translates to:
+  /// **'not assigned yet'**
+  String get dashNotAssigned;
+
+  /// 자원자가 맡은 역할 수
+  ///
+  /// In en, this message translates to:
+  /// **'assigned to {count}'**
+  String dashAssignedCount(int count);
 }
 
 class _AppLocalizationsDelegate

@@ -3229,4 +3229,20 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get schServiceHint =>
       'O lembrete dirá quantos faltam, só quando faltarem.';
+
+  @override
+  String svcAssignTo(String name) {
+    return 'Pedir a $name que ajude com';
+  }
+
+  @override
+  String get svcSuggested => 'combina com o que ofereceu';
+
+  @override
+  String get dashNotAssigned => 'ainda sem tarefa';
+
+  @override
+  String dashAssignedCount(int count) {
+    return 'atribuído a $count';
+  }
 }

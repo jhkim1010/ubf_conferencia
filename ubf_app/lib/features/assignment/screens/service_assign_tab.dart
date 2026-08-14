@@ -47,6 +47,9 @@ class ServiceAssignTab extends ConsumerWidget {
               // 등록할 때 자원한 사람. 지금까지 이 정보가 어느 화면에도
               // 나오지 않아, 누가 무엇을 할 수 있는지 알 길이 없었다.
               _Volunteers(
+                programId: programId,
+                roles: roles,
+                onChanged: refresh,
                 people: ((data?['volunteers'] as List?) ?? const [])
                     .cast<Map<String, dynamic>>(),
               ),
@@ -681,8 +684,16 @@ class _RoleConfigDialogState extends State<_RoleConfigDialog> {
 /// 담당자가 보고 고르라고 보여 주는 것이다.
 class _Volunteers extends StatefulWidget {
   final List<Map<String, dynamic>> people;
+  final String programId;
+  final List<Map<String, dynamic>> roles;
+  final VoidCallback onChanged;
 
-  const _Volunteers({required this.people});
+  const _Volunteers({
+    required this.people,
+    required this.programId,
+    required this.roles,
+    required this.onChanged,
+  });
 
   @override
   State<_Volunteers> createState() => _VolunteersState();
@@ -690,6 +701,92 @@ class _Volunteers extends StatefulWidget {
 
 class _VolunteersState extends State<_Volunteers> {
   bool _open = false;
+
+  /// 여기서 바로 맡긴다. 지금까지는 역할 카드를 열어 사람을 찾아야 했는데,
+  /// 담당자가 보고 있는 것은 이 명단이다 — 보고 있는 자리에서 누르는 것이
+  /// 맞다.
+  ///
+  /// 맡기는 것은 **부탁**이지 확정이 아니다. 본인이 수락해야 확정된다
+  /// (서버의 invite). 그래서 이미 그 역할에 있는 사람에게는 다시 묻지
+  /// 않는다.
+  ///
+  /// [hint] 는 누른 자원(운전·요리 …)이다. 어울리는 역할을 목록 맨 위로
+  /// 올리는 데만 쓰고, 나머지 역할도 그대로 고를 수 있다.
+  Future<void> _assign(Map<String, dynamic> person, {String? hint}) async {
+    final l10n = AppLocalizations.of(context)!;
+    final name = '${person['real_name'] ?? ''}';
+    final regId = person['registration_id'] as String?;
+    if (regId == null) return;
+
+    // 이미 맡고 있는 역할은 뺀다. 남는 것이 없으면 고를 것도 없다.
+    bool has(Map<String, dynamic> role) =>
+        ((role['people'] as List?) ?? const [])
+            .cast<Map<String, dynamic>>()
+            .any((p) => p['registration_id'] == regId);
+
+    final open = widget.roles.where((r) => !has(r)).toList();
+    final suggested = hint == null ? null : suggestedRoleFor(hint);
+    final offered = ((person['resources'] as List?) ?? const [])
+        .map((r) => suggestedRoleFor('$r'))
+        .whereType<String>()
+        .toSet();
+    // 누른 자원이 먼저, 그 다음이 적어 낸 것과 맞는 역할.
+    int rank(Map<String, dynamic> r) =>
+        r['key'] == suggested ? 0 : (offered.contains(r['key']) ? 1 : 2);
+    open.sort((a, b) => rank(a).compareTo(rank(b)));
+
+    final picked = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.svcAssignTo(name)),
+        children: [
+          if (open.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(l10n.tblEmpty),
+            ),
+          for (final r in open)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, r),
+              child: Row(
+                children: [
+                  Expanded(child: Text(serviceRoleLabel(l10n, r))),
+                  if (rank(r) < 2)
+                    Text(
+                      l10n.svcSuggested,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: Colors.green[700],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+    if (picked == null || !mounted) return;
+
+    try {
+      await ApiClient.inviteToService(
+        widget.programId,
+        registrationId: regId,
+        serviceKey: picked['key'] as String,
+      );
+      widget.onChanged();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.svcAsked(name))));
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -727,43 +824,56 @@ class _VolunteersState extends State<_Volunteers> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  '${p['real_name'] ?? ''}',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
+                          // 이름을 누르면 이 사람에게 맡길 일을 고른다.
+                          InkWell(
+                            onTap: () => _assign(p),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${p['real_name'] ?? ''}',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Text(
-                                [
-                                  WorldCountries.display(
-                                        p['country'] as String?,
-                                      ) ??
-                                      '',
-                                  '${p['branch'] ?? ''}',
-                                ].where((s) => s.isNotEmpty).join(' · '),
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  color: Colors.grey[700],
+                                Text(
+                                  [
+                                    WorldCountries.display(
+                                          p['country'] as String?,
+                                        ) ??
+                                        '',
+                                    '${p['branch'] ?? ''}',
+                                  ].where((s) => s.isNotEmpty).join(' · '),
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: Colors.grey[700],
+                                  ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.add_task,
+                                  size: 15,
+                                  color: Colors.grey[500],
+                                ),
+                              ],
+                            ),
                           ),
                           Wrap(
                             spacing: 4,
                             runSpacing: 2,
                             children: [
+                              // 자원 하나를 누르면 그것에 어울리는 역할이
+                              // 목록 맨 위로 온다 — 운전을 눌렀으면 픽업.
                               for (final r
                                   in ((p['resources'] as List?) ?? const []))
-                                Chip(
+                                ActionChip(
                                   label: Text(
                                     volunteerResourceLabel(l10n, '$r'),
                                     style: const TextStyle(fontSize: 11),
                                   ),
+                                  onPressed: () => _assign(p, hint: '$r'),
                                   visualDensity: VisualDensity.compact,
                                   materialTapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,

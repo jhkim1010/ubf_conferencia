@@ -961,5 +961,9 @@
   "dspUnassignedFlight": "sem van",
   "schServiceLabel": "Serviço necessário (opcional)",
   "schServiceNone": "Nenhum",
-  "schServiceHint": "O lembrete dirá quantos faltam, só quando faltarem."
+  "schServiceHint": "O lembrete dirá quantos faltam, só quando faltarem.",
+  "svcAssignTo": "Pedir a {name} que ajude com",
+  "svcSuggested": "combina com o que ofereceu",
+  "dashNotAssigned": "ainda sem tarefa",
+  "dashAssignedCount": "atribuído a {count}"
 }

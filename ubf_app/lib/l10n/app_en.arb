@@ -2006,5 +2006,31 @@
   "dspUnassignedFlight": "no van yet",
   "schServiceLabel": "Service needed for this (optional)",
   "schServiceNone": "None",
-  "schServiceHint": "The reminder will say how many are still needed, and only when some are."
+  "schServiceHint": "The reminder will say how many are still needed, and only when some are.",
+  "svcAssignTo": "Ask {name} to help with",
+  "@svcAssignTo": {
+    "description": "자원자 명단에서 사람을 눌렀을 때의 역할 고르기 제목",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "svcSuggested": "matches what they offered",
+  "@svcSuggested": {
+    "description": "적어 낸 자원과 어울리는 역할이라는 표시"
+  },
+  "dashNotAssigned": "not assigned yet",
+  "@dashNotAssigned": {
+    "description": "자원했지만 아직 어느 역할도 맡지 않은 사람"
+  },
+  "dashAssignedCount": "assigned to {count}",
+  "@dashAssignedCount": {
+    "description": "자원자가 맡은 역할 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

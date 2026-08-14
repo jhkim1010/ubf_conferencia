@@ -975,5 +975,9 @@
   "dspUnassignedFlight": "배차 없음",
   "schServiceLabel": "이 순서에 필요한 봉사 (선택)",
   "schServiceNone": "없음",
-  "schServiceHint": "시작 5분 전 알림에 \"아직 n명 부족\" 이 함께 갑니다. 다 찼으면 붙지 않습니다."
+  "schServiceHint": "시작 5분 전 알림에 \"아직 n명 부족\" 이 함께 갑니다. 다 찼으면 붙지 않습니다.",
+  "svcAssignTo": "{name} 님에게 부탁할 일",
+  "svcSuggested": "적어 낸 것과 맞음",
+  "dashNotAssigned": "아직 맡은 일 없음",
+  "dashAssignedCount": "{count}곳 맡음"
 }
