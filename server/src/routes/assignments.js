@@ -41,7 +41,9 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, async (req, re
              r.extra_capacity, r.gender,
              r.leader_registration_id AS "leaderRegistrationId",
         COALESCE(json_agg(
-          json_build_object('registrationId', reg.id, 'name', reg.real_name, 'gender', reg.gender)
+          json_build_object('registrationId', reg.id,
+                            'name', display_name(reg.bible_name, reg.real_name),
+                            'gender', reg.gender)
           ORDER BY reg.real_name
         ) FILTER (WHERE reg.id IS NOT NULL), '[]') AS members
       FROM rooms r
@@ -52,7 +54,8 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, async (req, re
       ORDER BY r.floor NULLS FIRST, r.name
     `;
     const unassigned = await sql`
-      SELECT id AS "registrationId", real_name AS name, gender
+      SELECT id AS "registrationId",
+             display_name(bible_name, real_name) AS name, gender
       FROM registrations
       WHERE program_id = ${programId} AND has_registrant_name(real_name)
         AND id NOT IN (SELECT registration_id FROM room_assignments WHERE registration_id IS NOT NULL)
@@ -75,7 +78,8 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, async (req, r
       SELECT g.id, g.name, g.passage, g.location, g.leader_name,
         g.study_language AS "studyLanguage", g.age_band AS "ageBand",
         COALESCE(json_agg(
-          json_build_object('registrationId', reg.id, 'name', reg.real_name,
+          json_build_object('registrationId', reg.id,
+                            'name', display_name(reg.bible_name, reg.real_name),
                             'gender', reg.gender, 'age', reg.age)
           ORDER BY reg.real_name
         ) FILTER (WHERE reg.id IS NOT NULL), '[]') AS members
@@ -89,7 +93,8 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, async (req, r
     // 아직 조가 없는 사람에게도 희망 언어(034)를 실어 준다 — 어느 조로
     // 보낼지는 그것으로 갈린다.
     const unassigned = await sql`
-      SELECT id AS "registrationId", real_name AS name, gender, age,
+      SELECT id AS "registrationId",
+             display_name(bible_name, real_name) AS name, gender, age,
              study_languages AS "studyLanguages"
       FROM registrations
       WHERE program_id = ${programId} AND has_registrant_name(real_name)

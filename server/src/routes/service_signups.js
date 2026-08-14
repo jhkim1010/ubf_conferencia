@@ -244,7 +244,8 @@ async function loadSignups(programId) {
     SELECT ss.id, ss.registration_id, ss.service_key, ss.status, ss.note,
            ss.is_lead, ss.invited_at, ss.responded_at,
            ss.can_provide_vehicle, ss.vehicle_seats, ss.contact_window,
-           r.real_name, r.bible_name, r.country, r.branch, r.gender, r.age,
+           display_name(r.bible_name, r.real_name) AS real_name,
+           r.bible_name, r.country, r.branch, r.gender, r.age,
            r.submitted
     FROM service_signups ss
     JOIN registrations r ON r.id = ss.registration_id
@@ -302,7 +303,9 @@ router.get(
       // 냈을 뿐이고, 누구에게 무엇을 맡길지는 담당자가 정한다. 그래서 역할
       // 목록과 섞지 않고 따로 내보낸다.
       const volunteers = await sql`
-        SELECT r.id AS registration_id, r.real_name, r.country, r.branch,
+        SELECT r.id AS registration_id,
+               display_name(r.bible_name, r.real_name) AS real_name,
+               r.country, r.branch,
                r.volunteer_resources AS resources, r.volunteer_note AS note
         FROM registrations r
         WHERE r.program_id = ${programId}

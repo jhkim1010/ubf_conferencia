@@ -39,7 +39,7 @@ async function loadDispatchPeople(programId, direction) {
   const [[program], regs, comps] = await Promise.all([
     sql`SELECT program_type, host_country FROM programs WHERE id = ${programId}`,
     sql`
-      SELECT id, real_name AS name, country, needs_pickup, pickup_from,
+      SELECT id, display_name(bible_name, real_name) AS name, country, needs_pickup, pickup_from,
              arrival_flight, departure_flight
       FROM registrations
       WHERE program_id = ${programId} AND submitted = true
@@ -126,7 +126,7 @@ router.get('/:programId/runs', requireAuth, requireProgramAdmin, async (req, res
           json_build_object(
             'registrationId', ra.registration_id,
             'companionId', ra.companion_id,
-            'name', COALESCE(reg.real_name, comp.real_name),
+            'name', COALESCE(display_name(reg.bible_name, reg.real_name), comp.real_name),
             'arrivalFlight', COALESCE(reg.arrival_flight, comp.arrival_flight),
             'departureFlight', COALESCE(reg.departure_flight, comp.departure_flight)
           ) ORDER BY COALESCE(reg.real_name, comp.real_name)
@@ -444,7 +444,7 @@ router.get('/:programId/my-transport', requireAuth, async (req, res) => {
     const runs = await sql`
       SELECT tr.direction, tr.airport, tr.depart_at, tr.vehicle,
              tr.driver_name, tr.driver_phone, tr.meet_point,
-        (SELECT COALESCE(json_agg(COALESCE(reg2.real_name, comp2.real_name)) FILTER (WHERE ra2.id IS NOT NULL), '[]')
+        (SELECT COALESCE(json_agg(COALESCE(display_name(reg2.bible_name, reg2.real_name), comp2.real_name)) FILTER (WHERE ra2.id IS NOT NULL), '[]')
          FROM run_assignments ra2
          LEFT JOIN registrations reg2 ON reg2.id = ra2.registration_id
          LEFT JOIN companions comp2 ON comp2.id = ra2.companion_id

@@ -132,9 +132,19 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
         [
           '${i + 1}',
           [
-            data[i]['real_name'] ?? '',
-            if ((data[i]['bible_name'] as String?)?.isNotEmpty ?? false)
-              '(${data[i]['bible_name']})',
+            // 이 공동체에서 서로 부르는 이름이 먼저다(049). 본명은 괄호
+            // 안에 남긴다 — 여권·항공권을 맞출 때 그것이 필요하다.
+            () {
+              final bible = '${data[i]['bible_name'] ?? ''}'.trim();
+              final legal = '${data[i]['real_name'] ?? ''}'.trim();
+              // 적을 것이 없어 '-' 만 넣어 둔 사람이 있다.
+              final hasBible = bible
+                  .replaceAll(RegExp(r'[^\p{L}\p{N}]', unicode: true), '')
+                  .isNotEmpty;
+              if (!hasBible) return legal;
+              if (legal.isEmpty) return bible;
+              return '$bible ($legal)';
+            }(),
           ].join(' '),
           WorldCountries.display(data[i]['country'] as String?) ?? '',
           '${data[i]['branch'] ?? ''}',

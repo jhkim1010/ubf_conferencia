@@ -780,7 +780,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
     // 실제로 맡은 자리다. 카드가 둘을 구별해 말하지 않으면 "자원자 5명" 옆의
     // 빈 줄이 자원자가 없다는 뜻으로 읽힌다. 거절·반려는 맡은 것이 아니다.
     const volunteers = await sql`
-      SELECT r.real_name AS name, r.country,
+      SELECT display_name(r.bible_name, r.real_name) AS name, r.country,
              r.volunteer_resources AS resources,
              (
                SELECT COUNT(*)::int FROM service_signups ss
@@ -796,7 +796,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
 
     const [recent, tours, meals, arrival, payments] = await Promise.all([
       sql`
-        SELECT r.real_name AS name, r.country, r.submitted
+        SELECT display_name(r.bible_name, r.real_name) AS name, r.country, r.submitted
         FROM registrations r
         WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
         ORDER BY r.created_at DESC LIMIT ${LIMIT}
@@ -816,7 +816,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
         LIMIT ${LIMIT}
       `,
       sql`
-        SELECT r.real_name AS name, r.country, r.food_requirements AS detail,
+        SELECT display_name(r.bible_name, r.real_name) AS name, r.country, r.food_requirements AS detail,
                r.submitted
         FROM registrations r
         WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
@@ -824,7 +824,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
         ORDER BY r.country NULLS LAST, r.real_name LIMIT ${LIMIT}
       `,
       sql`
-        SELECT r.real_name AS name, r.country,
+        SELECT display_name(r.bible_name, r.real_name) AS name, r.country,
                COALESCE(r.arrival_flight->>'flight_no', '') AS detail,
                r.submitted
         FROM registrations r
@@ -835,7 +835,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
       // 입금은 대기·확인을 한 목록으로 준다. 아직 낸 적이 없는 사람도
       // 넣는다 — 받을 돈이 남은 사람이야말로 담당자가 봐야 할 줄이다.
       sql`
-        SELECT r.real_name AS name, r.country,
+        SELECT display_name(r.bible_name, r.real_name) AS name, r.country,
                COALESCE(pay.status, 'none') AS status,
                pay.amount::text AS detail
         FROM registrations r
@@ -1148,7 +1148,7 @@ router.get('/:id/readiness', requireAuth, requireProgramAdmin, async (req, res) 
     // 앞 단계부터 보고 처음 비는 곳을 stuck_at 으로 준다.
     const blocked = await sql`
       SELECT
-        r.id AS registration_id, r.real_name AS name, r.country, r.branch,
+        r.id AS registration_id, display_name(r.bible_name, r.real_name) AS name, r.country, r.branch,
         (r.country IS NOT DISTINCT FROM ${host}) AS is_domestic,
         r.updated_at,
         CASE
