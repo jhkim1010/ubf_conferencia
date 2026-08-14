@@ -3020,4 +3020,41 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get svcCanDo => '가능';
+
+  @override
+  String get svcCallSend => '전체에 도움 청하기';
+
+  @override
+  String svcCallSent(int short) {
+    return '요청함 · $short자리 남음';
+  }
+
+  @override
+  String get svcCallClose => '요청 닫기';
+
+  @override
+  String get svcCallDone => '전체에 보냈습니다';
+
+  @override
+  String get svcCallTooSoon => '조금 전에 보냈습니다. 몇 시간 뒤에 다시 보내십시오.';
+
+  @override
+  String get svcCallFilled => '이 역할은 이미 다 찼습니다.';
+
+  @override
+  String get svcCallNoTarget => '필요 인원을 먼저 정해 주십시오.';
+
+  @override
+  String get svcOpenTitle => '봉사자를 찾고 있습니다';
+
+  @override
+  String svcOpenBody(String role, int short) {
+    return '$role — $short자리 남았습니다';
+  }
+
+  @override
+  String get svcIllDoIt => '제가 하겠습니다';
+
+  @override
+  String get svcAppliedThanks => '감사합니다. 담당자가 확정해 드립니다.';
 }

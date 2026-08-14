@@ -1913,5 +1913,33 @@
     }
   },
   "svcOfferedNote": "What they said they can do. Choosing who does what is still yours.",
-  "svcCanDo": "can do"
+  "svcCanDo": "can do",
+  "svcCallSend": "Ask everyone for help",
+  "svcCallSent": "Asked · {short} still open",
+  "@svcCallSent": {
+    "placeholders": {
+      "short": {
+        "type": "int"
+      }
+    }
+  },
+  "svcCallClose": "Stop asking",
+  "svcCallDone": "Sent to everyone",
+  "svcCallTooSoon": "Already asked recently. Give it a few hours.",
+  "svcCallFilled": "This one is already covered.",
+  "svcCallNoTarget": "Set how many you need first.",
+  "svcOpenTitle": "Help is needed",
+  "svcOpenBody": "{role} — {short} still open",
+  "@svcOpenBody": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      },
+      "short": {
+        "type": "int"
+      }
+    }
+  },
+  "svcIllDoIt": "I'll do it",
+  "svcAppliedThanks": "Thank you. The organizer will confirm."
 }

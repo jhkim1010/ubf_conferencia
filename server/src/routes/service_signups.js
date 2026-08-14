@@ -8,6 +8,8 @@ import { sql } from '../db.js';
 import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
 import {
   DEFAULT_SERVICE_ROLES,
+  canBroadcast,
+  isOpenForMe,
   isValidRoleKey,
   normalizeServiceRoles,
   rolesOf,
@@ -17,7 +19,8 @@ import {
   sortRoles,
   tallyRole,
 } from '../services/service_roles.js';
-import { sendPushNotification } from '../services/fcm.js';
+import { sendPushNotification, notifyProgramParticipants } from '../services/fcm.js';
+import { notifyProgramAdmins } from '../services/telegram.js';
 
 const router = Router();
 
@@ -285,6 +288,7 @@ router.get(
       }
 
       const signups = await loadSignups(programId);
+      const callMap = await lastCalls(programId);
       const roles = rolesOf(program.service_options).filter(
         (r) => r.enabled !== false,
       );
@@ -309,6 +313,8 @@ router.get(
         roles: sortRoles(roles, signups).map((role) => ({
           ...role,
           ...tallyRole(role, signups),
+          // 언제 도움을 청했는지. 없으면 아직 보낸 적이 없다는 뜻이다.
+          call: callMap.get(role.key) ?? null,
           people: signups
             .filter((s) => s.service_key === role.key)
             .map(personOf),
@@ -553,6 +559,216 @@ router.post('/:programId/:signupId/respond', requireAuth, async (req, res) => {
     res.json({ ok: true, status: next });
   } catch (err) {
     console.error('봉사 응답 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  도움 요청 (043)
+//
+//  한 사람씩 지명하는 길뿐이면, 여섯 자리가 빈 역할은 여섯 번을 찍어
+//  물어야 한다. 전체에 한 번 알리고 손을 든 사람 중에서 고르는 편이 빠르다.
+// ═══════════════════════════════════════════════════════════════
+
+// 이 수양회의 열린 요청(닫지 않은 것) 중 역할별 마지막 것.
+async function lastCalls(programId) {
+  const rows = await sql`
+    SELECT DISTINCT ON (service_key)
+           id, service_key, message, short_at_send, sent_at, closed_at
+    FROM service_calls
+    WHERE program_id = ${programId}
+    ORDER BY service_key, sent_at DESC
+  `;
+  return new Map(rows.map((r) => [r.service_key, r]));
+}
+
+// POST /service-signups/:programId/calls — 전체에게 도움을 청한다 (담당자)
+router.post(
+  '/:programId/calls',
+  requireAuth,
+  requireProgramAdmin,
+  async (req, res) => {
+    const programId = req.params.programId;
+    const { serviceKey, message } = req.body ?? {};
+
+    try {
+      const [program] = await sql`
+        SELECT id, name, service_options FROM programs
+        WHERE id = ${programId} AND is_active = true
+      `;
+      if (!program) {
+        return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
+      }
+
+      const role = rolesOf(program.service_options).find(
+        (r) => r.key === serviceKey,
+      );
+      const signups = await loadSignups(programId);
+      const tally = role ? tallyRole(role, signups) : null;
+      const calls = await lastCalls(programId);
+
+      const verdict = canBroadcast({
+        role,
+        tally,
+        lastCall: calls.get(serviceKey),
+      });
+      if (!verdict.ok) {
+        // 왜 못 보내는지 말해 준다. 아무 일도 안 일어나면 담당자는 버튼이
+        // 고장 났다고 여긴다.
+        return res.status(409).json({ error: verdict.reason, ...verdict });
+      }
+
+      const [call] = await sql`
+        INSERT INTO service_calls (program_id, service_key, message,
+                                   short_at_send, sent_by)
+        VALUES (${programId}, ${serviceKey},
+                ${(message ?? '').trim() || null}, ${tally.short},
+                ${req.user.leaderId ?? null})
+        RETURNING id, service_key, short_at_send, sent_at
+      `;
+
+      // 알림이 실패해도 요청 자체는 남는다. 알림 때문에 기록이 사라지면
+      // 담당자는 보냈는지 안 보냈는지 알 수 없다.
+      const title = program.name;
+      const bodyText = (message ?? '').trim()
+        || `봉사자를 찾습니다 — ${tally.short}자리`;
+      notifyProgramParticipants(sql, programId, title, bodyText, {
+        type: 'service_call',
+        programId,
+        serviceKey,
+      }).catch((e) => console.error('봉사 요청 알림 실패:', e));
+      notifyProgramAdmins(
+        programId,
+        `[봉사] ${serviceKey} — ${tally.short}자리 도움 요청을 보냈습니다`,
+      ).catch((e) => console.error('봉사 요청 텔레그램 실패:', e));
+
+      console.log(`[SERVICE] 도움요청 | programId=${programId} key=${serviceKey} short=${tally.short} leaderId=${req.user.leaderId}`);
+      res.status(201).json(call);
+    } catch (err) {
+      console.error('봉사 도움 요청 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// PATCH /service-signups/:programId/calls/:callId — 요청 닫기 (담당자)
+router.patch(
+  '/:programId/calls/:callId',
+  requireAuth,
+  requireProgramAdmin,
+  async (req, res) => {
+    try {
+      // 채워졌는데도 알림이 남아 있으면 참가자 화면에 쓸데없는 부탁이
+      // 계속 떠 있다.
+      const [row] = await sql`
+        UPDATE service_calls SET closed_at = NOW()
+        WHERE id = ${req.params.callId} AND program_id = ${req.params.programId}
+          AND closed_at IS NULL
+        RETURNING id, closed_at
+      `;
+      if (!row) return res.status(404).json({ error: '요청을 찾을 수 없습니다' });
+      res.json(row);
+    } catch (err) {
+      console.error('봉사 요청 닫기 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// GET /service-signups/:programId/open — 나에게 열려 있는 모집 (참가자)
+router.get('/:programId/open', requireAuth, async (req, res) => {
+  const programId = req.params.programId;
+  try {
+    const [program] = await sql`
+      SELECT service_options FROM programs
+      WHERE id = ${programId} AND is_active = true
+    `;
+    if (!program) return res.json([]);
+
+    const [me] = await sql`
+      SELECT id FROM registrations
+      WHERE program_id = ${programId} AND user_id = ${req.user.userId}
+    `;
+    const mine = me
+      ? await sql`
+          SELECT service_key, status FROM service_signups
+          WHERE registration_id = ${me.id}
+        `
+      : [];
+    const myStatus = new Map(mine.map((r) => [r.service_key, r.status]));
+
+    const signups = await loadSignups(programId);
+    const calls = await lastCalls(programId);
+    const roles = rolesOf(program.service_options).filter(
+      (r) => r.enabled !== false,
+    );
+
+    const open = roles
+      .map((role) => ({
+        role,
+        tally: tallyRole(role, signups),
+        call: calls.get(role.key),
+      }))
+      .filter(({ role, tally, call }) =>
+        isOpenForMe({ call, tally, myStatus: myStatus.get(role.key) }))
+      .map(({ role, tally, call }) => ({
+        service_key: role.key,
+        label: role.label ?? null,
+        requires_approval: role.requires_approval === true,
+        short: tally.short,
+        needed: tally.needed,
+        message: call.message,
+        sent_at: call.sent_at,
+      }));
+
+    res.json(open);
+  } catch (err) {
+    console.error('봉사 모집 조회 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// POST /service-signups/:programId/apply — 제가 하겠습니다 (참가자)
+//
+// 손을 든 것이지 확정이 아니다. 고르는 것은 담당자의 몫이다(039).
+router.post('/:programId/apply', requireAuth, async (req, res) => {
+  const programId = req.params.programId;
+  const { serviceKey } = req.body ?? {};
+
+  if (!isValidRoleKey(serviceKey)) {
+    return res.status(400).json({ error: '역할이 올바르지 않습니다' });
+  }
+  try {
+    const [me] = await sql`
+      SELECT id, real_name FROM registrations
+      WHERE program_id = ${programId} AND user_id = ${req.user.userId}
+        AND has_registrant_name(real_name)
+    `;
+    if (!me) {
+      return res.status(404).json({ error: '먼저 등록해 주십시오' });
+    }
+    const role = await findRole(programId, serviceKey);
+    if (!role) {
+      return res.status(400).json({ error: '이 수양회에 없는 역할입니다' });
+    }
+
+    const [row] = await sql`
+      INSERT INTO service_signups (registration_id, service_key, status)
+      VALUES (${me.id}, ${serviceKey}, 'applied')
+      ON CONFLICT (registration_id, service_key) DO UPDATE
+        SET status = 'applied', updated_at = NOW()
+      RETURNING id, status
+    `;
+
+    notifyProgramAdmins(
+      programId,
+      `[봉사] ${me.real_name} 님이 ${serviceKey} 에 손을 들었습니다`,
+    ).catch((e) => console.error('봉사 지원 알림 실패:', e));
+
+    console.log(`[SERVICE] 지원 | programId=${programId} key=${serviceKey} registrationId=${me.id}`);
+    res.status(201).json(row);
+  } catch (err) {
+    console.error('봉사 지원 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });

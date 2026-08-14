@@ -103,6 +103,7 @@ class _RoleCard extends ConsumerWidget {
     final needed = (role['needed'] as num?)?.toInt() ?? 0;
     final filled = (role['filled'] as num?)?.toInt() ?? 0;
     final short = (role['short'] as num?)?.toInt() ?? 0;
+    final call = role['call'] as Map<String, dynamic>?;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -178,18 +179,75 @@ class _RoleCard extends ConsumerWidget {
                   person: p,
                   onChanged: onChanged,
                 ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                icon: const Icon(Icons.person_add_alt, size: 18),
-                label: Text(l10n.svcNominate),
-                onPressed: () => _nominate(context, ref),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // 한 사람씩 지명하는 길뿐이면, 여섯 자리가 빈 역할은 여섯 번을
+                // 찍어 물어야 한다. 전체에 한 번 청하고 손을 든 사람 중에서
+                // 고르는 편이 빠르다.
+                if (call != null && call['closed_at'] == null)
+                  TextButton.icon(
+                    icon: const Icon(Icons.campaign_outlined, size: 18),
+                    label: Text(l10n.svcCallSent(short)),
+                    onPressed: () => _closeCall(context, '${call['id']}'),
+                  )
+                else if (short > 0)
+                  TextButton.icon(
+                    icon: const Icon(Icons.campaign_outlined, size: 18),
+                    label: Text(l10n.svcCallSend),
+                    onPressed: () => _sendCall(context),
+                  ),
+                TextButton.icon(
+                  icon: const Icon(Icons.person_add_alt, size: 18),
+                  label: Text(l10n.svcNominate),
+                  onPressed: () => _nominate(context, ref),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _sendCall(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ApiClient.sendServiceCall(programId, role['key'] as String);
+      onChanged();
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.svcCallDone)));
+      }
+    } on ApiException catch (e) {
+      // 서버가 왜 못 보내는지 말해 준다. 아무 일도 안 일어나면 담당자는
+      // 버튼이 고장 났다고 여긴다.
+      final msg = switch (e.message) {
+        'too_soon' => l10n.svcCallTooSoon,
+        'already_filled' => l10n.svcCallFilled,
+        'no_target' => l10n.svcCallNoTarget,
+        _ => e.message,
+      };
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _closeCall(BuildContext context, String callId) async {
+    try {
+      await ApiClient.closeServiceCall(programId, callId);
+      onChanged();
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Future<void> _nominate(BuildContext context, WidgetRef ref) async {

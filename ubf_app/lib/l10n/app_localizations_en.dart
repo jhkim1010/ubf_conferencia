@@ -3088,4 +3088,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get svcCanDo => 'can do';
+
+  @override
+  String get svcCallSend => 'Ask everyone for help';
+
+  @override
+  String svcCallSent(int short) {
+    return 'Asked · $short still open';
+  }
+
+  @override
+  String get svcCallClose => 'Stop asking';
+
+  @override
+  String get svcCallDone => 'Sent to everyone';
+
+  @override
+  String get svcCallTooSoon => 'Already asked recently. Give it a few hours.';
+
+  @override
+  String get svcCallFilled => 'This one is already covered.';
+
+  @override
+  String get svcCallNoTarget => 'Set how many you need first.';
+
+  @override
+  String get svcOpenTitle => 'Help is needed';
+
+  @override
+  String svcOpenBody(String role, int short) {
+    return '$role — $short still open';
+  }
+
+  @override
+  String get svcIllDoIt => 'I\'ll do it';
+
+  @override
+  String get svcAppliedThanks => 'Thank you. The organizer will confirm.';
 }

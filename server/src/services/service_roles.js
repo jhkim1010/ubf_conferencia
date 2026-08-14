@@ -165,3 +165,41 @@ export function sortRoles(roles, signups) {
     return String(a.key).localeCompare(String(b.key));
   });
 }
+
+// ── 도움 요청 (043) ──────────────────────────────────────────────
+
+/// 다시 울리기까지 두는 시간. 같은 역할로 몇 번이고 알림이 오면 사람들이
+/// 알림 자체를 꺼 버린다.
+export const RECALL_HOURS = 6;
+
+/// 지금 이 역할로 요청을 보낼 수 있는가.
+///
+/// 이유를 함께 돌려준다 — 화면이 "왜 못 보내는지" 를 말해 줘야 담당자가
+/// 버튼이 고장 났다고 여기지 않는다.
+export function canBroadcast({ role, tally, lastCall, now = Date.now() }) {
+  if (!role || role.enabled === false) {
+    return { ok: false, reason: 'role_off' };
+  }
+  // 필요 인원을 안 정했으면 모자란지 알 수 없다.
+  if (!tally || tally.needed <= 0) return { ok: false, reason: 'no_target' };
+  if (tally.short <= 0) return { ok: false, reason: 'already_filled' };
+
+  if (lastCall && !lastCall.closed_at) {
+    const sent = new Date(lastCall.sent_at).getTime();
+    if (Number.isFinite(sent) && now - sent < RECALL_HOURS * 3600 * 1000) {
+      return { ok: false, reason: 'too_soon', retryAfter: sent + RECALL_HOURS * 3600 * 1000 };
+    }
+  }
+  return { ok: true };
+}
+
+/// 참가자에게 보일 "모집 중" 역할인가.
+///
+/// 열린 요청이 있고, 아직 모자라고, 내가 이미 손을 들지 않았을 때만 보인다.
+/// 이미 손을 든 사람에게 계속 물으면 재촉으로 읽힌다.
+export function isOpenForMe({ call, tally, myStatus }) {
+  if (!call || call.closed_at) return false;
+  if (!tally || tally.short <= 0) return false;
+  return myStatus === undefined || myStatus === null
+    || myStatus === 'declined' || myStatus === 'rejected';
+}

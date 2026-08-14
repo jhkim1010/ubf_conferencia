@@ -188,3 +188,87 @@ test('정렬이 원본 배열을 건드리지 않는다', () => {
   sortRoles(roles, []);
   assert.deepEqual(roles.map((r) => r.key), before);
 });
+
+// ── 도움 요청 (043) ──────────────────────────────────────────────
+
+test('모자랄 때만 요청할 수 있다', async () => {
+  const { canBroadcast } = await import('../src/services/service_roles.js');
+  const role = { key: 'meal_prep', enabled: true };
+  assert.deepEqual(
+    canBroadcast({ role, tally: { needed: 6, short: 6 } }),
+    { ok: true },
+  );
+  assert.equal(
+    canBroadcast({ role, tally: { needed: 6, short: 0 } }).reason,
+    'already_filled',
+  );
+});
+
+test('필요 인원을 안 정했으면 모자란지 알 수 없다', async () => {
+  const { canBroadcast } = await import('../src/services/service_roles.js');
+  const r = canBroadcast({
+    role: { key: 'mc', enabled: true }, tally: { needed: 0, short: 0 },
+  });
+  assert.equal(r.reason, 'no_target');
+});
+
+test('꺼 둔 역할로는 보내지 않는다', async () => {
+  const { canBroadcast } = await import('../src/services/service_roles.js');
+  const r = canBroadcast({
+    role: { key: 'mc', enabled: false }, tally: { needed: 3, short: 3 },
+  });
+  assert.equal(r.reason, 'role_off');
+});
+
+test('같은 역할로 곧바로 다시 울리지 않는다', async () => {
+  // 몇 번이고 알림이 오면 사람들이 알림 자체를 꺼 버린다.
+  const { canBroadcast, RECALL_HOURS } = await import('../src/services/service_roles.js');
+  const now = Date.UTC(2027, 0, 24, 12);
+  const role = { key: 'meal_prep', enabled: true };
+  const tally = { needed: 6, short: 6 };
+
+  const justNow = { sent_at: new Date(now - 60 * 1000).toISOString(), closed_at: null };
+  assert.equal(canBroadcast({ role, tally, lastCall: justNow, now }).reason, 'too_soon');
+
+  const old = {
+    sent_at: new Date(now - (RECALL_HOURS + 1) * 3600 * 1000).toISOString(),
+    closed_at: null,
+  };
+  assert.equal(canBroadcast({ role, tally, lastCall: old, now }).ok, true);
+});
+
+test('닫은 요청은 다시 울리는 것을 막지 않는다', async () => {
+  const { canBroadcast } = await import('../src/services/service_roles.js');
+  const now = Date.UTC(2027, 0, 24, 12);
+  const closed = {
+    sent_at: new Date(now - 60 * 1000).toISOString(),
+    closed_at: new Date(now - 30 * 1000).toISOString(),
+  };
+  assert.equal(
+    canBroadcast({
+      role: { key: 'meal_prep', enabled: true },
+      tally: { needed: 6, short: 6 }, lastCall: closed, now,
+    }).ok,
+    true,
+  );
+});
+
+test('참가자에게 보이는 모집 — 아직 답하지 않았을 때만', async () => {
+  const { isOpenForMe } = await import('../src/services/service_roles.js');
+  const call = { closed_at: null };
+  const tally = { short: 3 };
+  assert.equal(isOpenForMe({ call, tally, myStatus: null }), true);
+  // 이미 손을 든 사람에게 또 물으면 재촉으로 읽힌다.
+  assert.equal(isOpenForMe({ call, tally, myStatus: 'applied' }), false);
+  assert.equal(isOpenForMe({ call, tally, myStatus: 'confirmed' }), false);
+  assert.equal(isOpenForMe({ call, tally, myStatus: 'invited' }), false);
+  // 한 번 어렵다고 했어도 다시 물을 수는 있다 — 사정이 바뀐다.
+  assert.equal(isOpenForMe({ call, tally, myStatus: 'declined' }), true);
+});
+
+test('채워졌거나 닫혔으면 참가자에게 안 보인다', async () => {
+  const { isOpenForMe } = await import('../src/services/service_roles.js');
+  assert.equal(isOpenForMe({ call: { closed_at: null }, tally: { short: 0 } }), false);
+  assert.equal(isOpenForMe({ call: { closed_at: 'x' }, tally: { short: 3 } }), false);
+  assert.equal(isOpenForMe({ call: null, tally: { short: 3 } }), false);
+});

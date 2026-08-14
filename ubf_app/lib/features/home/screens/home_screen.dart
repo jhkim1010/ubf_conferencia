@@ -486,8 +486,12 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
         // 최근에 연 수양회 세 개까지만 본다. 부탁은 지금 준비 중인 수양회에서
         // 오지, 몇 해 전 것에서 오지 않는다. 전부 물으면 홈을 열 때마다
         // 요청이 그만큼 늘어난다.
-        for (final prog in _recentPrograms.take(3))
+        for (final prog in _recentPrograms.take(3)) ...[
           _ServiceInviteNotice(programId: prog['uuid'] as String),
+          // 전체에 청한 모집(043). 지명은 나에게 온 부탁이고, 이쪽은
+          // 아직 아무에게도 정해지지 않은 자리다.
+          _ServiceCallNotice(programId: prog['uuid'] as String),
+        ],
         if (!widget.embedded) ...[
           const SizedBox(height: 20),
           Text(
@@ -605,6 +609,114 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
 //
 // 처음 오는 사람에게는 아무것도 안 나온다 — 나라·지부를 알 방법이 없고,
 // 그때는 UUID 가 유일한 길이다.
+// 봉사자를 찾는다는 요청. 담당자가 전체에 청한 것이다.
+//
+// 지명(_ServiceInviteNotice)과 다르다 — 저쪽은 나를 콕 집어 부탁한 것이고,
+// 이쪽은 아직 아무에게도 정해지지 않은 자리다. 손을 들면 신청으로 잡히고
+// 확정은 담당자가 한다.
+class _ServiceCallNotice extends ConsumerWidget {
+  final String programId;
+
+  const _ServiceCallNotice({required this.programId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final async = ref.watch(openServiceCallsProvider(programId));
+
+    return async.maybeWhen(
+      orElse: () => const SizedBox.shrink(),
+      data: (rows) {
+        final open = rows.cast<Map<String, dynamic>>();
+        if (open.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          children: [
+            for (final c in open)
+              Card(
+                color: const Color(0xFFFFF8E7),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.campaign_outlined,
+                            size: 18,
+                            color: Colors.orange[900],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.svcOpenTitle,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Colors.orange[900],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.svcOpenBody(
+                          serviceRoleLabel(l10n, {
+                            'key': c['service_key'],
+                            'label': c['label'],
+                          }),
+                          ((c['short'] ?? 0) as num).toInt(),
+                        ),
+                        style: const TextStyle(fontSize: 13.5),
+                      ),
+                      if ('${c['message'] ?? ''}'.isNotEmpty)
+                        Text(
+                          '${c['message']}',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: FilledButton(
+                          onPressed: () => _apply(context, ref, c),
+                          child: Text(l10n.svcIllDoIt),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _apply(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> call,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ApiClient.applyToService(programId, '${call['service_key']}');
+      ref.invalidate(openServiceCallsProvider(programId));
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.svcAppliedThanks)));
+      }
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+}
+
 // 나에게 온 봉사 부탁. 답하지 않은 것만 뜬다.
 //
 // 지명은 부탁이지 확정이 아니다. 본인이 여기서 답해야 담당자 화면의

@@ -3099,4 +3099,41 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get svcCanDo => 'puede';
+
+  @override
+  String get svcCallSend => 'Pedir ayuda a todos';
+
+  @override
+  String svcCallSent(int short) {
+    return 'Pedido · faltan $short';
+  }
+
+  @override
+  String get svcCallClose => 'Dejar de pedir';
+
+  @override
+  String get svcCallDone => 'Enviado a todos';
+
+  @override
+  String get svcCallTooSoon => 'Ya lo pediste hace poco. Espera unas horas.';
+
+  @override
+  String get svcCallFilled => 'Este rol ya está cubierto.';
+
+  @override
+  String get svcCallNoTarget => 'Primero define cuántos necesitas.';
+
+  @override
+  String get svcOpenTitle => 'Se necesita ayuda';
+
+  @override
+  String svcOpenBody(String role, int short) {
+    return '$role — faltan $short';
+  }
+
+  @override
+  String get svcIllDoIt => 'Yo lo hago';
+
+  @override
+  String get svcAppliedThanks => 'Gracias. El organizador lo confirmará.';
 }

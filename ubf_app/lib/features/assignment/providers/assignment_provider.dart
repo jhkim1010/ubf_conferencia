@@ -31,3 +31,10 @@ final myServiceInvitesProvider = FutureProvider.autoDispose
     .family<List<dynamic>, String>(
       (_, programId) => ApiClient.getMyServiceInvites(programId),
     );
+
+// 나에게 열려 있는 봉사 모집 (043). 담당자가 전체에 청한 것 중, 아직 내가
+// 답하지 않았고 여전히 모자란 역할만 온다.
+final openServiceCallsProvider = FutureProvider.autoDispose
+    .family<List<dynamic>, String>(
+      (_, programId) => ApiClient.getOpenServiceCalls(programId),
+    );

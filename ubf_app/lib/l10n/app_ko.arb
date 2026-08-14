@@ -937,5 +937,16 @@
   "dashOpenService": "봉사 배정 열기 →",
   "svcOffered": "등록할 때 자원한 사람 ({count}명)",
   "svcOfferedNote": "할 수 있다고 적어 낸 것입니다. 누구에게 맡길지는 담당자가 정합니다.",
-  "svcCanDo": "가능"
+  "svcCanDo": "가능",
+  "svcCallSend": "전체에 도움 청하기",
+  "svcCallSent": "요청함 · {short}자리 남음",
+  "svcCallClose": "요청 닫기",
+  "svcCallDone": "전체에 보냈습니다",
+  "svcCallTooSoon": "조금 전에 보냈습니다. 몇 시간 뒤에 다시 보내십시오.",
+  "svcCallFilled": "이 역할은 이미 다 찼습니다.",
+  "svcCallNoTarget": "필요 인원을 먼저 정해 주십시오.",
+  "svcOpenTitle": "봉사자를 찾고 있습니다",
+  "svcOpenBody": "{role} — {short}자리 남았습니다",
+  "svcIllDoIt": "제가 하겠습니다",
+  "svcAppliedThanks": "감사합니다. 담당자가 확정해 드립니다."
 }

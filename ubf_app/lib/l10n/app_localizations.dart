@@ -5645,6 +5645,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'can do'**
   String get svcCanDo;
+
+  /// No description provided for @svcCallSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask everyone for help'**
+  String get svcCallSend;
+
+  /// No description provided for @svcCallSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Asked · {short} still open'**
+  String svcCallSent(int short);
+
+  /// No description provided for @svcCallClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop asking'**
+  String get svcCallClose;
+
+  /// No description provided for @svcCallDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to everyone'**
+  String get svcCallDone;
+
+  /// No description provided for @svcCallTooSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Already asked recently. Give it a few hours.'**
+  String get svcCallTooSoon;
+
+  /// No description provided for @svcCallFilled.
+  ///
+  /// In en, this message translates to:
+  /// **'This one is already covered.'**
+  String get svcCallFilled;
+
+  /// No description provided for @svcCallNoTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Set how many you need first.'**
+  String get svcCallNoTarget;
+
+  /// No description provided for @svcOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help is needed'**
+  String get svcOpenTitle;
+
+  /// No description provided for @svcOpenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{role} — {short} still open'**
+  String svcOpenBody(String role, int short);
+
+  /// No description provided for @svcIllDoIt.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ll do it'**
+  String get svcIllDoIt;
+
+  /// No description provided for @svcAppliedThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you. The organizer will confirm.'**
+  String get svcAppliedThanks;
 }
 
 class _AppLocalizationsDelegate

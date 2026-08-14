@@ -245,6 +245,83 @@ eq "자원한 사람도 지명은 부탁일 뿐" 'invited' \
 eq "  수락해야 확정" 'confirmed' "$(resp "$SV" "$VT" true | jq_ 'r.status')"
 
 echo
+echo "── 도움 요청 (043) ──"
+# 한 사람씩 지명하는 길뿐이면 여섯 자리가 빈 역할은 여섯 번을 찍어야 한다.
+call() { curl -s -X POST "$API/service-signups/$P/calls" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' --data-binary "$(printf '{"serviceKey":"%s"}' "$1")"; }
+callCode() { curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/calls" \
+  -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+  --data-binary "$(printf '{"serviceKey":"%s"}' "$1")"; }
+
+# 식사 준비를 6명 필요로 켠다 (앞 구성에는 없다)
+curl -s -o /dev/null -X PUT "$API/service-signups/$P/roles" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' \
+  -d '{"roles":[{"key":"pickup","enabled":true,"needed":3},
+                {"key":"meal_prep","enabled":true,"needed":6}]}'
+eq "모자란 역할로 보낼 수 있다" '201' "$(callCode meal_prep)"
+eq "  보낸 자리 수가 남는다"   '6'   \
+   "$(BOARD | jq_ "r.roles.find(x => x.key === 'meal_prep').call.short_at_send")"
+# 몇 번이고 울리면 사람들이 알림 자체를 꺼 버린다.
+eq "곧바로 다시 보내지 못한다" '409' "$(callCode meal_prep)"
+eq "  이유를 말해 준다" 'too_soon' \
+   "$(call meal_prep | jq_ 'r.error')"
+
+echo
+echo "── 참가자에게 열린 모집 ──"
+CT=$(login "svc-call-$$@test.local")
+curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $CT" \
+  -H 'Content-Type: application/json' \
+  -d '{"realName":"손든이","country":"KR","gender":"M","age":25}' > /dev/null
+OPEN() { curl -s "$API/service-signups/$P/open" -H "Authorization: Bearer $CT"; }
+eq "모집 중인 역할이 보인다" 'meal_prep' "$(OPEN | jq_ 'r.map(x => x.service_key).join()')"
+eq "  몇 자리 모자란지도"     '6'         "$(OPEN | jq_ 'r[0].short')"
+
+echo
+echo "── 손을 든다 ──"
+eq "지원이 된다" '201' \
+   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/apply" \
+      -H "Authorization: Bearer $CT" -H 'Content-Type: application/json' \
+      -d '{"serviceKey":"meal_prep"}')"
+# 손을 든 것이지 확정이 아니다 — 고르는 것은 담당자의 몫이다.
+eq "  상태는 신청" 'applied' \
+   "$(BOARD | jq_ "r.roles.find(x => x.key === 'meal_prep').people.find(p => p.real_name === '손든이').status")"
+# 이미 손을 든 사람에게 계속 물으면 재촉으로 읽힌다.
+eq "  나에게는 더 안 보인다" '' "$(OPEN | jq_ 'r.map(x => x.service_key).join()')"
+eq "  담당자가 확정한다" 'confirmed' \
+   "$(curl -s -X PATCH "$API/service-signups/$P/$(BOARD | jq_ "r.roles.find(x => x.key === 'meal_prep').people.find(p => p.real_name === '손든이').id")" \
+      -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+      -d '{"action":"confirm"}' | jq_ 'r.status')"
+
+echo
+echo "── 요청 닫기 ──"
+CALLID=$(BOARD | jq_ "r.roles.find(x => x.key === 'meal_prep').call.id")
+eq "닫을 수 있다" '200' \
+   "$(curl -s -o /dev/null -w '%{http_code}' -X PATCH "$API/service-signups/$P/calls/$CALLID" \
+      -H "Authorization: Bearer $LT")"
+# 닫았으면 다시 보낼 수 있다 — 대기 시간에 묶이지 않는다.
+eq "  닫은 뒤에는 다시 보낼 수 있다" '201' "$(callCode meal_prep)"
+
+echo
+echo "── 막아야 하는 것 ──"
+# 픽업이 정말 다 찼는지 먼저 만든다. 앞 단계에서 몇 명이 남았는지에 따라
+# 달라지므로, 지금 채워진 수만큼을 필요 인원으로 정한다.
+PFILLED=$(BOARD | jq_ "r.roles.find(x => x.key === 'pickup').filled")
+curl -s -o /dev/null -X PUT "$API/service-signups/$P/roles" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' \
+  --data-binary "$(printf '{"roles":[{"key":"pickup","enabled":true,"needed":%s},
+                {"key":"meal_prep","enabled":true,"needed":6}]}' "$PFILLED")"
+eq "다 찬 역할로는 못 보낸다" '409' "$(callCode pickup)"
+eq "  이유는 이미 참"      'already_filled' "$(call pickup | jq_ 'r.error')"
+eq "담당자가 아니면 못 보낸다" '403' \
+   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/calls" \
+      -H "Authorization: Bearer $CT" -H 'Content-Type: application/json' \
+      -d '{"serviceKey":"meal_prep"}')"
+eq "등록하지 않았으면 손을 못 든다" '404' \
+   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/apply" \
+      -H "Authorization: Bearer $(login "svc-nobody-$$@test.local")" \
+      -H 'Content-Type: application/json' -d '{"serviceKey":"meal_prep"}')"
+
+echo
 echo "── 이름 없는 등록은 여기에도 안 나온다 ──"
 BLANK=$(login "svc-blank-$$@test.local")
 curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $BLANK" \

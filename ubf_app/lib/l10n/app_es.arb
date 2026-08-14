@@ -937,5 +937,16 @@
   "dashOpenService": "Abrir el panel de servicio →",
   "svcOffered": "Se ofrecieron ({count})",
   "svcOfferedNote": "Lo que dijeron que pueden hacer. A quién se lo pides sigue siendo tu decisión.",
-  "svcCanDo": "puede"
+  "svcCanDo": "puede",
+  "svcCallSend": "Pedir ayuda a todos",
+  "svcCallSent": "Pedido · faltan {short}",
+  "svcCallClose": "Dejar de pedir",
+  "svcCallDone": "Enviado a todos",
+  "svcCallTooSoon": "Ya lo pediste hace poco. Espera unas horas.",
+  "svcCallFilled": "Este rol ya está cubierto.",
+  "svcCallNoTarget": "Primero define cuántos necesitas.",
+  "svcOpenTitle": "Se necesita ayuda",
+  "svcOpenBody": "{role} — faltan {short}",
+  "svcIllDoIt": "Yo lo hago",
+  "svcAppliedThanks": "Gracias. El organizador lo confirmará."
 }

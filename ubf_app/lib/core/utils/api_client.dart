@@ -551,6 +551,57 @@ class ApiClient {
     return _decodeList(response);
   }
 
+  /// 전체에게 도움을 청한다 (담당자).
+  static Future<Map<String, dynamic>> sendServiceCall(
+    String programId,
+    String serviceKey, {
+    String? message,
+  }) async {
+    final response = await http.post(
+      _uri('/service-signups/$programId/calls'),
+      headers: await _headers(),
+      body: jsonEncode({
+        'serviceKey': serviceKey,
+        if (message != null && message.isNotEmpty) 'message': message,
+      }),
+    );
+    return _decode(response);
+  }
+
+  /// 요청 닫기 (담당자).
+  static Future<Map<String, dynamic>> closeServiceCall(
+    String programId,
+    String callId,
+  ) async {
+    final response = await http.patch(
+      _uri('/service-signups/$programId/calls/$callId'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  /// 나에게 열려 있는 모집 (참가자).
+  static Future<List<dynamic>> getOpenServiceCalls(String programId) async {
+    final response = await http.get(
+      _uri('/service-signups/$programId/open'),
+      headers: await _headers(),
+    );
+    return _decodeList(response);
+  }
+
+  /// 제가 하겠습니다 (참가자). 손을 든 것이지 확정이 아니다.
+  static Future<Map<String, dynamic>> applyToService(
+    String programId,
+    String serviceKey,
+  ) async {
+    final response = await http.post(
+      _uri('/service-signups/$programId/apply'),
+      headers: await _headers(),
+      body: jsonEncode({'serviceKey': serviceKey}),
+    );
+    return _decode(response);
+  }
+
   /// 수락 · 거절 (본인).
   static Future<Map<String, dynamic>> respondToServiceInvite(
     String programId,

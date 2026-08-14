@@ -3100,4 +3100,41 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get svcCanDo => 'pode';
+
+  @override
+  String get svcCallSend => 'Pedir ajuda a todos';
+
+  @override
+  String svcCallSent(int short) {
+    return 'Pedido · faltam $short';
+  }
+
+  @override
+  String get svcCallClose => 'Parar de pedir';
+
+  @override
+  String get svcCallDone => 'Enviado a todos';
+
+  @override
+  String get svcCallTooSoon => 'Você já pediu há pouco. Espere algumas horas.';
+
+  @override
+  String get svcCallFilled => 'Esta função já está coberta.';
+
+  @override
+  String get svcCallNoTarget => 'Defina primeiro quantos você precisa.';
+
+  @override
+  String get svcOpenTitle => 'Precisamos de ajuda';
+
+  @override
+  String svcOpenBody(String role, int short) {
+    return '$role — faltam $short';
+  }
+
+  @override
+  String get svcIllDoIt => 'Eu faço';
+
+  @override
+  String get svcAppliedThanks => 'Obrigado. O organizador vai confirmar.';
 }
