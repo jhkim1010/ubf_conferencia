@@ -3325,4 +3325,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get setupAnyLanguage => 'Sin definir';
+
+  @override
+  String get setupCoupleRooms => 'Cuartos de matrimonio · familia';
+
+  @override
+  String get setupDormRooms => 'Cuartos compartidos';
+
+  @override
+  String get setupRoomsMadeName => 'Nombre del cuarto';
 }

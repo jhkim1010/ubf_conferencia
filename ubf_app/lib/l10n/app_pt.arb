@@ -990,5 +990,8 @@
   "svcWillConfirm": "ofereceu-se para isto — atribuído na hora",
   "svcWillAsk": "não se ofereceu — vamos perguntar",
   "setupGroupLanguage": "Idioma em que este grupo estuda",
-  "setupAnyLanguage": "Não definido"
+  "setupAnyLanguage": "Não definido",
+  "setupCoupleRooms": "Quartos de casal · família",
+  "setupDormRooms": "Quartos compartilhados",
+  "setupRoomsMadeName": "Nome do quarto"
 }

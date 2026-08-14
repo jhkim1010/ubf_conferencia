@@ -6047,6 +6047,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not set'**
   String get setupAnyLanguage;
+
+  /// 편성 준비의 왼쪽 칸 제목
+  ///
+  /// In en, this message translates to:
+  /// **'Couple · family rooms'**
+  String get setupCoupleRooms;
+
+  /// 편성 준비의 오른쪽 칸 제목
+  ///
+  /// In en, this message translates to:
+  /// **'Shared rooms'**
+  String get setupDormRooms;
+
+  /// 방 수정에서 이름 칸
+  ///
+  /// In en, this message translates to:
+  /// **'Room name'**
+  String get setupRoomsMadeName;
 }
 
 class _AppLocalizationsDelegate

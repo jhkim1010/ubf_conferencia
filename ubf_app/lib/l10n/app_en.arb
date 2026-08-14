@@ -2142,5 +2142,17 @@
   "setupAnyLanguage": "Not set",
   "@setupAnyLanguage": {
     "description": "언어를 정하지 않은 조 (아무나 받는 조)"
+  },
+  "setupCoupleRooms": "Couple · family rooms",
+  "@setupCoupleRooms": {
+    "description": "편성 준비의 왼쪽 칸 제목"
+  },
+  "setupDormRooms": "Shared rooms",
+  "@setupDormRooms": {
+    "description": "편성 준비의 오른쪽 칸 제목"
+  },
+  "setupRoomsMadeName": "Room name",
+  "@setupRoomsMadeName": {
+    "description": "방 수정에서 이름 칸"
   }
 }

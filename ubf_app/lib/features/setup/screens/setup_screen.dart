@@ -81,12 +81,15 @@ class _RoomsTab extends ConsumerWidget {
                     message: l10n.setupRoomsEmpty,
                   )
                 else
-                  ...rooms.map(
-                    (r) => _RoomTile(
-                      programId: programId,
-                      room: r,
-                      onChanged: () => ref.invalidate(roomsProvider(programId)),
-                    ),
+                  // 부부·가족실과 단체실은 **다른 종류의 일**이다. 부부실은
+                  // 가족 단위로 묶어 배정하고 단체실은 성별로 채운다. 한
+                  // 줄로 늘어놓으면 열여섯 개 중에서 눈으로 골라내야 한다.
+                  //
+                  // 폰에서는 나눌 너비가 없으므로 예전처럼 이어 붙인다.
+                  _RoomColumns(
+                    programId: programId,
+                    rooms: rooms,
+                    onChanged: () => ref.invalidate(roomsProvider(programId)),
                   ),
               ],
             ),
@@ -263,6 +266,81 @@ class _GenderReconcileRow extends StatelessWidget {
   }
 }
 
+/// 부부·가족실과 단체실을 좌우로 나눈다.
+class _RoomColumns extends StatelessWidget {
+  final String programId;
+  final List<Map<String, dynamic>> rooms;
+  final VoidCallback onChanged;
+
+  const _RoomColumns({
+    required this.programId,
+    required this.rooms,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    // 부부실과 가족실은 같은 칸에 둔다 — 둘 다 가족 단위로 배정한다.
+    final couples = rooms
+        .where((r) => r['room_type'] == 'couple' || r['room_type'] == 'family')
+        .toList();
+    final dorms = rooms.where((r) => r['room_type'] == 'dorm').toList();
+
+    List<Widget> column(String title, List<Map<String, dynamic>> list) => [
+      Text(
+        '$title · ${list.length}',
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+      ),
+      const SizedBox(height: 6),
+      if (list.isEmpty)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(
+            l10n.setupRoomsEmpty,
+            style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+          ),
+        )
+      else
+        for (final r in list)
+          _RoomTile(programId: programId, room: r, onChanged: onChanged),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, box) {
+        if (box.maxWidth < 900) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ...column(l10n.setupCoupleRooms, couples),
+              const SizedBox(height: 16),
+              ...column(l10n.setupDormRooms, dorms),
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: column(l10n.setupCoupleRooms, couples),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: column(l10n.setupDormRooms, dorms),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _RoomTile extends StatelessWidget {
   final String programId;
   final Map<String, dynamic> room;
@@ -306,16 +384,108 @@ class _RoomTile extends StatelessWidget {
                   ' · $genderLabel'
               .replaceFirst(RegExp(r'^ · '), ''),
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, size: 20),
-          tooltip: l10n.actionDelete,
-          onPressed: () async {
-            await ApiClient.deleteRoom(programId, room['id'] as String);
-            onChanged();
-          },
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 정원은 현장에서 자주 바뀐다 — 침대를 하나 더 넣거나, 방 하나가
+            // 못 쓰게 되거나. 지금까지는 지우고 다시 만드는 길뿐이었고,
+            // 그러면 그 방에 이미 배정된 사람이 함께 날아갔다.
+            TextButton(
+              onPressed: () => _edit(context),
+              child: Text(l10n.actionEdit),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, size: 20),
+              tooltip: l10n.actionDelete,
+              onPressed: () async {
+                await ApiClient.deleteRoom(programId, room['id'] as String);
+                onChanged();
+              },
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  /// 이름·정원·여유 자리를 고친다.
+  ///
+  /// 유형과 성별은 여기서 바꾸지 않는다 — 단체실을 부부실로 바꾸면 이미
+  /// 그 방에 든 사람들의 혼숙 방침이 깨진다. 그런 경우는 방을 새로 만드는
+  /// 편이 맞다.
+  Future<void> _edit(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final nameCtrl = TextEditingController(text: '${room['name'] ?? ''}');
+    final capCtrl = TextEditingController(
+      text: '${(room['capacity'] as num?)?.toInt() ?? 0}',
+    );
+    final extraCtrl = TextEditingController(
+      text: '${(room['extra_capacity'] as num?)?.toInt() ?? 0}',
+    );
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('${room['name']}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              decoration: InputDecoration(labelText: l10n.setupRoomsMadeName),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: capCtrl,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(labelText: l10n.setupCapacity),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: extraCtrl,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: l10n.setupExtraBed,
+                helperText: l10n.setupExtraBedHint,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.actionSave),
+          ),
+        ],
+      ),
+    );
+    if (saved != true) return;
+
+    // 정원이 0 이면 아무도 못 들어가는 방이 된다. 서버도 막지만 여기서
+    // 먼저 막아야 담당자가 "저장했는데 그대로" 를 겪지 않는다.
+    final cap = int.tryParse(capCtrl.text.trim()) ?? 0;
+    if (cap < 1) return;
+
+    try {
+      await ApiClient.updateRoom(programId, room['id'] as String, {
+        'name': nameCtrl.text.trim(),
+        'capacity': cap,
+        'extraCapacity': int.tryParse(extraCtrl.text.trim()) ?? 0,
+      });
+      onChanged();
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 }
 

@@ -175,6 +175,14 @@ router.post('/:programId/bulk', requireAuth, requireProgramAdmin, async (req, re
 // PATCH /rooms/:programId/:roomId — 방 수정 (admin 이상)
 router.patch('/:programId/:roomId', requireAuth, requireProgramAdmin, async (req, res) => {
   const { name, floor, roomType, capacity, gender } = req.body;
+  // 여유 자리(042)도 여기서 고칠 수 있어야 한다. 만들 때만 정할 수 있으면,
+  // 2인실에 한 명 더 받기로 한 뒤에는 방을 지우고 다시 만들어야 한다.
+  //
+  // 본문에 없으면 손대지 않는다 — 이름만 고치는 저장이 여유 자리를
+  // 0 으로 되돌리면 안 된다.
+  const nextExtra = Object.prototype.hasOwnProperty.call(req.body, 'extraCapacity')
+    ? normalizeExtra(req.body.extraCapacity)
+    : null;
 
   // 유형·성별이 함께 바뀌는 경우 방침 검증 (부분 수정 시엔 기존 값과 합쳐 확인)
   try {
@@ -195,9 +203,10 @@ router.patch('/:programId/:roomId', requireAuth, requireProgramAdmin, async (req
         floor     = COALESCE(${floor ?? null}, floor),
         room_type = COALESCE(${roomType ?? null}, room_type),
         capacity  = COALESCE(${capacity ?? null}, capacity),
+        extra_capacity = COALESCE(${nextExtra}, extra_capacity),
         gender    = COALESCE(${gender ?? null}, gender)
       WHERE id = ${req.params.roomId} AND program_id = ${req.params.programId}
-      RETURNING id, name, floor, room_type, capacity, gender, created_at
+      RETURNING id, name, floor, room_type, capacity, extra_capacity, gender, created_at
     `;
     res.json(updated);
   } catch (err) {

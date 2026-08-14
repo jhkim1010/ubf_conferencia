@@ -3244,4 +3244,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get setupAnyLanguage => '정하지 않음';
+
+  @override
+  String get setupCoupleRooms => '부부·가족실';
+
+  @override
+  String get setupDormRooms => '단체실';
+
+  @override
+  String get setupRoomsMadeName => '방 이름';
 }

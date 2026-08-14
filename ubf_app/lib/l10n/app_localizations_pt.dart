@@ -3326,4 +3326,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get setupAnyLanguage => 'Não definido';
+
+  @override
+  String get setupCoupleRooms => 'Quartos de casal · família';
+
+  @override
+  String get setupDormRooms => 'Quartos compartilhados';
+
+  @override
+  String get setupRoomsMadeName => 'Nome do quarto';
 }

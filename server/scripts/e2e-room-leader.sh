@@ -136,5 +136,30 @@ eq "담당자가 아니면 403" '403' \
       --data-binary "$(printf '{"registrationId":"%s"}' "$A")")"
 
 echo
+echo "── 방 정원 고치기 ──"
+# 정원은 현장에서 자주 바뀐다. 지금까지는 지우고 다시 만드는 길뿐이었고,
+# 그러면 이미 배정된 사람이 함께 날아갔다.
+UPD() { curl -s -X PATCH "$API/rooms/$P/$ROOM" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' --data-binary "$1"; }
+CAP() { curl -s "$API/rooms/$P" -H "Authorization: Bearer $LT" \
+  | jq_ "r.rooms.find(x => x.id === '$ROOM').$1"; }
+MEMBERS() { BOARD | jq_ "r.rooms.find(x => x.id === '$ROOM').members.length"; }
+BEFORE=$(MEMBERS)
+eq "정원을 고칠 수 있다" '200' \
+   "$(curl -s -o /dev/null -w '%{http_code}' -X PATCH "$API/rooms/$P/$ROOM" \
+      -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+      -d '{"capacity":6}')"
+eq "  값이 바뀐다"       '6'   "$(CAP capacity)"
+# 이미 그 방에 있는 사람이 정원을 고쳤다고 빠지면 안 된다. 앞의 자동 배정
+# 결과가 몇 명이든, **고치기 전후가 같아야** 한다.
+eq "  배정은 그대로" "$BEFORE" "$(MEMBERS)"
+UPD '{"extraCapacity":2}' > /dev/null
+eq "여유 자리도 고친다"  '2'   "$(CAP extra_capacity)"
+# 이름만 고치는 저장이 여유 자리를 0 으로 되돌리면 안 된다.
+UPD '{"name":"301호"}' > /dev/null
+eq "  이름만 고치면 그대로" '2' "$(CAP extra_capacity)"
+eq "  이름은 바뀐다" '301호' "$(CAP name)"
+
+echo
 echo "통과 $pass · 실패 $fail"
 [ "$fail" -eq 0 ]
