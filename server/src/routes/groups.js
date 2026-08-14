@@ -10,7 +10,8 @@ router.get('/:programId', requireAuth, async (req, res) => {
   try {
     const groups = await sql`
       SELECT id, name, passage, location,
-             leader_registration_id, leader_name, leader_phone, sort_order, created_at
+             leader_registration_id, leader_name, leader_phone, sort_order,
+             study_language AS "studyLanguage", created_at
       FROM groups
       WHERE program_id = ${programId}
       ORDER BY sort_order ASC, created_at ASC
@@ -48,19 +49,37 @@ router.get('/:programId', requireAuth, async (req, res) => {
 });
 
 // POST /groups/:programId — 조 1개 생성 (admin 이상)
+// 조가 어느 언어로 모이는지(025). 배정 엔진이 이 값으로 사람을 나눠 담고,
+// 배정 화면이 담당자에게 보여 준다.
+//
+// **025 이후 읽기만 하고 아무도 쓰지 않았다** — 칸은 있는데 저장할 길이
+// 없어서 모든 조가 "아무나 받는 조" 였다. 여기서 받는다.
+//
+// 빈 문자열은 "정하지 않음" 이다. 화면에서 지웠을 때 되돌아가야 한다.
+const STUDY_LANGUAGES = ['ko', 'en', 'es', 'pt'];
+function cleanLanguage(v) {
+  if (v === null || v === '') return null;
+  if (typeof v !== 'string') return undefined;   // 본문에 없음 → 손대지 않는다
+  const s = v.trim().toLowerCase();
+  if (s === '') return null;
+  return STUDY_LANGUAGES.includes(s) ? s : undefined;
+}
+
 router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
   const { name, passage, location, leaderRegistrationId, leaderName, leaderPhone, sortOrder } = req.body;
   if (!name) return res.status(400).json({ error: 'name이 필요합니다' });
+  const language = cleanLanguage(req.body?.studyLanguage) ?? null;
 
   try {
     const [group] = await sql`
       INSERT INTO groups
-        (program_id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order)
+        (program_id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, study_language)
       VALUES (
         ${req.params.programId}, ${name}, ${passage ?? null}, ${location ?? null},
-        ${leaderRegistrationId ?? null}, ${leaderName ?? null}, ${leaderPhone ?? null}, ${sortOrder ?? 0}
+        ${leaderRegistrationId ?? null}, ${leaderName ?? null}, ${leaderPhone ?? null}, ${sortOrder ?? 0},
+        ${language}
       )
-      RETURNING id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, created_at
+      RETURNING id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, study_language AS "studyLanguage", created_at
     `;
     res.status(201).json(group);
   } catch (err) {
@@ -95,7 +114,7 @@ router.post('/:programId/generate', requireAuth, requireProgramAdmin, async (req
         const { rows: [group] } = await client.query(
           `INSERT INTO groups (program_id, name, sort_order)
            VALUES ($1, $2, $3)
-           RETURNING id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, created_at`,
+           RETURNING id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, study_language AS "studyLanguage", created_at`,
           [req.params.programId, name, order],
         );
         rows.push(group);
@@ -113,6 +132,8 @@ router.post('/:programId/generate', requireAuth, requireProgramAdmin, async (req
 // PATCH /groups/:programId/:groupId — 조 수정 (admin 이상)
 router.patch('/:programId/:groupId', requireAuth, requireProgramAdmin, async (req, res) => {
   const { name, passage, location, leaderRegistrationId, leaderName, leaderPhone, sortOrder } = req.body;
+  // undefined 면 본문에 없거나 모르는 값이다 — 그때는 손대지 않는다.
+  const language = cleanLanguage(req.body?.studyLanguage);
   try {
     const [updated] = await sql`
       UPDATE groups SET
@@ -122,9 +143,13 @@ router.patch('/:programId/:groupId', requireAuth, requireProgramAdmin, async (re
         leader_registration_id = COALESCE(${leaderRegistrationId ?? null}, leader_registration_id),
         leader_name            = COALESCE(${leaderName ?? null}, leader_name),
         leader_phone           = COALESCE(${leaderPhone ?? null}, leader_phone),
-        sort_order             = COALESCE(${sortOrder ?? null}, sort_order)
+        sort_order             = COALESCE(${sortOrder ?? null}, sort_order),
+        study_language         = CASE
+          WHEN ${language === undefined} THEN study_language
+          ELSE ${language ?? null}::text
+        END
       WHERE id = ${req.params.groupId} AND program_id = ${req.params.programId}
-      RETURNING id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, created_at
+      RETURNING id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, study_language AS "studyLanguage", created_at
     `;
     if (!updated) return res.status(404).json({ error: '조를 찾을 수 없습니다' });
     res.json(updated);

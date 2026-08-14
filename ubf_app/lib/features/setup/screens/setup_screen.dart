@@ -917,52 +917,87 @@ class _GroupTile extends StatelessWidget {
     final locationCtrl = TextEditingController(
       text: group['location'] as String? ?? '',
     );
+    // 조가 어느 언어로 모이는지(025). 칸은 처음부터 있었는데 정할 자리가
+    // 없어서 늘 비어 있었고, 그래서 자동 배정이 모든 조를 "아무나 받는 조"
+    // 로 봤다. 안 정해 두는 것도 그대로 뜻이 있으므로 빈 값을 남겨 둔다.
+    String? lang = group['studyLanguage'] as String?;
 
     final saved = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text(l10n.setupEditGroupTitle('${group['name']}')),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: InputDecoration(labelText: l10n.setupGroupName),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: leaderCtrl,
-                decoration: InputDecoration(labelText: l10n.setupLeaderName),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: phoneCtrl,
-                decoration: InputDecoration(labelText: l10n.setupLeaderPhone),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: passageCtrl,
-                decoration: InputDecoration(labelText: l10n.setupPassage),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: locationCtrl,
-                decoration: InputDecoration(labelText: l10n.setupLocation),
-              ),
-            ],
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: Text(l10n.setupEditGroupTitle('${group['name']}')),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: InputDecoration(labelText: l10n.setupGroupName),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: leaderCtrl,
+                  decoration: InputDecoration(labelText: l10n.setupLeaderName),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: phoneCtrl,
+                  decoration: InputDecoration(labelText: l10n.setupLeaderPhone),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: passageCtrl,
+                  decoration: InputDecoration(labelText: l10n.setupPassage),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: locationCtrl,
+                  decoration: InputDecoration(labelText: l10n.setupLocation),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.setupGroupLanguage,
+                    style: const TextStyle(fontSize: 12.5),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 6,
+                  children: [
+                    for (final o in const [
+                      (code: null, label: '—'),
+                      (code: 'ko', label: '한국어'),
+                      (code: 'en', label: 'English'),
+                      (code: 'es', label: 'Español'),
+                      (code: 'pt', label: 'Português'),
+                    ])
+                      ChoiceChip(
+                        label: Text(
+                          o.code == null ? l10n.setupAnyLanguage : o.label,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        selected: lang == o.code,
+                        onSelected: (_) => setLocal(() => lang = o.code),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.actionCancel),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.actionSave),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.actionCancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.actionSave),
-          ),
-        ],
       ),
     );
 
@@ -973,6 +1008,8 @@ class _GroupTile extends StatelessWidget {
       'leaderPhone': phoneCtrl.text.trim(),
       'passage': passageCtrl.text.trim(),
       'location': locationCtrl.text.trim(),
+      // 빈 문자열은 "정하지 않음" 이다 — 서버가 그렇게 읽는다.
+      'studyLanguage': lang ?? '',
     });
     onChanged();
   }

@@ -3320,4 +3320,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get svcWillAsk => 'não se ofereceu — vamos perguntar';
+
+  @override
+  String get setupGroupLanguage => 'Idioma em que este grupo estuda';
+
+  @override
+  String get setupAnyLanguage => 'Não definido';
 }

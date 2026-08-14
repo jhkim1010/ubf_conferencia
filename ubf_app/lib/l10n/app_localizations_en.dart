@@ -3308,4 +3308,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get svcWillAsk => 'they did not offer this — we will ask them';
+
+  @override
+  String get setupGroupLanguage => 'Language this group studies in';
+
+  @override
+  String get setupAnyLanguage => 'Not set';
 }

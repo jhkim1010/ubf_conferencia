@@ -6035,6 +6035,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'they did not offer this — we will ask them'**
   String get svcWillAsk;
+
+  /// 말씀조의 공부 언어 선택 제목
+  ///
+  /// In en, this message translates to:
+  /// **'Language this group studies in'**
+  String get setupGroupLanguage;
+
+  /// 언어를 정하지 않은 조 (아무나 받는 조)
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get setupAnyLanguage;
 }
 
 class _AppLocalizationsDelegate

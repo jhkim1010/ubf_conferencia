@@ -3238,4 +3238,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get svcWillAsk => '자원하지 않은 일 — 본인에게 물어봅니다';
+
+  @override
+  String get setupGroupLanguage => '이 조가 모이는 언어';
+
+  @override
+  String get setupAnyLanguage => '정하지 않음';
 }

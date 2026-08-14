@@ -3319,4 +3319,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get svcWillAsk => 'no se ofreció — se le va a preguntar';
+
+  @override
+  String get setupGroupLanguage => 'Idioma en que estudia este grupo';
+
+  @override
+  String get setupAnyLanguage => 'Sin definir';
 }

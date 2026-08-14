@@ -1002,5 +1002,7 @@
   "flightNoteHint": "예: EZE 로 도착해 거기서 버스로 이동합니다",
   "immCardOtherRoute": "OTHER ROUTE / 다른 경로",
   "svcWillConfirm": "자원한 일 — 바로 확정됩니다",
-  "svcWillAsk": "자원하지 않은 일 — 본인에게 물어봅니다"
+  "svcWillAsk": "자원하지 않은 일 — 본인에게 물어봅니다",
+  "setupGroupLanguage": "이 조가 모이는 언어",
+  "setupAnyLanguage": "정하지 않음"
 }
