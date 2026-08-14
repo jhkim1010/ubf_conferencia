@@ -5957,6 +5957,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disconnect'**
   String get tgUnlink;
+
+  /// 고른 역할 수만큼 한 번에 부탁하는 버튼
+  ///
+  /// In en, this message translates to:
+  /// **'Ask ({count})'**
+  String svcAskThem(int count);
 }
 
 class _AppLocalizationsDelegate

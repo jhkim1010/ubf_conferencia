@@ -807,43 +807,76 @@ class _VolunteersState extends State<_Volunteers> {
         r['key'] == suggested ? 0 : (offered.contains(r['key']) ? 1 : 2);
     open.sort((a, b) => rank(a).compareTo(rank(b)));
 
-    final picked = await showDialog<Map<String, dynamic>>(
+    // 여럿을 한 번에 고른다. 운전도 하고 요리도 하는 사람에게 둘을 따로
+    // 물으면 대화상자를 두 번 열어야 하고, 알림도 따로 간다.
+    //
+    // 누른 자원이 있으면 그것만 미리 켜 둔다 — 나머지는 담당자가 정한다.
+    final picked = await showDialog<Set<String>>(
       context: context,
-      builder: (ctx) => SimpleDialog(
-        title: Text(l10n.svcAssignTo(name)),
-        children: [
-          if (open.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(l10n.tblEmpty),
-            ),
-          for (final r in open)
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(ctx, r),
-              child: Row(
-                children: [
-                  Expanded(child: Text(serviceRoleLabel(l10n, r))),
-                  if (rank(r) < 2)
-                    Text(
-                      l10n.svcSuggested,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: Colors.green[700],
-                      ),
+      builder: (ctx) {
+        final chosen = <String>{?suggested};
+        return StatefulBuilder(
+          builder: (ctx, setLocal) => AlertDialog(
+            title: Text(l10n.svcAssignTo(name)),
+            content: SizedBox(
+              width: 360,
+              child: open.isEmpty
+                  ? Text(l10n.tblEmpty)
+                  : ListView(
+                      shrinkWrap: true,
+                      children: [
+                        for (final r in open)
+                          CheckboxListTile(
+                            dense: true,
+                            value: chosen.contains(r['key']),
+                            onChanged: (v) => setLocal(() {
+                              if (v == true) {
+                                chosen.add(r['key'] as String);
+                              } else {
+                                chosen.remove(r['key']);
+                              }
+                            }),
+                            title: Text(
+                              serviceRoleLabel(l10n, r),
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            subtitle: rank(r) < 2
+                                ? Text(
+                                    l10n.svcSuggested,
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: Colors.green[700],
+                                    ),
+                                  )
+                                : null,
+                          ),
+                      ],
                     ),
-                ],
-              ),
             ),
-        ],
-      ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l10n.actionCancel),
+              ),
+              FilledButton(
+                // 아무것도 안 고른 채로 보내면 서버가 거절한다. 여기서 막는다.
+                onPressed: chosen.isEmpty
+                    ? null
+                    : () => Navigator.pop(ctx, chosen),
+                child: Text(l10n.svcAskThem(chosen.length)),
+              ),
+            ],
+          ),
+        );
+      },
     );
-    if (picked == null || !mounted) return;
+    if (picked == null || picked.isEmpty || !mounted) return;
 
     try {
       await ApiClient.inviteToService(
         widget.programId,
         registrationId: regId,
-        serviceKey: picked['key'] as String,
+        serviceKeys: picked.toList(),
       );
       widget.onChanged();
       if (mounted) {

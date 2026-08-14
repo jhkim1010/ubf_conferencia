@@ -2077,5 +2077,14 @@
   "tgUnlink": "Disconnect",
   "@tgUnlink": {
     "description": "연결 해제"
+  },
+  "svcAskThem": "Ask ({count})",
+  "@svcAskThem": {
+    "description": "고른 역할 수만큼 한 번에 부탁하는 버튼",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

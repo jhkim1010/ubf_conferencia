@@ -125,6 +125,13 @@ invCode() { # $1=등록id $2=역할 $3=토큰
     -H "Authorization: Bearer $3" -H 'Content-Type: application/json' \
     --data-binary "$(invBody "$1" "$2")"
 }
+invMany() { # $1=등록id, 나머지=역할들
+  local reg="$1"; shift
+  local keys; keys=$(printf '"%s",' "$@"); keys="[${keys%,}]"
+  curl -s -X POST "$API/service-signups/$P/invite" -H "Authorization: Bearer $LT" \
+    -H 'Content-Type: application/json' \
+    --data-binary "$(printf '{"registrationId":"%s","serviceKeys":%s}' "$reg" "$keys")"
+}
 S1=$(inv "$R1" pickup | jq_ "r.id")
 eq "지명하면 수락 대기" 'invited' "$(role pickup "people.find(p => p.registration_id === '$R1').status")"
 eq "  아직 확정은 0" '0' "$(role pickup 'confirmed')"
@@ -328,6 +335,42 @@ curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $BLANK" \
   -H 'Content-Type: application/json' -d '{"country":"KR"}' > /dev/null
 BR=$(curl -s "$API/registrations/$P/me" -H "Authorization: Bearer $BLANK" | jq_ "r.id")
 eq "이름 없는 사람은 지명할 수 없다" '404' "$(invCode "$BR" pickup "$LT")"
+
+echo
+echo "── 한 사람에게 여러 가지를 한 번에 ──"
+# 운전도 하고 요리도 하는 사람에게 둘을 따로 물으면 대화상자를 두 번 열고,
+# 받는 사람에게는 알림이 두 번 간다. 한 번에 부탁한다.
+#
+# 앞 검사들의 인원 수를 흔들지 않도록 새 사람으로 한다.
+T5=$(enroll 정마태); R5=$(regId "$T5")
+MULTI=$(invMany "$R5" pickup meal_prep)
+eq "여럿이 한 번에 들어간다" '2' "$(printf '%s' "$MULTI" | jq_ 'r.invited.length')"
+# 예전 형태(단일 지명)를 쓰는 곳이 남아 있어도 깨지면 안 된다.
+eq "  id·status 는 그대로" 'true' \
+   "$(printf '%s' "$MULTI" | jq_ 'typeof r.id === "string" && r.status === "invited"')"
+eq "  첫 번째 역할에 들어갔다" 'invited' \
+   "$(role pickup "people.find(p => p.registration_id === '$R5').status")"
+eq "  두 번째 역할에도"       'invited' \
+   "$(role meal_prep "people.find(p => p.registration_id === '$R5').status")"
+# 체크를 두 번 눌러 같은 것이 겹쳐 오는 일이 있다.
+eq "같은 역할이 겹쳐 오면 한 번만" '1' \
+   "$(invMany "$R5" meal_prep meal_prep | jq_ 'r.invited.length')"
+# **하나라도 이 수양회에 없으면 전부 거절한다.** 일부만 들어가면 담당자는
+# 둘을 부탁한 줄 아는데 하나만 갔다는 것을 알 길이 없다. mc 는 올바른
+# 키지만 이 수양회 구성에는 없다.
+# 아무 역할도 없는 사람으로 본다 — 이미 들어가 있으면 "안 들어갔다" 를
+# 확인할 수 없다.
+T6=$(enroll 한도마); R6=$(regId "$T6")
+eq "이 수양회에 없는 역할이 섞이면 전부 거절" '400' \
+   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/invite" \
+      -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+      --data-binary "$(printf '{"registrationId":"%s","serviceKeys":["pickup","mc"]}' "$R6")")"
+eq "  멀쩡한 쪽도 안 들어갔다" '0' \
+   "$(role pickup "people.filter(p => p.registration_id === '$R6').length")"
+eq "빈 목록은 거절" '400' \
+   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/service-signups/$P/invite" \
+      -H "Authorization: Bearer $LT" -H 'Content-Type: application/json' \
+      --data-binary "$(printf '{"registrationId":"%s","serviceKeys":[]}' "$R5")")"
 
 echo
 echo "통과 $pass · 실패 $fail"

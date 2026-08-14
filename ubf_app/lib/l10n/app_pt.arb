@@ -975,5 +975,6 @@
   "tgCheck": "Já fiz",
   "tgLinked": "O Telegram está conectado",
   "tgNotYet": "Ainda não — abra o link, toque em Iniciar e tente de novo",
-  "tgUnlink": "Desconectar"
+  "tgUnlink": "Desconectar",
+  "svcAskThem": "Pedir ({count})"
 }

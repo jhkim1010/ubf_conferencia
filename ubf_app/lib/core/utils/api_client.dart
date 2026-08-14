@@ -510,18 +510,22 @@ class ApiClient {
   }
 
   /// 참가자를 역할에 지명한다. 부탁이지 확정이 아니다 — 본인이 수락해야 한다.
+  /// 한 사람에게 봉사를 부탁한다.
+  ///
+  /// 여럿을 한 번에 부탁할 수 있다 — [serviceKeys] 로 보내면 알림도 한 통만
+  /// 간다. 역할마다 따로 부르면 받는 사람이 세 번 울린다.
   static Future<Map<String, dynamic>> inviteToService(
     String programId, {
     required String registrationId,
-    required String serviceKey,
+    String? serviceKey,
+    List<String>? serviceKeys,
   }) async {
+    final keys = serviceKeys ?? [?serviceKey];
+    assert(keys.isNotEmpty, '역할을 하나는 주어야 합니다');
     final response = await http.post(
       _uri('/service-signups/$programId/invite'),
       headers: await _headers(),
-      body: jsonEncode({
-        'registrationId': registrationId,
-        'serviceKey': serviceKey,
-      }),
+      body: jsonEncode({'registrationId': registrationId, 'serviceKeys': keys}),
     );
     return _decode(response);
   }

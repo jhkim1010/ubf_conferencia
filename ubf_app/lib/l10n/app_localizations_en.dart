@@ -3266,4 +3266,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tgUnlink => 'Disconnect';
+
+  @override
+  String svcAskThem(int count) {
+    return 'Ask ($count)';
+  }
 }

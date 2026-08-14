@@ -3278,4 +3278,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get tgUnlink => 'Desconectar';
+
+  @override
+  String svcAskThem(int count) {
+    return 'Pedir ($count)';
+  }
 }

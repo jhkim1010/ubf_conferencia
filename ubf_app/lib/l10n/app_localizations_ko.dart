@@ -3197,4 +3197,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get tgUnlink => '연결 끊기';
+
+  @override
+  String svcAskThem(int count) {
+    return '부탁하기 ($count)';
+  }
 }

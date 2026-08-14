@@ -989,5 +989,6 @@
   "tgCheck": "눌렀습니다",
   "tgLinked": "텔레그램이 연결되었습니다",
   "tgNotYet": "아직입니다 — 링크를 열어 시작을 누른 뒤 다시 해 주십시오",
-  "tgUnlink": "연결 끊기"
+  "tgUnlink": "연결 끊기",
+  "svcAskThem": "부탁하기 ({count})"
 }

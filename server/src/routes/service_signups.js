@@ -371,9 +371,21 @@ router.post(
   requireProgramAdmin,
   async (req, res) => {
     const programId = req.params.programId;
-    const { registrationId, serviceKey } = req.body ?? {};
+    const { registrationId, serviceKey, serviceKeys } = req.body ?? {};
 
-    if (!isValidRoleKey(serviceKey)) {
+    // 한 사람에게 여러 가지를 부탁하는 일이 보통이다 — 운전도 하고 요리도
+    // 하는 사람에게 둘을 따로 물으면 알림도 따로 간다. 한 번에 받는다.
+    //
+    // serviceKey 하나만 오는 예전 형태도 그대로 받는다.
+    const keys = [
+      ...new Set(
+        (Array.isArray(serviceKeys) ? serviceKeys : [serviceKey]).filter(
+          (k) => typeof k === 'string' && k !== '',
+        ),
+      ),
+    ];
+
+    if (keys.length === 0 || !keys.every(isValidRoleKey)) {
       return res.status(400).json({ error: '역할이 올바르지 않습니다' });
     }
     if (!registrationId) {
@@ -381,9 +393,15 @@ router.post(
     }
 
     try {
-      const role = await findRole(programId, serviceKey);
-      if (!role) {
-        return res.status(400).json({ error: '이 수양회에 없는 역할입니다' });
+      // **하나라도 이 수양회에 없으면 전부 거절한다.** 일부만 들어가면
+      // 담당자는 셋을 부탁한 줄 아는데 둘만 갔다는 것을 알 길이 없다.
+      const roles = [];
+      for (const key of keys) {
+        const found = await findRole(programId, key);
+        if (!found) {
+          return res.status(400).json({ error: '이 수양회에 없는 역할입니다' });
+        }
+        roles.push(found);
       }
 
       // 다른 수양회의 등록을 지명할 수 없다.
@@ -398,31 +416,38 @@ router.post(
 
       // 이미 있으면 다시 지명한다. 거절했던 사람에게 다시 부탁하는 일은
       // 실제로 흔하다.
-      const [row] = await sql`
-        INSERT INTO service_signups (registration_id, service_key, status,
-                                     invited_by, invited_at)
-        VALUES (${registrationId}, ${serviceKey}, ${statusOnInvite()},
-                ${req.user.leaderId ?? null}, NOW())
-        ON CONFLICT (registration_id, service_key) DO UPDATE
-          SET status = ${statusOnInvite()},
-              invited_by = ${req.user.leaderId ?? null},
-              invited_at = NOW(),
-              responded_at = NULL,
-              updated_at = NOW()
-        RETURNING id, status
-      `;
+      const invited = [];
+      for (const role of roles) {
+        const [row] = await sql`
+          INSERT INTO service_signups (registration_id, service_key, status,
+                                       invited_by, invited_at)
+          VALUES (${registrationId}, ${role.key}, ${statusOnInvite()},
+                  ${req.user.leaderId ?? null}, NOW())
+          ON CONFLICT (registration_id, service_key) DO UPDATE
+            SET status = ${statusOnInvite()},
+                invited_by = ${req.user.leaderId ?? null},
+                invited_at = NOW(),
+                responded_at = NULL,
+                updated_at = NOW()
+          RETURNING id, status
+        `;
+        invited.push({ id: row.id, status: row.status, service_key: role.key });
+      }
 
       // 알림이 실패해도 지명은 남는다. 알림 때문에 배정이 막히면 안 된다.
       //
       // **무엇을 부탁받았는지 알림에 적는다.** "봉사를 부탁드립니다" 만
       // 오면 앱을 열기 전까지는 무슨 일인지 모른다.
-      const what = roleName(role);
+      //
+      // 여럿을 부탁해도 **알림은 한 통** 이다. 역할마다 따로 보내면 세 번
+      // 울리고, 세 번째쯤에는 아무도 읽지 않는다.
+      const what = roles.map(roleName).join(', ');
       if (reg.fcm_token) {
         sendPushNotification(
           [reg.fcm_token],
           '봉사 부탁',
           `${reg.real_name} 님, ${what} 을(를) 부탁드립니다. 앱에서 수락 여부를 알려 주십시오.`,
-          { type: 'service_invite', programId, serviceKey },
+          { type: 'service_invite', programId, serviceKey: roles[0].key },
         ).catch((e) => console.error('봉사 지명 알림 실패:', e));
       }
       // 앱 푸시는 앱을 지웠거나 알림을 꺼 뒀거나 웹으로만 쓰는 사람에게는
@@ -433,8 +458,14 @@ router.post(
         `<b>봉사 부탁</b>\n${reg.real_name} 님, ${what} 을(를) 부탁드립니다.\n앱에서 수락 여부를 알려 주십시오.`,
       ).catch((e) => console.error('봉사 지명 텔레그램 실패:', e));
 
-      console.log(`[SERVICE] 지명 | programId=${programId} key=${serviceKey} registrationId=${registrationId} leaderId=${req.user.leaderId}`);
-      res.status(201).json({ id: row.id, status: row.status });
+      console.log(`[SERVICE] 지명 | programId=${programId} keys=${keys.join(',')} registrationId=${registrationId} leaderId=${req.user.leaderId}`);
+      // id·status 는 예전 형태 그대로 둔다(첫 번째). 여럿을 부탁한 경우는
+      // invited 로 전부 온다.
+      res.status(201).json({
+        id: invited[0].id,
+        status: invited[0].status,
+        invited,
+      });
     } catch (err) {
       console.error('봉사 지명 오류:', err);
       res.status(500).json({ error: '서버 오류' });
