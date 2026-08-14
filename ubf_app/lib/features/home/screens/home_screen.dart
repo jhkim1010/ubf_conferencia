@@ -6,6 +6,7 @@ import '../../program/providers/program_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/ubf_chapters.dart';
@@ -488,6 +489,9 @@ class _AttendeeHomeViewState extends State<_AttendeeHomeView> {
         // 요청이 그만큼 늘어난다.
         for (final prog in _recentPrograms.take(3)) ...[
           _ServiceInviteNotice(programId: prog['uuid'] as String),
+          // 텔레그램 연결(047). 앱 푸시가 닿지 않는 사람에게도 부탁이
+          // 가도록. 봇을 안 정해 둔 수양회에서는 아무것도 안 보인다.
+          _TelegramLinkCard(programId: prog['uuid'] as String),
           // 전체에 청한 모집(043). 지명은 나에게 온 부탁이고, 이쪽은
           // 아직 아무에게도 정해지지 않은 자리다.
           _ServiceCallNotice(programId: prog['uuid'] as String),
@@ -734,14 +738,74 @@ class _ServiceInviteNotice extends ConsumerWidget {
     return async.maybeWhen(
       orElse: () => const SizedBox.shrink(),
       data: (rows) {
-        final pending = rows
-            .cast<Map<String, dynamic>>()
-            .where((r) => r['status'] == 'invited')
+        final all = rows.cast<Map<String, dynamic>>();
+        final pending = all.where((r) => r['status'] == 'invited').toList();
+        // 수락한 뒤에 부탁 카드가 사라지면, 자기가 무엇을 맡았는지 확인할
+        // 데가 없어진다. 맡은 것은 남겨 둔다 — 수양회가 시작하기 전에 다시
+        // 열어 보는 것이 바로 이것이다.
+        final mine = all
+            .where(
+              (r) =>
+                  r['status'] == 'confirmed' ||
+                  r['status'] == 'applied' ||
+                  r['status'] == 'awaiting_approval',
+            )
             .toList();
-        if (pending.isEmpty) return const SizedBox.shrink();
+        if (pending.isEmpty && mine.isEmpty) return const SizedBox.shrink();
 
         return Column(
           children: [
+            if (mine.isNotEmpty)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.volunteer_activism, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.svcMineTitle,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      for (final r in mine)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  serviceRoleLabel(l10n, {
+                                    'key': r['service_key'],
+                                    'label': r['label'],
+                                  }),
+                                  style: const TextStyle(fontSize: 13.5),
+                                ),
+                              ),
+                              // 확정과 "기다리는 중" 은 다른 상태다. 같이
+                              // 보이면 승인 대기가 끝난 줄 안다.
+                              Text(
+                                serviceStatusLabel(l10n, '${r['status']}'),
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: r['status'] == 'confirmed'
+                                      ? Colors.green[700]
+                                      : Colors.orange[900],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
             for (final inv in pending)
               Card(
                 color: const Color(0xFFFFF8E7),
@@ -991,6 +1055,127 @@ class _MenuTile extends StatelessWidget {
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
       ),
+    );
+  }
+}
+
+/// 텔레그램으로도 연락받기 (047).
+///
+/// 봇은 사람에게 먼저 말을 걸 수 없다 — 그 사람이 봇을 열어 /start 를
+/// 보내야 한다. 그래서 두 걸음이다: 링크를 열고, 돌아와서 확인을 누른다.
+///
+/// 확인을 사람이 누르게 하는 것이 번거로워 보이지만, 웹훅을 걸면 수양회마다
+/// 다른 봇을 텔레그램에 등록해 두어야 한다. 연결은 한 사람이 한 번 하는
+/// 일이므로 이쪽이 싸다.
+class _TelegramLinkCard extends ConsumerStatefulWidget {
+  final String programId;
+
+  const _TelegramLinkCard({required this.programId});
+
+  @override
+  ConsumerState<_TelegramLinkCard> createState() => _TelegramLinkCardState();
+}
+
+class _TelegramLinkCardState extends ConsumerState<_TelegramLinkCard> {
+  bool _busy = false;
+
+  Future<void> _open(String url) async {
+    final uri = Uri.parse(url);
+    // 텔레그램 앱이 없으면 브라우저가 t.me 를 연다 — 거기서도 연결된다.
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _check() async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _busy = true);
+    try {
+      final r = await ApiClient.checkTelegramLink(widget.programId);
+      ref.invalidate(myTelegramLinkProvider(widget.programId));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(r['linked'] == true ? l10n.tgLinked : l10n.tgNotYet),
+        ),
+      );
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _unlink() async {
+    setState(() => _busy = true);
+    try {
+      await ApiClient.unlinkTelegram(widget.programId);
+      ref.invalidate(myTelegramLinkProvider(widget.programId));
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final async = ref.watch(myTelegramLinkProvider(widget.programId));
+
+    return async.maybeWhen(
+      orElse: () => const SizedBox.shrink(),
+      data: (data) {
+        // 봇을 안 정해 둔 수양회에서는 아예 내보내지 않는다. 눌러도 아무
+        // 일이 안 일어나는 버튼을 두는 것보다 없는 편이 낫다.
+        if (data['available'] != true) return const SizedBox.shrink();
+        final linked = data['linked'] == true;
+        final url = data['url'] as String?;
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 8, 6),
+            child: Row(
+              children: [
+                Icon(
+                  linked ? Icons.check_circle : Icons.send_outlined,
+                  size: 18,
+                  color: linked ? Colors.green[700] : Colors.grey[700],
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    linked ? l10n.tgLinked : l10n.tgOffer,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+                if (linked)
+                  TextButton(
+                    onPressed: _busy ? null : _unlink,
+                    child: Text(l10n.tgUnlink),
+                  )
+                else ...[
+                  if (url != null)
+                    TextButton(
+                      onPressed: _busy ? null : () => _open(url),
+                      child: Text(l10n.tgOpen),
+                    ),
+                  TextButton(
+                    onPressed: _busy ? null : _check,
+                    child: Text(l10n.tgCheck),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

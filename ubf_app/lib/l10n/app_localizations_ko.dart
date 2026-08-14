@@ -3176,4 +3176,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get asnNoGroupLeader => '조장 없음';
+
+  @override
+  String get svcMineTitle => '내가 맡은 봉사';
+
+  @override
+  String get tgOffer => '텔레그램으로도 연락받기';
+
+  @override
+  String get tgOpen => '텔레그램 열기';
+
+  @override
+  String get tgCheck => '눌렀습니다';
+
+  @override
+  String get tgLinked => '텔레그램이 연결되었습니다';
+
+  @override
+  String get tgNotYet => '아직입니다 — 링크를 열어 시작을 누른 뒤 다시 해 주십시오';
+
+  @override
+  String get tgUnlink => '연결 끊기';
 }

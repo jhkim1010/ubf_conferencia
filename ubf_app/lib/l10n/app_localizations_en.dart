@@ -3244,4 +3244,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get asnNoGroupLeader => 'no leader yet';
+
+  @override
+  String get svcMineTitle => 'What I am helping with';
+
+  @override
+  String get tgOffer => 'Get messages on Telegram too';
+
+  @override
+  String get tgOpen => 'Open Telegram';
+
+  @override
+  String get tgCheck => 'I did it';
+
+  @override
+  String get tgLinked => 'Telegram is connected';
+
+  @override
+  String get tgNotYet =>
+      'Not connected yet — open the link and press Start, then try again';
+
+  @override
+  String get tgUnlink => 'Disconnect';
 }

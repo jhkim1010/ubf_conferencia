@@ -5915,6 +5915,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'no leader yet'**
   String get asnNoGroupLeader;
+
+  /// 참가자 홈에서 자기가 맡은 봉사 목록의 제목
+  ///
+  /// In en, this message translates to:
+  /// **'What I am helping with'**
+  String get svcMineTitle;
+
+  /// 텔레그램 연결 권유
+  ///
+  /// In en, this message translates to:
+  /// **'Get messages on Telegram too'**
+  String get tgOffer;
+
+  /// 봇 대화를 여는 버튼
+  ///
+  /// In en, this message translates to:
+  /// **'Open Telegram'**
+  String get tgOpen;
+
+  /// /start 를 눌렀는지 확인하는 버튼
+  ///
+  /// In en, this message translates to:
+  /// **'I did it'**
+  String get tgCheck;
+
+  /// 연결됨
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram is connected'**
+  String get tgLinked;
+
+  /// 아직 /start 가 오지 않았을 때
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected yet — open the link and press Start, then try again'**
+  String get tgNotYet;
+
+  /// 연결 해제
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get tgUnlink;
 }
 
 class _AppLocalizationsDelegate

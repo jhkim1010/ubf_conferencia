@@ -59,6 +59,37 @@ function cleanNeeded(v) {
 ///
 /// 이름 없는 자유 역할은 버린다. 화면에 "custom:9f2c…" 라고 뜨느니 없는
 /// 편이 낫다.
+// 알림에 적을 역할 이름.
+//
+// 화면의 이름은 앱이 네 언어로 붙인다(service_role_label.dart). 서버는 키만
+// 아는데, 푸시와 텔레그램은 서버가 문장을 만들어 보내므로 여기에도 이름이
+// 있어야 한다. 서버가 보내는 다른 알림과 같이 한국어로 적는다.
+//
+// **담당자가 그 자리에서 만든 역할(custom:)은 적어 준 이름을 그대로 쓴다** —
+// 번역할 방법이 없고, 번역해서도 안 된다.
+const ROLE_NAMES_KO = {
+  special_song: '특송',
+  mc: '사회',
+  pickup: '픽업',
+  cleaning: '청소',
+  tour_guide: '투어 안내',
+  meal_prep: '식사 준비',
+  lodging_backup: '숙소 백업',
+  registration_desk: '등록 데스크',
+  interpreter: '통역',
+  photo_video: '사진·영상',
+  medical: '의료',
+  group_study_leader: '말씀조 리더',
+  other: '봉사',
+};
+
+export function roleName(role) {
+  if (!role) return '봉사';
+  const label = cleanLabel(role.label);
+  if (label !== '') return label;
+  return ROLE_NAMES_KO[role.key] ?? '봉사';
+}
+
 export function normalizeServiceRoles(raw) {
   if (!Array.isArray(raw)) return [];
   const out = [];

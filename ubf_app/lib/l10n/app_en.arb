@@ -2049,5 +2049,33 @@
   "asnNoGroupLeader": "no leader yet",
   "@asnNoGroupLeader": {
     "description": "아직 조장이 없는 말씀조"
+  },
+  "svcMineTitle": "What I am helping with",
+  "@svcMineTitle": {
+    "description": "참가자 홈에서 자기가 맡은 봉사 목록의 제목"
+  },
+  "tgOffer": "Get messages on Telegram too",
+  "@tgOffer": {
+    "description": "텔레그램 연결 권유"
+  },
+  "tgOpen": "Open Telegram",
+  "@tgOpen": {
+    "description": "봇 대화를 여는 버튼"
+  },
+  "tgCheck": "I did it",
+  "@tgCheck": {
+    "description": "/start 를 눌렀는지 확인하는 버튼"
+  },
+  "tgLinked": "Telegram is connected",
+  "@tgLinked": {
+    "description": "연결됨"
+  },
+  "tgNotYet": "Not connected yet — open the link and press Start, then try again",
+  "@tgNotYet": {
+    "description": "아직 /start 가 오지 않았을 때"
+  },
+  "tgUnlink": "Disconnect",
+  "@tgUnlink": {
+    "description": "연결 해제"
   }
 }

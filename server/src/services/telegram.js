@@ -101,6 +101,78 @@ export async function notifyProgramAdmins(programId, message) {
   }
 }
 
+// ─── 참가자 개인에게 (047) ───────────────────────────────────
+//
+// 앱 푸시는 앱을 지웠거나 알림을 꺼 뒀거나 웹으로만 쓰는 사람에게는 가지
+// 않는다. 텔레그램을 연결해 둔 사람에게는 이쪽으로도 보낸다 — 둘 다
+// 보내는 것은 낭비가 아니라 보험이다.
+//
+// **연결하지 않은 사람은 조용히 건너뛴다.** 여기서 던지면 봉사 지명 자체가
+// 실패한다.
+export async function notifyRegistrations(programId, registrationIds, message) {
+  try {
+    if (!registrationIds || registrationIds.length === 0) return 0;
+    const [program] = await sql`
+      SELECT telegram_bot_token FROM programs WHERE id = ${programId}
+    `;
+    const token = program?.telegram_bot_token || ENV_BOT_TOKEN;
+    if (!token) return 0;
+
+    const rows = await sql`
+      SELECT telegram_chat_id FROM registrations
+      WHERE program_id = ${programId}
+        AND id = ANY(${registrationIds})
+        AND telegram_chat_id IS NOT NULL
+    `;
+    await Promise.all(
+      rows.map((r) => sendMessage(r.telegram_chat_id, message, token)),
+    );
+    return rows.length;
+  } catch (err) {
+    console.error('참가자 텔레그램 알림 오류:', err.message);
+    return 0;
+  }
+}
+
+// ─── 봇 자신 (연결 링크를 만들 때) ───────────────────────────
+//
+// 링크는 `https://t.me/<봇이름>?start=<코드>` 다. 봇 이름은 토큰에 들어
+// 있지 않으므로 물어봐야 한다.
+export async function getBotUsername(token) {
+  const botToken = token || ENV_BOT_TOKEN;
+  if (!botToken) return null;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/getMe`);
+    if (!res.ok) return null;
+    const body = await res.json();
+    return body?.result?.username ?? null;
+  } catch (err) {
+    console.error('getMe 오류:', err.message);
+    return null;
+  }
+}
+
+// ─── 사람이 보낸 /start 를 가져온다 ──────────────────────────
+//
+// 웹훅을 걸지 않는 이유는 047 에 적어 두었다. offset 을 주지 않으면 같은
+// 것을 계속 돌려주므로, 읽은 자리는 호출부가 저장한다.
+export async function getUpdates(token, offset) {
+  const botToken = token || ENV_BOT_TOKEN;
+  if (!botToken) return [];
+  try {
+    const url = new URL(`https://api.telegram.org/bot${botToken}/getUpdates`);
+    if (offset != null) url.searchParams.set('offset', String(offset));
+    url.searchParams.set('timeout', '0');
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const body = await res.json();
+    return Array.isArray(body?.result) ? body.result : [];
+  } catch (err) {
+    console.error('getUpdates 오류:', err.message);
+    return [];
+  }
+}
+
 // ─── 일일 요약 전송 (매일 19:00) ─────────────────────────────
 export async function sendDailySummary() {
   try {

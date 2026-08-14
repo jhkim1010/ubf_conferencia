@@ -1129,6 +1129,34 @@ class ApiClient {
     _decode(response);
   }
 
+  /// 내 텔레그램 연결 상태와 연결 링크(047).
+  static Future<Map<String, dynamic>> getTelegramLink(String programId) async {
+    final response = await http.get(
+      _uri('/telegram/$programId/link'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  /// 봇에게 /start 를 보냈는지 확인한다. 연결됐으면 linked:true 로 온다.
+  static Future<Map<String, dynamic>> checkTelegramLink(
+    String programId,
+  ) async {
+    final response = await http.post(
+      _uri('/telegram/$programId/link/check'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  static Future<Map<String, dynamic>> unlinkTelegram(String programId) async {
+    final response = await http.delete(
+      _uri('/telegram/$programId/link'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
   /// 방장을 세운다. [registrationId] 가 null 이면 내린다.
   static Future<void> setRoomLeader(
     String programId,

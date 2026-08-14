@@ -12,6 +12,7 @@ import {
   isOpenForMe,
   isValidRoleKey,
   normalizeServiceRoles,
+  roleName,
   rolesOf,
   statusOnInvite,
   statusOnConfirm,
@@ -24,7 +25,7 @@ import {
   notifyAudience,
 } from '../services/fcm.js';
 import { audienceFromBody } from '../services/audience.js';
-import { notifyProgramAdmins } from '../services/telegram.js';
+import { notifyProgramAdmins, notifyRegistrations } from '../services/telegram.js';
 
 const router = Router();
 
@@ -412,14 +413,25 @@ router.post(
       `;
 
       // 알림이 실패해도 지명은 남는다. 알림 때문에 배정이 막히면 안 된다.
+      //
+      // **무엇을 부탁받았는지 알림에 적는다.** "봉사를 부탁드립니다" 만
+      // 오면 앱을 열기 전까지는 무슨 일인지 모른다.
+      const what = roleName(role);
       if (reg.fcm_token) {
         sendPushNotification(
           [reg.fcm_token],
           '봉사 부탁',
-          `${reg.real_name} 님, 봉사를 부탁드립니다. 앱에서 수락 여부를 알려 주십시오.`,
+          `${reg.real_name} 님, ${what} 을(를) 부탁드립니다. 앱에서 수락 여부를 알려 주십시오.`,
           { type: 'service_invite', programId, serviceKey },
         ).catch((e) => console.error('봉사 지명 알림 실패:', e));
       }
+      // 앱 푸시는 앱을 지웠거나 알림을 꺼 뒀거나 웹으로만 쓰는 사람에게는
+      // 가지 않는다. 텔레그램을 연결해 둔 사람에게는 이쪽으로도 보낸다(047).
+      notifyRegistrations(
+        programId,
+        [registrationId],
+        `<b>봉사 부탁</b>\n${reg.real_name} 님, ${what} 을(를) 부탁드립니다.\n앱에서 수락 여부를 알려 주십시오.`,
+      ).catch((e) => console.error('봉사 지명 텔레그램 실패:', e));
 
       console.log(`[SERVICE] 지명 | programId=${programId} key=${serviceKey} registrationId=${registrationId} leaderId=${req.user.leaderId}`);
       res.status(201).json({ id: row.id, status: row.status });

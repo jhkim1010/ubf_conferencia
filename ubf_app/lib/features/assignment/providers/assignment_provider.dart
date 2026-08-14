@@ -44,3 +44,11 @@ final announcementsProvider = FutureProvider.autoDispose
     .family<List<dynamic>, String>(
       (_, programId) => ApiClient.getAnnouncements(programId),
     );
+
+/// 내 텔레그램 연결 상태(047). 링크와 연결 여부를 함께 준다.
+///
+/// autoDispose 다 — 연결한 뒤 화면을 다시 열면 새로 물어야 한다.
+final myTelegramLinkProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>, String>(
+      (_, programId) => ApiClient.getTelegramLink(programId),
+    );

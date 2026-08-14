@@ -982,5 +982,12 @@
   "dashAssignedCount": "asignado a {count}",
   "asnNoRoomLeader": "sin encargado de cuarto",
   "asnRoomLeaderIs": "Encargado del cuarto: {name}",
-  "asnNoGroupLeader": "sin líder"
+  "asnNoGroupLeader": "sin líder",
+  "svcMineTitle": "En qué ayudo",
+  "tgOffer": "Recibir avisos también por Telegram",
+  "tgOpen": "Abrir Telegram",
+  "tgCheck": "Ya lo hice",
+  "tgLinked": "Telegram está conectado",
+  "tgNotYet": "Todavía no — abre el enlace, pulsa Iniciar y vuelve a intentarlo",
+  "tgUnlink": "Desconectar"
 }
