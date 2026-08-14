@@ -3202,4 +3202,34 @@ class AppLocalizationsKo extends AppLocalizations {
   String svcAskThem(int count) {
     return '부탁하기 ($count)';
   }
+
+  @override
+  String get epRoutes => '올 수 있는 다른 길';
+
+  @override
+  String get epRoutesDesc => '모두가 같은 공항으로 오지 않습니다. 다른 경로를 적어 주십시오.';
+
+  @override
+  String get epRouteAirport => '공항';
+
+  @override
+  String get epRouteNote => '거기서 오는 방법';
+
+  @override
+  String get epRouteNoteHint => '예: 부에노스아이레스 · 버스로 4시간';
+
+  @override
+  String get epAddRoute => '경로 추가';
+
+  @override
+  String get epRemoveRoute => '이 경로 지우기';
+
+  @override
+  String get flightNoteLabel => '덧붙일 말 (선택)';
+
+  @override
+  String get flightNoteHint => '예: EZE 로 도착해 거기서 버스로 이동합니다';
+
+  @override
+  String get immCardOtherRoute => 'OTHER ROUTE / 다른 경로';
 }

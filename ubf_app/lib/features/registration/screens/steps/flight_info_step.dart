@@ -28,6 +28,7 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
   late final TextEditingController _dateLabelController; // 날짜 표시용
   late final TextEditingController _flightNoController;
   late final TextEditingController _airportController;
+  late final TextEditingController _noteController;
   late final TextEditingController _timeController; // 항공편 조회 시각 표시용
 
   DateTime? _selectedDate;
@@ -67,6 +68,9 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
           ? (data?['arrival_airport'] ?? '')
           : (data?['departure_airport'] ?? ''),
     );
+    // 도착·출발 공항이 다를 수 있고, 거기서 어떻게 오는지는 담당자가
+    // 알아야 배차를 짤 수 있다. 칸이 없어서 지금까지는 아무 데도 못 적었다.
+    _noteController = TextEditingController(text: data?['note'] ?? '');
     _timeController = TextEditingController(
       text: widget.isArrival
           ? (data?['scheduled_arrival'] ?? '')
@@ -79,6 +83,7 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
     _dateLabelController.dispose();
     _flightNoController.dispose();
     _airportController.dispose();
+    _noteController.dispose();
     _timeController.dispose();
     super.dispose();
   }
@@ -194,6 +199,9 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
           : (_flightInfo?.scheduledDeparture?.toIso8601String() ??
                 manualDateStr),
       'terminal': _flightInfo?.terminal,
+      // 적어 둔 설명. 예: "EZE 도착 후 버스 4시간" — 도착 공항과 수양회
+      // 장소가 다를 때 담당자가 이것만 보고 배차를 짠다.
+      'note': _noteController.text.trim(),
       // 예매 전이면 이 값이 참이다. 서버의 flight_confirmed() 가 이 값을 보고
       // 확정 항공편에서 제외한다(021).
       'estimated': _estimated,
@@ -432,6 +440,20 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
             decoration: InputDecoration(
               labelText: l10n.flightAirportLabel(label),
               hintText: l10n.flightAutoFillHint,
+            ),
+            onChanged: (_) => _saveToProvider(),
+          ),
+          const SizedBox(height: 12),
+          // ── 덧붙일 말 ─────────────────────────────────────
+          // 도착 공항이 수양회 장소와 멀거나, 오는 길이 한 번에 끝나지 않는
+          // 경우가 많다. 그것을 적을 데가 없었다.
+          TextField(
+            controller: _noteController,
+            maxLines: 2,
+            maxLength: 200,
+            decoration: InputDecoration(
+              labelText: l10n.flightNoteLabel,
+              hintText: l10n.flightNoteHint,
             ),
             onChanged: (_) => _saveToProvider(),
           ),

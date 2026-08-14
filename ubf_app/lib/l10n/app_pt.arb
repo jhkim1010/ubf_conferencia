@@ -976,5 +976,15 @@
   "tgLinked": "O Telegram está conectado",
   "tgNotYet": "Ainda não — abra o link, toque em Iniciar e tente de novo",
   "tgUnlink": "Desconectar",
-  "svcAskThem": "Pedir ({count})"
+  "svcAskThem": "Pedir ({count})",
+  "epRoutes": "Outras formas de chegar",
+  "epRoutesDesc": "Nem todos chegam pelo mesmo aeroporto. Indique as outras rotas.",
+  "epRouteAirport": "Aeroporto",
+  "epRouteNote": "Como se chega de lá",
+  "epRouteNoteHint": "ex.: Buenos Aires e 4 horas de ônibus",
+  "epAddRoute": "Adicionar rota",
+  "epRemoveRoute": "Remover esta rota",
+  "flightNoteLabel": "Algo a acrescentar (opcional)",
+  "flightNoteHint": "ex.: chego em EZE e sigo de ônibus",
+  "immCardOtherRoute": "OTHER ROUTE / outra rota"
 }

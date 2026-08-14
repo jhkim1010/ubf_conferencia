@@ -9,6 +9,7 @@ import {
   normalizePaymentTiming,
   needsPaymentCard,
 } from '../services/program_contacts.js';
+import { normalizeRoutes, routesOf } from '../services/arrival_routes.js';
 
 // 옵션 id 는 우리가 만든 uuid 만 받는다.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -249,7 +250,13 @@ router.get('/:id', requireAuth, async (req, res) => {
 
     // 연락처는 늘 목록으로 내보낸다(040). 이 기능이 생기기 전 수양회는
     // 005 의 두 컬럼에만 있으므로 읽을 때 만들어 준다.
-    res.json({ ...stripBotToken(program), contacts: contactsOf(program) });
+    res.json({
+      ...stripBotToken(program),
+      contacts: contactsOf(program),
+      // 도착 경로도 늘 목록으로 내보낸다(048). null 을 그대로 주면 화면마다
+      // 따로 막아야 한다.
+      arrival_routes: routesOf(program),
+    });
   } catch (err) {
     console.error('프로그램 조회 오류:', err);
     res.status(500).json({ error: '서버 오류' });
@@ -331,6 +338,9 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
     const contactList = contactsFromBody(req.body) ?? [];
     const newContacts = legacyPair(contactList);
 
+    // 도착 경로(048). 가까운 공항 외에 올 수 있는 길.
+    const routeList = normalizeRoutes(req.body?.arrivalRoutes);
+
     // 중복 체크: 같은 리더가 같은 이름+시작일 프로그램을 이미 만든 경우
     const [existing] = await sql`
       SELECT id FROM programs
@@ -362,7 +372,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
       INSERT INTO programs (
         name, location, leader_id, start_date, end_date, enabled_sections,
         nearest_airport, contact1_name, contact1_phone, contact2_name, contact2_phone,
-        contacts, fee_payment, tour_payment,
+        contacts, arrival_routes, fee_payment, tour_payment,
         program_type, host_country,
         fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options,
         currency, small_cohort_policy, min_team_size, hotel_options,
@@ -381,6 +391,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         ${newContacts.contact2Name},
         ${newContacts.contact2Phone},
         ${JSON.stringify(contactList ?? [])}::jsonb,
+        ${JSON.stringify(routeList)}::jsonb,
         ${normalizePaymentTiming(req.body?.feePayment)},
         ${normalizePaymentTiming(req.body?.tourPayment)},
         ${type},
@@ -477,6 +488,9 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
     ? null
     : { list: contactList2, pair: legacyPair(contactList2) };
 
+  // 도착 경로(048). 연락처와 같은 규칙 — 본문에 없으면 그대로 둔다.
+  // 공항 하나만 고치는 저장이 애써 적어 둔 경로 목록을 지우면 안 된다.
+
   // 본문에 없는 키는 건드리지 않는다. 참가비만 고치려는 호출이 할인 항목을
   // 지워버리면 안 된다. (기존 필드들은 덮어쓰기 방식이라 이 규칙이 없다.)
   const has = (k) => Object.prototype.hasOwnProperty.call(req.body, k);
@@ -522,6 +536,11 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
         contacts         = CASE
           WHEN ${patchContacts === null} THEN contacts
           ELSE ${JSON.stringify(patchContacts?.list ?? [])}::jsonb
+        END,
+        arrival_routes   = CASE
+          WHEN ${!Object.prototype.hasOwnProperty.call(req.body, 'arrivalRoutes')}
+            THEN arrival_routes
+          ELSE ${JSON.stringify(normalizeRoutes(req.body?.arrivalRoutes))}::jsonb
         END,
         -- 참가비만 고치는 저장이 입금 시점을 되돌리면 안 된다.
         fee_payment      = CASE

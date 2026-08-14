@@ -990,5 +990,15 @@
   "tgLinked": "Telegram está conectado",
   "tgNotYet": "Todavía no — abre el enlace, pulsa Iniciar y vuelve a intentarlo",
   "tgUnlink": "Desconectar",
-  "svcAskThem": "Pedir ({count})"
+  "svcAskThem": "Pedir ({count})",
+  "epRoutes": "Otras formas de llegar",
+  "epRoutesDesc": "No todos llegan al mismo aeropuerto. Indique las otras rutas.",
+  "epRouteAirport": "Aeropuerto",
+  "epRouteNote": "Cómo se llega desde allí",
+  "epRouteNoteHint": "ej.: Buenos Aires y 4 horas en micro",
+  "epAddRoute": "Agregar ruta",
+  "epRemoveRoute": "Quitar esta ruta",
+  "flightNoteLabel": "Algo que agregar (opcional)",
+  "flightNoteHint": "ej.: llego a EZE y sigo en micro",
+  "immCardOtherRoute": "OTHER ROUTE / otra ruta"
 }

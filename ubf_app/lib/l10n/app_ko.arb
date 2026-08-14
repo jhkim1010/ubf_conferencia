@@ -990,5 +990,15 @@
   "tgLinked": "텔레그램이 연결되었습니다",
   "tgNotYet": "아직입니다 — 링크를 열어 시작을 누른 뒤 다시 해 주십시오",
   "tgUnlink": "연결 끊기",
-  "svcAskThem": "부탁하기 ({count})"
+  "svcAskThem": "부탁하기 ({count})",
+  "epRoutes": "올 수 있는 다른 길",
+  "epRoutesDesc": "모두가 같은 공항으로 오지 않습니다. 다른 경로를 적어 주십시오.",
+  "epRouteAirport": "공항",
+  "epRouteNote": "거기서 오는 방법",
+  "epRouteNoteHint": "예: 부에노스아이레스 · 버스로 4시간",
+  "epAddRoute": "경로 추가",
+  "epRemoveRoute": "이 경로 지우기",
+  "flightNoteLabel": "덧붙일 말 (선택)",
+  "flightNoteHint": "예: EZE 로 도착해 거기서 버스로 이동합니다",
+  "immCardOtherRoute": "OTHER ROUTE / 다른 경로"
 }

@@ -31,7 +31,13 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
   /// 사람이 그보다 많고 참가자가 급할 때 닿아야 할 번호가 둘로 끝나지 않는다.
   final List<({TextEditingController name, TextEditingController phone})>
   _contacts = [];
+
+  /// 가까운 공항 말고 올 수 있는 다른 길(048). 한 줄이 공항 + 설명이다.
+  final List<({TextEditingController airport, TextEditingController note})>
+  _routes = [];
   static const _maxContacts = 10;
+  // 서버의 MAX_ROUTES 와 같아야 한다(arrival_routes.js).
+  static const _maxRoutes = 8;
 
   /// 입금 시점(041). 둘 다 현장이면 대시보드에서 입금 카드를 감춘다.
   String _feePayment = 'prepaid';
@@ -141,6 +147,21 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
       ));
     }
     if (_contacts.isEmpty) _addContactRow();
+
+    for (final r in _routes) {
+      r.airport.dispose();
+      r.note.dispose();
+    }
+    _routes.clear();
+    for (final r in (program['arrival_routes'] as List? ?? const [])) {
+      if (r is! Map) continue;
+      _routes.add((
+        airport: TextEditingController(text: '${r['airport'] ?? ''}'),
+        note: TextEditingController(text: '${r['note'] ?? ''}'),
+      ));
+    }
+    // 빈 줄 하나는 늘 둔다 — 비어 있으면 적을 자리가 있다는 것을 모른다.
+    if (_routes.isEmpty) _addRouteRow();
 
     _feePayment = program['fee_payment'] as String? ?? 'prepaid';
     _tourPayment = program['tour_payment'] as String? ?? 'prepaid';
@@ -280,6 +301,11 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
         'enabledSections': Map<String, bool>.from(_enabledSections),
         'options': _options,
         'nearestAirport': _airportController.text.trim(),
+        // 다른 도착 경로(048). 비어 있는 줄은 서버가 버린다.
+        'arrivalRoutes': [
+          for (final r in _routes)
+            {'airport': r.airport.text.trim(), 'note': r.note.text.trim()},
+        ],
         // 빈 줄은 서버가 버린다. 여기서도 보내지 않는다.
         'contacts': [
           for (final c in _contacts)
@@ -322,6 +348,13 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _addRouteRow() {
+    _routes.add((
+      airport: TextEditingController(),
+      note: TextEditingController(),
+    ));
   }
 
   void _addContactRow() {
@@ -502,6 +535,72 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                       labelText: l10n.cpNearestAirport,
                       hintText: l10n.cpAirportHint,
                       prefixIcon: const Icon(Icons.flight_land),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // 오는 길이 하나가 아니다 — 큰 공항으로 들어와 버스로
+                  // 갈아타거나, 육로로 국경을 넘는 사람이 있다. 표를 끊기
+                  // 전에 알아야 하는 정보다.
+                  Text(
+                    l10n.epRoutes,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    l10n.epRoutesDesc,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  for (var i = 0; i < _routes.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: TextFormField(
+                              controller: _routes[i].airport,
+                              decoration: InputDecoration(
+                                labelText: l10n.epRouteAirport,
+                                hintText: l10n.cpAirportHint,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            flex: 3,
+                            child: TextFormField(
+                              controller: _routes[i].note,
+                              decoration: InputDecoration(
+                                labelText: l10n.epRouteNote,
+                                hintText: l10n.epRouteNoteHint,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 18),
+                            tooltip: l10n.epRemoveRoute,
+                            onPressed: () => setState(() {
+                              _routes[i].airport.dispose();
+                              _routes[i].note.dispose();
+                              _routes.removeAt(i);
+                              if (_routes.isEmpty) _addRouteRow();
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: _routes.length >= _maxRoutes
+                          ? null
+                          : () => setState(_addRouteRow),
+                      icon: const Icon(Icons.add_circle_outline, size: 18),
+                      label: Text(l10n.epAddRoute),
                     ),
                   ),
                   const SizedBox(height: 16),

@@ -126,6 +126,16 @@ class _CardBody extends StatelessWidget {
     final contact2Phone = program['contact2_phone'] as String?;
     final hasContacts = contact1Name != null || contact2Name != null;
     final hasAirport = (program['nearest_airport'] as String?) != null;
+    // 다른 도착 경로(048). 큰 공항으로 들어와 갈아타는 사람에게는 이쪽이
+    // 실제로 지나온 길이므로, 감사관에게 보여 줄 카드에도 있어야 한다.
+    final routes = ((program['arrival_routes'] as List?) ?? const [])
+        .whereType<Map>()
+        .where(
+          (r) =>
+              '${r['airport'] ?? ''}'.isNotEmpty ||
+              '${r['note'] ?? ''}'.isNotEmpty,
+        )
+        .toList();
 
     return GestureDetector(
       // 전체화면 상태에서 탭하면 해제
@@ -258,6 +268,21 @@ class _CardBody extends StatelessWidget {
                               value: program['nearest_airport'] as String,
                               icon: Icons.flight_land_outlined,
                             ),
+                          ],
+                          if (routes.isNotEmpty) ...[
+                            const Divider(height: 24),
+                            for (final r in routes)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: _CardRow(
+                                  label: l10n.immCardOtherRoute,
+                                  value: [
+                                    '${r['airport'] ?? ''}',
+                                    '${r['note'] ?? ''}',
+                                  ].where((v) => v.isNotEmpty).join(' · '),
+                                  icon: Icons.alt_route_outlined,
+                                ),
+                              ),
                           ],
                           if (hasContacts) ...[
                             const Divider(height: 24),

@@ -5963,6 +5963,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ask ({count})'**
   String svcAskThem(int count);
+
+  /// 가까운 공항 외의 도착 경로 목록 제목
+  ///
+  /// In en, this message translates to:
+  /// **'Other ways to get here'**
+  String get epRoutes;
+
+  /// 왜 적는지
+  ///
+  /// In en, this message translates to:
+  /// **'Not everyone flies into the same airport. Say what the other routes are.'**
+  String get epRoutesDesc;
+
+  /// 경로 한 줄의 공항 칸
+  ///
+  /// In en, this message translates to:
+  /// **'Airport'**
+  String get epRouteAirport;
+
+  /// 경로 한 줄의 설명 칸
+  ///
+  /// In en, this message translates to:
+  /// **'How they get here from there'**
+  String get epRouteNote;
+
+  /// 설명 칸 예시
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Buenos Aires, then 4 hours by bus'**
+  String get epRouteNoteHint;
+
+  /// 경로 한 줄 더하기 (+)
+  ///
+  /// In en, this message translates to:
+  /// **'Add a route'**
+  String get epAddRoute;
+
+  /// 경로 한 줄 지우기
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this route'**
+  String get epRemoveRoute;
+
+  /// 참가자가 항공편에 덧붙이는 설명
+  ///
+  /// In en, this message translates to:
+  /// **'Anything to add (optional)'**
+  String get flightNoteLabel;
+
+  /// 그 예시
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. landing at EZE, taking the bus from there'**
+  String get flightNoteHint;
+
+  /// 입국 안내 카드의 다른 도착 경로 줄. 감사관이 읽으므로 영문을 함께 둔다.
+  ///
+  /// In en, this message translates to:
+  /// **'OTHER ROUTE / 다른 경로'**
+  String get immCardOtherRoute;
 }
 
 class _AppLocalizationsDelegate

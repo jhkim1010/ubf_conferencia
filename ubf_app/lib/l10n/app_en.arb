@@ -2086,5 +2086,45 @@
         "type": "int"
       }
     }
+  },
+  "epRoutes": "Other ways to get here",
+  "@epRoutes": {
+    "description": "가까운 공항 외의 도착 경로 목록 제목"
+  },
+  "epRoutesDesc": "Not everyone flies into the same airport. Say what the other routes are.",
+  "@epRoutesDesc": {
+    "description": "왜 적는지"
+  },
+  "epRouteAirport": "Airport",
+  "@epRouteAirport": {
+    "description": "경로 한 줄의 공항 칸"
+  },
+  "epRouteNote": "How they get here from there",
+  "@epRouteNote": {
+    "description": "경로 한 줄의 설명 칸"
+  },
+  "epRouteNoteHint": "e.g. Buenos Aires, then 4 hours by bus",
+  "@epRouteNoteHint": {
+    "description": "설명 칸 예시"
+  },
+  "epAddRoute": "Add a route",
+  "@epAddRoute": {
+    "description": "경로 한 줄 더하기 (+)"
+  },
+  "epRemoveRoute": "Remove this route",
+  "@epRemoveRoute": {
+    "description": "경로 한 줄 지우기"
+  },
+  "flightNoteLabel": "Anything to add (optional)",
+  "@flightNoteLabel": {
+    "description": "참가자가 항공편에 덧붙이는 설명"
+  },
+  "flightNoteHint": "e.g. landing at EZE, taking the bus from there",
+  "@flightNoteHint": {
+    "description": "그 예시"
+  },
+  "immCardOtherRoute": "OTHER ROUTE / 다른 경로",
+  "@immCardOtherRoute": {
+    "description": "입국 안내 카드의 다른 도착 경로 줄. 감사관이 읽으므로 영문을 함께 둔다."
   }
 }

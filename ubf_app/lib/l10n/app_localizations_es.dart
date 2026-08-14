@@ -3282,4 +3282,35 @@ class AppLocalizationsEs extends AppLocalizations {
   String svcAskThem(int count) {
     return 'Pedir ($count)';
   }
+
+  @override
+  String get epRoutes => 'Otras formas de llegar';
+
+  @override
+  String get epRoutesDesc =>
+      'No todos llegan al mismo aeropuerto. Indique las otras rutas.';
+
+  @override
+  String get epRouteAirport => 'Aeropuerto';
+
+  @override
+  String get epRouteNote => 'Cómo se llega desde allí';
+
+  @override
+  String get epRouteNoteHint => 'ej.: Buenos Aires y 4 horas en micro';
+
+  @override
+  String get epAddRoute => 'Agregar ruta';
+
+  @override
+  String get epRemoveRoute => 'Quitar esta ruta';
+
+  @override
+  String get flightNoteLabel => 'Algo que agregar (opcional)';
+
+  @override
+  String get flightNoteHint => 'ej.: llego a EZE y sigo en micro';
+
+  @override
+  String get immCardOtherRoute => 'OTHER ROUTE / otra ruta';
 }

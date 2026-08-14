@@ -129,5 +129,35 @@ eq "참가자 조회에도 목록이 온다" '이름만,' \
       | jq_ "r.contacts.map(c => c.name).join()")"
 
 echo
+echo "── 올 수 있는 다른 길 (048) ──"
+# 가까운 공항 한 칸으로는 부족하다. 큰 공항으로 들어와 버스로 갈아타거나
+# 육로로 국경을 넘는 사람이 있고, 표를 끊기 전에 알아야 하는 정보다.
+R=$(mk '"nearestAirport":"IGR","arrivalRoutes":[
+   {"airport":"EZE","note":"부에노스아이레스 · 버스   4시간"},
+   {"airport":"","note":"육로로 국경을 넘습니다"},
+   {"airport":"","note":""}]' r)
+[ -n "$R" ] && [ "$R" != "ERR" ] || { echo "수양회를 만들지 못했습니다"; exit 1; }
+eq "빈 줄은 버린다"          '2'   "$(GET "$R" | jq_ 'r.arrival_routes.length')"
+eq "  공백이 정리된다" '부에노스아이레스 · 버스 4시간' \
+   "$(GET "$R" | jq_ 'r.arrival_routes[0].note')"
+eq "  공항 없이 설명만도"    '육로로 국경을 넘습니다' \
+   "$(GET "$R" | jq_ 'r.arrival_routes[1].note')"
+# 가까운 공항은 그대로 둔다 — 입국 안내 카드가 크게 보여 주는 값이다.
+eq "가까운 공항은 그대로"    'IGR' "$(GET "$R" | jq_ 'r.nearest_airport')"
+
+# 경로를 건드리지 않는 저장이 애써 적어 둔 목록을 지우면 안 된다.
+curl -s -o /dev/null -X PATCH "$API/programs/$R" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' -d '{"feeBasic":222}'
+eq "다른 것을 고쳐도 남는다"  '2'  "$(GET "$R" | jq_ 'r.arrival_routes.length')"
+# 빈 목록을 **명시적으로** 보내면 지운다.
+curl -s -o /dev/null -X PATCH "$API/programs/$R" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' -d '{"arrivalRoutes":[]}'
+eq "  빈 목록을 보내면 지운다" '0' "$(GET "$R" | jq_ 'r.arrival_routes.length')"
+
+# 값을 적어 둔 적이 없는 수양회도 빈 목록으로 온다 — null 이면 화면마다
+# 따로 막아야 한다.
+eq "적은 적 없으면 빈 목록"   '0'  "$(GET "$P" | jq_ 'r.arrival_routes.length')"
+
+echo
 echo "통과 $pass · 실패 $fail"
 [ "$fail" -eq 0 ]
