@@ -1000,5 +1000,7 @@
   "epRemoveRoute": "Quitar esta ruta",
   "flightNoteLabel": "Algo que agregar (opcional)",
   "flightNoteHint": "ej.: llego a EZE y sigo en micro",
-  "immCardOtherRoute": "OTHER ROUTE / otra ruta"
+  "immCardOtherRoute": "OTHER ROUTE / otra ruta",
+  "svcWillConfirm": "se ofreció para esto — se asigna de inmediato",
+  "svcWillAsk": "no se ofreció — se le va a preguntar"
 }

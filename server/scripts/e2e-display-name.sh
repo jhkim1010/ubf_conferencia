@@ -5,7 +5,10 @@
 #
 # 이 공동체에서 서로 부르는 이름은 여권의 본명이 아니다 — "Kim jung ho" 가
 # 아니라 "Marcos". 명단만 보고는 누가 누구인지 알아보지 못한다. 그렇다고
-# 본명을 감출 수도 없다(여권·항공권·입국). 그래서 둘을 함께 적는다.
+# 본명을 감출 수도 없다(여권·항공권·입국). 그래서 둘을 함께 적되, 성은
+# 두 이름에 같으므로 한 번만 적는다(050):
+#
+#   Marcos (Jung ho) Kim
 #
 # **화면마다 따로 이어 붙이면 한 곳만 빠뜨렸을 때 아무도 이유를 모른다** —
 # 식사 제한 인원이 카드와 표에서 달랐던 것이 바로 그런 일이었다. 그래서
@@ -70,7 +73,7 @@ UNASSIGNED() { curl -s "$API/assignments/$P/rooms" -H "Authorization: Bearer $LT
 GROUPFREE() { curl -s "$API/assignments/$P/groups" -H "Authorization: Bearer $LT" \
   | jq_ "r.unassigned.map(x => x.name).sort().join(' | ')"; }
 
-WANT='Josverlyn | Marcos (Kim jung ho) | Shirley Coronel'
+WANT='Josverlyn | Marcos (Jung ho) Kim | Shirley Coronel'
 
 echo "── 세례명이 있으면 함께, 없으면 본명만 ──"
 eq "대시보드 미리보기"  "$WANT" "$(RECENT)"
@@ -82,8 +85,12 @@ eq "  말씀조 배정 화면" "$WANT" "$(GROUPFREE)"
 echo
 echo "── 본명은 감추지 않는다 ──"
 # 여권·항공권·입국 안내는 본명이라야 한다. 괄호 안에 남아 있어야 한다.
-eq "본명이 함께 있다" 'true' \
-   "$(RECENT | node -pe "require('fs').readFileSync(0,'utf8').includes('(Kim jung ho)')")"
+eq "이름은 괄호 안에" 'true' \
+   "$(RECENT | node -pe "require('fs').readFileSync(0,'utf8').includes('(Jung ho)')")"
+# 성은 두 이름에 같으므로 뒤에 한 번만.
+eq "  성은 뒤에 한 번" 'true' \
+   "$(RECENT | node -pe "const s=require('fs').readFileSync(0,'utf8');
+      s.includes('Marcos (Jung ho) Kim') && !s.includes('Kim jung ho')")"
 
 echo
 echo "── 적을 것이 없어 기호만 넣은 경우 ──"
@@ -97,7 +104,7 @@ T=$(login "dn-b-$$@test.local")
 curl -s -o /dev/null -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $T" \
   -H 'Content-Type: application/json' \
   -d '{"realName":"Josverlyn","bibleName":"Josue","country":"KR","gender":"M","age":30}'
-eq "세례명을 넣으면 바뀐다" 'Josue (Josverlyn) | Marcos (Kim jung ho) | Shirley Coronel' \
+eq "세례명을 넣으면 바뀐다" 'Josue (Josverlyn) | Marcos (Jung ho) Kim | Shirley Coronel' \
    "$(RECENT)"
 # 지웠다 저장하면 빈 문자열이 남는다. 그때는 본명으로 돌아가야 한다.
 curl -s -o /dev/null -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $T" \
@@ -106,14 +113,35 @@ curl -s -o /dev/null -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer
 eq "  지우면 본명으로 돌아간다" "$WANT" "$(RECENT)"
 
 echo
+echo "── 성이 앞에 오기도, 뒤에 오기도 한다 ──"
+# 둘 다 한국 이름인데 적는 순서가 다르다. 문자열만으로는 알 수 없어
+# 한국 성 목록으로 가려낸다.
+E=$(login "dn-e-$$@test.local")
+curl -s -o /dev/null -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $E" \
+  -H 'Content-Type: application/json' \
+  -d '{"realName":"Yong Su Han","bibleName":"Timoteo","country":"KR","gender":"M","age":30}'
+eq "성이 뒤에 있어도 찾는다" 'true' \
+   "$(RECENT | node -pe "require('fs').readFileSync(0,'utf8').includes('Timoteo (Yong Su) Han')")"
+
+echo
+echo "── 첫 글자는 대문자로 ──"
+F=$(login "dn-f-$$@test.local")
+curl -s -o /dev/null -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $F" \
+  -H 'Content-Type: application/json' \
+  -d '{"realName":"nicolas mendoza","country":"KR","gender":"M","age":30}'
+eq "소문자로 적어도 올려 준다" 'true' \
+   "$(RECENT | node -pe "require('fs').readFileSync(0,'utf8').includes('Nicolas Mendoza')")"
+
+echo
 echo "── 두 이름이 같으면 ──"
 # 같은 이름을 양쪽에 적어 두는 사람이 있다. 그대로 두면 "Joseph (Joseph)".
 D=$(login "dn-d-$$@test.local")
 curl -s -o /dev/null -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $D" \
   -H 'Content-Type: application/json' \
-  -d '{"realName":"Joseph","bibleName":"joseph","country":"KR","gender":"M","age":30}'
-eq "한 번만 보인다" 'true' \
-   "$(RECENT | node -pe "const s=require('fs').readFileSync(0,'utf8'); s.includes('Joseph') && !s.includes('(joseph)') && !s.includes('(Joseph)')")"
+  -d '{"realName":"Joseph Kuper","bibleName":"joseph","country":"KR","gender":"M","age":30}'
+eq "괄호를 넣지 않는다" 'true' \
+   "$(RECENT | node -pe "const s=require('fs').readFileSync(0,'utf8');
+      s.includes('Joseph Kuper') && !s.includes('(joseph)') && !s.includes('(Joseph)')")"
 
 echo
 echo "통과 $pass · 실패 $fail"

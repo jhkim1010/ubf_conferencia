@@ -134,12 +134,58 @@ export const STATUSES = [
   'declined',
 ];
 
+/// 등록할 때 적어 낸 자원(009)에 어울리는 역할.
+///
+/// **추천이 아니라 판정에 쓴다.** "운전할 수 있다" 고 적어 낸 사람에게
+/// 픽업을 맡기는 것은 그 사람이 하겠다고 한 일이므로, 다시 물을 이유가
+/// 없다. 앱의 같은 표(service_role_label.dart)와 짝을 이룬다 — 한쪽만
+/// 고치면 화면의 추천과 서버의 판정이 어긋난다.
+const ROLE_BY_RESOURCE = {
+  piano: 'special_song',
+  guitar: 'special_song',
+  bass: 'special_song',
+  drums: 'special_song',
+  violin: 'special_song',
+  vocals: 'special_song',
+  worship_lead: 'special_song',
+  sound: 'special_song',
+  translation: 'interpreter',
+  photography: 'photo_video',
+  cooking: 'meal_prep',
+  driving: 'pickup',
+  medical: 'medical',
+};
+
+export function roleForResource(resourceKey) {
+  return ROLE_BY_RESOURCE[resourceKey] ?? null;
+}
+
+/// 이 사람이 이 역할을 **스스로 하겠다고 한** 적이 있는가.
+///
+/// 둘 중 하나면 그렇다:
+///   - 등록할 때 그 일을 할 수 있다고 적어 냈다(volunteer_resources)
+///   - 이미 그 역할에 손을 들었다(applied)
+export function offeredThis(role, { resources, applied } = {}) {
+  if (!role?.key) return false;
+  if (applied === true) return true;
+  const list = Array.isArray(resources) ? resources : [];
+  return list.some((r) => roleForResource(r) === role.key);
+}
+
 /// 담당자가 지명했을 때의 첫 상태.
 ///
-/// 승인이 필요한 역할이라도 **본인 수락이 먼저**다. 순서를 뒤집으면
-/// 지부장이 승인해 둔 사람이 나중에 거절하는 일이 생긴다.
-export function statusOnInvite() {
-  return 'invited';
+/// **스스로 하겠다고 한 일이면 곧바로 맡긴다.** 자기가 적어 낸 것을 두고
+/// 다시 "하시겠습니까" 를 묻는 것은 한 번 더 누르게 할 뿐이고, 그동안
+/// 담당자는 자리가 찼는지 모른 채 기다린다. 알림은 그대로 간다 —
+/// 맡았다는 것은 알아야 한다.
+///
+/// **적어 내지 않은 일이면 물어본다.** 하지 않겠다고 한 적도 없지만
+/// 하겠다고 한 적도 없는 일이므로, 본인이 답해야 확정이다.
+///
+/// 승인이 필요한 역할(말씀조 리더)은 어느 쪽이든 지부장 동의가 남는다.
+export function statusOnInvite(role, offer) {
+  if (!offeredThis(role, offer)) return 'invited';
+  return statusOnConfirm(role);
 }
 
 /// 담당자가 확정을 눌렀을 때.

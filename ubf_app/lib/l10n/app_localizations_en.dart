@@ -3302,4 +3302,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get immCardOtherRoute => 'OTHER ROUTE / 다른 경로';
+
+  @override
+  String get svcWillConfirm => 'they offered this — assigned right away';
+
+  @override
+  String get svcWillAsk => 'they did not offer this — we will ask them';
 }

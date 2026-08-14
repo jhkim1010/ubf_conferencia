@@ -409,7 +409,8 @@ router.post(
 
       // 다른 수양회의 등록을 지명할 수 없다.
       const [reg] = await sql`
-        SELECT id, real_name, fcm_token FROM registrations
+        SELECT id, real_name, fcm_token, volunteer_resources
+        FROM registrations
         WHERE id = ${registrationId} AND program_id = ${programId}
           AND has_registrant_name(real_name)
       `;
@@ -417,17 +418,30 @@ router.post(
         return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
       }
 
+      // 이미 손을 든 역할. 자기가 신청해 둔 것을 담당자가 승인하는 경우
+      // 다시 물을 이유가 없다.
+      const mine = await sql`
+        SELECT service_key FROM service_signups
+        WHERE registration_id = ${registrationId} AND status = 'applied'
+      `;
+      const appliedKeys = new Set(mine.map((m) => m.service_key));
+
       // 이미 있으면 다시 지명한다. 거절했던 사람에게 다시 부탁하는 일은
       // 실제로 흔하다.
       const invited = [];
       for (const role of roles) {
+        // 스스로 하겠다고 한 일이면 곧바로 맡기고, 아니면 물어본다.
+        const next = statusOnInvite(role, {
+          resources: reg.volunteer_resources,
+          applied: appliedKeys.has(role.key),
+        });
         const [row] = await sql`
           INSERT INTO service_signups (registration_id, service_key, status,
                                        invited_by, invited_at)
-          VALUES (${registrationId}, ${role.key}, ${statusOnInvite()},
+          VALUES (${registrationId}, ${role.key}, ${next},
                   ${req.user.leaderId ?? null}, NOW())
           ON CONFLICT (registration_id, service_key) DO UPDATE
-            SET status = ${statusOnInvite()},
+            SET status = ${next},
                 invited_by = ${req.user.leaderId ?? null},
                 invited_at = NOW(),
                 responded_at = NULL,
@@ -445,11 +459,20 @@ router.post(
       // 여럿을 부탁해도 **알림은 한 통** 이다. 역할마다 따로 보내면 세 번
       // 울리고, 세 번째쯤에는 아무도 읽지 않는다.
       const what = roles.map(roleName).join(', ');
+      // **답을 기다리는 것과 알리는 것은 다른 말이다.** 스스로 하겠다고
+      // 적어 낸 일을 두고 "수락해 주십시오" 라고 하면 무엇을 더 해야 하는
+      // 줄 알고, 반대로 묻지도 않고 "맡기셨습니다" 라고 하면 하겠다고 한
+      // 적 없는 일이 통보로 온다.
+      const asking = invited.some((i) => i.status === 'invited');
+      const title = asking ? '봉사 부탁' : '봉사 배정';
+      const line = asking
+        ? `${reg.real_name} 님, ${what} 을(를) 부탁드립니다. 앱에서 수락 여부를 알려 주십시오.`
+        : `${reg.real_name} 님, 적어 주신 대로 ${what} 을(를) 맡아 주시게 되었습니다.`;
       if (reg.fcm_token) {
         sendPushNotification(
           [reg.fcm_token],
-          '봉사 부탁',
-          `${reg.real_name} 님, ${what} 을(를) 부탁드립니다. 앱에서 수락 여부를 알려 주십시오.`,
+          title,
+          line,
           { type: 'service_invite', programId, serviceKey: roles[0].key },
         ).catch((e) => console.error('봉사 지명 알림 실패:', e));
       }
@@ -458,7 +481,7 @@ router.post(
       notifyRegistrations(
         programId,
         [registrationId],
-        `<b>봉사 부탁</b>\n${reg.real_name} 님, ${what} 을(를) 부탁드립니다.\n앱에서 수락 여부를 알려 주십시오.`,
+        `<b>${title}</b>\n${line}`,
       ).catch((e) => console.error('봉사 지명 텔레그램 실패:', e));
 
       console.log(`[SERVICE] 지명 | programId=${programId} keys=${keys.join(',')} registrationId=${registrationId} leaderId=${req.user.leaderId}`);

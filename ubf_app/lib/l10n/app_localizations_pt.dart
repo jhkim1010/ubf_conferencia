@@ -3314,4 +3314,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get immCardOtherRoute => 'OTHER ROUTE / outra rota';
+
+  @override
+  String get svcWillConfirm => 'ofereceu-se para isto — atribuído na hora';
+
+  @override
+  String get svcWillAsk => 'não se ofereceu — vamos perguntar';
 }

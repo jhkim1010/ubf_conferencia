@@ -3,19 +3,21 @@ import assert from 'node:assert/strict';
 
 import {
   DEFAULT_SERVICE_ROLES,
-  MAX_ROLES,
   MAX_LABEL,
   MAX_NEEDED,
-  isValidRoleKey,
+  MAX_ROLES,
   isCustomKey,
+  isValidRoleKey,
   normalizeServiceRoles,
-  rolesOf,
-  statusOnInvite,
-  statusOnConfirm,
-  statusOnRespond,
   occupiesSeat,
-  tallyRole,
+  offeredThis,
+  roleForResource,
+  rolesOf,
   sortRoles,
+  statusOnConfirm,
+  statusOnInvite,
+  statusOnRespond,
+  tallyRole,
 } from '../src/services/service_roles.js';
 
 const CUSTOM = 'custom:9f2c1a4b-77de';
@@ -271,4 +273,54 @@ test('채워졌거나 닫혔으면 참가자에게 안 보인다', async () => {
   assert.equal(isOpenForMe({ call: { closed_at: null }, tally: { short: 0 } }), false);
   assert.equal(isOpenForMe({ call: { closed_at: 'x' }, tally: { short: 3 } }), false);
   assert.equal(isOpenForMe({ call: null, tally: { short: 3 } }), false);
+});
+
+// ── 자원한 일과 아닌 일 (050) ────────────────────────────────
+//
+// 자기가 "할 수 있다" 고 적어 낸 일을 두고 다시 "하시겠습니까" 를 묻는 것은
+// 한 번 더 누르게 할 뿐이고, 그동안 담당자는 자리가 찼는지 모른 채 기다린다.
+// 반대로 적어 내지 않은 일을 묻지도 않고 맡기면 통보가 된다.
+
+test('적어 낸 일이면 곧바로 확정', () => {
+  const pickup = { key: 'pickup' };
+  assert.equal(statusOnInvite(pickup, { resources: ['driving'] }), 'confirmed');
+  assert.equal(statusOnInvite({ key: 'meal_prep' }, { resources: ['cooking'] }), 'confirmed');
+  // 악기는 여러 가지가 특송 하나로 모인다.
+  assert.equal(statusOnInvite({ key: 'special_song' }, { resources: ['piano'] }), 'confirmed');
+});
+
+test('이미 손 든 역할도 곧바로 확정', () => {
+  assert.equal(statusOnInvite({ key: 'pickup' }, { applied: true }), 'confirmed');
+});
+
+test('적어 내지 않은 일이면 물어본다', () => {
+  const pickup = { key: 'pickup' };
+  assert.equal(statusOnInvite(pickup, { resources: ['cooking'] }), 'invited');
+  assert.equal(statusOnInvite(pickup, { resources: [] }), 'invited');
+  assert.equal(statusOnInvite(pickup, {}), 'invited');
+  // 아무 정보 없이 부르면 예전처럼 물어본다 — 모르면 묻는 쪽이 안전하다.
+  assert.equal(statusOnInvite(pickup), 'invited');
+  assert.equal(statusOnInvite(pickup, { resources: null }), 'invited');
+});
+
+test('승인이 필요한 역할은 자원했어도 지부장 동의가 남는다', () => {
+  const lead = { key: 'group_study_leader', requires_approval: true };
+  assert.equal(statusOnInvite(lead, { applied: true }), 'awaiting_approval');
+  // 자원하지 않았으면 본인 답이 먼저다.
+  assert.equal(statusOnInvite(lead, { resources: [] }), 'invited');
+});
+
+test('자원 항목과 역할의 짝', () => {
+  assert.equal(roleForResource('driving'), 'pickup');
+  assert.equal(roleForResource('translation'), 'interpreter');
+  assert.equal(roleForResource('photography'), 'photo_video');
+  // 어느 역할에도 붙지 않는 것이 있다 — 디자인·IT·보육.
+  assert.equal(roleForResource('design'), null);
+  assert.equal(roleForResource('childcare'), null);
+  assert.equal(roleForResource(''), null);
+});
+
+test('역할이 없으면 자원했다고 보지 않는다', () => {
+  assert.equal(offeredThis(null, { applied: true }), false);
+  assert.equal(offeredThis({}, { applied: true }), false);
 });

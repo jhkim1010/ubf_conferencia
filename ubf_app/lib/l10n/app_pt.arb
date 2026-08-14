@@ -986,5 +986,7 @@
   "epRemoveRoute": "Remover esta rota",
   "flightNoteLabel": "Algo a acrescentar (opcional)",
   "flightNoteHint": "ex.: chego em EZE e sigo de ônibus",
-  "immCardOtherRoute": "OTHER ROUTE / outra rota"
+  "immCardOtherRoute": "OTHER ROUTE / outra rota",
+  "svcWillConfirm": "ofereceu-se para isto — atribuído na hora",
+  "svcWillAsk": "não se ofereceu — vamos perguntar"
 }

@@ -840,15 +840,21 @@ class _VolunteersState extends State<_Volunteers> {
                               serviceRoleLabel(l10n, r),
                               style: const TextStyle(fontSize: 14),
                             ),
-                            subtitle: rank(r) < 2
-                                ? Text(
-                                    l10n.svcSuggested,
-                                    style: TextStyle(
-                                      fontSize: 11.5,
-                                      color: Colors.green[700],
-                                    ),
-                                  )
-                                : null,
+                            // 적어 낸 것과 맞는 역할은 곧바로 확정된다 —
+                            // 자기가 하겠다고 한 일이기 때문이다(050).
+                            // 그 밖의 역할은 본인에게 물어본다. 누르기
+                            // 전에 어느 쪽인지 알아야 한다.
+                            subtitle: Text(
+                              offered.contains(r['key'])
+                                  ? l10n.svcWillConfirm
+                                  : l10n.svcWillAsk,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: offered.contains(r['key'])
+                                    ? Colors.green[700]
+                                    : Colors.grey[600],
+                              ),
+                            ),
                           ),
                       ],
                     ),

@@ -1000,5 +1000,7 @@
   "epRemoveRoute": "이 경로 지우기",
   "flightNoteLabel": "덧붙일 말 (선택)",
   "flightNoteHint": "예: EZE 로 도착해 거기서 버스로 이동합니다",
-  "immCardOtherRoute": "OTHER ROUTE / 다른 경로"
+  "immCardOtherRoute": "OTHER ROUTE / 다른 경로",
+  "svcWillConfirm": "자원한 일 — 바로 확정됩니다",
+  "svcWillAsk": "자원하지 않은 일 — 본인에게 물어봅니다"
 }

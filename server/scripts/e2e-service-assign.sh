@@ -243,13 +243,20 @@ eq "  적어 둔 말도"         '승합차 운전 가능' "$(BOARD | jq_ 'r.vol
 # 자원했다고 역할에 들어가면 안 된다 — 고르는 것은 담당자의 일이다.
 eq "자원만으로는 역할에 안 들어간다" '0' \
    "$(BOARD | jq_ "r.roles.filter(x => x.people.some(p => p.real_name === '한자원')).length")"
-# 반대로, 자원하지 않은 사람도 지명할 수 있어야 한다. 지명은 부탁이고
-# 본인이 수락해야 확정이다 — 자원 여부와는 상관이 없다.
+# **스스로 하겠다고 적어 낸 일이면 곧바로 맡긴다**(050). 자기가 적어 낸
+# 것을 두고 다시 "하시겠습니까" 를 묻는 것은 한 번 더 누르게 할 뿐이고,
+# 그동안 담당자는 자리가 찼는지 모른 채 기다린다.
 VR=$(curl -s "$API/registrations/$P/me" -H "Authorization: Bearer $VT" | jq_ "r.id")
-SV=$(inv "$VR" pickup | jq_ "r.id")
-eq "자원한 사람도 지명은 부탁일 뿐" 'invited' \
+inv "$VR" pickup > /dev/null
+eq "운전할 수 있다고 한 사람에게 픽업은 곧바로 확정" 'confirmed' \
    "$(BOARD | jq_ "r.roles.find(x => x.key === 'pickup').people.find(p => p.real_name === '한자원').status")"
-eq "  수락해야 확정" 'confirmed' "$(resp "$SV" "$VT" true | jq_ 'r.status')"
+# 반대로 적어 내지 않은 일은 물어봐야 한다. 하겠다고 한 적 없는 일이
+# 통보로 오면 안 된다. 이 사람은 운전·요리만 적어 냈다.
+SV=$(inv "$VR" group_study_leader | jq_ "r.id")
+eq "  적어 내지 않은 일은 물어본다" 'invited' \
+   "$(BOARD | jq_ "r.roles.find(x => x.key === 'group_study_leader').people.find(p => p.real_name === '한자원').status")"
+eq "  수락하면 (승인이 필요한 역할이므로) 승인 대기" 'awaiting_approval' \
+   "$(resp "$SV" "$VT" true | jq_ 'r.status')"
 
 echo
 echo "── 도움 요청 (043) ──"

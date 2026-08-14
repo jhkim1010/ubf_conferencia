@@ -6023,6 +6023,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OTHER ROUTE / 다른 경로'**
   String get immCardOtherRoute;
+
+  /// 자원한 일이라 곧바로 확정된다는 표시
+  ///
+  /// In en, this message translates to:
+  /// **'they offered this — assigned right away'**
+  String get svcWillConfirm;
+
+  /// 자원하지 않은 일이라 본인에게 묻는다는 표시
+  ///
+  /// In en, this message translates to:
+  /// **'they did not offer this — we will ask them'**
+  String get svcWillAsk;
 }
 
 class _AppLocalizationsDelegate

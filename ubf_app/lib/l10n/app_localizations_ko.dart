@@ -3232,4 +3232,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get immCardOtherRoute => 'OTHER ROUTE / 다른 경로';
+
+  @override
+  String get svcWillConfirm => '자원한 일 — 바로 확정됩니다';
+
+  @override
+  String get svcWillAsk => '자원하지 않은 일 — 본인에게 물어봅니다';
 }

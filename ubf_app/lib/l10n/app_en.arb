@@ -2126,5 +2126,13 @@
   "immCardOtherRoute": "OTHER ROUTE / 다른 경로",
   "@immCardOtherRoute": {
     "description": "입국 안내 카드의 다른 도착 경로 줄. 감사관이 읽으므로 영문을 함께 둔다."
+  },
+  "svcWillConfirm": "they offered this — assigned right away",
+  "@svcWillConfirm": {
+    "description": "자원한 일이라 곧바로 확정된다는 표시"
+  },
+  "svcWillAsk": "they did not offer this — we will ask them",
+  "@svcWillAsk": {
+    "description": "자원하지 않은 일이라 본인에게 묻는다는 표시"
   }
 }
