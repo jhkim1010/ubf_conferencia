@@ -1,7 +1,12 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
 import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
-import { autoDispatch, departureDeadline, isPickupExempt } from '../services/dispatch_engine.js';
+import {
+  autoDispatch,
+  departureDeadline,
+  isPickupExempt,
+  planRuns,
+} from '../services/dispatch_engine.js';
 
 const router = Router();
 
@@ -163,7 +168,46 @@ router.get('/:programId/runs', requireAuth, requireProgramAdmin, async (req, res
         };
       });
 
-    res.json({ direction, runs, unassigned });
+    // 시간대별 필요 대수(042 배차 준비). 담당자가 배차에서 처음 묻는 것은
+    // "차를 몇 대 불러야 하나" 인데, 지금까지 그 답이 화면 어디에도 없었다.
+    //
+    // **자동 배차와 같은 규칙으로 묶는다** — 여기서 센 대수와 실제로 채워지는
+    // 대수가 다르면 숫자가 거짓말이 된다.
+    const plan = planRuns({
+      runs: runs.map((r) => ({
+        id: r.id,
+        airport: r.airport,
+        capacity: r.capacity,
+      })),
+      people,
+      windowMin: 90,
+      vanSeats: 7,
+    }).map((b) => ({
+      airport: b.airport,
+      from: new Date(b.from).toISOString(),
+      to: new Date(b.to).toISOString(),
+      people: b.personIds.length,
+      seats_needed: b.seatsNeeded,
+      seats_have: b.seatsHave,
+      vans_to_add: b.vansToAdd,
+      run_ids: b.runIds,
+      // 이 묶음에 속한 사람들. 화면이 편명·시각으로 줄을 그린다.
+      members: b.personIds.map((pid) => {
+        const d = info.get(pid);
+        const m2 = meta.get(pid);
+        return {
+          registrationId: m2?.regId ?? null,
+          companionId: m2?.compId ?? null,
+          name: d?.name ?? '',
+          timeAt: d && !Number.isNaN(d.timeAt)
+            ? new Date(d.timeAt).toISOString()
+            : null,
+          assigned: assignedKeys.has(pid),
+        };
+      }),
+    }));
+
+    res.json({ direction, runs, unassigned, plan });
   } catch (err) {
     console.error('배차판 조회 오류:', err);
     res.status(500).json({ error: '서버 오류' });

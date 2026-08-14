@@ -965,5 +965,12 @@
   "annPast": "지난 공지",
   "annNoneYet": "아직 보낸 공지가 없습니다",
   "dashAnnounce": "공지 보내기",
-  "dashAnnounceSub": "전체에게, 또는 한 숙소·말씀조에만"
+  "dashAnnounceSub": "전체에게, 또는 한 숙소·말씀조에만",
+  "dspPlanTitle": "필요한 차량",
+  "dspPlanNeed": "{need}대 필요 · {add}대 부족",
+  "dspPlanOk": "{have}대 · 채워짐",
+  "dspPlanPeople": "{count}명",
+  "dspMakeVans": "밴 {count}대 만들기",
+  "dspPlanNone": "아직 도착 시각이 없습니다",
+  "dspUnassignedFlight": "배차 없음"
 }

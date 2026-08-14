@@ -3190,4 +3190,33 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get dashAnnounceSub => 'A todos, ou só a um quarto ou grupo';
+
+  @override
+  String get dspPlanTitle => 'O que é preciso';
+
+  @override
+  String dspPlanNeed(int need, int add) {
+    return '$need necessários · faltam $add';
+  }
+
+  @override
+  String dspPlanOk(int have) {
+    return '$have · coberto';
+  }
+
+  @override
+  String dspPlanPeople(int count) {
+    return '$count pessoas';
+  }
+
+  @override
+  String dspMakeVans(int count) {
+    return 'Criar $count van(s)';
+  }
+
+  @override
+  String get dspPlanNone => 'Ainda não há horários';
+
+  @override
+  String get dspUnassignedFlight => 'sem van';
 }

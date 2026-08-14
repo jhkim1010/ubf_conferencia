@@ -965,5 +965,12 @@
   "annPast": "Avisos anteriores",
   "annNoneYet": "Todavía no enviaste nada",
   "dashAnnounce": "Avisar a los participantes",
-  "dashAnnounceSub": "A todos, o solo a una habitación o grupo"
+  "dashAnnounceSub": "A todos, o solo a una habitación o grupo",
+  "dspPlanTitle": "Qué hace falta",
+  "dspPlanNeed": "{need} hacen falta · faltan {add}",
+  "dspPlanOk": "{have} · cubierto",
+  "dspPlanPeople": "{count} personas",
+  "dspMakeVans": "Crear {count} van(s)",
+  "dspPlanNone": "Todavía no hay horarios",
+  "dspUnassignedFlight": "sin van"
 }

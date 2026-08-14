@@ -1965,5 +1965,43 @@
   "annPast": "Sent before",
   "annNoneYet": "Nothing sent yet",
   "dashAnnounce": "Message participants",
-  "dashAnnounceSub": "Everyone, or just one room or group"
+  "dashAnnounceSub": "Everyone, or just one room or group",
+  "dspPlanTitle": "What is needed",
+  "dspPlanNeed": "{need} needed · {add} short",
+  "@dspPlanNeed": {
+    "placeholders": {
+      "need": {
+        "type": "int"
+      },
+      "add": {
+        "type": "int"
+      }
+    }
+  },
+  "dspPlanOk": "{have} · covered",
+  "@dspPlanOk": {
+    "placeholders": {
+      "have": {
+        "type": "int"
+      }
+    }
+  },
+  "dspPlanPeople": "{count} people",
+  "@dspPlanPeople": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dspMakeVans": "Make {count} van(s)",
+  "@dspMakeVans": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dspPlanNone": "No arrival times yet",
+  "dspUnassignedFlight": "no van yet"
 }

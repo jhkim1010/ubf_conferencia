@@ -5813,6 +5813,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Everyone, or just one room or group'**
   String get dashAnnounceSub;
+
+  /// No description provided for @dspPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is needed'**
+  String get dspPlanTitle;
+
+  /// No description provided for @dspPlanNeed.
+  ///
+  /// In en, this message translates to:
+  /// **'{need} needed · {add} short'**
+  String dspPlanNeed(int need, int add);
+
+  /// No description provided for @dspPlanOk.
+  ///
+  /// In en, this message translates to:
+  /// **'{have} · covered'**
+  String dspPlanOk(int have);
+
+  /// No description provided for @dspPlanPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} people'**
+  String dspPlanPeople(int count);
+
+  /// No description provided for @dspMakeVans.
+  ///
+  /// In en, this message translates to:
+  /// **'Make {count} van(s)'**
+  String dspMakeVans(int count);
+
+  /// No description provided for @dspPlanNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No arrival times yet'**
+  String get dspPlanNone;
+
+  /// No description provided for @dspUnassignedFlight.
+  ///
+  /// In en, this message translates to:
+  /// **'no van yet'**
+  String get dspUnassignedFlight;
 }
 
 class _AppLocalizationsDelegate

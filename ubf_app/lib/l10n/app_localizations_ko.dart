@@ -3110,4 +3110,33 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get dashAnnounceSub => '전체에게, 또는 한 숙소·말씀조에만';
+
+  @override
+  String get dspPlanTitle => '필요한 차량';
+
+  @override
+  String dspPlanNeed(int need, int add) {
+    return '$need대 필요 · $add대 부족';
+  }
+
+  @override
+  String dspPlanOk(int have) {
+    return '$have대 · 채워짐';
+  }
+
+  @override
+  String dspPlanPeople(int count) {
+    return '$count명';
+  }
+
+  @override
+  String dspMakeVans(int count) {
+    return '밴 $count대 만들기';
+  }
+
+  @override
+  String get dspPlanNone => '아직 도착 시각이 없습니다';
+
+  @override
+  String get dspUnassignedFlight => '배차 없음';
 }
