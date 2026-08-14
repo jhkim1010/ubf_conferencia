@@ -1941,5 +1941,29 @@
     }
   },
   "svcIllDoIt": "I'll do it",
-  "svcAppliedThanks": "Thank you. The organizer will confirm."
+  "svcAppliedThanks": "Thank you. The organizer will confirm.",
+  "annTitle": "Send a message",
+  "annSubtitle": "Reaches phones directly, not just the group chat",
+  "annBody": "What do you want to say?",
+  "annSend": "Send",
+  "annTo": "Who gets it",
+  "annToAll": "Everyone",
+  "annToRoom": "One room",
+  "annToGroup": "One study group",
+  "annToUnsub": "Not finished registering",
+  "annToUnpaid": "Not paid yet",
+  "annPickRoom": "Which room?",
+  "annPickGroup": "Which group?",
+  "annSent": "Sent to {count} devices",
+  "@annSent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "annPast": "Sent before",
+  "annNoneYet": "Nothing sent yet",
+  "dashAnnounce": "Message participants",
+  "dashAnnounceSub": "Everyone, or just one room or group"
 }

@@ -602,6 +602,37 @@ class ApiClient {
     return _decode(response);
   }
 
+  // ── 공지 (044) ─────────────────────────────────────────────
+
+  /// 지난 공지 (담당자).
+  static Future<List<dynamic>> getAnnouncements(String programId) async {
+    final response = await http.get(
+      _uri('/announcements/$programId'),
+      headers: await _headers(),
+    );
+    return _decodeList(response);
+  }
+
+  /// 공지 보내기. 받는 사람을 좁힐 수 있다 — 전체·한 숙소·한 말씀조 등.
+  static Future<Map<String, dynamic>> sendAnnouncement(
+    String programId, {
+    required String body,
+    String audienceKind = 'all',
+    String? audienceId,
+    String? title,
+  }) async {
+    final response = await http.post(
+      _uri('/announcements/$programId'),
+      headers: await _headers(),
+      body: jsonEncode({
+        'body': body,
+        if (title != null && title.isNotEmpty) 'title': title,
+        'audience': {'kind': audienceKind, 'id': ?audienceId},
+      }),
+    );
+    return _decode(response);
+  }
+
   /// 수락 · 거절 (본인).
   static Future<Map<String, dynamic>> respondToServiceInvite(
     String programId,

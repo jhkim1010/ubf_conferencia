@@ -3136,4 +3136,57 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get svcAppliedThanks => 'Gracias. El organizador lo confirmará.';
+
+  @override
+  String get annTitle => 'Enviar un aviso';
+
+  @override
+  String get annSubtitle => 'Llega a los teléfonos, no solo al chat grupal';
+
+  @override
+  String get annBody => '¿Qué quieres decir?';
+
+  @override
+  String get annSend => 'Enviar';
+
+  @override
+  String get annTo => 'Quién lo recibe';
+
+  @override
+  String get annToAll => 'Todos';
+
+  @override
+  String get annToRoom => 'Una habitación';
+
+  @override
+  String get annToGroup => 'Un grupo de estudio';
+
+  @override
+  String get annToUnsub => 'No terminaron el registro';
+
+  @override
+  String get annToUnpaid => 'Aún no pagaron';
+
+  @override
+  String get annPickRoom => '¿Cuál habitación?';
+
+  @override
+  String get annPickGroup => '¿Cuál grupo?';
+
+  @override
+  String annSent(int count) {
+    return 'Enviado a $count dispositivos';
+  }
+
+  @override
+  String get annPast => 'Avisos anteriores';
+
+  @override
+  String get annNoneYet => 'Todavía no enviaste nada';
+
+  @override
+  String get dashAnnounce => 'Avisar a los participantes';
+
+  @override
+  String get dashAnnounceSub => 'A todos, o solo a una habitación o grupo';
 }

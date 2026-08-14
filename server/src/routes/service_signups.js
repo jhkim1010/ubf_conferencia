@@ -19,7 +19,11 @@ import {
   sortRoles,
   tallyRole,
 } from '../services/service_roles.js';
-import { sendPushNotification, notifyProgramParticipants } from '../services/fcm.js';
+import {
+  sendPushNotification,
+  notifyAudience,
+} from '../services/fcm.js';
+import { audienceFromBody } from '../services/audience.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
 
 const router = Router();
@@ -591,6 +595,13 @@ router.post(
     const programId = req.params.programId;
     const { serviceKey, message } = req.body ?? {};
 
+    // 받을 사람(044). 안 보내면 전체다. 이상한 값이면 **아무에게도 보내지
+    // 않는다** — 한 방에만 보내려던 것이 전원에게 가는 쪽이 가장 나쁘다.
+    const audience = audienceFromBody(req.body);
+    if (audience === null) {
+      return res.status(400).json({ error: '보낼 대상이 올바르지 않습니다' });
+    }
+
     try {
       const [program] = await sql`
         SELECT id, name, service_options FROM programs
@@ -632,7 +643,7 @@ router.post(
       const title = program.name;
       const bodyText = (message ?? '').trim()
         || `봉사자를 찾습니다 — ${tally.short}자리`;
-      notifyProgramParticipants(sql, programId, title, bodyText, {
+      notifyAudience(sql, programId, audience, title, bodyText, {
         type: 'service_call',
         programId,
         serviceKey,

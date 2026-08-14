@@ -934,5 +934,22 @@
   "svcOpenTitle": "Precisamos de ajuda",
   "svcOpenBody": "{role} — faltam {short}",
   "svcIllDoIt": "Eu faço",
-  "svcAppliedThanks": "Obrigado. O organizador vai confirmar."
+  "svcAppliedThanks": "Obrigado. O organizador vai confirmar.",
+  "annTitle": "Enviar um aviso",
+  "annSubtitle": "Chega aos celulares, não só ao grupo",
+  "annBody": "O que você quer dizer?",
+  "annSend": "Enviar",
+  "annTo": "Quem recebe",
+  "annToAll": "Todos",
+  "annToRoom": "Um quarto",
+  "annToGroup": "Um grupo de estudo",
+  "annToUnsub": "Não concluíram o cadastro",
+  "annToUnpaid": "Ainda não pagaram",
+  "annPickRoom": "Qual quarto?",
+  "annPickGroup": "Qual grupo?",
+  "annSent": "Enviado para {count} aparelhos",
+  "annPast": "Avisos anteriores",
+  "annNoneYet": "Você ainda não enviou nada",
+  "dashAnnounce": "Avisar os participantes",
+  "dashAnnounceSub": "A todos, ou só a um quarto ou grupo"
 }

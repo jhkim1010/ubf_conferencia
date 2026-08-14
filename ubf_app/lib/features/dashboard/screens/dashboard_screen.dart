@@ -195,6 +195,32 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
 
+            // 공지 — 전체 또는 한 숙소·말씀조에만 보낸다.
+            Card(
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.campaign_outlined,
+                    color: Colors.amber[800],
+                  ),
+                ),
+                title: Text(
+                  l10n.dashAnnounce,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(l10n.dashAnnounceSub),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () =>
+                    context.push('/leader/program/$programId/announce'),
+              ),
+            ),
+            const SizedBox(height: 10),
+
             // 관리자 — 명단·배정을 함께 볼 사람을 세운다.
             // 수양회를 만든 사람에게만 보인다(서버도 같은 규칙이다).
             Card(

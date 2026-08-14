@@ -72,6 +72,69 @@ export async function sendPushNotification(tokens, title, body, data = {}) {
   }
 }
 
+// ─── 고른 사람들에게만 알림 전송 (044) ──────────────────────────
+//
+// 전체에게만 보낼 수 있으면 쓸모가 반이다. "302호 사람들만", "3조만" 처럼
+// 좁혀 보내야 할 일이 실제로 더 많다.
+//
+// **좁히려던 것이 넓어지는 쪽이 가장 나쁘다.** 그래서 모르는 갈래가 오면
+// 아무에게도 보내지 않는다 — 전체로 떨어뜨리지 않는다.
+export async function notifyAudience(sql, programId, audience, title, body, data = {}) {
+  try {
+    const kind = audience?.kind;
+    const id = audience?.id ?? null;
+    let rows;
+
+    if (kind === 'all') {
+      rows = await sql`
+        SELECT fcm_token FROM registrations
+        WHERE program_id = ${programId} AND fcm_token IS NOT NULL
+          AND has_registrant_name(real_name)
+      `;
+    } else if (kind === 'room') {
+      rows = await sql`
+        SELECT r.fcm_token FROM registrations r
+        JOIN room_assignments ra ON ra.registration_id = r.id
+        JOIN rooms rm ON rm.id = ra.room_id
+        WHERE rm.id = ${id} AND rm.program_id = ${programId}
+          AND r.fcm_token IS NOT NULL
+      `;
+    } else if (kind === 'group') {
+      rows = await sql`
+        SELECT r.fcm_token FROM registrations r
+        JOIN group_members gm ON gm.registration_id = r.id
+        JOIN groups g ON g.id = gm.group_id
+        WHERE g.id = ${id} AND g.program_id = ${programId}
+          AND r.fcm_token IS NOT NULL
+      `;
+    } else if (kind === 'unsubmitted') {
+      rows = await sql`
+        SELECT fcm_token FROM registrations
+        WHERE program_id = ${programId} AND submitted = false
+          AND fcm_token IS NOT NULL AND has_registrant_name(real_name)
+      `;
+    } else if (kind === 'unpaid') {
+      rows = await sql`
+        SELECT r.fcm_token FROM registrations r
+        LEFT JOIN payments pay ON pay.registration_id = r.id
+        WHERE r.program_id = ${programId}
+          AND COALESCE(pay.status, 'none') <> 'confirmed'
+          AND r.fcm_token IS NOT NULL AND has_registrant_name(r.real_name)
+      `;
+    } else {
+      console.error('알 수 없는 알림 대상:', kind);
+      return 0;
+    }
+
+    const tokens = [...new Set(rows.map((r) => r.fcm_token))];
+    await sendPushNotification(tokens, title, body, data);
+    return tokens.length;
+  } catch (err) {
+    console.error('대상 알림 전송 오류:', err.message);
+    return 0;
+  }
+}
+
 // ─── 프로그램 참가자 전체에게 알림 전송 ──────────────────────────
 export async function notifyProgramParticipants(sql, programId, title, body, data = {}) {
   try {

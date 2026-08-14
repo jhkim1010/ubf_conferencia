@@ -948,5 +948,22 @@
   "svcOpenTitle": "봉사자를 찾고 있습니다",
   "svcOpenBody": "{role} — {short}자리 남았습니다",
   "svcIllDoIt": "제가 하겠습니다",
-  "svcAppliedThanks": "감사합니다. 담당자가 확정해 드립니다."
+  "svcAppliedThanks": "감사합니다. 담당자가 확정해 드립니다.",
+  "annTitle": "공지 보내기",
+  "annSubtitle": "단톡방이 아니라 앱으로 바로 갑니다",
+  "annBody": "무엇을 알릴까요?",
+  "annSend": "보내기",
+  "annTo": "받는 사람",
+  "annToAll": "전체",
+  "annToRoom": "한 숙소",
+  "annToGroup": "한 말씀조",
+  "annToUnsub": "등록을 안 끝낸 사람",
+  "annToUnpaid": "입금 전인 사람",
+  "annPickRoom": "어느 숙소입니까?",
+  "annPickGroup": "어느 조입니까?",
+  "annSent": "{count}대에 보냈습니다",
+  "annPast": "지난 공지",
+  "annNoneYet": "아직 보낸 공지가 없습니다",
+  "dashAnnounce": "공지 보내기",
+  "dashAnnounceSub": "전체에게, 또는 한 숙소·말씀조에만"
 }

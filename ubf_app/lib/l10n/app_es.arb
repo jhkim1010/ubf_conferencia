@@ -948,5 +948,22 @@
   "svcOpenTitle": "Se necesita ayuda",
   "svcOpenBody": "{role} — faltan {short}",
   "svcIllDoIt": "Yo lo hago",
-  "svcAppliedThanks": "Gracias. El organizador lo confirmará."
+  "svcAppliedThanks": "Gracias. El organizador lo confirmará.",
+  "annTitle": "Enviar un aviso",
+  "annSubtitle": "Llega a los teléfonos, no solo al chat grupal",
+  "annBody": "¿Qué quieres decir?",
+  "annSend": "Enviar",
+  "annTo": "Quién lo recibe",
+  "annToAll": "Todos",
+  "annToRoom": "Una habitación",
+  "annToGroup": "Un grupo de estudio",
+  "annToUnsub": "No terminaron el registro",
+  "annToUnpaid": "Aún no pagaron",
+  "annPickRoom": "¿Cuál habitación?",
+  "annPickGroup": "¿Cuál grupo?",
+  "annSent": "Enviado a {count} dispositivos",
+  "annPast": "Avisos anteriores",
+  "annNoneYet": "Todavía no enviaste nada",
+  "dashAnnounce": "Avisar a los participantes",
+  "dashAnnounceSub": "A todos, o solo a una habitación o grupo"
 }

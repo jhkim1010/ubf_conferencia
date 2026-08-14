@@ -3057,4 +3057,57 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get svcAppliedThanks => '감사합니다. 담당자가 확정해 드립니다.';
+
+  @override
+  String get annTitle => '공지 보내기';
+
+  @override
+  String get annSubtitle => '단톡방이 아니라 앱으로 바로 갑니다';
+
+  @override
+  String get annBody => '무엇을 알릴까요?';
+
+  @override
+  String get annSend => '보내기';
+
+  @override
+  String get annTo => '받는 사람';
+
+  @override
+  String get annToAll => '전체';
+
+  @override
+  String get annToRoom => '한 숙소';
+
+  @override
+  String get annToGroup => '한 말씀조';
+
+  @override
+  String get annToUnsub => '등록을 안 끝낸 사람';
+
+  @override
+  String get annToUnpaid => '입금 전인 사람';
+
+  @override
+  String get annPickRoom => '어느 숙소입니까?';
+
+  @override
+  String get annPickGroup => '어느 조입니까?';
+
+  @override
+  String annSent(int count) {
+    return '$count대에 보냈습니다';
+  }
+
+  @override
+  String get annPast => '지난 공지';
+
+  @override
+  String get annNoneYet => '아직 보낸 공지가 없습니다';
+
+  @override
+  String get dashAnnounce => '공지 보내기';
+
+  @override
+  String get dashAnnounceSub => '전체에게, 또는 한 숙소·말씀조에만';
 }

@@ -38,3 +38,9 @@ final openServiceCallsProvider = FutureProvider.autoDispose
     .family<List<dynamic>, String>(
       (_, programId) => ApiClient.getOpenServiceCalls(programId),
     );
+
+// 지난 공지 (044).
+final announcementsProvider = FutureProvider.autoDispose
+    .family<List<dynamic>, String>(
+      (_, programId) => ApiClient.getAnnouncements(programId),
+    );

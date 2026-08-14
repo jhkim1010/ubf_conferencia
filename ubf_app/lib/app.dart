@@ -33,6 +33,7 @@ import 'features/sos/screens/sos_screen.dart';
 import 'features/program/screens/immigration_card_screen.dart';
 import 'features/program/screens/edit_program_screen.dart';
 import 'features/program/screens/program_admins_screen.dart';
+import 'features/dashboard/screens/announce_screen.dart';
 import 'features/program/screens/my_programs_screen.dart';
 import 'features/setup/screens/setup_screen.dart';
 import 'features/assignment/screens/assignment_screen.dart';
@@ -163,6 +164,10 @@ class _UbfAppState extends ConsumerState<UbfApp> {
           path: '/leader/program/:id/edit',
           builder: (_, s) =>
               EditProgramScreen(programId: s.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: '/leader/program/:id/announce',
+          builder: (_, s) => AnnounceScreen(programId: s.pathParameters['id']!),
         ),
         GoRoute(
           path: '/leader/program/:id/admins',

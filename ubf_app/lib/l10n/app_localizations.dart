@@ -5711,6 +5711,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Thank you. The organizer will confirm.'**
   String get svcAppliedThanks;
+
+  /// No description provided for @annTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a message'**
+  String get annTitle;
+
+  /// No description provided for @annSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reaches phones directly, not just the group chat'**
+  String get annSubtitle;
+
+  /// No description provided for @annBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to say?'**
+  String get annBody;
+
+  /// No description provided for @annSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get annSend;
+
+  /// No description provided for @annTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Who gets it'**
+  String get annTo;
+
+  /// No description provided for @annToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get annToAll;
+
+  /// No description provided for @annToRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'One room'**
+  String get annToRoom;
+
+  /// No description provided for @annToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'One study group'**
+  String get annToGroup;
+
+  /// No description provided for @annToUnsub.
+  ///
+  /// In en, this message translates to:
+  /// **'Not finished registering'**
+  String get annToUnsub;
+
+  /// No description provided for @annToUnpaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Not paid yet'**
+  String get annToUnpaid;
+
+  /// No description provided for @annPickRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Which room?'**
+  String get annPickRoom;
+
+  /// No description provided for @annPickGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Which group?'**
+  String get annPickGroup;
+
+  /// No description provided for @annSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to {count} devices'**
+  String annSent(int count);
+
+  /// No description provided for @annPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent before'**
+  String get annPast;
+
+  /// No description provided for @annNoneYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing sent yet'**
+  String get annNoneYet;
+
+  /// No description provided for @dashAnnounce.
+  ///
+  /// In en, this message translates to:
+  /// **'Message participants'**
+  String get dashAnnounce;
+
+  /// No description provided for @dashAnnounceSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone, or just one room or group'**
+  String get dashAnnounceSub;
 }
 
 class _AppLocalizationsDelegate
