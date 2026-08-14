@@ -3233,4 +3233,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String dashAssignedCount(int count) {
     return 'assigned to $count';
   }
+
+  @override
+  String get asnNoRoomLeader => 'no room leader yet';
+
+  @override
+  String asnRoomLeaderIs(String name) {
+    return 'Room leader: $name';
+  }
+
+  @override
+  String get asnNoGroupLeader => 'no leader yet';
 }

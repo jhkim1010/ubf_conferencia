@@ -979,5 +979,8 @@
   "svcAssignTo": "{name} 님에게 부탁할 일",
   "svcSuggested": "적어 낸 것과 맞음",
   "dashNotAssigned": "아직 맡은 일 없음",
-  "dashAssignedCount": "{count}곳 맡음"
+  "dashAssignedCount": "{count}곳 맡음",
+  "asnNoRoomLeader": "방장 없음",
+  "asnRoomLeaderIs": "방장 {name}",
+  "asnNoGroupLeader": "조장 없음"
 }

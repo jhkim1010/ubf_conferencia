@@ -965,5 +965,8 @@
   "svcAssignTo": "Pedir a {name} que ajude com",
   "svcSuggested": "combina com o que ofereceu",
   "dashNotAssigned": "ainda sem tarefa",
-  "dashAssignedCount": "atribuído a {count}"
+  "dashAssignedCount": "atribuído a {count}",
+  "asnNoRoomLeader": "sem responsável de quarto",
+  "asnRoomLeaderIs": "Responsável do quarto: {name}",
+  "asnNoGroupLeader": "sem líder"
 }

@@ -3244,4 +3244,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String dashAssignedCount(int count) {
     return 'asignado a $count';
   }
+
+  @override
+  String get asnNoRoomLeader => 'sin encargado de cuarto';
+
+  @override
+  String asnRoomLeaderIs(String name) {
+    return 'Encargado del cuarto: $name';
+  }
+
+  @override
+  String get asnNoGroupLeader => 'sin líder';
 }

@@ -39,8 +39,10 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, async (req, re
     const rooms = await sql`
       SELECT r.id, r.name, r.floor, r.room_type, r.capacity,
              r.extra_capacity, r.gender,
+             r.leader_registration_id AS "leaderRegistrationId",
         COALESCE(json_agg(
           json_build_object('registrationId', reg.id, 'name', reg.real_name, 'gender', reg.gender)
+          ORDER BY reg.real_name
         ) FILTER (WHERE reg.id IS NOT NULL), '[]') AS members
       FROM rooms r
       LEFT JOIN room_assignments ra ON ra.room_id = r.id
@@ -67,11 +69,15 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, async (req, re
 router.get('/:programId/groups', requireAuth, requireProgramAdmin, async (req, res) => {
   const { programId } = req.params;
   try {
+    // 조의 언어(025)를 함께 보낸다. 담당자가 사람을 조에 넣을 때 가장 먼저
+    // 맞춰 보는 것이 언어인데, 화면에 없으면 조 이름만 보고 짐작해야 한다.
     const groups = await sql`
       SELECT g.id, g.name, g.passage, g.location, g.leader_name,
+        g.study_language AS "studyLanguage", g.age_band AS "ageBand",
         COALESCE(json_agg(
           json_build_object('registrationId', reg.id, 'name', reg.real_name,
                             'gender', reg.gender, 'age', reg.age)
+          ORDER BY reg.real_name
         ) FILTER (WHERE reg.id IS NOT NULL), '[]') AS members
       FROM groups g
       LEFT JOIN group_members gm ON gm.group_id = g.id
@@ -80,8 +86,11 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, async (req, r
       GROUP BY g.id
       ORDER BY g.sort_order, g.created_at
     `;
+    // 아직 조가 없는 사람에게도 희망 언어(034)를 실어 준다 — 어느 조로
+    // 보낼지는 그것으로 갈린다.
     const unassigned = await sql`
-      SELECT id AS "registrationId", real_name AS name, gender, age
+      SELECT id AS "registrationId", real_name AS name, gender, age,
+             study_languages AS "studyLanguages"
       FROM registrations
       WHERE program_id = ${programId} AND has_registrant_name(real_name)
         AND id NOT IN (SELECT registration_id FROM group_members)
@@ -126,6 +135,20 @@ router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, async (r
           [a.roomId, a.registrationId],
         );
       }
+      // 자동 배정은 사람을 다른 방으로 옮긴다. 방장을 그대로 두면 그 방에서
+      // 자지도 않는 사람이 방장으로 남는다 — 화면에는 이름이 있으니 아무도
+      // 알아채지 못한다.
+      await client.query(
+        `UPDATE rooms SET leader_registration_id = NULL
+          WHERE program_id = $1
+            AND leader_registration_id IS NOT NULL
+            AND NOT EXISTS (
+              SELECT 1 FROM room_assignments ra
+               WHERE ra.room_id = rooms.id
+                 AND ra.registration_id = rooms.leader_registration_id
+            )`,
+        [programId],
+      );
     });
 
     res.json({ assigned: assignments.length, unplaced });
@@ -226,9 +249,51 @@ router.post('/:programId/rooms/assign', requireAuth, requireProgramAdmin, async 
 router.delete('/:programId/rooms/:registrationId', requireAuth, requireProgramAdmin, async (req, res) => {
   try {
     await sql`DELETE FROM room_assignments WHERE registration_id = ${req.params.registrationId}`;
+    // 방에서 뺐으면 방장도 아니다.
+    await sql`
+      UPDATE rooms SET leader_registration_id = NULL
+      WHERE leader_registration_id = ${req.params.registrationId}
+    `;
     res.json({ success: true });
   } catch (err) {
     console.error('숙소 배정 해제 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// ── PUT 방장 세우기 { registrationId } ───────────────────────
+//
+// 방장은 **그 방에 배정된 사람** 이라야 한다. 방에서 자지 않는 사람을
+// 방장으로 세우면 현장에서 아무 소용이 없다. 이 규칙은 컬럼 제약으로는
+// 표현할 수 없어(배정이 다른 표에 있다) 여기서 본다.
+//
+// registrationId 를 비우면 방장을 내린다.
+router.put('/:programId/rooms/:roomId/leader', requireAuth, requireProgramAdmin, async (req, res) => {
+  const { programId, roomId } = req.params;
+  const registrationId = req.body?.registrationId ?? null;
+  try {
+    const [room] = await sql`
+      SELECT id FROM rooms WHERE id = ${roomId} AND program_id = ${programId}
+    `;
+    if (!room) return res.status(404).json({ error: '숙소를 찾을 수 없습니다' });
+
+    if (registrationId) {
+      const [inRoom] = await sql`
+        SELECT 1 FROM room_assignments
+        WHERE room_id = ${roomId} AND registration_id = ${registrationId}
+      `;
+      if (!inRoom) {
+        return res.status(400).json({ error: '그 방에 배정된 사람만 방장이 될 수 있습니다' });
+      }
+    }
+
+    await sql`
+      UPDATE rooms SET leader_registration_id = ${registrationId}
+      WHERE id = ${roomId}
+    `;
+    res.json({ success: true, leaderRegistrationId: registrationId });
+  } catch (err) {
+    console.error('방장 지정 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });

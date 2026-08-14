@@ -5897,6 +5897,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'assigned to {count}'**
   String dashAssignedCount(int count);
+
+  /// 아직 방장을 세우지 않은 숙소
+  ///
+  /// In en, this message translates to:
+  /// **'no room leader yet'**
+  String get asnNoRoomLeader;
+
+  /// 숙소의 방장
+  ///
+  /// In en, this message translates to:
+  /// **'Room leader: {name}'**
+  String asnRoomLeaderIs(String name);
+
+  /// 아직 조장이 없는 말씀조
+  ///
+  /// In en, this message translates to:
+  /// **'no leader yet'**
+  String get asnNoGroupLeader;
 }
 
 class _AppLocalizationsDelegate

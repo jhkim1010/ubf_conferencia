@@ -33,39 +33,106 @@ class ServiceAssignTab extends ConsumerWidget {
       data: (data) {
         final roles = ((data?['roles'] as List?) ?? const [])
             .cast<Map<String, dynamic>>();
-        return RefreshIndicator(
-          onRefresh: () async => refresh(),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => _editRoles(context, ref, roles),
-                icon: const Icon(Icons.tune, size: 18),
-                label: Text(l10n.svcEditRoles),
-              ),
-              const SizedBox(height: 12),
-              // 등록할 때 자원한 사람. 지금까지 이 정보가 어느 화면에도
-              // 나오지 않아, 누가 무엇을 할 수 있는지 알 길이 없었다.
-              _Volunteers(
-                programId: programId,
-                roles: roles,
-                onChanged: refresh,
-                people: ((data?['volunteers'] as List?) ?? const [])
-                    .cast<Map<String, dynamic>>(),
-              ),
-              if (roles.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Center(child: Text(l10n.svcNobody)),
+        final people = ((data?['volunteers'] as List?) ?? const [])
+            .cast<Map<String, dynamic>>();
+
+        // 자원자 명단과 역할 현황은 **같이 봐야 하는 것**이다. 누구를 어디에
+        // 넣을지 정하는 일이기 때문이다. 한 줄로 쌓아 두면 자원자를 보려고
+        // 위로, 역할을 보려고 아래로 오가야 한다.
+        //
+        // 폰에서는 나눌 너비가 없으므로 예전처럼 쌓는다.
+        return LayoutBuilder(
+          builder: (context, box) {
+            if (box.maxWidth < 900) {
+              return RefreshIndicator(
+                onRefresh: () async => refresh(),
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+                  children: [
+                    _rolesButton(context, ref, roles, l10n),
+                    const SizedBox(height: 12),
+                    // 등록할 때 자원한 사람. 지금까지 이 정보가 어느 화면에도
+                    // 나오지 않아, 누가 무엇을 할 수 있는지 알 길이 없었다.
+                    _Volunteers(
+                      programId: programId,
+                      roles: roles,
+                      onChanged: refresh,
+                      people: people,
+                    ),
+                    ..._roleCards(roles, refresh, l10n),
+                  ],
                 ),
-              for (final role in roles)
-                _RoleCard(programId: programId, role: role, onChanged: refresh),
-            ],
-          ),
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 왼쪽: 자원한 사람. 넓은 화면에서는 접어 둘 이유가 없다.
+                SizedBox(
+                  width: box.maxWidth < 1200 ? 340 : 400,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 6, 24),
+                    children: [
+                      _Volunteers(
+                        programId: programId,
+                        roles: roles,
+                        onChanged: refresh,
+                        people: people,
+                        alwaysOpen: true,
+                      ),
+                    ],
+                  ),
+                ),
+                const VerticalDivider(width: 1),
+                // 오른쪽: 역할별 현황.
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () async => refresh(),
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(6, 12, 12, 24),
+                      children: [
+                        _rolesButton(context, ref, roles, l10n),
+                        const SizedBox(height: 12),
+                        ..._roleCards(roles, refresh, l10n),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
+
+  Widget _rolesButton(
+    BuildContext context,
+    WidgetRef ref,
+    List<Map<String, dynamic>> roles,
+    AppLocalizations l10n,
+  ) => OutlinedButton.icon(
+    onPressed: () => _editRoles(context, ref, roles),
+    icon: const Icon(Icons.tune, size: 18),
+    label: Text(l10n.svcEditRoles),
+  );
+
+  /// 아무도 없는 역할도 남긴다 — 사람이 없는 역할이 목록에서 사라지면,
+  /// 그것이야말로 봐야 할 상황인데 보이지 않는다.
+  List<Widget> _roleCards(
+    List<Map<String, dynamic>> roles,
+    VoidCallback refresh,
+    AppLocalizations l10n,
+  ) => [
+    if (roles.isEmpty)
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Center(child: Text(l10n.svcNobody)),
+      ),
+    for (final role in roles)
+      _RoleCard(programId: programId, role: role, onChanged: refresh),
+  ];
 
   Future<void> _editRoles(
     BuildContext context,
@@ -688,11 +755,16 @@ class _Volunteers extends StatefulWidget {
   final List<Map<String, dynamic>> roles;
   final VoidCallback onChanged;
 
+  /// 왼쪽 패널로 서 있을 때는 접지 않는다. 접을 수 있게 두면 패널이 통째로
+  /// 빈 채로 남는다.
+  final bool alwaysOpen;
+
   const _Volunteers({
     required this.people,
     required this.programId,
     required this.roles,
     required this.onChanged,
+    this.alwaysOpen = false,
   });
 
   @override
@@ -700,7 +772,7 @@ class _Volunteers extends StatefulWidget {
 }
 
 class _VolunteersState extends State<_Volunteers> {
-  bool _open = false;
+  late bool _open = widget.alwaysOpen;
 
   /// 여기서 바로 맡긴다. 지금까지는 역할 카드를 열어 사람을 찾아야 했는데,
   /// 담당자가 보고 있는 것은 이 명단이다 — 보고 있는 자리에서 누르는 것이
@@ -791,7 +863,11 @@ class _VolunteersState extends State<_Volunteers> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    if (widget.people.isEmpty) return const SizedBox.shrink();
+    // 패널로 서 있을 때는 아무도 자원하지 않았다는 것도 말해 줘야 한다.
+    // 통째로 사라지면 왼쪽이 빈 칸으로 남아 무엇이 없는 것인지 알 수 없다.
+    if (widget.people.isEmpty && !widget.alwaysOpen) {
+      return const SizedBox.shrink();
+    }
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -809,9 +885,21 @@ class _VolunteersState extends State<_Volunteers> {
               l10n.svcOfferedNote,
               style: const TextStyle(fontSize: 11.5),
             ),
-            trailing: Icon(_open ? Icons.expand_less : Icons.expand_more),
-            onTap: () => setState(() => _open = !_open),
+            trailing: widget.alwaysOpen
+                ? null
+                : Icon(_open ? Icons.expand_less : Icons.expand_more),
+            onTap: widget.alwaysOpen
+                ? null
+                : () => setState(() => _open = !_open),
           ),
+          if (widget.people.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+              child: Text(
+                l10n.svcNobody,
+                style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+              ),
+            ),
           if (_open)
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),

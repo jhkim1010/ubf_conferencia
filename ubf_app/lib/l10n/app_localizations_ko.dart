@@ -3165,4 +3165,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String dashAssignedCount(int count) {
     return '$count곳 맡음';
   }
+
+  @override
+  String get asnNoRoomLeader => '방장 없음';
+
+  @override
+  String asnRoomLeaderIs(String name) {
+    return '방장 $name';
+  }
+
+  @override
+  String get asnNoGroupLeader => '조장 없음';
 }

@@ -1129,6 +1129,20 @@ class ApiClient {
     _decode(response);
   }
 
+  /// 방장을 세운다. [registrationId] 가 null 이면 내린다.
+  static Future<void> setRoomLeader(
+    String programId,
+    String roomId,
+    String? registrationId,
+  ) async {
+    final response = await http.put(
+      _uri('/assignments/$programId/rooms/$roomId/leader'),
+      headers: await _headers(),
+      body: jsonEncode({'registrationId': registrationId}),
+    );
+    _decode(response);
+  }
+
   static Future<void> assignToGroup(
     String programId,
     String groupId,

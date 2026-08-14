@@ -2032,5 +2032,22 @@
         "type": "int"
       }
     }
+  },
+  "asnNoRoomLeader": "no room leader yet",
+  "@asnNoRoomLeader": {
+    "description": "아직 방장을 세우지 않은 숙소"
+  },
+  "asnRoomLeaderIs": "Room leader: {name}",
+  "@asnRoomLeaderIs": {
+    "description": "숙소의 방장",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "asnNoGroupLeader": "no leader yet",
+  "@asnNoGroupLeader": {
+    "description": "아직 조장이 없는 말씀조"
   }
 }

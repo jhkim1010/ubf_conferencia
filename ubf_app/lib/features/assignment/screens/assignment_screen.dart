@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/api_client.dart';
 import '../providers/assignment_provider.dart';
 import 'service_assign_tab.dart';
+import '../widgets/split_board.dart';
 import 'package:mana/l10n/app_localizations.dart';
 
 // PRD F4 — 관리자 배정 화면 (숙소 · 말씀조)
@@ -61,19 +62,70 @@ Color _genderColor(String? g) => g == 'M'
     ? const Color(0xFF3B6FB0)
     : (g == 'F' ? const Color(0xFFB0547E) : Colors.grey);
 
-Widget _personChip(String name, String? gender, VoidCallback? onRemove) => Chip(
-  avatar: CircleAvatar(
-    backgroundColor: _genderColor(gender),
-    child: Text(
-      name.isNotEmpty ? name.characters.first : '?',
-      style: const TextStyle(color: Colors.white, fontSize: 11),
+/// 말씀공부 언어(025·034)의 이름.
+///
+/// 언어 이름은 그 언어로 적는다 — 등록 화면과 같다. "Korean" 이라고 옮기면
+/// 정작 그 조에 들어갈 사람이 못 알아본다.
+String _languageLabel(String? code) => switch (code) {
+  'ko' => '한국어',
+  'en' => 'English',
+  'es' => 'Español',
+  'pt' => 'Português',
+  _ => '',
+};
+
+/// 여럿 고른 경우. 첫 번째가 주 언어이므로 순서를 지킨다.
+String _languagesLabel(dynamic codes) => ((codes as List?) ?? const [])
+    .map((c) => _languageLabel('$c'))
+    .where((s) => s.isNotEmpty)
+    .join(' · ');
+
+/// 배정된 사람 한 명.
+///
+/// X 는 자리에서 빼는 것이고, 이름을 누르는 것은 [onTap] 이다 — 두 동작을
+/// 한 곳에 두면 빼려다 방장을 세우게 된다. 그래서 지우기는 X 에만 둔다.
+Widget _personChip(
+  String name,
+  String? gender,
+  VoidCallback? onRemove, {
+  bool isLeader = false,
+  VoidCallback? onTap,
+}) {
+  final chip = Chip(
+    avatar: CircleAvatar(
+      backgroundColor: _genderColor(gender),
+      child: Text(
+        name.isNotEmpty ? name.characters.first : '?',
+        style: const TextStyle(color: Colors.white, fontSize: 11),
+      ),
     ),
-  ),
-  label: Text(name, style: const TextStyle(fontSize: 12)),
-  onDeleted: onRemove,
-  deleteIcon: onRemove == null ? null : const Icon(Icons.close, size: 16),
-  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-);
+    label: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isLeader) ...[
+          const Icon(Icons.star, size: 12, color: Color(0xFFC98A16)),
+          const SizedBox(width: 3),
+        ],
+        Text(
+          name,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isLeader ? FontWeight.w700 : null,
+          ),
+        ),
+      ],
+    ),
+    onDeleted: onRemove,
+    deleteIcon: onRemove == null ? null : const Icon(Icons.close, size: 16),
+    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  );
+  if (onTap == null) return chip;
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(16),
+    child: chip,
+  );
+}
 
 // ═══════════════════════════════════════════════════════════
 //  숙소 배정 탭
@@ -120,25 +172,20 @@ class _RoomsAssignTab extends ConsumerWidget {
         if (rooms.isEmpty) {
           return _emptyHint(Icons.meeting_room_outlined, l10n.asnNoRooms);
         }
-        return RefreshIndicator(
+        return SplitBoard(
           onRefresh: () async => refresh(),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: [
-              FilledButton.icon(
-                onPressed: auto,
-                icon: const Icon(Icons.auto_awesome),
-                label: Text(l10n.asnAutoAssign),
-              ),
-              const SizedBox(height: 12),
-              _UnassignedCard(
-                people: unassigned,
-                onTap: (p) => _pickRoom(context, ref, rooms, p, refresh),
-              ),
-              const SizedBox(height: 12),
-              ...rooms.map((room) => _roomCard(context, ref, room, refresh)),
-            ],
+          action: FilledButton.icon(
+            onPressed: auto,
+            icon: const Icon(Icons.auto_awesome),
+            label: Text(l10n.asnAutoAssign),
           ),
+          left: _UnassignedCard(
+            people: unassigned,
+            onTap: (p) => _pickRoom(context, ref, rooms, p, refresh),
+          ),
+          right: [
+            for (final room in rooms) _roomCard(context, ref, room, refresh),
+          ],
         );
       },
     );
@@ -155,6 +202,11 @@ class _RoomsAssignTab extends ConsumerWidget {
     final cap = (room['capacity'] as num).toInt();
     final extra = (room['extra_capacity'] as num?)?.toInt() ?? 0;
     final g = room['gender'] as String;
+    final leaderId = room['leaderRegistrationId'] as String?;
+    final leader = members.firstWhere(
+      (m) => m['registrationId'] == leaderId,
+      orElse: () => const {},
+    );
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -192,6 +244,33 @@ class _RoomsAssignTab extends ConsumerWidget {
                 ),
               ],
             ),
+            // 방장. 현장에서 방에 무슨 일이 생기면 담당자가 먼저 찾는
+            // 사람이다. 아직 없으면 그것도 말해 준다 — 빈 줄로 두면 세울 수
+            // 있다는 것 자체를 모른다.
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.star,
+                    size: 14,
+                    color: leader.isEmpty
+                        ? Colors.grey[400]
+                        : const Color(0xFFC98A16),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    leader.isEmpty
+                        ? l10n.asnNoRoomLeader
+                        : l10n.asnRoomLeaderIs('${leader['name']}'),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: leader.isEmpty ? Colors.grey[600] : null,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             if (members.isNotEmpty) ...[
               const SizedBox(height: 8),
               Wrap(
@@ -209,6 +288,15 @@ class _RoomsAssignTab extends ConsumerWidget {
                           );
                           refresh();
                         },
+                        // 이름을 누르면 방장이 된다. 이미 방장이면 내린다.
+                        isLeader: m['registrationId'] == leaderId,
+                        onTap: () => _setRoomLeader(
+                          context,
+                          room,
+                          m,
+                          isLeader: m['registrationId'] == leaderId,
+                          refresh: refresh,
+                        ),
                       ),
                     )
                     .toList(),
@@ -218,6 +306,43 @@ class _RoomsAssignTab extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// 방장을 세우거나 내린다. 이미 방장인 사람을 다시 누르면 내려간다 —
+  /// 잘못 눌렀을 때 되돌릴 길이 그것뿐이다.
+  Future<void> _setRoomLeader(
+    BuildContext context,
+    Map<String, dynamic> room,
+    Map<String, dynamic> person, {
+    required bool isLeader,
+    required VoidCallback refresh,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ApiClient.setRoomLeader(
+        programId,
+        room['id'] as String,
+        isLeader ? null : person['registrationId'] as String,
+      );
+      refresh();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isLeader
+                  ? l10n.asnNoRoomLeader
+                  : l10n.asnRoomLeaderIs('${person['name']}'),
+            ),
+          ),
+        );
+      }
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Future<void> _pickRoom(
@@ -325,27 +450,24 @@ class _GroupsAssignTab extends ConsumerWidget {
         if (groups.isEmpty) {
           return _emptyHint(Icons.groups_outlined, l10n.asnNoGroups);
         }
-        return RefreshIndicator(
+        return SplitBoard(
           onRefresh: () async => refresh(),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: [
-              FilledButton.icon(
-                onPressed: auto,
-                icon: const Icon(Icons.auto_awesome),
-                label: Text(l10n.asnAutoAssign),
-              ),
-              const SizedBox(height: 12),
-              _UnassignedCard(
-                people: unassigned,
-                onTap: (p) => _pickGroup(context, ref, groups, p, refresh),
-              ),
-              const SizedBox(height: 12),
-              ...groups.map(
-                (group) => _groupCard(context, ref, group, refresh),
-              ),
-            ],
+          action: FilledButton.icon(
+            onPressed: auto,
+            icon: const Icon(Icons.auto_awesome),
+            label: Text(l10n.asnAutoAssign),
           ),
+          left: _UnassignedCard(
+            people: unassigned,
+            onTap: (p) => _pickGroup(context, ref, groups, p, refresh),
+            // 어느 조로 보낼지는 언어로 갈린다. 이름만 있으면 한 명씩
+            // 열어 봐야 한다.
+            languageOf: (p) => _languagesLabel(p['studyLanguages']),
+          ),
+          right: [
+            for (final group in groups)
+              _groupCard(context, ref, group, refresh),
+          ],
         );
       },
     );
@@ -362,6 +484,7 @@ class _GroupsAssignTab extends ConsumerWidget {
     final male = members.where((m) => m['gender'] == 'M').length;
     final female = members.where((m) => m['gender'] == 'F').length;
     final leader = group['leader_name'] as String?;
+    final lang = _languageLabel(group['studyLanguage'] as String?);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -375,9 +498,7 @@ class _GroupsAssignTab extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    leader != null && leader.isNotEmpty
-                        ? '${group['name']} · $leader'
-                        : group['name'] as String,
+                    group['name'] as String,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -386,6 +507,42 @@ class _GroupsAssignTab extends ConsumerWidget {
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
+            ),
+            // 조가 어느 언어로 모이는지(025)와 조장이 누구인지. 사람을 조에
+            // 넣을 때 담당자가 맞춰 보는 것이 이 둘이다.
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                children: [
+                  if (lang.isNotEmpty) ...[
+                    const Icon(Icons.translate, size: 14),
+                    const SizedBox(width: 5),
+                    Text(lang, style: const TextStyle(fontSize: 11.5)),
+                    const SizedBox(width: 12),
+                  ],
+                  Icon(
+                    Icons.star,
+                    size: 14,
+                    color: (leader == null || leader.isEmpty)
+                        ? Colors.grey[400]
+                        : const Color(0xFFC98A16),
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      (leader == null || leader.isEmpty)
+                          ? l10n.asnNoGroupLeader
+                          : leader,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: (leader == null || leader.isEmpty)
+                            ? Colors.grey[600]
+                            : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             if (members.isNotEmpty) ...[
               const SizedBox(height: 8),
@@ -468,7 +625,16 @@ class _GroupsAssignTab extends ConsumerWidget {
 class _UnassignedCard extends StatelessWidget {
   final List<Map<String, dynamic>> people;
   final void Function(Map<String, dynamic>) onTap;
-  const _UnassignedCard({required this.people, required this.onTap});
+
+  /// 이름 옆에 덧붙일 한마디. 말씀조에서는 그 사람이 할 수 있는 언어다 —
+  /// 어느 조로 보낼지가 그것으로 갈린다. 숙소에서는 쓰지 않는다.
+  final String Function(Map<String, dynamic>)? languageOf;
+
+  const _UnassignedCard({
+    required this.people,
+    required this.onTap,
+    this.languageOf,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -529,10 +695,12 @@ class _UnassignedCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    label: Text(
-                      '${p['name']}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
+                    label: Text(() {
+                      final lang = languageOf?.call(p) ?? '';
+                      return lang.isEmpty
+                          ? '${p['name']}'
+                          : '${p['name']} · $lang';
+                    }(), style: const TextStyle(fontSize: 12)),
                     onPressed: () => onTap(p),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
