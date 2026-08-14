@@ -2998,4 +2998,26 @@ class AppLocalizationsKo extends AppLocalizations {
   String setupExtraSeats(int count) {
     return '여유 $count석';
   }
+
+  @override
+  String get dashStatVolunteers => '봉사 자원자';
+
+  @override
+  String dashRoleFilled(int filled, int needed) {
+    return '$filled/$needed';
+  }
+
+  @override
+  String get dashOpenService => '봉사 배정 열기 →';
+
+  @override
+  String svcOffered(int count) {
+    return '등록할 때 자원한 사람 ($count명)';
+  }
+
+  @override
+  String get svcOfferedNote => '할 수 있다고 적어 낸 것입니다. 누구에게 맡길지는 담당자가 정합니다.';
+
+  @override
+  String get svcCanDo => '가능';
 }

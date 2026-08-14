@@ -7,6 +7,7 @@ import 'package:mana/l10n/app_localizations.dart';
 import 'roster_table_screen.dart';
 import 'tour_signups_screen.dart';
 import '../../../core/constants/world_countries.dart';
+import '../../../core/utils/service_role_label.dart';
 import '../../../core/utils/money.dart';
 
 // 리더용 대시보드 - 통계 + 참가자 관리
@@ -369,6 +370,21 @@ class _StatsGrid extends StatelessWidget {
             .cast<Map<String, dynamic>>()
             .toList();
 
+    /// 봉사 줄은 역할 이름과 확정/필요를 보여 준다. 다 채운 역할은
+    /// 크림색을 쓰지 않는다 — 크림색은 "아직 안 끝난" 쪽이다.
+    List<Map<String, dynamic>> serviceRows() => [
+      for (final x in rows('services'))
+        {
+          'name': serviceRoleLabel(l10n, x),
+          'country': null,
+          'detail': l10n.dashRoleFilled(
+            ((x['filled'] ?? 0) as num).toInt(),
+            ((x['needed'] ?? 0) as num).toInt(),
+          ),
+          'submitted': ((x['short'] ?? 0) as num).toInt() == 0,
+        },
+    ];
+
     /// 입금 줄은 상태를 말로 바꾸고, **아직 못 받은 사람**을 크림색으로
     /// 만든다 — 다른 화면과 같은 뜻이다(크림색 = 아직 안 끝난 사람).
     List<Map<String, dynamic>> paymentRows() => [
@@ -457,6 +473,20 @@ class _StatsGrid extends StatelessWidget {
                 onOpen: () =>
                     _openTable(context, programId, RosterView.payments),
               ),
+            // 봉사. 큰 숫자는 **자원자 수** 다 — 등록할 때 "할 수 있다" 고
+            // 적어 낸 사람. 역할을 맡은 것은 아니고, 누구에게 맡길지는
+            // 담당자가 정한다. 미리보기에는 역할별 확정/필요를 보여 준다.
+            _StatCard(
+              label: l10n.dashStatVolunteers,
+              total: n('volunteer_count'),
+              preview: serviceRows(),
+              value: l10n.unitPeople(n('volunteer_count')),
+              openLabel: l10n.dashOpenService,
+              icon: Icons.volunteer_activism_outlined,
+              color: Colors.pink,
+              onOpen: () =>
+                  context.push('/leader/program/$programId/assign?tab=2'),
+            ),
             _StatCard(
               label: l10n.dashStatArrival,
               total: n('arrival_flight_count'),
@@ -500,6 +530,10 @@ class _StatCard extends StatelessWidget {
   /// 미리보기에 다 못 담은 나머지 수. "나머지 n명 보기" 로 쓴다.
   final int total;
 
+  /// 아래 링크 문구를 바꿔야 할 때. 봉사 카드는 표가 아니라 배정 화면을
+  /// 열므로 "표로 보기" 라고 하면 거짓말이 된다.
+  final String? openLabel;
+
   const _StatCard({
     required this.label,
     required this.value,
@@ -509,6 +543,7 @@ class _StatCard extends StatelessWidget {
     this.preview = const [],
     this.tourPreview = const [],
     this.total = 0,
+    this.openLabel,
   });
 
   /// 아직 등록을 완료하지 않은 사람의 배경. 표·투어 명단과 같은 크림색이다.
@@ -655,9 +690,12 @@ class _StatCard extends StatelessWidget {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: Text(
-                  isTour
-                      ? l10n.dashByTour
-                      : (rest > 0 ? l10n.dashMoreCount(rest) : l10n.dashSeeAll),
+                  openLabel ??
+                      (isTour
+                          ? l10n.dashByTour
+                          : (rest > 0
+                                ? l10n.dashMoreCount(rest)
+                                : l10n.dashSeeAll)),
                   style: const TextStyle(fontSize: 12),
                 ),
               ),

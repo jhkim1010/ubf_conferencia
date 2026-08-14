@@ -8,13 +8,23 @@ import 'package:mana/l10n/app_localizations.dart';
 // PRD F4 — 관리자 배정 화면 (숙소 · 말씀조)
 class AssignmentScreen extends StatelessWidget {
   final String programId;
-  const AssignmentScreen({super.key, required this.programId});
+
+  /// 처음 열 탭. 대시보드의 봉사 카드가 곧바로 봉사 탭으로 보낸다 —
+  /// 숙소 탭을 지나 손으로 찾아가게 하면 카드를 누른 뜻이 없다.
+  final int initialTab;
+
+  const AssignmentScreen({
+    super.key,
+    required this.programId,
+    this.initialTab = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return DefaultTabController(
       length: 3,
+      initialIndex: initialTab.clamp(0, 2),
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.asnTitle),

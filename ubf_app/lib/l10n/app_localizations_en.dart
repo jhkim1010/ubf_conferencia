@@ -3065,4 +3065,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String setupExtraSeats(int count) {
     return 'spare $count';
   }
+
+  @override
+  String get dashStatVolunteers => 'Volunteers';
+
+  @override
+  String dashRoleFilled(int filled, int needed) {
+    return '$filled/$needed';
+  }
+
+  @override
+  String get dashOpenService => 'Open the service board →';
+
+  @override
+  String svcOffered(int count) {
+    return 'Offered to help ($count)';
+  }
+
+  @override
+  String get svcOfferedNote =>
+      'What they said they can do. Choosing who does what is still yours.';
+
+  @override
+  String get svcCanDo => 'can do';
 }

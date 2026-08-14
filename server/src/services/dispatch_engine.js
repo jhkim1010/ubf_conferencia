@@ -98,3 +98,87 @@ export function departureDeadline(flightDepartMs, bufferMin = 210) {
   if (typeof flightDepartMs !== 'number' || Number.isNaN(flightDepartMs)) return NaN;
   return flightDepartMs - bufferMin * 60 * 1000;
 }
+
+// ── 필요한 차량 세기 ─────────────────────────────────────────
+//
+// 담당자가 배차에서 처음 묻는 것은 "차를 몇 대 불러야 하나" 인데, 지금까지는
+// 그 답이 화면 어디에도 없었다. 도착 시각은 이미 등록서에 다 있으므로
+// 화면이 먼저 세어 줄 수 있다.
+//
+// **자동 배차와 같은 규칙으로 묶는다** — 같은 공항, 앞사람 시각으로부터
+// windowMin 안. 여기서 센 대수와 자동 배차가 실제로 채우는 대수가 다르면
+// 숫자가 거짓말이 된다.
+//
+// people:    [{ id, airport, timeAt, needsPickup }]
+// runs:      [{ id, airport, capacity }]
+// vanSeats:  새로 만들 밴 한 대의 정원 (부족분을 몇 대로 볼지 계산용)
+// 반환: [{ airport, from, to, personIds, flightsAt, seatsNeeded, seatsHave,
+//         runIds, vansToAdd }]
+export function planRuns({ runs = [], people = [], windowMin = 90, vanSeats = 7 }) {
+  const windowMs = windowMin * 60 * 1000;
+  const seats = Math.max(1, Number(vanSeats) || 1);
+
+  const pickup = people.filter(
+    (p) =>
+      p.needsPickup !== false &&
+      typeof p.timeAt === 'number' &&
+      !Number.isNaN(p.timeAt),
+  );
+
+  const buckets = [];
+  const airports = [...new Set(pickup.map((p) => p.airport))].sort();
+
+  for (const airport of airports) {
+    const queue = pickup
+      .filter((p) => p.airport === airport)
+      .sort((a, b) => a.timeAt - b.timeAt);
+
+    // 앞사람으로부터 windowMs 안이면 같은 묶음. 자동 배차의 anchor 규칙과 같다.
+    let current = null;
+    for (const p of queue) {
+      if (current === null || p.timeAt - current.from > windowMs) {
+        current = { airport, from: p.timeAt, to: p.timeAt, personIds: [], flightsAt: [] };
+        buckets.push(current);
+      }
+      current.to = Math.max(current.to, p.timeAt);
+      current.personIds.push(p.id);
+      if (!current.flightsAt.includes(p.timeAt)) current.flightsAt.push(p.timeAt);
+    }
+  }
+
+  // 이미 만들어 둔 밴을 묶음에 붙인다. 밴에는 시각이 없을 수 있으므로
+  // 공항이 같은 밴을 시각 순서대로 앞 묶음부터 나눠 준다 — 담당자가
+  // 만든 순서가 곧 이른 시각부터라는 뜻이기 때문이다.
+  for (const airport of airports) {
+    const mine = buckets.filter((b) => b.airport === airport);
+    const vans = runs.filter((r) => r.airport === airport);
+    let vi = 0;
+    for (const b of mine) {
+      b.seatsNeeded = b.personIds.length;
+      b.seatsHave = 0;
+      b.runIds = [];
+      while (vi < vans.length && b.seatsHave < b.seatsNeeded) {
+        b.seatsHave += Math.max(0, Number(vans[vi].capacity) || 0);
+        b.runIds.push(vans[vi].id);
+        vi += 1;
+      }
+      const short = Math.max(0, b.seatsNeeded - b.seatsHave);
+      b.vansToAdd = Math.ceil(short / seats);
+    }
+    // 남는 밴은 마지막 묶음에 붙인다. 어디에도 안 붙으면 화면에서 사라진다.
+    if (vi < vans.length && mine.length > 0) {
+      const last = mine[mine.length - 1];
+      for (; vi < vans.length; vi += 1) {
+        last.seatsHave += Math.max(0, Number(vans[vi].capacity) || 0);
+        last.runIds.push(vans[vi].id);
+      }
+      last.vansToAdd = Math.ceil(
+        Math.max(0, last.seatsNeeded - last.seatsHave) / seats,
+      );
+    }
+  }
+
+  // 공항이 없는(아직 밴만 만들어 둔) 경우까지 보여 줄 필요는 없다 —
+  // 태울 사람이 없으면 묶음도 없다.
+  return buckets.sort((a, b) => a.from - b.from || a.airport.localeCompare(b.airport));
+}

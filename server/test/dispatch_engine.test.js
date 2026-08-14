@@ -9,6 +9,7 @@ import {
   autoDispatch,
   departureDeadline,
   isPickupExempt,
+  planRuns,
 } from '../src/services/dispatch_engine.js';
 
 // 테스트 가독성을 위한 시각 헬퍼 (고정 기준 시각 + 분 단위 오프셋)
@@ -274,4 +275,111 @@ describe('isPickupExempt — 국제 수양회 개최국 참가자', () => {
   test('다른 나라 사람은 이름이 비슷해도 빼지 않는다', () => {
     assert.equal(isPickupExempt({ ...intl, country: 'AU', hasFlight: false }), false);
   });
+});
+
+// ── 필요한 차량 세기 (배차 준비) ─────────────────────────────────
+
+// 기존 테스트에 이미 at 이 있어 이름을 달리한다.
+const planAt = (h, m = 0) => Date.UTC(2027, 0, 24, h, m);
+
+test('같은 공항에서 가까운 시각끼리 한 묶음', () => {
+  const people = [
+    { id: 'a', airport: 'EZE', timeAt: planAt(6, 10) },
+    { id: 'b', airport: 'EZE', timeAt: planAt(7, 20) },
+    { id: 'c', airport: 'EZE', timeAt: planAt(14, 20) },
+  ];
+  const buckets = planRuns({ runs: [], people, windowMin: 90, vanSeats: 7 });
+  assert.equal(buckets.length, 2);
+  assert.deepEqual(buckets[0].personIds, ['a', 'b']);
+  assert.deepEqual(buckets[1].personIds, ['c']);
+});
+
+test('공항이 다르면 시각이 겹쳐도 안 묶는다', () => {
+  const people = [
+    { id: 'a', airport: 'EZE', timeAt: planAt(9) },
+    { id: 'b', airport: 'AEP', timeAt: planAt(9) },
+  ];
+  const buckets = planRuns({ runs: [], people });
+  assert.equal(buckets.length, 2);
+});
+
+test('필요한 대수를 센다', () => {
+  // 11명, 밴 7인 → 2대.
+  const people = Array.from({ length: 11 }, (_, i) => ({
+    id: `p${i}`, airport: 'EZE', timeAt: planAt(6) + i * 60000,
+  }));
+  const [b] = planRuns({ runs: [], people, vanSeats: 7 });
+  assert.equal(b.seatsNeeded, 11);
+  assert.equal(b.seatsHave, 0);
+  assert.equal(b.vansToAdd, 2);
+});
+
+test('이미 만든 밴만큼 뺀다', () => {
+  const people = Array.from({ length: 11 }, (_, i) => ({
+    id: `p${i}`, airport: 'EZE', timeAt: planAt(6) + i * 60000,
+  }));
+  const [b] = planRuns({
+    runs: [{ id: 'r1', airport: 'EZE', capacity: 7 }], people, vanSeats: 7,
+  });
+  assert.equal(b.seatsHave, 7);
+  assert.equal(b.vansToAdd, 1);
+  assert.deepEqual(b.runIds, ['r1']);
+});
+
+test('자리가 충분하면 더 만들 것이 없다', () => {
+  const people = [
+    { id: 'a', airport: 'EZE', timeAt: planAt(6) },
+    { id: 'b', airport: 'EZE', timeAt: planAt(6, 30) },
+  ];
+  const [b] = planRuns({
+    runs: [{ id: 'r1', airport: 'EZE', capacity: 7 }], people, vanSeats: 7,
+  });
+  assert.equal(b.vansToAdd, 0);
+});
+
+test('자차·시각 미상은 세지 않는다', () => {
+  // 태워 달라고 하지 않은 사람 때문에 차를 더 부르면 안 된다.
+  const people = [
+    { id: 'a', airport: 'EZE', timeAt: planAt(6) },
+    { id: 'b', airport: 'EZE', timeAt: planAt(6, 10), needsPickup: false },
+    { id: 'c', airport: 'EZE', timeAt: null },
+  ];
+  const [b] = planRuns({ runs: [], people, vanSeats: 7 });
+  assert.deepEqual(b.personIds, ['a']);
+});
+
+test('밴이 남으면 마지막 묶음에 붙는다', () => {
+  // 어디에도 안 붙으면 화면에서 그 밴이 사라진다.
+  const people = [{ id: 'a', airport: 'EZE', timeAt: planAt(6) }];
+  const [b] = planRuns({
+    runs: [
+      { id: 'r1', airport: 'EZE', capacity: 7 },
+      { id: 'r2', airport: 'EZE', capacity: 4 },
+    ],
+    people,
+  });
+  assert.deepEqual(b.runIds, ['r1', 'r2']);
+  assert.equal(b.seatsHave, 11);
+});
+
+test('자동 배차가 실제로 채우는 대수와 어긋나지 않는다', () => {
+  // 여기서 센 대수만큼 밴을 만들면 자동 배차에 미배차가 남지 않아야 한다.
+  const people = Array.from({ length: 11 }, (_, i) => ({
+    id: `p${i}`, airport: 'EZE', timeAt: planAt(6) + i * 5 * 60000,
+  }));
+  const [plan] = planRuns({ runs: [], people, windowMin: 90, vanSeats: 7 });
+  const runs = Array.from({ length: plan.vansToAdd }, (_, i) => ({
+    id: `r${i}`, airport: 'EZE', capacity: 7,
+  }));
+  const { unassigned } = autoDispatch({ runs, people, windowMin: 90 });
+  assert.deepEqual(unassigned, []);
+});
+
+test('시각 순으로 나온다', () => {
+  const people = [
+    { id: 'late', airport: 'EZE', timeAt: planAt(20) },
+    { id: 'early', airport: 'AEP', timeAt: planAt(6) },
+  ];
+  const buckets = planRuns({ runs: [], people });
+  assert.deepEqual(buckets.map((b) => b.personIds[0]), ['early', 'late']);
 });

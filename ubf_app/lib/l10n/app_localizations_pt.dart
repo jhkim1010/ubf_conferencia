@@ -3077,4 +3077,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String setupExtraSeats(int count) {
     return 'extra $count';
   }
+
+  @override
+  String get dashStatVolunteers => 'Voluntários';
+
+  @override
+  String dashRoleFilled(int filled, int needed) {
+    return '$filled/$needed';
+  }
+
+  @override
+  String get dashOpenService => 'Abrir o painel de serviço →';
+
+  @override
+  String svcOffered(int count) {
+    return 'Se ofereceram ($count)';
+  }
+
+  @override
+  String get svcOfferedNote =>
+      'O que disseram que podem fazer. Quem faz o quê continua sendo sua decisão.';
+
+  @override
+  String get svcCanDo => 'pode';
 }

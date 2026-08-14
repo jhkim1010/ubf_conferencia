@@ -39,3 +39,27 @@ String serviceStatusLabel(AppLocalizations l10n, String? status) =>
       'declined' => l10n.svcStatusDeclined,
       _ => '',
     };
+
+/// 등록할 때 적어 낸 자원(009)의 이름.
+///
+/// **역할이 아니다.** "할 수 있다" 고 적어 낸 것일 뿐이고, 누구에게 무엇을
+/// 맡길지는 담당자가 정한다. 그래서 역할 이름과 섞지 않고 따로 둔다.
+String volunteerResourceLabel(AppLocalizations l10n, String key) =>
+    switch (key) {
+      'piano' => l10n.volPiano,
+      'guitar' => l10n.volGuitar,
+      'bass' => l10n.volBass,
+      'drums' => l10n.volDrums,
+      'violin' => l10n.volViolin,
+      'worship_lead' => l10n.volWorshipLead,
+      'vocals' => l10n.volVocals,
+      'translation' => l10n.volTranslation,
+      'photography' => l10n.volPhotography,
+      'sound' => l10n.volSound,
+      'design' => l10n.volDesign,
+      'it' => l10n.volIt,
+      'childcare' => l10n.volChildcare,
+      'cooking' => l10n.volCooking,
+      'driving' => l10n.volDriving,
+      _ => key,
+    };

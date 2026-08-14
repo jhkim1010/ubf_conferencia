@@ -5609,6 +5609,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'spare {count}'**
   String setupExtraSeats(int count);
+
+  /// No description provided for @dashStatVolunteers.
+  ///
+  /// In en, this message translates to:
+  /// **'Volunteers'**
+  String get dashStatVolunteers;
+
+  /// No description provided for @dashRoleFilled.
+  ///
+  /// In en, this message translates to:
+  /// **'{filled}/{needed}'**
+  String dashRoleFilled(int filled, int needed);
+
+  /// No description provided for @dashOpenService.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the service board →'**
+  String get dashOpenService;
+
+  /// No description provided for @svcOffered.
+  ///
+  /// In en, this message translates to:
+  /// **'Offered to help ({count})'**
+  String svcOffered(int count);
+
+  /// No description provided for @svcOfferedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'What they said they can do. Choosing who does what is still yours.'**
+  String get svcOfferedNote;
+
+  /// No description provided for @svcCanDo.
+  ///
+  /// In en, this message translates to:
+  /// **'can do'**
+  String get svcCanDo;
 }
 
 class _AppLocalizationsDelegate

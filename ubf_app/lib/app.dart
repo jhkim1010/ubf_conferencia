@@ -175,8 +175,10 @@ class _UbfAppState extends ConsumerState<UbfApp> {
         ),
         GoRoute(
           path: '/leader/program/:id/assign',
-          builder: (_, s) =>
-              AssignmentScreen(programId: s.pathParameters['id']!),
+          builder: (_, s) => AssignmentScreen(
+            programId: s.pathParameters['id']!,
+            initialTab: int.tryParse(s.uri.queryParameters['tab'] ?? '') ?? 0,
+          ),
         ),
         GoRoute(
           path: '/leader/program/:id/dispatch',

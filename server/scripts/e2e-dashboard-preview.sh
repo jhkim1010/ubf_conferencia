@@ -126,6 +126,26 @@ eq "맨 위가 그대로" '정바울' "$(STATS | jq_ 'r.preview.recent[0].name')
 eq "  숫자도 그대로" '5'     "$(STATS | jq_ 'r.total_registrations')"
 
 echo
+echo "── 봉사 ──"
+VT=$(login "prv-vol-$$@test.local")
+curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $VT" \
+  -H 'Content-Type: application/json' \
+  -d '{"realName":"한자원","country":"KR","gender":"F","age":28,
+       "volunteerResources":["driving","cooking"]}' > /dev/null
+eq "자원자 수를 센다" '1' "$(STATS | jq_ 'r.volunteer_count')"
+# 역할 구성을 정하면 부족이 보인다.
+curl -s -o /dev/null -X PUT "$API/service-signups/$P/roles" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' \
+  -d '{"roles":[{"key":"pickup","enabled":true,"needed":3},
+                {"key":"meal_prep","enabled":true,"needed":1}]}'
+eq "모자란 역할이 먼저 온다" 'pickup' "$(STATS | jq_ 'r.preview.services[0].key')"
+eq "  필요 인원이 함께"     '3'      "$(STATS | jq_ 'r.preview.services[0].needed')"
+eq "  아직 아무도 없다"     '0'      "$(STATS | jq_ 'r.preview.services[0].filled')"
+# 자원했다고 역할이 채워지면 안 된다.
+eq "자원만으로는 역할이 안 찬다" '0' \
+   "$(STATS | jq_ 'r.preview.services.reduce((n, x) => n + x.filled, 0)')"
+
+echo
 echo "── 입금 카드를 보여 줄지 ──"
 # 전액을 현장에서 받는 수양회에는 늘 0 인 칸 두 개가 자리만 차지한다.
 eq "기본은 보여 준다" 'true' "$(STATS | jq_ 'r.needs_payment_card')"

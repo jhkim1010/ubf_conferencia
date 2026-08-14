@@ -1890,5 +1890,28 @@
         "type": "int"
       }
     }
-  }
+  },
+  "dashStatVolunteers": "Volunteers",
+  "dashRoleFilled": "{filled}/{needed}",
+  "@dashRoleFilled": {
+    "placeholders": {
+      "filled": {
+        "type": "int"
+      },
+      "needed": {
+        "type": "int"
+      }
+    }
+  },
+  "dashOpenService": "Open the service board →",
+  "svcOffered": "Offered to help ({count})",
+  "@svcOffered": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "svcOfferedNote": "What they said they can do. Choosing who does what is still yours.",
+  "svcCanDo": "can do"
 }

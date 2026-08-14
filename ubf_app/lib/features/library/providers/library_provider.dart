@@ -8,7 +8,7 @@ import '../../../core/utils/api_client.dart';
 // 참가자 화면에도 그것이 남는다.
 typedef LibraryArgs = ({String programId, bool all});
 
-final programLibraryProvider =
-    FutureProvider.family<List<dynamic>, LibraryArgs>(
+final programLibraryProvider = FutureProvider.autoDispose
+    .family<List<dynamic>, LibraryArgs>(
       (_, args) => ApiClient.getLibrary(args.programId, all: args.all),
     );

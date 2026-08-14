@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
 import { normalizeOptions } from '../services/option_media.js';
+import { rolesOf, tallyRole, sortRoles } from '../services/service_roles.js';
 import {
   contactsOf,
   contactsFromBody,
@@ -701,6 +702,11 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
         -- 규칙으로 세면 어느 쪽도 믿을 수 없다.
         COUNT(r.id) FILTER (WHERE has_food_restriction(r.food_requirements))
           AS food_restriction_count,
+        -- 등록할 때 "제가 할 수 있는 것" 을 적어 낸 사람(009). 역할을 맡은
+        -- 것이 아니라 자원한 것뿐이다 — 고르는 것은 담당자의 몫이다.
+        COUNT(r.id) FILTER (
+          WHERE COALESCE(array_length(r.volunteer_resources, 1), 0) > 0
+        ) AS volunteer_count,
         COUNT(r.id) FILTER (WHERE flight_confirmed(r.arrival_flight)) AS arrival_flight_count,
         COUNT(r.id) FILTER (WHERE flight_confirmed(r.departure_flight)) AS departure_flight_count,
         COUNT(pay.id) FILTER (WHERE pay.status = 'pending') AS pending_payment_count,
@@ -724,6 +730,25 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
     // 둘, 같은 어긋남이 또 생긴다 — 식사 제한과 투어에서 이미 두 번 겪었다.
     const id = req.params.id;
     const LIMIT = 3;
+
+    // 봉사 역할별 현황. 역할 구성은 프로그램에 저장돼 있고(039), 비어 있으면
+    // 기본 열세 개를 쓴다.
+    const [progRow] = await sql`
+      SELECT service_options FROM programs WHERE id = ${id}
+    `;
+    const serviceSignups = await sql`
+      SELECT ss.service_key, ss.status
+      FROM service_signups ss
+      JOIN registrations r ON r.id = ss.registration_id
+      WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+    `;
+    const serviceRoles = sortRoles(
+      rolesOf(progRow?.service_options).filter((x) => x.enabled !== false),
+      serviceSignups,
+    )
+      .map((role) => ({ ...role, ...tallyRole(role, serviceSignups) }))
+      .filter((x) => x.needed > 0 || x.filled > 0)
+      .slice(0, LIMIT);
 
     const [recent, tours, meals, arrival, payments] = await Promise.all([
       sql`
@@ -782,7 +807,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
       // 입금 카드를 보여 줄지 여기서 정한다. 앱이 따로 판단하면 규칙이
       // 두 곳에 생긴다.
       needs_payment_card: needsPaymentCard(stats ?? {}),
-      preview: { recent, tours, meals, arrival, payments },
+      preview: { recent, tours, meals, arrival, payments, services: serviceRoles },
     });
   } catch (err) {
     console.error('통계 조회 오류:', err);

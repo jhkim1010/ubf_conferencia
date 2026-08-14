@@ -917,5 +917,11 @@
   "setupExtraBed": "Lugar extra",
   "setupExtraBedHint": "Cabe mais uma pessoa. Só é usada quando as camas normais acabam.",
   "asnRoomWithExtra": "{used}/{cap} (+{extra})",
-  "setupExtraSeats": "extra {count}"
+  "setupExtraSeats": "extra {count}",
+  "dashStatVolunteers": "Voluntários",
+  "dashRoleFilled": "{filled}/{needed}",
+  "dashOpenService": "Abrir o painel de serviço →",
+  "svcOffered": "Se ofereceram ({count})",
+  "svcOfferedNote": "O que disseram que podem fazer. Quem faz o quê continua sendo sua decisão.",
+  "svcCanDo": "pode"
 }

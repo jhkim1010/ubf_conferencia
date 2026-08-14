@@ -221,6 +221,30 @@ eq "  승인 필요 여부도 함께" 'true' \
    "$(MINE | jq_ "r.find(x => x.service_key === 'group_study_leader').requires_approval")"
 
 echo
+echo "── 등록할 때 적어 낸 자원 ──"
+# 자원은 역할이 아니다. 운전할 수 있다고 픽업 담당이 되는 것이 아니라,
+# 담당자가 보고 고른다. 그래서 역할 목록과 섞지 않고 따로 온다.
+VT=$(login "svc-vol-$$@test.local")
+curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $VT" \
+  -H 'Content-Type: application/json' \
+  --data-binary '{"realName":"한자원","country":"KR","gender":"F","age":28,
+       "volunteerResources":["driving","cooking"],"volunteerNote":"승합차 운전 가능"}' > /dev/null
+eq "자원자가 따로 나온다" '한자원' "$(BOARD | jq_ "r.volunteers.map(v => v.real_name).join()")"
+eq "  무엇을 할 수 있는지도" 'driving,cooking' \
+   "$(BOARD | jq_ "r.volunteers[0].resources.join()")"
+eq "  적어 둔 말도"         '승합차 운전 가능' "$(BOARD | jq_ 'r.volunteers[0].note')"
+# 자원했다고 역할에 들어가면 안 된다 — 고르는 것은 담당자의 일이다.
+eq "자원만으로는 역할에 안 들어간다" '0' \
+   "$(BOARD | jq_ "r.roles.filter(x => x.people.some(p => p.real_name === '한자원')).length")"
+# 반대로, 자원하지 않은 사람도 지명할 수 있어야 한다. 지명은 부탁이고
+# 본인이 수락해야 확정이다 — 자원 여부와는 상관이 없다.
+VR=$(curl -s "$API/registrations/$P/me" -H "Authorization: Bearer $VT" | jq_ "r.id")
+SV=$(inv "$VR" pickup | jq_ "r.id")
+eq "자원한 사람도 지명은 부탁일 뿐" 'invited' \
+   "$(BOARD | jq_ "r.roles.find(x => x.key === 'pickup').people.find(p => p.real_name === '한자원').status")"
+eq "  수락해야 확정" 'confirmed' "$(resp "$SV" "$VT" true | jq_ 'r.status')"
+
+echo
 echo "── 이름 없는 등록은 여기에도 안 나온다 ──"
 BLANK=$(login "svc-blank-$$@test.local")
 curl -s -X PUT "$API/registrations/$P/me" -H "Authorization: Bearer $BLANK" \

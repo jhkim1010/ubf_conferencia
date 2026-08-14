@@ -289,8 +289,22 @@ router.get(
         (r) => r.enabled !== false,
       );
 
+      // 등록할 때 적어 낸 자원(009). **역할이 아니다** — 할 수 있다고 적어
+      // 냈을 뿐이고, 누구에게 무엇을 맡길지는 담당자가 정한다. 그래서 역할
+      // 목록과 섞지 않고 따로 내보낸다.
+      const volunteers = await sql`
+        SELECT r.id AS registration_id, r.real_name, r.country, r.branch,
+               r.volunteer_resources AS resources, r.volunteer_note AS note
+        FROM registrations r
+        WHERE r.program_id = ${programId}
+          AND has_registrant_name(r.real_name)
+          AND COALESCE(array_length(r.volunteer_resources, 1), 0) > 0
+        ORDER BY r.real_name
+      `;
+
       res.json({
         program: { id: program.id, name: program.name },
+        volunteers,
         // 모자란 역할이 위로 온다 — 담당자가 화면을 열자마자 할 일을 본다.
         roles: sortRoles(roles, signups).map((role) => ({
           ...role,

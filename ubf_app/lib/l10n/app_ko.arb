@@ -931,5 +931,11 @@
   "setupExtraBed": "여유 자리",
   "setupExtraBedHint": "한 명 더 들어갈 수 있습니다. 정원이 다 찼을 때에만 씁니다.",
   "asnRoomWithExtra": "{used}/{cap} (+{extra})",
-  "setupExtraSeats": "여유 {count}석"
+  "setupExtraSeats": "여유 {count}석",
+  "dashStatVolunteers": "봉사 자원자",
+  "dashRoleFilled": "{filled}/{needed}",
+  "dashOpenService": "봉사 배정 열기 →",
+  "svcOffered": "등록할 때 자원한 사람 ({count}명)",
+  "svcOfferedNote": "할 수 있다고 적어 낸 것입니다. 누구에게 맡길지는 담당자가 정합니다.",
+  "svcCanDo": "가능"
 }

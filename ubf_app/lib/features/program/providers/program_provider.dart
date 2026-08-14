@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/api_client.dart';
 
 // 단일 프로그램 (UUID로 조회)
-final programByIdProvider =
-    FutureProvider.family<Map<String, dynamic>?, String>(
+final programByIdProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>?, String>(
       (_, programId) => ApiClient.getProgram(programId),
     );
 
@@ -13,26 +13,26 @@ final leaderProgramsProvider = FutureProvider<List<dynamic>>(
 );
 
 // 대시보드 통계
-final programStatsProvider =
-    FutureProvider.family<Map<String, dynamic>?, String>(
+final programStatsProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>?, String>(
       (_, programId) => ApiClient.getProgramStats(programId),
     );
 
 // 준비 현황 (A003) — 준비 항목 + 국내/해외 코호트 + 막힌 사람
-final programReadinessProvider =
-    FutureProvider.family<Map<String, dynamic>?, String>(
+final programReadinessProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>?, String>(
       (_, programId) => ApiClient.getProgramReadiness(programId),
     );
 
 // 식사 제한 명단 — 준비 현황의 식사 카드를 두 번 누르면 열린다
 // 투어별 신청 상황. 대시보드의 "등록 완료" 카드를 대신한다.
-final programTourSignupsProvider =
-    FutureProvider.family<Map<String, dynamic>?, String>(
+final programTourSignupsProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>?, String>(
       (_, programId) => ApiClient.getTourSignups(programId),
     );
 
-final programMealsProvider =
-    FutureProvider.family<Map<String, dynamic>?, String>(
+final programMealsProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>?, String>(
       (_, programId) => ApiClient.getProgramMeals(programId),
     );
 
@@ -43,8 +43,8 @@ final chapterProgramsProvider = FutureProvider<List<dynamic>>(
 );
 
 // 참가자 전체 목록
-final programRegistrationsProvider =
-    FutureProvider.family<List<dynamic>, String>(
+final programRegistrationsProvider = FutureProvider.autoDispose
+    .family<List<dynamic>, String>(
       (_, programId) => ApiClient.getProgramRegistrations(programId),
     );
 
@@ -125,6 +125,7 @@ class ProgramService {
 }
 
 // 이 수양회를 관리할 사람. 만든 사람도 함께 온다(is_owner).
-final programAdminsProvider = FutureProvider.family<List<dynamic>, String>(
-  (_, programId) => ApiClient.getProgramAdmins(programId),
-);
+final programAdminsProvider = FutureProvider.autoDispose
+    .family<List<dynamic>, String>(
+      (_, programId) => ApiClient.getProgramAdmins(programId),
+    );

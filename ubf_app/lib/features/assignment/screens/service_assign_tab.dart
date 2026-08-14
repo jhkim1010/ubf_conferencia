@@ -44,6 +44,12 @@ class ServiceAssignTab extends ConsumerWidget {
                 label: Text(l10n.svcEditRoles),
               ),
               const SizedBox(height: 12),
+              // 등록할 때 자원한 사람. 지금까지 이 정보가 어느 화면에도
+              // 나오지 않아, 누가 무엇을 할 수 있는지 알 길이 없었다.
+              _Volunteers(
+                people: ((data?['volunteers'] as List?) ?? const [])
+                    .cast<Map<String, dynamic>>(),
+              ),
               if (roles.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 40),
@@ -607,6 +613,122 @@ class _RoleConfigDialogState extends State<_RoleConfigDialog> {
         else
           const SizedBox(width: 40),
       ],
+    );
+  }
+}
+
+/// 등록할 때 "할 수 있다" 고 적어 낸 사람들.
+///
+/// 역할 목록과 섞지 않는다 — 운전할 수 있다고 픽업 담당이 되는 것이 아니다.
+/// 담당자가 보고 고르라고 보여 주는 것이다.
+class _Volunteers extends StatefulWidget {
+  final List<Map<String, dynamic>> people;
+
+  const _Volunteers({required this.people});
+
+  @override
+  State<_Volunteers> createState() => _VolunteersState();
+}
+
+class _VolunteersState extends State<_Volunteers> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    if (widget.people.isEmpty) return const SizedBox.shrink();
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.emoji_people_outlined, size: 20),
+            title: Text(
+              l10n.svcOffered(widget.people.length),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
+            subtitle: Text(
+              l10n.svcOfferedNote,
+              style: const TextStyle(fontSize: 11.5),
+            ),
+            trailing: Icon(_open ? Icons.expand_less : Icons.expand_more),
+            onTap: () => setState(() => _open = !_open),
+          ),
+          if (_open)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final p in widget.people)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${p['real_name'] ?? ''}',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                [
+                                  WorldCountries.display(
+                                        p['country'] as String?,
+                                      ) ??
+                                      '',
+                                  '${p['branch'] ?? ''}',
+                                ].where((s) => s.isNotEmpty).join(' · '),
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 2,
+                            children: [
+                              for (final r
+                                  in ((p['resources'] as List?) ?? const []))
+                                Chip(
+                                  label: Text(
+                                    volunteerResourceLabel(l10n, '$r'),
+                                    style: const TextStyle(fontSize: 11),
+                                  ),
+                                  visualDensity: VisualDensity.compact,
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  padding: EdgeInsets.zero,
+                                ),
+                            ],
+                          ),
+                          if ('${p['note'] ?? ''}'.isNotEmpty)
+                            Text(
+                              '${p['note']}',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
