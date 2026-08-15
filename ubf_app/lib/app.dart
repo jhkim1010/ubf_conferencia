@@ -244,6 +244,21 @@ class _UbfAppState extends ConsumerState<UbfApp> {
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       theme: AppTheme.lightTheme,
       routerConfig: _router,
+      // 화면 양옆에 숨 쉴 자리. 넓은 화면에서 목록이 가장자리에 딱 붙으면
+      // 줄 끝의 버튼(편집·삭제)이 잘려 보이거나 가장자리와 구별되지 않는다.
+      //
+      // **한 곳에서 준다.** 화면마다 padding 을 늘리면 어떤 화면은 16, 어떤
+      // 화면은 20 이 되어 창을 옮길 때마다 들쭉날쭉해진다.
+      //
+      // 배경색을 함께 칠하는 이유는, 여백만 두면 그 자리에 아무것도 없어
+      // 화면 밖이 비쳐 보이기 때문이다.
+      builder: (context, child) => ColoredBox(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: child,
+        ),
+      ),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
