@@ -3422,4 +3422,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get dashLedgerSub => 'Apoios, gastos e o que sobra';
+
+  @override
+  String get ledgerAddExpense => 'Anotar gasto';
+
+  @override
+  String get ledgerAddIncome => 'Anotar apoio';
+
+  @override
+  String ledgerCount(int count) {
+    return '$count lançamentos';
+  }
 }

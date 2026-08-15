@@ -3339,4 +3339,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get dashLedgerSub => '지원과 지출, 그리고 남은 돈';
+
+  @override
+  String get ledgerAddExpense => '지출 적기';
+
+  @override
+  String get ledgerAddIncome => '후원금 적기';
+
+  @override
+  String ledgerCount(int count) {
+    return '$count건';
+  }
 }

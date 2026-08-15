@@ -6233,6 +6233,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Support, spending and what is left'**
   String get dashLedgerSub;
+
+  /// No description provided for @ledgerAddExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Record spending'**
+  String get ledgerAddExpense;
+
+  /// No description provided for @ledgerAddIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Record support'**
+  String get ledgerAddIncome;
+
+  /// 장부 줄 수
+  ///
+  /// In en, this message translates to:
+  /// **'{count} entries'**
+  String ledgerCount(int count);
 }
 
 class _AppLocalizationsDelegate

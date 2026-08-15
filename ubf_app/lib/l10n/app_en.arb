@@ -2229,5 +2229,16 @@
       }
     }
   },
-  "dashLedgerSub": "Support, spending and what is left"
+  "dashLedgerSub": "Support, spending and what is left",
+  "ledgerAddExpense": "Record spending",
+  "ledgerAddIncome": "Record support",
+  "ledgerCount": "{count} entries",
+  "@ledgerCount": {
+    "description": "장부 줄 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

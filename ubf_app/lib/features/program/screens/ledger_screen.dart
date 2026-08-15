@@ -30,11 +30,6 @@ class LedgerScreen extends ConsumerWidget {
     );
     return Scaffold(
       appBar: AppBar(title: Text(l10n.ledgerTitle)),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _edit(context, ref, currency, null),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.ledgerAdd),
-      ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(l10n.commonErrorDetail('$e'))),
@@ -42,6 +37,34 @@ class LedgerScreen extends ConsumerWidget {
           final entries = ((data['entries'] as List?) ?? const [])
               .cast<Map<String, dynamic>>();
           final sum = (data['summary'] as Map?) ?? const {};
+
+          // 무엇을 적는지가 버튼에 있어야 한다. "한 줄 적기" 하나면 누른
+          // 뒤에야 갈래를 고르게 되고, 그 한 걸음에서 갈래를 잘못 두고
+          // 저장하는 일이 생긴다.
+          final buttons = Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () =>
+                      _edit(context, ref, currency, null, kind: 'expense'),
+                  icon: const Icon(Icons.north_east, size: 18),
+                  label: Text(l10n.ledgerAddExpense),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.green[700],
+                  ),
+                  onPressed: () =>
+                      _edit(context, ref, currency, null, kind: 'income'),
+                  icon: const Icon(Icons.south_west, size: 18),
+                  label: Text(l10n.ledgerAddIncome),
+                ),
+              ),
+            ],
+          );
 
           final entryList = _Entries(
             entries: entries,
@@ -57,8 +80,16 @@ class LedgerScreen extends ConsumerWidget {
               // 합계가 화면 밖으로 밀려나면 왜 적는지를 잊는다.
               if (box.maxWidth < 900) {
                 return ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
-                  children: [summary, const SizedBox(height: 12), entryList],
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                  children: [
+                    summary,
+                    const SizedBox(height: 12),
+                    buttons,
+                    const SizedBox(height: 12),
+                    // 몇 줄이든 다 보여 준다 — 장부에서 접어 둘 줄은 없다.
+                    _Count(n: entries.length),
+                    entryList,
+                  ],
                 );
               }
               return Row(
@@ -73,8 +104,13 @@ class LedgerScreen extends ConsumerWidget {
                   ),
                   Expanded(
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(8, 12, 16, 96),
-                      children: [entryList],
+                      padding: const EdgeInsets.fromLTRB(8, 12, 16, 24),
+                      children: [
+                        buttons,
+                        const SizedBox(height: 12),
+                        _Count(n: entries.length),
+                        entryList,
+                      ],
                     ),
                   ),
                 ],
@@ -90,10 +126,11 @@ class LedgerScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     Currency currency,
-    Map<String, dynamic>? entry,
-  ) async {
+    Map<String, dynamic>? entry, {
+    String? kind,
+  }) async {
     final l10n = AppLocalizations.of(context)!;
-    var kind = (entry?['kind'] as String?) ?? 'expense';
+    var kind0 = (entry?['kind'] as String?) ?? kind ?? 'expense';
     final titleCtrl = TextEditingController(text: '${entry?['title'] ?? ''}');
     final noteCtrl = TextEditingController(text: '${entry?['note'] ?? ''}');
     final amountCtrl = TextEditingController(
@@ -106,7 +143,13 @@ class LedgerScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocal) => AlertDialog(
-          title: Text(entry == null ? l10n.ledgerAdd : l10n.actionEdit),
+          title: Text(
+            entry == null
+                ? (kind0 == 'income'
+                      ? l10n.ledgerAddIncome
+                      : l10n.ledgerAddExpense)
+                : l10n.actionEdit,
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -123,8 +166,8 @@ class LedgerScreen extends ConsumerWidget {
                     ])
                       ChoiceChip(
                         label: Text(o.label),
-                        selected: kind == o.key,
-                        onSelected: (_) => setLocal(() => kind = o.key),
+                        selected: kind0 == o.key,
+                        onSelected: (_) => setLocal(() => kind0 = o.key),
                       ),
                   ],
                 ),
@@ -177,7 +220,7 @@ class LedgerScreen extends ConsumerWidget {
         await ApiClient.deleteLedgerEntry(programId, entry['id'] as String);
       } else if (action == 'save') {
         final body = {
-          'kind': kind,
+          'kind': kind0,
           'title': titleCtrl.text.trim(),
           'amount': int.tryParse(amountCtrl.text.trim()) ?? 0,
           'note': noteCtrl.text.trim(),
@@ -329,6 +372,26 @@ class _Entries extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// 몇 줄인지. 장부는 접어 두지 않고 다 보여 주므로, 몇 개인지는 위에
+/// 적어 둔다.
+class _Count extends StatelessWidget {
+  final int n;
+
+  const _Count({required this.n});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        l10n.ledgerCount(n),
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+      ),
     );
   }
 }

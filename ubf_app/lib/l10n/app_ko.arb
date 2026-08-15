@@ -1035,5 +1035,8 @@
   "ledgerBalance": "지금 남은 돈",
   "ledgerExpected": "다 걷히면",
   "ledgerOwedNote": "아직 받을 참가비 {amount}",
-  "dashLedgerSub": "지원과 지출, 그리고 남은 돈"
+  "dashLedgerSub": "지원과 지출, 그리고 남은 돈",
+  "ledgerAddExpense": "지출 적기",
+  "ledgerAddIncome": "후원금 적기",
+  "ledgerCount": "{count}건"
 }

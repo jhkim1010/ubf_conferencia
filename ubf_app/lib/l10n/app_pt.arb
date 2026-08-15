@@ -1021,5 +1021,8 @@
   "ledgerBalance": "Em caixa",
   "ledgerExpected": "Se todos pagarem",
   "ledgerOwedNote": "Falta receber {amount}",
-  "dashLedgerSub": "Apoios, gastos e o que sobra"
+  "dashLedgerSub": "Apoios, gastos e o que sobra",
+  "ledgerAddExpense": "Anotar gasto",
+  "ledgerAddIncome": "Anotar apoio",
+  "ledgerCount": "{count} lançamentos"
 }
