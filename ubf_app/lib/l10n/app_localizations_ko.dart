@@ -3268,4 +3268,28 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get annPickService => '어느 팀에 보낼까요?';
+
+  @override
+  String get payUnpaid => '미납';
+
+  @override
+  String get payPartial => '부분납금';
+
+  @override
+  String get payPaid => '완납';
+
+  @override
+  String get payPending => '대기';
+
+  @override
+  String get tblAmountPaid => '받은 금액';
+
+  @override
+  String get sumWanting => '총 참가 희망자';
+
+  @override
+  String get sumCollected => '지금까지 수금';
+
+  @override
+  String get sumRemaining => '아직 받을 돈';
 }

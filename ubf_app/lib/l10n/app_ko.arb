@@ -1012,5 +1012,13 @@
   "tblAmountDue": "내야 할 금액",
   "tblSubmittedHint": "종이로 대신 받아 적었으면 켜 주십시오",
   "annToService": "봉사팀",
-  "annPickService": "어느 팀에 보낼까요?"
+  "annPickService": "어느 팀에 보낼까요?",
+  "payUnpaid": "미납",
+  "payPartial": "부분납금",
+  "payPaid": "완납",
+  "payPending": "대기",
+  "tblAmountPaid": "받은 금액",
+  "sumWanting": "총 참가 희망자",
+  "sumCollected": "지금까지 수금",
+  "sumRemaining": "아직 받을 돈"
 }

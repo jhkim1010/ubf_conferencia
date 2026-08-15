@@ -6,6 +6,7 @@ import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/utils/payment_state.dart';
 import '../../../core/utils/table_export.dart';
 import '../../program/providers/program_provider.dart';
 
@@ -69,10 +70,14 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
       RosterView.payments => l10n.colPayment,
       _ => l10n.colStatus,
     },
+    // 전체 명단에서는 입금도 한 칸으로 본다. 돈은 담당자가 가장 자주
+    // 확인하는 것인데 지금까지 다른 표로 넘어가야 보였다.
+    if (widget.view == RosterView.all) l10n.colPayment,
   ];
 
   List<double> get _flex => switch (widget.view) {
     RosterView.meals => [0.5, 2.0, 1.3, 1.3, 0.9, 3.6],
+    RosterView.all => [0.5, 2.2, 1.4, 1.5, 1.0, 1.2, 2.0],
     _ => [0.5, 2.2, 1.4, 1.5, 1.0, 2.0],
   };
 
@@ -159,8 +164,32 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
             '${data[i]['age'] ?? ''}',
           ].where((s) => s.isNotEmpty).join(' / '),
           last(data[i]),
+          if (widget.view == RosterView.all) _payCell(l10n, data[i], currency),
         ],
     ];
+  }
+
+  /// 입금 한 칸: "부분납금 · 50 / 200".
+  ///
+  /// 상태만 적으면 얼마가 남았는지 모르고, 금액만 적으면 확인 전인지
+  /// 아닌지를 모른다.
+  String _payCell(
+    AppLocalizations l10n,
+    Map<String, dynamic> r,
+    Currency currency,
+  ) {
+    final pay = (r['payment'] as Map?) ?? const {};
+    final due = Money.parse(r['amount_due']) ?? 0;
+    final paid = Money.parse(pay['amount']) ?? 0;
+    final state = payStateOf(
+      due: due,
+      paid: paid,
+      status: pay['status'] as String?,
+    );
+    return [
+      payStateLabel(l10n, state),
+      if (due > 0) '${currency.format(paid)} / ${currency.format(due)}',
+    ].join(' · ');
   }
 
   /// 한 사람의 등록 완료 여부와 입금을 그 자리에서 고친다.
@@ -180,9 +209,11 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     };
     // 낼 돈이 아직 없으면 등록서에서 계산된 금액을 넣어 준다 — 담당자가
     // 매번 옮겨 적을 이유가 없다.
+    final due = Money.parse(reg['amount_due']) ?? 0;
+    // **받은 금액**이다. 예전에는 여기에 낼 돈을 넣어 두어, 부분 납부를
+    // 적을 방법이 아예 없었다.
     final amountCtrl = TextEditingController(
-      text: (Money.parse(pay['amount']) ?? Money.parse(reg['total_cost']) ?? 0)
-          .toStringAsFixed(0),
+      text: (Money.parse(pay['amount']) ?? 0).toStringAsFixed(0),
     );
 
     final saved = await showDialog<bool>(
@@ -205,12 +236,23 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                 ),
               ),
               const Divider(),
+              // 낼 돈은 등록서가 정한다. 여기서 고치는 것이 아니다 —
+              // 고친다면 그것은 할인이고, 할인은 따로 판단한다.
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${l10n.tblAmountDue}  ${currency.format(due)}',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+              const SizedBox(height: 8),
               TextField(
                 controller: amountCtrl,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                onChanged: (_) => setLocal(() {}),
                 decoration: InputDecoration(
-                  labelText: l10n.tblAmountDue,
+                  labelText: l10n.tblAmountPaid,
                   prefixText: '${currency.symbol} ',
                 ),
               ),
@@ -220,7 +262,7 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                 children: [
                   for (final o in [
                     (key: 'none', label: l10n.dashPayNone),
-                    (key: 'pending', label: l10n.dashPayPending),
+                    (key: 'pending', label: l10n.payPending),
                     (key: 'confirmed', label: l10n.dashPayConfirmed),
                   ])
                     ChoiceChip(
@@ -232,6 +274,23 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                       onSelected: (_) => setLocal(() => status = o.key),
                     ),
                 ],
+              ),
+              const SizedBox(height: 8),
+              // 넷 중 어디로 가는지 누르기 전에 보인다. 상태는 따로 고르는
+              // 것이 아니라 **금액에서 나온다**.
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  payStateLabel(
+                    l10n,
+                    payStateOf(
+                      due: due,
+                      paid: int.tryParse(amountCtrl.text.trim()) ?? 0,
+                      status: status == 'none' ? null : status,
+                    ),
+                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
             ],
           ),
@@ -355,6 +414,7 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
             );
           final headers = _headers(l10n);
           final rows = _rows(l10n, data, currency);
+          final table = _table(l10n, theme, data, headers, rows, currency);
 
           return Column(
             children: [
@@ -400,77 +460,196 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
               ),
               if (rows.isEmpty)
                 Expanded(child: Center(child: Text(l10n.tblEmpty)))
-              else
-                // 표는 가로로 넓다. 화면 밖으로 밀리면 못 읽으므로 표만
-                // 따로 가로 스크롤한다 — 화면 전체가 옆으로 밀리면 안 된다.
+              else if (widget.view == RosterView.all &&
+                  MediaQuery.sizeOf(context).width >= 1000)
+                // 넓은 화면에서는 왼쪽에 셈, 오른쪽에 표. 담당자가 표를
+                // 훑어 세던 것을 화면이 대신 센다.
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        headingRowColor: WidgetStatePropertyAll(
-                          theme.colorScheme.surfaceContainerHighest,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 왼쪽은 오른쪽의 절반 폭.
+                      Expanded(
+                        flex: 1,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 8, 16),
+                          child: _MoneySummary(
+                            people: data,
+                            currency: currency,
+                          ),
                         ),
-                        columns: [
-                          for (final h in headers)
-                            DataColumn(
-                              label: Text(
-                                h,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          // 고치기 칸. 내보내기에는 넣지 않는다 — 종이에
-                          // 인쇄된 표에 버튼 자리가 있으면 이상하다.
-                          const DataColumn(label: Text('')),
-                        ],
-                        rows: [
-                          for (var ri = 0; ri < rows.length; ri++)
-                            DataRow(
-                              // 완료하지 않은 사람은 줄 전체를 노랗게.
-                              // 크림색은 늘 "아직 안 끝난 사람". 입금 표에서는
-                              // 등록 완료가 아니라 **입금** 이 기준이다.
-                              color: _done(data[ri])
-                                  ? null
-                                  : WidgetStatePropertyAll(
-                                      _unfinishedColor(theme),
-                                    ),
-                              cells: [
-                                for (final cell in rows[ri])
-                                  DataCell(
-                                    ConstrainedBox(
-                                      constraints: const BoxConstraints(
-                                        maxWidth: 220,
-                                      ),
-                                      child: Text(
-                                        cell,
-                                        style: const TextStyle(fontSize: 12.5),
-                                      ),
-                                    ),
-                                  ),
-                                DataCell(
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
-                                    ),
-                                    tooltip: l10n.actionEdit,
-                                    onPressed: () =>
-                                        _editPerson(data[ri], currency),
-                                  ),
-                                ),
-                              ],
-                            ),
-                        ],
                       ),
-                    ),
+                      Expanded(flex: 2, child: table),
+                    ],
                   ),
-                ),
+                )
+              else
+                Expanded(child: table),
             ],
           );
         },
+      ),
+    );
+  }
+
+  /// 표 하나. 좌우로 나눈 배치와 위아래로 쌓은 배치가 같은 것을 쓴다.
+  ///
+  /// 표는 가로로 넓다. 화면 밖으로 밀리면 못 읽으므로 표만 따로 가로
+  /// 스크롤한다 — 화면 전체가 옆으로 밀리면 안 된다.
+  Widget _table(
+    AppLocalizations l10n,
+    ThemeData theme,
+    List<Map<String, dynamic>> data,
+    List<String> headers,
+    List<List<String>> rows,
+    Currency currency,
+  ) {
+    return SingleChildScrollView(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          headingRowColor: WidgetStatePropertyAll(
+            theme.colorScheme.surfaceContainerHighest,
+          ),
+          columns: [
+            for (final h in headers)
+              DataColumn(
+                label: Text(
+                  h,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            // 고치기 칸. 내보내기에는 넣지 않는다 — 종이에
+            // 인쇄된 표에 버튼 자리가 있으면 이상하다.
+            const DataColumn(label: Text('')),
+          ],
+          rows: [
+            for (var ri = 0; ri < rows.length; ri++)
+              DataRow(
+                // 완료하지 않은 사람은 줄 전체를 노랗게.
+                // 크림색은 늘 "아직 안 끝난 사람". 입금 표에서는
+                // 등록 완료가 아니라 **입금** 이 기준이다.
+                color: _done(data[ri])
+                    ? null
+                    : WidgetStatePropertyAll(_unfinishedColor(theme)),
+                cells: [
+                  for (final cell in rows[ri])
+                    DataCell(
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 220),
+                        child: Text(
+                          cell,
+                          style: const TextStyle(fontSize: 12.5),
+                        ),
+                      ),
+                    ),
+                  DataCell(
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      tooltip: l10n.actionEdit,
+                      onPressed: () => _editPerson(data[ri], currency),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 명단 옆의 셈.
+///
+/// 담당자가 표를 훑으며 손으로 세던 것들이다 — 몇 명이 오려 하고, 돈을 얼마나
+/// 걷었나. 표 안에 있는 값만 쓰므로 서버에 다시 묻지 않는다.
+class _MoneySummary extends StatelessWidget {
+  final List<Map<String, dynamic>> people;
+  final Currency currency;
+
+  const _MoneySummary({required this.people, required this.currency});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    var unpaid = 0, partial = 0, paid = 0, pending = 0;
+    num collected = 0;
+    num due = 0;
+    for (final r in people) {
+      final pay = (r['payment'] as Map?) ?? const {};
+      final d = Money.parse(r['amount_due']) ?? 0;
+      final p = Money.parse(pay['amount']) ?? 0;
+      due += d;
+      // **확인된 것만 걷은 돈이다.** 확인 전 금액을 더하면 장부가 실제보다
+      // 커지고, 그 숫자를 믿고 예산을 짜게 된다.
+      if (pay['status'] == 'confirmed') collected += p;
+      switch (payStateOf(due: d, paid: p, status: pay['status'] as String?)) {
+        case PayState.unpaid:
+          unpaid++;
+        case PayState.partial:
+          partial++;
+        case PayState.paid:
+          paid++;
+        case PayState.pending:
+          pending++;
+      }
+    }
+
+    Widget line(String label, String value, {Color? color, bool big = false}) =>
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(label, style: const TextStyle(fontSize: 13)),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: big ? 17 : 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            line(l10n.sumWanting, l10n.unitPeople(people.length), big: true),
+            const Divider(),
+            line(
+              l10n.payPending,
+              l10n.unitPeople(pending),
+              color: Colors.orange[900],
+            ),
+            line(l10n.payUnpaid, l10n.unitPeople(unpaid), color: Colors.red),
+            line(
+              l10n.payPartial,
+              l10n.unitPeople(partial),
+              color: Colors.orange[800],
+            ),
+            line(l10n.payPaid, l10n.unitPeople(paid), color: Colors.green[700]),
+            const Divider(),
+            line(
+              l10n.sumCollected,
+              currency.format(collected),
+              color: Colors.green[800],
+              big: true,
+            ),
+            // 아직 받을 돈. 걷은 돈만 보면 다 끝난 것처럼 보인다.
+            line(l10n.sumRemaining, currency.format(due - collected)),
+          ],
+        ),
       ),
     );
   }

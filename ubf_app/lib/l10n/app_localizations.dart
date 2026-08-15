@@ -6095,6 +6095,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Which team?'**
   String get annPickService;
+
+  /// 입금 상태: 아무것도 받지 못함
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid'**
+  String get payUnpaid;
+
+  /// 입금 상태: 일부만 받음
+  ///
+  /// In en, this message translates to:
+  /// **'Part paid'**
+  String get payPartial;
+
+  /// 입금 상태: 낼 돈을 다 채움
+  ///
+  /// In en, this message translates to:
+  /// **'Paid in full'**
+  String get payPaid;
+
+  /// 입금 상태: 냈다고 알려 왔으나 확인 전
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting check'**
+  String get payPending;
+
+  /// 담당자가 적는, 실제로 받은 금액
+  ///
+  /// In en, this message translates to:
+  /// **'Amount received'**
+  String get tblAmountPaid;
+
+  /// 명단 옆 셈: 참가하려는 사람 수
+  ///
+  /// In en, this message translates to:
+  /// **'Coming'**
+  String get sumWanting;
+
+  /// 명단 옆 셈: 확인된 입금 총액
+  ///
+  /// In en, this message translates to:
+  /// **'Collected'**
+  String get sumCollected;
+
+  /// 명단 옆 셈: 아직 받지 못한 총액
+  ///
+  /// In en, this message translates to:
+  /// **'Still owed'**
+  String get sumRemaining;
 }
 
 class _AppLocalizationsDelegate

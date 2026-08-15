@@ -3351,4 +3351,28 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get annPickService => 'Para qual equipe?';
+
+  @override
+  String get payUnpaid => 'Não pago';
+
+  @override
+  String get payPartial => 'Pago parcial';
+
+  @override
+  String get payPaid => 'Pago';
+
+  @override
+  String get payPending => 'A verificar';
+
+  @override
+  String get tblAmountPaid => 'Valor recebido';
+
+  @override
+  String get sumWanting => 'Vão vir';
+
+  @override
+  String get sumCollected => 'Arrecadado';
+
+  @override
+  String get sumRemaining => 'Falta receber';
 }

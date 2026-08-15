@@ -998,5 +998,13 @@
   "tblAmountDue": "Valor a pagar",
   "tblSubmittedHint": "Ative se você anotou o formulário no papel",
   "annToService": "Uma equipe de serviço",
-  "annPickService": "Para qual equipe?"
+  "annPickService": "Para qual equipe?",
+  "payUnpaid": "Não pago",
+  "payPartial": "Pago parcial",
+  "payPaid": "Pago",
+  "payPending": "A verificar",
+  "tblAmountPaid": "Valor recebido",
+  "sumWanting": "Vão vir",
+  "sumCollected": "Arrecadado",
+  "sumRemaining": "Falta receber"
 }

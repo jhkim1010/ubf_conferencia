@@ -911,8 +911,16 @@ router.get('/:id/registrations', requireAuth, requireProgramAdmin, async (req, r
           'status', pay.status,
           'amount', pay.amount,
           'receipt_image_url', pay.receipt_image_url
-        ) AS payment
+        ) AS payment,
+        -- 낼 돈. total_cost 는 저장된 값이고, 참가비를 안 고른 옛 행은
+        -- 0 이다. 그런 행에는 수양회의 기본 참가비를 대신 쓴다 — 표에서
+        -- 0 원으로 보이면 받으러 가지 않는다(054).
+        GREATEST(
+          COALESCE(NULLIF(r.total_cost, 0), p.fee_basic, 0),
+          0
+        )::numeric AS amount_due
       FROM registrations r
+      JOIN programs p ON p.id = r.program_id
       LEFT JOIN payments pay ON pay.registration_id = r.id
       -- 이름이 없으면 아직 참가자가 아니다(038). 카드의 숫자도 같은 판정을
       -- 쓴다 — 한쪽만 거르면 "10명인데 9명만 보인다" 가 된다.

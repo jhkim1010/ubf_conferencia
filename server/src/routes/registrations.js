@@ -157,10 +157,13 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     //
     // 승인된 할인만 뺀다. 신청 중인 금액을 미리 빼면 아직 결정되지 않은 감액이
     // 확정된 것처럼 장부에 남는다.
+    // **등급을 안 고른 사람도 기본 참가비를 낸다.** 예전에는 0 으로 두어,
+    // 등급 화면을 지나치기만 한 사람의 낼 돈이 0 이 됐다 — 운영 명단 열둘 중
+    // 여섯이 그랬다. 참가비를 안 내는 참가자는 없다.
     const tierFee =
-      tier === 'basic' ? Number(program.fee_basic ?? 0)
-      : tier === 'premium' ? Number(program.fee_premium ?? 0)
-      : 0;
+      tier === 'premium'
+        ? Number(program.fee_premium ?? 0)
+        : Number(program.fee_basic ?? 0);
 
     // 같은 투어를 두 번 담지 않는다. 화면이 잘못 보내도 여기서 정리한다 —
     // 운영에 같은 투어가 세 번 들어간 등록이 있었다.
