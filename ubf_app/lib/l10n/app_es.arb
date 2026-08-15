@@ -1010,5 +1010,7 @@
   "setupRoomsMadeName": "Nombre del cuarto",
   "setupGroupCapacityHint": "Déjelo vacío y la asignación automática reparte parejo",
   "tblAmountDue": "Monto a pagar",
-  "tblSubmittedHint": "Actívelo si tomó su formulario en papel"
+  "tblSubmittedHint": "Actívelo si tomó su formulario en papel",
+  "annToService": "Un equipo de servicio",
+  "annPickService": "¿A qué equipo?"
 }

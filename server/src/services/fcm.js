@@ -121,6 +121,17 @@ export async function notifyAudience(sql, programId, audience, title, body, data
           AND COALESCE(pay.status, 'none') <> 'confirmed'
           AND r.fcm_token IS NOT NULL AND has_registrant_name(r.real_name)
       `;
+    } else if (kind === 'service') {
+      // 그 역할을 **맡은** 사람. 거절·반려는 뺀다 — 안 하겠다고 한 사람에게
+      // 그 일의 공지를 보내면 안 된다.
+      rows = await sql`
+        SELECT r.fcm_token FROM registrations r
+        JOIN service_signups ss ON ss.registration_id = r.id
+        WHERE r.program_id = ${programId}
+          AND ss.service_key = ${id}
+          AND ss.status NOT IN ('declined', 'rejected')
+          AND r.fcm_token IS NOT NULL AND has_registrant_name(r.real_name)
+      `;
     } else {
       console.error('알 수 없는 알림 대상:', kind);
       return 0;

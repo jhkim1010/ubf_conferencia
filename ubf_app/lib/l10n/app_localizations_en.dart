@@ -3333,4 +3333,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tblSubmittedHint => 'Turn on if you took their form on paper';
+
+  @override
+  String get annToService => 'One service team';
+
+  @override
+  String get annPickService => 'Which team?';
 }

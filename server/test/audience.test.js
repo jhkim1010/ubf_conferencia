@@ -9,14 +9,30 @@ import {
 
 const UUID = '0f8fad5b-d9cb-469f-a165-70867728950e';
 
+// 대상을 하나 골라야 하는 갈래. 없으면 좁히려던 것이 전체로 넓어진다.
+const NEEDS_ID = { room: UUID, group: UUID, service: 'pickup' };
+
 test('아는 갈래만 받는다', () => {
   for (const kind of AUDIENCE_KINDS) {
-    const a = kind === 'room' || kind === 'group' ? { kind, id: UUID } : { kind };
+    const a = NEEDS_ID[kind] ? { kind, id: NEEDS_ID[kind] } : { kind };
     assert.equal(isValidAudience(a), true, kind);
   }
   assert.equal(isValidAudience({ kind: 'everyone' }), false);
   assert.equal(isValidAudience(null), false);
   assert.equal(isValidAudience('all'), false);
+});
+
+test('봉사팀은 역할 키로 고른다', () => {
+  // 역할 키는 UUID 가 아니다. 담당자가 만든 역할은 'custom:...' 로 온다.
+  assert.equal(isValidAudience({ kind: 'service', id: 'pickup' }), true);
+  assert.equal(
+    isValidAudience({ kind: 'service', id: 'custom:iguazu-bus-01' }),
+    true,
+  );
+  // 어느 팀인지 모르는 채로 보내면 전체에게 가는 셈이다.
+  assert.equal(isValidAudience({ kind: 'service' }), false);
+  assert.equal(isValidAudience({ kind: 'service', id: '' }), false);
+  assert.equal(isValidAudience({ kind: 'service', id: 'x'.repeat(61) }), false);
 });
 
 test('방·조는 대상 id 가 있어야 한다', () => {

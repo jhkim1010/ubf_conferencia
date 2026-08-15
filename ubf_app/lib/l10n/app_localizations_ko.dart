@@ -3262,4 +3262,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get tblSubmittedHint => '종이로 대신 받아 적었으면 켜 주십시오';
+
+  @override
+  String get annToService => '봉사팀';
+
+  @override
+  String get annPickService => '어느 팀에 보낼까요?';
 }

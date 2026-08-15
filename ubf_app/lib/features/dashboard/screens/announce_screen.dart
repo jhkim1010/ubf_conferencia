@@ -5,6 +5,7 @@ import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/utils/api_client.dart';
 import '../../assignment/providers/assignment_provider.dart';
 import '../../setup/providers/setup_provider.dart';
+import '../../../core/utils/service_role_label.dart';
 
 // 공지 보내기 (044)
 //
@@ -47,35 +48,72 @@ class _AnnounceScreenState extends ConsumerState<AnnounceScreen> {
   /// 먼저 막아야 담당자가 "왜 안 가지" 를 겪지 않는다.
   bool get _ready {
     if (_bodyCtrl.text.trim().isEmpty) return false;
-    if (_kind == 'room' || _kind == 'group') return _targetId != null;
+    if (_kind == 'room' || _kind == 'group' || _kind == 'service') {
+      return _targetId != null;
+    }
     return true;
   }
 
   Future<void> _pickTarget(String kind) async {
     final l10n = AppLocalizations.of(context)!;
-    final items = kind == 'room'
-        ? ((await ref.read(roomsProvider(widget.programId).future))['rooms']
-                  as List? ??
-              const [])
-        : ((await ref.read(groupsProvider(widget.programId).future))['groups']
-                  as List? ??
-              const []);
+    // 봉사팀은 역할이 대상이다 — 방·조와 달리 id 가 UUID 가 아니라 역할
+    // 키다(pickup, custom:… ). 사람이 아무도 없는 역할도 고를 수 있게
+    // 남겨 둔다: 지금 아무도 없다는 것도 보내 봐야 아는 일이다.
+    final List<Map<String, dynamic>> items;
+    if (kind == 'room') {
+      items =
+          ((await ref.read(roomsProvider(widget.programId).future))['rooms']
+                      as List? ??
+                  const [])
+              .cast<Map<String, dynamic>>();
+    } else if (kind == 'group') {
+      items =
+          ((await ref.read(groupsProvider(widget.programId).future))['groups']
+                      as List? ??
+                  const [])
+              .cast<Map<String, dynamic>>();
+    } else {
+      final board = await ref.read(
+        serviceBoardProvider(widget.programId).future,
+      );
+      items = ((board?['roles'] as List?) ?? const [])
+          .cast<Map<String, dynamic>>();
+    }
     if (!mounted) return;
+
+    String label(Map<String, dynamic> it) => kind == 'service'
+        ? serviceRoleLabel(l10n, it)
+        : '${it['floor'] ?? ''} ${it['name'] ?? ''}'.trim();
 
     final picked = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        title: Text(kind == 'room' ? l10n.annPickRoom : l10n.annPickGroup),
+        title: Text(switch (kind) {
+          'room' => l10n.annPickRoom,
+          'group' => l10n.annPickGroup,
+          _ => l10n.annPickService,
+        }),
         children: [
           if (items.isEmpty)
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(l10n.tblEmpty),
             ),
-          for (final it in items.cast<Map<String, dynamic>>())
+          for (final it in items)
             SimpleDialogOption(
               onPressed: () => Navigator.pop(ctx, it),
-              child: Text('${it['floor'] ?? ''} ${it['name'] ?? ''}'.trim()),
+              child: Row(
+                children: [
+                  Expanded(child: Text(label(it))),
+                  if (kind == 'service')
+                    Text(
+                      l10n.unitPeople(
+                        ((it['people'] as List?) ?? const []).length,
+                      ),
+                      style: const TextStyle(fontSize: 11.5),
+                    ),
+                ],
+              ),
             ),
         ],
       ),
@@ -83,8 +121,9 @@ class _AnnounceScreenState extends ConsumerState<AnnounceScreen> {
     if (picked == null) return;
     setState(() {
       _kind = kind;
-      _targetId = picked['id'] as String;
-      _targetName = '${picked['floor'] ?? ''} ${picked['name'] ?? ''}'.trim();
+      // 봉사팀은 역할 키가 대상이다.
+      _targetId = (kind == 'service' ? picked['key'] : picked['id']) as String;
+      _targetName = label(picked);
     });
   }
 
@@ -113,6 +152,7 @@ class _AnnounceScreenState extends ConsumerState<AnnounceScreen> {
     'group' => l10n.annToGroup,
     'unsubmitted' => l10n.annToUnsub,
     'unpaid' => l10n.annToUnpaid,
+    'service' => l10n.annToService,
     _ => l10n.annToAll,
   };
 
@@ -144,6 +184,7 @@ class _AnnounceScreenState extends ConsumerState<AnnounceScreen> {
                 'all',
                 'room',
                 'group',
+                'service',
                 'unsubmitted',
                 'unpaid',
               ])
@@ -156,7 +197,9 @@ class _AnnounceScreenState extends ConsumerState<AnnounceScreen> {
                   ),
                   selected: _kind == kind,
                   onSelected: (_) {
-                    if (kind == 'room' || kind == 'group') {
+                    if (kind == 'room' ||
+                        kind == 'group' ||
+                        kind == 'service') {
                       _pickTarget(kind);
                     } else {
                       setState(() {

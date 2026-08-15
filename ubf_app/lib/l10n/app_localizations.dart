@@ -6083,6 +6083,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn on if you took their form on paper'**
   String get tblSubmittedHint;
+
+  /// 공지 대상: 특정 봉사팀
+  ///
+  /// In en, this message translates to:
+  /// **'One service team'**
+  String get annToService;
+
+  /// 봉사팀 고르기 제목
+  ///
+  /// In en, this message translates to:
+  /// **'Which team?'**
+  String get annPickService;
 }
 
 class _AppLocalizationsDelegate

@@ -3345,4 +3345,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get tblSubmittedHint => 'Ative se você anotou o formulário no papel';
+
+  @override
+  String get annToService => 'Uma equipe de serviço';
+
+  @override
+  String get annPickService => 'Para qual equipe?';
 }

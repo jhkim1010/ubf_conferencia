@@ -996,5 +996,7 @@
   "setupRoomsMadeName": "Nome do quarto",
   "setupGroupCapacityHint": "Deixe vazio e a atribuição automática divide por igual",
   "tblAmountDue": "Valor a pagar",
-  "tblSubmittedHint": "Ative se você anotou o formulário no papel"
+  "tblSubmittedHint": "Ative se você anotou o formulário no papel",
+  "annToService": "Uma equipe de serviço",
+  "annPickService": "Para qual equipe?"
 }

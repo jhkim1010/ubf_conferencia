@@ -17,6 +17,7 @@ export const AUDIENCE_KINDS = [
   'group',        // 특정 말씀조의 배정자
   'unsubmitted',  // 아직 등록을 끝내지 않은 사람
   'unpaid',       // 입금이 확인되지 않은 사람
+  'service',      // 특정 봉사팀 (그 역할을 맡은 사람)
 ];
 
 export function isValidAudience(a) {
@@ -24,6 +25,11 @@ export function isValidAudience(a) {
   if (!AUDIENCE_KINDS.includes(a.kind)) return false;
   if (a.kind === 'room' || a.kind === 'group') {
     return typeof a.id === 'string' && a.id.length === 36;
+  }
+  // 봉사팀은 역할 키로 고른다 — UUID 가 아니다. 담당자가 그 자리에서 만든
+  // 역할은 'custom:iguazu-bus-01' 처럼 온다.
+  if (a.kind === 'service') {
+    return typeof a.id === 'string' && a.id.length > 0 && a.id.length <= 60;
   }
   return true;
 }

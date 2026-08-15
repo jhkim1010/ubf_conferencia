@@ -2166,5 +2166,13 @@
   "tblSubmittedHint": "Turn on if you took their form on paper",
   "@tblSubmittedHint": {
     "description": "등록 완료를 담당자가 켜는 경우"
+  },
+  "annToService": "One service team",
+  "@annToService": {
+    "description": "공지 대상: 특정 봉사팀"
+  },
+  "annPickService": "Which team?",
+  "@annPickService": {
+    "description": "봉사팀 고르기 제목"
   }
 }

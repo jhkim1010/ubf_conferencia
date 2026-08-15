@@ -3344,4 +3344,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tblSubmittedHint => 'Actívelo si tomó su formulario en papel';
+
+  @override
+  String get annToService => 'Un equipo de servicio';
+
+  @override
+  String get annPickService => '¿A qué equipo?';
 }

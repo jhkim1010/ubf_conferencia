@@ -87,6 +87,29 @@ eq "  긴 내용은 잘린다" '1000' \
    "$(send "$(node -pe "JSON.stringify({body: 'ㄱ'.repeat(3000)})")" > /dev/null; LIST | jq_ 'r[0].body.length')"
 
 echo
+echo "── 봉사팀에 보내기 ──"
+# "픽업 담당들만" 처럼 팀 하나에 말할 일이 실제로 많다. 대상은 방·조와
+# 달리 UUID 가 아니라 역할 키다.
+curl -s -o /dev/null -X PUT "$API/service-signups/$P/roles" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' \
+  -d '{"roles":[{"key":"pickup","enabled":true,"needed":2}]}'
+eq "봉사팀에 보낸다" '201' \
+   "$(send '{"body":"픽업 담당들 9시에 모입니다","audience":{"kind":"service","id":"pickup"}}')"
+eq "  대상이 남는다"   'service' "$(LIST | jq_ 'r[0].audience_kind')"
+eq "  어느 팀인지도"   'pickup'  "$(LIST | jq_ 'r[0].audience_id')"
+# 어느 팀인지 없으면 전체에게 가는 셈이다 — 좁히려던 것이 넓어지는 쪽이
+# 가장 나쁘다.
+eq "팀을 안 고르면 400" '400' \
+   "$(send '{"body":"x","audience":{"kind":"service"}}')"
+# 담당자가 만든 역할도 보낼 수 있어야 한다.
+curl -s -o /dev/null -X PUT "$API/service-signups/$P/roles" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' \
+  -d '{"roles":[{"key":"pickup","enabled":true,"needed":2},
+                {"key":"custom:iguazu-bus-01","label":"이과수 버스","enabled":true,"needed":1}]}'
+eq "자유 역할 팀에도 보낸다" '201' \
+   "$(send '{"body":"버스 인솔 모임","audience":{"kind":"service","id":"custom:iguazu-bus-01"}}')"
+
+echo
 echo "── 권한 ──"
 OTHER=$(login "ann-other-$$@test.local")
 eq "담당자가 아니면 403" '403' \
