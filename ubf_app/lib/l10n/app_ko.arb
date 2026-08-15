@@ -1007,5 +1007,6 @@
   "setupAnyLanguage": "정하지 않음",
   "setupCoupleRooms": "부부·가족실",
   "setupDormRooms": "단체실",
-  "setupRoomsMadeName": "방 이름"
+  "setupRoomsMadeName": "방 이름",
+  "setupGroupCapacityHint": "비워 두면 자동 배정이 고르게 나눕니다"
 }

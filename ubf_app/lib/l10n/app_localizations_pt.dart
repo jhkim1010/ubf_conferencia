@@ -3335,4 +3335,8 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get setupRoomsMadeName => 'Nome do quarto';
+
+  @override
+  String get setupGroupCapacityHint =>
+      'Deixe vazio e a atribuição automática divide por igual';
 }

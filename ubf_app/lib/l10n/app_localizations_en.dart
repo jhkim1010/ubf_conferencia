@@ -3323,4 +3323,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setupRoomsMadeName => 'Room name';
+
+  @override
+  String get setupGroupCapacityHint =>
+      'Leave blank to let the auto-assigner spread people evenly';
 }

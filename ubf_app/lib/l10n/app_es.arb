@@ -1007,5 +1007,6 @@
   "setupAnyLanguage": "Sin definir",
   "setupCoupleRooms": "Cuartos de matrimonio · familia",
   "setupDormRooms": "Cuartos compartidos",
-  "setupRoomsMadeName": "Nombre del cuarto"
+  "setupRoomsMadeName": "Nombre del cuarto",
+  "setupGroupCapacityHint": "Déjelo vacío y la asignación automática reparte parejo"
 }

@@ -2154,5 +2154,9 @@
   "setupRoomsMadeName": "Room name",
   "@setupRoomsMadeName": {
     "description": "방 수정에서 이름 칸"
+  },
+  "setupGroupCapacityHint": "Leave blank to let the auto-assigner spread people evenly",
+  "@setupGroupCapacityHint": {
+    "description": "조 정원을 비워 두었을 때의 뜻"
   }
 }

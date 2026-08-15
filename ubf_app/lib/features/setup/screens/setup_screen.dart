@@ -835,13 +835,31 @@ class _GroupsTab extends ConsumerWidget {
                     message: l10n.setupGroupsEmpty,
                   )
                 else
-                  ...groups.map(
-                    (g) => _GroupTile(
-                      programId: programId,
-                      group: g,
-                      onChanged: () =>
-                          ref.invalidate(groupsProvider(programId)),
-                    ),
+                  // 큰 화면에서는 한 줄에 셋. 조가 열 개를 넘으면 한 줄에
+                  // 하나씩 쌓았을 때 아래쪽은 스크롤해야 보인다.
+                  LayoutBuilder(
+                    builder: (context, box) {
+                      final columns = (box.maxWidth / 300).floor().clamp(1, 3);
+                      const gap = 8.0;
+                      final width =
+                          (box.maxWidth - gap * (columns - 1)) / columns;
+                      return Wrap(
+                        spacing: gap,
+                        runSpacing: gap,
+                        children: [
+                          for (final g in groups)
+                            SizedBox(
+                              width: columns == 1 ? box.maxWidth : width,
+                              child: _GroupTile(
+                                programId: programId,
+                                group: g,
+                                onChanged: () =>
+                                    ref.invalidate(groupsProvider(programId)),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
               ],
             ),
@@ -1001,6 +1019,15 @@ class _GroupSummaryCard extends StatelessWidget {
   }
 }
 
+/// 말씀공부 언어의 이름. 그 언어로 적는다 — 배정 화면과 같다.
+String _languageName(String? code) => switch (code) {
+  'ko' => '한국어',
+  'en' => 'English',
+  'es' => 'Español',
+  'pt' => 'Português',
+  _ => '',
+};
+
 class _GroupTile extends StatelessWidget {
   final String programId;
   final Map<String, dynamic> group;
@@ -1023,49 +1050,106 @@ class _GroupTile extends StatelessWidget {
       if (location != null && location.isNotEmpty) location,
     ].join(' · ');
 
+    // 어느 언어로 모이는 조인지(025)와 몇 명까지 받을지(051). 사람을 조에
+    // 넣을 때 맞춰 보는 것이 이 둘인데 화면에 없었다.
+    final lang = _languageName(group['studyLanguage'] as String?);
+    final cap = (group['capacity'] as num?)?.toInt();
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: hasLeader
-              ? AppTheme.primary.withValues(alpha: 0.12)
-              : Colors.grey[200],
-          child: Icon(
-            Icons.groups,
-            color: hasLeader ? AppTheme.primary : Colors.grey,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          hasLeader
-              ? '${group['name']} · $leaderName'
-              : group['name'] as String,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          sub.isEmpty
-              ? (hasLeader ? l10n.setupNoPassageLocation : l10n.setupNoLeader)
-              : sub,
-          style: TextStyle(
-            color: hasLeader ? null : Colors.amber[800],
-            fontSize: 12,
-          ),
-        ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (v) async {
-            if (v == 'edit') {
-              await _editGroup(context);
-            } else if (v == 'delete') {
-              await ApiClient.deleteGroup(programId, group['id'] as String);
-              onChanged();
-            }
-          },
-          itemBuilder: (_) => [
-            PopupMenuItem(value: 'edit', child: Text(l10n.setupEditGroupMenu)),
-            PopupMenuItem(value: 'delete', child: Text(l10n.actionDelete)),
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 6, 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: hasLeader
+                      ? AppTheme.primary.withValues(alpha: 0.12)
+                      : Colors.grey[200],
+                  child: Icon(
+                    Icons.groups,
+                    color: hasLeader ? AppTheme.primary : Colors.grey,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    group['name'] as String,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (cap != null)
+                  Text(
+                    l10n.setupRoomCapacity(cap),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.star,
+                  size: 13,
+                  color: hasLeader ? const Color(0xFFC98A16) : Colors.grey[400],
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    hasLeader ? leaderName : l10n.asnNoGroupLeader,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: hasLeader ? null : Colors.amber[800],
+                    ),
+                  ),
+                ),
+                if (lang.isNotEmpty) ...[
+                  const Icon(Icons.translate, size: 13),
+                  const SizedBox(width: 4),
+                  Text(lang, style: const TextStyle(fontSize: 12)),
+                ],
+              ],
+            ),
+            if (sub.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  sub,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11.5, color: Colors.grey[700]),
+                ),
+              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => _editGroup(context),
+                  child: Text(l10n.actionEdit),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  tooltip: l10n.actionDelete,
+                  onPressed: () async {
+                    await ApiClient.deleteGroup(
+                      programId,
+                      group['id'] as String,
+                    );
+                    onChanged();
+                  },
+                ),
+              ],
+            ),
           ],
         ),
-        onTap: () => _editGroup(context),
       ),
     );
   }
@@ -1091,6 +1175,11 @@ class _GroupTile extends StatelessWidget {
     // 없어서 늘 비어 있었고, 그래서 자동 배정이 모든 조를 "아무나 받는 조"
     // 로 봤다. 안 정해 두는 것도 그대로 뜻이 있으므로 빈 값을 남겨 둔다.
     String? lang = group['studyLanguage'] as String?;
+    // 정원(051). 비워 두면 "정하지 않음" 이고, 그때는 자동 배정이 지금까지처럼
+    // 고르게 나눈다.
+    final groupCapCtrl = TextEditingController(
+      text: group['capacity'] == null ? '' : '${group['capacity']}',
+    );
 
     final saved = await showDialog<bool>(
       context: context,
@@ -1124,6 +1213,16 @@ class _GroupTile extends StatelessWidget {
                 TextField(
                   controller: locationCtrl,
                   decoration: InputDecoration(labelText: l10n.setupLocation),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: groupCapCtrl,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    labelText: l10n.setupCapacity,
+                    helperText: l10n.setupGroupCapacityHint,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Align(
@@ -1180,6 +1279,9 @@ class _GroupTile extends StatelessWidget {
       'location': locationCtrl.text.trim(),
       // 빈 문자열은 "정하지 않음" 이다 — 서버가 그렇게 읽는다.
       'studyLanguage': lang ?? '',
+      'capacity': groupCapCtrl.text.trim().isEmpty
+          ? null
+          : int.tryParse(groupCapCtrl.text.trim()),
     });
     onChanged();
   }

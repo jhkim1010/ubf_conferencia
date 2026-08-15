@@ -106,5 +106,36 @@ eq "조 목록이 언어를 준다" 'ko' \
       | jq_ "r.groups.find(g => g.id === '$G').studyLanguage")"
 
 echo
+echo "── 조 정원 (051) ──"
+# 방에는 정원이 있는데 조에는 없어서, 여덟 명이 앉을 방에 열두 명이
+# 배정되는 일이 생겼다.
+CAP_OF() { curl -s "$API/groups/$P" -H "Authorization: Bearer $LT" \
+  | jq_ "(r.groups.find(g => g.id === '$1') || {}).capacity"; }
+G4=$(mk '{"name":"4조","capacity":6}')
+eq "만들 때 정원을 받는다"      '6' "$(CAP_OF "$G4")"
+eq "  배정 화면에도 온다"       '6' \
+   "$(curl -s "$API/assignments/$P/groups" -H "Authorization: Bearer $LT" \
+      | jq_ "(r.groups.find(g => g.id === '$G4') || {}).capacity")"
+# 안 정하는 것도 뜻이 있다 — 그때는 자동 배정이 고르게 나눈다.
+eq "  안 정하면 비어 있다"      ''  "$(CAP_OF "$G2")"
+curl -s -o /dev/null -X PATCH "$API/groups/$P/$G4" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' -d '{"capacity":9}'
+eq "나중에 고칠 수 있다"        '9' "$(CAP_OF "$G4")"
+# null 을 보내면 "정하지 않음" 으로 되돌린다.
+curl -s -o /dev/null -X PATCH "$API/groups/$P/$G4" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' -d '{"capacity":null}'
+eq "  비우면 되돌아간다"        ''  "$(CAP_OF "$G4")"
+# 0 이면 아무도 못 들어가는 조가 된다. 받지 않는다.
+curl -s -o /dev/null -X PATCH "$API/groups/$P/$G4" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' -d '{"capacity":8}'
+curl -s -o /dev/null -X PATCH "$API/groups/$P/$G4" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' -d '{"capacity":0}'
+eq "0 은 무시한다"             '8'  "$(CAP_OF "$G4")"
+# 이름만 고치는 저장이 정원을 지우면 안 된다.
+curl -s -o /dev/null -X PATCH "$API/groups/$P/$G4" -H "Authorization: Bearer $LT" \
+  -H 'Content-Type: application/json' -d '{"name":"4조 (수정)"}'
+eq "  다른 것을 고쳐도 그대로" '8'  "$(CAP_OF "$G4")"
+
+echo
 echo "통과 $pass · 실패 $fail"
 [ "$fail" -eq 0 ]

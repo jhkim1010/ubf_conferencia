@@ -247,6 +247,9 @@ export function assignGroups({
     id: g.id,
     language: g.studyLanguage ?? null,
     band: g.ageBand ?? null,
+    // 정원(051). 안 정했으면 null 이고, 그때는 예전처럼 고르게 나눈다.
+    capacity:
+      typeof g.capacity === 'number' && g.capacity > 0 ? g.capacity : null,
     size: 0,
     male: 0,
     female: 0,
@@ -303,8 +306,15 @@ export function assignGroups({
     const ordered = [...cohort.units].sort((a, b) => a.avgAge - b.avgAge);
     for (const unit of ordered) {
       const dominant = unit.male >= unit.female ? 'male' : 'female';
+      // 정원이 남은 조를 먼저 본다(051). **다 찼다고 사람을 빼지는
+      // 않는다** — 조가 없는 참가자를 만드는 것이 정원을 한 명 넘기는
+      // 것보다 나쁘다. 그런 경우는 넘겼다고 적어 둔다.
+      const roomy = targets.filter(
+        (s) => s.capacity === null || s.size + unit.size <= s.capacity,
+      );
+      const pool = roomy.length > 0 ? roomy : targets;
       let best = null;
-      for (const s of targets) {
+      for (const s of pool) {
         if (
           best === null ||
           s.size < best.size ||
@@ -312,6 +322,13 @@ export function assignGroups({
         ) {
           best = s;
         }
+      }
+      if (roomy.length === 0) {
+        notes.push({
+          cohort: `${cohort.language ?? '?'}·${cohort.band}`,
+          action: 'over_capacity',
+          count: unit.size,
+        });
       }
       best.size += unit.size;
       best.male += unit.male;

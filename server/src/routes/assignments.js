@@ -77,6 +77,7 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, async (req, r
     const groups = await sql`
       SELECT g.id, g.name, g.passage, g.location, g.leader_name,
         g.study_language AS "studyLanguage", g.age_band AS "ageBand",
+        g.capacity,
         COALESCE(json_agg(
           json_build_object('registrationId', reg.id,
                             'name', display_name(reg.bible_name, reg.real_name),
@@ -168,7 +169,8 @@ router.post('/:programId/groups/auto', requireAuth, requireProgramAdmin, async (
   const { programId } = req.params;
   try {
     const [groups, people, groupEdges, [program]] = await Promise.all([
-      sql`SELECT id, study_language AS "studyLanguage", age_band AS "ageBand"
+      sql`SELECT id, study_language AS "studyLanguage", age_band AS "ageBand",
+                 capacity
             FROM groups WHERE program_id = ${programId} ORDER BY sort_order`,
       loadPeople(programId),
       loadAcceptedEdges(programId, 'group'),

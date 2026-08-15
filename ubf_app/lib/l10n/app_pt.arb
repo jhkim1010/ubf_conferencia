@@ -993,5 +993,6 @@
   "setupAnyLanguage": "Não definido",
   "setupCoupleRooms": "Quartos de casal · família",
   "setupDormRooms": "Quartos compartilhados",
-  "setupRoomsMadeName": "Nome do quarto"
+  "setupRoomsMadeName": "Nome do quarto",
+  "setupGroupCapacityHint": "Deixe vazio e a atribuição automática divide por igual"
 }

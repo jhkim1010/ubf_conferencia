@@ -3253,4 +3253,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get setupRoomsMadeName => '방 이름';
+
+  @override
+  String get setupGroupCapacityHint => '비워 두면 자동 배정이 고르게 나눕니다';
 }

@@ -634,3 +634,77 @@ test('여유 값이 이상하면 없는 것으로 본다', () => {
   assert.equal(assignments.length, 2);
   assert.equal(unplaced.length, 1);
 });
+
+// ── 조 정원 (051) ────────────────────────────────────────────
+//
+// 방에는 정원이 있는데 조에는 없어서, 여덟 명이 앉을 방에 열두 명이
+// 배정되는 일이 생겼다. 다만 **정원 때문에 조가 없는 사람을 만들지는
+// 않는다** — 한 명 넘기는 것보다 그쪽이 나쁘다.
+
+test('정원이 있으면 그 안에서 채운다', () => {
+  const groups = [
+    { id: 'a', capacity: 2 },
+    { id: 'b', capacity: 5 },
+  ];
+  const people = Array.from({ length: 5 }, (_, i) => ({
+    id: `p${i}`, gender: i % 2 ? 'F' : 'M', age: 30,
+  }));
+  const { assignments, unplaced } = assignGroups({ groups, people, groupEdges: [] });
+  assert.equal(unplaced.length, 0);
+  const count = (g) => assignments.filter((a) => a.groupId === g).length;
+  assert.equal(count('a'), 2, '정원 2 를 넘지 않는다');
+  assert.equal(count('b'), 3);
+});
+
+test('정원을 안 정하면 예전처럼 고르게 나눈다', () => {
+  const groups = [{ id: 'a' }, { id: 'b' }];
+  const people = Array.from({ length: 6 }, (_, i) => ({
+    id: `p${i}`, gender: 'M', age: 30,
+  }));
+  const { assignments } = assignGroups({ groups, people, groupEdges: [] });
+  const count = (g) => assignments.filter((a) => a.groupId === g).length;
+  assert.equal(count('a'), 3);
+  assert.equal(count('b'), 3);
+});
+
+test('정원이 모자라도 조 없는 사람을 만들지 않는다', () => {
+  // 자리는 둘뿐인데 넷이 왔다. 둘을 빼고 두 명을 조 없이 두면, 그 둘은
+  // 수양회 내내 어디로 가야 할지 모른다.
+  const groups = [{ id: 'a', capacity: 1 }, { id: 'b', capacity: 1 }];
+  const people = Array.from({ length: 4 }, (_, i) => ({
+    id: `p${i}`, gender: 'M', age: 30,
+  }));
+  const { assignments, unplaced, notes } = assignGroups({
+    groups, people, groupEdges: [],
+  });
+  assert.equal(assignments.length, 4, '넷 다 어딘가에 들어간다');
+  assert.equal(unplaced.length, 0);
+  // 넘겼다는 것은 남긴다 — 담당자가 알아야 조를 더 만든다.
+  assert.ok(notes.some((n) => n.action === 'over_capacity'));
+});
+
+test('0 이나 음수 정원은 안 정한 것으로 본다', () => {
+  // DB 제약이 막지만, 옛 데이터나 잘못된 요청이 흘러들 수 있다.
+  const groups = [{ id: 'a', capacity: 0 }, { id: 'b', capacity: -3 }];
+  const people = Array.from({ length: 4 }, (_, i) => ({
+    id: `p${i}`, gender: 'M', age: 30,
+  }));
+  const { assignments, unplaced } = assignGroups({ groups, people, groupEdges: [] });
+  assert.equal(assignments.length, 4);
+  assert.equal(unplaced.length, 0);
+});
+
+test('같이 앉겠다고 한 짝은 정원 때문에 갈라지지 않는다', () => {
+  // 묶음은 통째로 들어간다. 정원 2 인 조에 3인 가족을 넣을 자리가 없으면
+  // 다른 조로 간다.
+  const groups = [{ id: 'a', capacity: 2 }, { id: 'b', capacity: 5 }];
+  const people = Array.from({ length: 3 }, (_, i) => ({
+    id: `f${i}`, gender: 'M', age: 30,
+  }));
+  const { assignments } = assignGroups({
+    groups, people, groupEdges: [['f0', 'f1'], ['f1', 'f2']],
+  });
+  const ids = new Set(assignments.map((a) => a.groupId));
+  assert.equal(ids.size, 1, '한 조에 모인다');
+  assert.equal([...ids][0], 'b', '자리가 있는 쪽으로');
+});

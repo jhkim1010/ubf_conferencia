@@ -90,211 +90,78 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // 편성 준비 — 방·조 정의 (배정 전 단계)
-            // 준비 현황 — 막힌 지점과 연락 대상 (A003)
-            Card(
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.fact_check_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+            // 담당자가 이 수양회에서 할 수 있는 일들.
+            //
+            // 여덟 개를 한 줄에 하나씩 쌓으면 큰 화면에서 화면 하나를 통째로
+            // 쓰면서도 절반이 빈 채로 남고, 아래쪽 것은 스크롤해야 보인다.
+            // 넓으면 세 개씩 늘어놓는다.
+            _MenuGrid(
+              items: [
+                (
+                  icon: Icons.fact_check_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                  title: l10n.rdyOpenCard,
+                  subtitle: l10n.rdyOpenCardSub,
+                  onTap: () =>
+                      context.push('/leader/program/$programId/readiness'),
                 ),
-                title: Text(
-                  l10n.rdyOpenCard,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                (
+                  icon: Icons.dashboard_customize_outlined,
+                  color: Colors.indigo,
+                  title: l10n.setupTitle,
+                  subtitle: l10n.dashSetupSubtitle,
+                  onTap: () => context.push('/leader/program/$programId/setup'),
                 ),
-                subtitle: Text(l10n.rdyOpenCardSub),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () =>
-                    context.push('/leader/program/$programId/readiness'),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            Card(
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.indigo.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.dashboard_customize_outlined,
-                    color: Colors.indigo,
-                  ),
+                // 담당자도 참석자다. 이 수양회를 열어 둔 채로 자기 등록을
+                // 바로 열 수 있어야 한다.
+                (
+                  icon: Icons.how_to_reg_outlined,
+                  color: Colors.teal,
+                  title: l10n.homeAlsoAttending,
+                  subtitle: l10n.homeAlsoAttendingSub,
+                  onTap: () => context.push('/registration/$programId'),
                 ),
-                title: Text(
-                  l10n.setupTitle,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                (
+                  icon: Icons.folder_copy_outlined,
+                  color: Colors.deepOrange,
+                  title: l10n.libTitle,
+                  subtitle: l10n.dashLibrarySubtitle,
+                  onTap: () =>
+                      context.push('/leader/program/$programId/library'),
                 ),
-                subtitle: Text(l10n.dashSetupSubtitle),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/leader/program/$programId/setup'),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // 담당자도 참석자다. 이 수양회를 열어 둔 채로 자기 등록을
-            // 바로 열 수 있어야 한다 — 홈으로 나갔다 UUID 를 다시 찾는 것은
-            // 자기 수양회에서 할 일이 아니다.
-            Card(
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blueGrey.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.how_to_reg_outlined,
-                    color: Colors.blueGrey,
-                  ),
+                (
+                  icon: Icons.campaign_outlined,
+                  color: Colors.amber,
+                  title: l10n.annTitle,
+                  subtitle: l10n.dashAnnounceSub,
+                  onTap: () =>
+                      context.push('/leader/program/$programId/notify'),
                 ),
-                title: Text(
-                  l10n.homeAlsoAttending,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                (
+                  icon: Icons.admin_panel_settings_outlined,
+                  color: Colors.blueGrey,
+                  title: l10n.dashAdmins,
+                  subtitle: l10n.dashAdminsSub,
+                  onTap: () =>
+                      context.push('/leader/program/$programId/admins'),
                 ),
-                subtitle: Text(l10n.homeAlsoAttendingSub),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/registration/$programId'),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // 자료실 — 교재 PDF (030)
-            Card(
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.deepOrange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.folder_copy_outlined,
-                    color: Colors.deepOrange,
-                  ),
+                (
+                  icon: Icons.assignment_ind_outlined,
+                  color: Colors.green,
+                  title: l10n.asnTitle,
+                  subtitle: l10n.dashAssignSubtitle,
+                  onTap: () =>
+                      context.push('/leader/program/$programId/assign'),
                 ),
-                title: Text(
-                  l10n.libTitle,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                (
+                  icon: Icons.directions_bus_outlined,
+                  color: Colors.brown,
+                  title: l10n.dspTitle,
+                  subtitle: l10n.dashDispatchSubtitle,
+                  onTap: () =>
+                      context.push('/leader/program/$programId/dispatch'),
                 ),
-                subtitle: Text(l10n.dashLibrarySubtitle),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/leader/program/$programId/library'),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // 공지 — 전체 또는 한 숙소·말씀조에만 보낸다.
-            Card(
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.campaign_outlined,
-                    color: Colors.amber[800],
-                  ),
-                ),
-                title: Text(
-                  l10n.dashAnnounce,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(l10n.dashAnnounceSub),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () =>
-                    context.push('/leader/program/$programId/announce'),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // 관리자 — 명단·배정을 함께 볼 사람을 세운다.
-            // 수양회를 만든 사람에게만 보인다(서버도 같은 규칙이다).
-            Card(
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.indigo.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.admin_panel_settings_outlined,
-                    color: Colors.indigo,
-                  ),
-                ),
-                title: Text(
-                  l10n.dashAdmins,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(l10n.dashAdminsSub),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/leader/program/$programId/admins'),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // 배정 — 확정 묶음·자동배정
-            Card(
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.teal.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.assignment_ind_outlined,
-                    color: Colors.teal,
-                  ),
-                ),
-                title: Text(
-                  l10n.asnTitle,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(l10n.dashAssignSubtitle),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/leader/program/$programId/assign'),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // 운행 배차 — 기사 명부·자동배차 (F5)
-            Card(
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F7A6E).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.directions_bus_outlined,
-                    color: Color(0xFF0F7A6E),
-                  ),
-                ),
-                title: Text(
-                  l10n.dspTitle,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(l10n.dashDispatchSubtitle),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () =>
-                    context.push('/leader/program/$programId/dispatch'),
-              ),
+              ],
             ),
             const SizedBox(height: 20),
 
@@ -333,31 +200,9 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // 참가자 목록
-            _SectionHeader(
-              title: l10n.dashAttendeeList,
-              icon: Icons.people,
-              actionLabel: l10n.dashViewAll,
-              onAction: () =>
-                  context.push('/leader/program/$programId/attendees'),
-            ),
-            const SizedBox(height: 8),
-            registrationsAsync.when(
-              loading: () => const LinearProgressIndicator(),
-              error: (e, _) => Text(l10n.commonErrorDetail('$e')),
-              data: (registrations) {
-                if (registrations.isEmpty) {
-                  return _EmptyState(message: l10n.dashNoAttendees);
-                }
-
-                return Column(
-                  children: registrations.take(5).map((r) {
-                    return _AttendeeListTile(registration: r);
-                  }).toList(),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
+            // 참가자 목록은 여기 두지 않는다. 맨 위 "총 등록" 카드가 이미
+            // 같은 사람들을 보여 주고, 눌러서 표로 여니 아래에 다섯 명을
+            // 다시 늘어놓을 이유가 없다 — 스크롤만 길어진다.
 
             // 공지 전송 버튼
             OutlinedButton.icon(
@@ -368,6 +213,94 @@ class DashboardScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 담당자 메뉴를 넓으면 세 개씩, 좁으면 한 개씩.
+///
+/// 항목마다 Card 를 손으로 늘어놓다가 목록으로 바꿨다 — 여덟 개가 같은
+/// 모양인데 코드가 여덟 벌이면 하나만 고치고 나머지를 잊는다.
+typedef _MenuItem = ({
+  IconData icon,
+  Color color,
+  String title,
+  String subtitle,
+  VoidCallback onTap,
+});
+
+class _MenuGrid extends StatelessWidget {
+  final List<_MenuItem> items;
+
+  const _MenuGrid({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        // 한 칸이 280 아래로 내려가면 제목이 두 줄로 접힌다.
+        final columns = (box.maxWidth / 300).floor().clamp(1, 3);
+        if (columns == 1) {
+          return Column(
+            children: [
+              for (final it in items) ...[
+                _MenuCard(item: it),
+                const SizedBox(height: 10),
+              ],
+            ],
+          );
+        }
+        const gap = 10.0;
+        final width = (box.maxWidth - gap * (columns - 1)) / columns;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final it in items)
+              SizedBox(
+                width: width,
+                child: _MenuCard(item: it),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _MenuCard extends StatelessWidget {
+  final _MenuItem item;
+
+  const _MenuCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: item.color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(item.icon, color: item.color),
+        ),
+        title: Text(
+          item.title,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(
+          item.subtitle,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 12),
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: item.onTap,
       ),
     );
   }
@@ -843,49 +776,6 @@ class _PaymentTile extends StatelessWidget {
   }
 }
 
-// ─── 참가자 목록 타일 ────────────────────────────────────────
-class _AttendeeListTile extends StatelessWidget {
-  final Map<String, dynamic> registration;
-
-  const _AttendeeListTile({required this.registration});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final submitted = registration['submitted'] == true;
-
-    return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: submitted ? Colors.green[100] : Colors.grey[200],
-          child: Icon(
-            Icons.person,
-            color: submitted ? Colors.green : Colors.grey,
-          ),
-        ),
-        title: Text(
-          registration['real_name'] ?? l10n.commonNoName,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          '${WorldCountries.display(registration['country'] as String?) ?? ''}'
-          ' / ${registration['branch'] ?? ''}',
-        ),
-        trailing: Chip(
-          label: Text(
-            submitted ? l10n.dashStatusDone : l10n.dashStatusInProgress,
-            style: const TextStyle(fontSize: 11),
-          ),
-          backgroundColor: submitted ? Colors.green[50] : Colors.grey[100],
-          padding: EdgeInsets.zero,
-          labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── 빈 상태 ─────────────────────────────────────────────────
 class _EmptyState extends StatelessWidget {
   final String message;
 

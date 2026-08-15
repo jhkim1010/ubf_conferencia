@@ -6065,6 +6065,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Room name'**
   String get setupRoomsMadeName;
+
+  /// 조 정원을 비워 두었을 때의 뜻
+  ///
+  /// In en, this message translates to:
+  /// **'Leave blank to let the auto-assigner spread people evenly'**
+  String get setupGroupCapacityHint;
 }
 
 class _AppLocalizationsDelegate

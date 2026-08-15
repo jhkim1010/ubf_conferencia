@@ -11,7 +11,7 @@ router.get('/:programId', requireAuth, async (req, res) => {
     const groups = await sql`
       SELECT id, name, passage, location,
              leader_registration_id, leader_name, leader_phone, sort_order,
-             study_language AS "studyLanguage", created_at
+             study_language AS "studyLanguage", capacity, created_at
       FROM groups
       WHERE program_id = ${programId}
       ORDER BY sort_order ASC, created_at ASC
@@ -65,21 +65,32 @@ function cleanLanguage(v) {
   return STUDY_LANGUAGES.includes(s) ? s : undefined;
 }
 
+// 조 정원(051). 0 이나 음수는 아무도 못 들어가는 조가 된다 — DB 제약이
+// 막지만 400 으로 돌려주는 편이 낫다. 빈 값은 "정하지 않음" 이다.
+function cleanCapacity(v) {
+  if (v === null || v === '') return null;
+  if (v === undefined) return undefined;          // 본문에 없음 → 손대지 않는다
+  const n = Number.parseInt(v, 10);
+  if (!Number.isFinite(n) || n <= 0) return undefined;
+  return Math.min(999, n);
+}
+
 router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
   const { name, passage, location, leaderRegistrationId, leaderName, leaderPhone, sortOrder } = req.body;
   if (!name) return res.status(400).json({ error: 'name이 필요합니다' });
   const language = cleanLanguage(req.body?.studyLanguage) ?? null;
+  const capacity = cleanCapacity(req.body?.capacity) ?? null;
 
   try {
     const [group] = await sql`
       INSERT INTO groups
-        (program_id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, study_language)
+        (program_id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, study_language, capacity)
       VALUES (
         ${req.params.programId}, ${name}, ${passage ?? null}, ${location ?? null},
         ${leaderRegistrationId ?? null}, ${leaderName ?? null}, ${leaderPhone ?? null}, ${sortOrder ?? 0},
-        ${language}
+        ${language}, ${capacity}
       )
-      RETURNING id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, study_language AS "studyLanguage", created_at
+      RETURNING id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, study_language AS "studyLanguage", capacity, created_at
     `;
     res.status(201).json(group);
   } catch (err) {
@@ -114,7 +125,7 @@ router.post('/:programId/generate', requireAuth, requireProgramAdmin, async (req
         const { rows: [group] } = await client.query(
           `INSERT INTO groups (program_id, name, sort_order)
            VALUES ($1, $2, $3)
-           RETURNING id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, study_language AS "studyLanguage", created_at`,
+           RETURNING id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, study_language AS "studyLanguage", capacity, created_at`,
           [req.params.programId, name, order],
         );
         rows.push(group);
@@ -134,6 +145,7 @@ router.patch('/:programId/:groupId', requireAuth, requireProgramAdmin, async (re
   const { name, passage, location, leaderRegistrationId, leaderName, leaderPhone, sortOrder } = req.body;
   // undefined 면 본문에 없거나 모르는 값이다 — 그때는 손대지 않는다.
   const language = cleanLanguage(req.body?.studyLanguage);
+  const capacity = cleanCapacity(req.body?.capacity);
   try {
     const [updated] = await sql`
       UPDATE groups SET
@@ -147,9 +159,13 @@ router.patch('/:programId/:groupId', requireAuth, requireProgramAdmin, async (re
         study_language         = CASE
           WHEN ${language === undefined} THEN study_language
           ELSE ${language ?? null}::text
+        END,
+        capacity               = CASE
+          WHEN ${capacity === undefined} THEN capacity
+          ELSE ${capacity ?? null}::int
         END
       WHERE id = ${req.params.groupId} AND program_id = ${req.params.programId}
-      RETURNING id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, study_language AS "studyLanguage", created_at
+      RETURNING id, name, passage, location, leader_registration_id, leader_name, leader_phone, sort_order, study_language AS "studyLanguage", capacity, created_at
     `;
     if (!updated) return res.status(404).json({ error: '조를 찾을 수 없습니다' });
     res.json(updated);
