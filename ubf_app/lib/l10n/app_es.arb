@@ -1008,5 +1008,7 @@
   "setupCoupleRooms": "Cuartos de matrimonio · familia",
   "setupDormRooms": "Cuartos compartidos",
   "setupRoomsMadeName": "Nombre del cuarto",
-  "setupGroupCapacityHint": "Déjelo vacío y la asignación automática reparte parejo"
+  "setupGroupCapacityHint": "Déjelo vacío y la asignación automática reparte parejo",
+  "tblAmountDue": "Monto a pagar",
+  "tblSubmittedHint": "Actívelo si tomó su formulario en papel"
 }

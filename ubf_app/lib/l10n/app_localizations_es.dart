@@ -3338,4 +3338,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get setupGroupCapacityHint =>
       'Déjelo vacío y la asignación automática reparte parejo';
+
+  @override
+  String get tblAmountDue => 'Monto a pagar';
+
+  @override
+  String get tblSubmittedHint => 'Actívelo si tomó su formulario en papel';
 }

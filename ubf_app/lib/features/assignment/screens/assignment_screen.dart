@@ -468,6 +468,10 @@ class _GroupsAssignTab extends ConsumerWidget {
             for (final group in groups)
               _groupCard(context, ref, group, refresh),
           ],
+          rightWeights: [
+            for (final group in groups)
+              2 + ((group['members'] as List?)?.length ?? 0) / 2,
+          ],
         );
       },
     );

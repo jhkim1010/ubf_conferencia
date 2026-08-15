@@ -11,6 +11,10 @@ import '../constants/app_constants.dart';
 // macOS: keychain 엔타이틀먼트 불필요한 SharedPreferences 사용
 // iOS/Android: 보안 키체인인 FlutterSecureStorage 사용
 class ApiClient {
+  /// "본문에 넣지 않는다" 를 나타내는 표식. null 은 "지운다" 라는 뜻이라
+  /// 둘을 구별해야 한다.
+  static const _unset = Object();
+
   static const _storage = FlutterSecureStorage();
   static String? _cachedToken;
 
@@ -1131,6 +1135,27 @@ class ApiClient {
       headers: await _headers(),
     );
     _decode(response);
+  }
+
+  /// 담당자가 한 사람의 등록 완료 여부와 입금을 손본다.
+  ///
+  /// [payment] 에 null 을 주면 입금 줄을 지운다 — 잘못 적었을 때 되돌릴
+  /// 길이 그것뿐이다. 보내지 않으면 손대지 않는다.
+  static Future<Map<String, dynamic>> updateRegistrationAdmin(
+    String programId,
+    String registrationId, {
+    bool? submitted,
+    Object? payment = _unset,
+  }) async {
+    final response = await http.patch(
+      _uri('/programs/$programId/registrations/$registrationId'),
+      headers: await _headers(),
+      body: jsonEncode({
+        'submitted': ?submitted,
+        if (!identical(payment, _unset)) 'payment': payment,
+      }),
+    );
+    return _decode(response);
   }
 
   /// 내 텔레그램 연결 상태와 연결 링크(047).

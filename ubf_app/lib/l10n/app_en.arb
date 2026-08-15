@@ -2158,5 +2158,13 @@
   "setupGroupCapacityHint": "Leave blank to let the auto-assigner spread people evenly",
   "@setupGroupCapacityHint": {
     "description": "조 정원을 비워 두었을 때의 뜻"
+  },
+  "tblAmountDue": "Amount owed",
+  "@tblAmountDue": {
+    "description": "그 사람이 내야 할 금액"
+  },
+  "tblSubmittedHint": "Turn on if you took their form on paper",
+  "@tblSubmittedHint": {
+    "description": "등록 완료를 담당자가 켜는 경우"
   }
 }

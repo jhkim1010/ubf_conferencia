@@ -3339,4 +3339,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get setupGroupCapacityHint =>
       'Deixe vazio e a atribuição automática divide por igual';
+
+  @override
+  String get tblAmountDue => 'Valor a pagar';
+
+  @override
+  String get tblSubmittedHint => 'Ative se você anotou o formulário no papel';
 }

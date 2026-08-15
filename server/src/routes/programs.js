@@ -928,6 +928,83 @@ router.get('/:id/registrations', requireAuth, requireProgramAdmin, async (req, r
   }
 });
 
+// PATCH /programs/:id/registrations/:registrationId — 한 사람의 등록·입금 손보기
+//
+// 담당자가 명단을 보다가 그 자리에서 고쳐야 하는 것들이 있다:
+//   - 현장에서 등록서를 대신 받아 적어 준 사람의 **등록 완료**
+//   - 그 사람이 **낼 돈**과 **받았는지**
+//
+// 지금까지 입금은 등록자가 올린 것을 담당자가 승인/반려하는 길뿐이었다.
+// 그런데 현금을 그 자리에서 받는 수양회가 대부분이고, 그때는 올릴 영수증도
+// 없다. 담당자가 직접 적을 수 있어야 한다.
+//
+// **금액과 상태는 함께 다룬다.** 금액만 적고 상태를 안 정하면 "얼마를
+// 받을지는 아는데 받았는지는 모르는" 줄이 생긴다.
+router.patch(
+  '/:id/registrations/:registrationId',
+  requireAuth,
+  requireProgramAdmin,
+  async (req, res) => {
+    const { id: programId, registrationId } = req.params;
+    const body = req.body ?? {};
+
+    try {
+      const [reg] = await sql`
+        SELECT id FROM registrations
+        WHERE id = ${registrationId} AND program_id = ${programId}
+      `;
+      if (!reg) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+
+      // 등록 완료 여부. 본문에 없으면 손대지 않는다.
+      if (typeof body.submitted === 'boolean') {
+        await sql`
+          UPDATE registrations SET submitted = ${body.submitted}, updated_at = NOW()
+          WHERE id = ${registrationId}
+        `;
+      }
+
+      // 입금. payments 는 등록 하나에 한 줄이다(001 의 UNIQUE).
+      if (Object.prototype.hasOwnProperty.call(body, 'payment')) {
+        const pay = body.payment;
+        if (pay === null) {
+          // 잘못 적었을 때 되돌릴 길. 줄을 지운다.
+          await sql`DELETE FROM payments WHERE registration_id = ${registrationId}`;
+        } else {
+          const amount = Number(pay?.amount);
+          if (!Number.isFinite(amount) || amount < 0) {
+            return res.status(400).json({ error: '금액이 올바르지 않습니다' });
+          }
+          const status = ['pending', 'confirmed', 'rejected'].includes(pay?.status)
+            ? pay.status
+            : 'pending';
+          await sql`
+            INSERT INTO payments (registration_id, amount, status, note)
+            VALUES (${registrationId}, ${amount}, ${status}, ${pay?.note ?? null})
+            ON CONFLICT (registration_id) DO UPDATE
+              SET amount = ${amount},
+                  status = ${status},
+                  note = ${pay?.note ?? null},
+                  confirmed_by = ${status === 'confirmed' ? (req.user.leaderId ?? null) : null},
+                  confirmed_at = ${status === 'confirmed' ? new Date() : null}
+          `;
+        }
+      }
+
+      const [row] = await sql`
+        SELECT r.id, r.submitted,
+               json_build_object('status', pay.status, 'amount', pay.amount) AS payment
+        FROM registrations r
+        LEFT JOIN payments pay ON pay.registration_id = r.id
+        WHERE r.id = ${registrationId}
+      `;
+      res.json(row);
+    } catch (err) {
+      console.error('참가자 수정 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
 // PATCH /programs/:id/registrations/:registrationId/discount - 할인 신청 판단 (리더 전용)
 //
 // 신청과 판단을 분리한다. 등록자는 PUT /registrations/:programId/me 로 신청만 남기고

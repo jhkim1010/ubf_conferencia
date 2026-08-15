@@ -6071,6 +6071,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave blank to let the auto-assigner spread people evenly'**
   String get setupGroupCapacityHint;
+
+  /// 그 사람이 내야 할 금액
+  ///
+  /// In en, this message translates to:
+  /// **'Amount owed'**
+  String get tblAmountDue;
+
+  /// 등록 완료를 담당자가 켜는 경우
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on if you took their form on paper'**
+  String get tblSubmittedHint;
 }
 
 class _AppLocalizationsDelegate

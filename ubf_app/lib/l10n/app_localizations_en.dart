@@ -3327,4 +3327,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get setupGroupCapacityHint =>
       'Leave blank to let the auto-assigner spread people evenly';
+
+  @override
+  String get tblAmountDue => 'Amount owed';
+
+  @override
+  String get tblSubmittedHint => 'Turn on if you took their form on paper';
 }

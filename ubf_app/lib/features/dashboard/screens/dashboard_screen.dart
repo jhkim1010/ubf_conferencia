@@ -373,22 +373,6 @@ class _StatsGrid extends StatelessWidget {
       ];
     }
 
-    /// 입금 줄은 상태를 말로 바꾸고, **아직 못 받은 사람**을 크림색으로
-    /// 만든다 — 다른 화면과 같은 뜻이다(크림색 = 아직 안 끝난 사람).
-    List<Map<String, dynamic>> paymentRows() => [
-      for (final p in rows('payments'))
-        {
-          'name': p['name'],
-          'country': p['country'],
-          'detail': switch (p['status']) {
-            'confirmed' => l10n.dashPayConfirmed,
-            'pending' => l10n.dashPayPending,
-            _ => l10n.dashPayNone,
-          },
-          'submitted': p['status'] == 'confirmed',
-        },
-    ];
-
     // 카드 크기를 화면 너비에 비례해 늘리지 않는다.
     //
     // 예전에는 2열 고정에 childAspectRatio 로 높이를 정했더니, 컴퓨터
@@ -445,22 +429,9 @@ class _StatsGrid extends StatelessWidget {
               color: Colors.orange,
               onOpen: () => _openTable(context, programId, RosterView.meals),
             ),
-            // 입금 현황. 대기·확인을 카드 둘로 나눠 두면 담당자가 둘을
-            // 머릿속에서 더해야 하고, 전액을 현장에서 받는 수양회에서는
-            // 늘 0 인 칸 둘이 자리만 차지한다. 하나로 합치고, 필요 없으면
-            // 아예 내보내지 않는다 — 필요 여부는 서버가 정한다.
-            if (stats!['needs_payment_card'] != false)
-              _StatCard(
-                label: l10n.dashStatPayments,
-                total: n('total_registrations'),
-                preview: paymentRows(),
-                value:
-                    '${n('confirmed_payment_count')} / ${n('total_registrations')}',
-                icon: Icons.payments_outlined,
-                color: Colors.red,
-                onOpen: () =>
-                    _openTable(context, programId, RosterView.payments),
-              ),
+            // 입금 카드는 두지 않는다. 입금은 이제 참가자 표 안에서
+            // 사람마다 적고 고치므로(053), 같은 것을 카드로 한 번 더
+            // 보여 주면 어느 쪽이 최신인지 헷갈릴 뿐이다.
             // 봉사. 큰 숫자는 **자원자 수** 다 — 등록할 때 "할 수 있다" 고
             // 적어 낸 사람. 역할을 맡은 것은 아니고, 누구에게 맡길지는
             // 담당자가 정한다. 미리보기에는 역할별 확정/필요를 보여 준다.

@@ -7,6 +7,7 @@ import '../../../core/utils/api_client.dart';
 import '../../../core/utils/service_role_label.dart';
 import '../../program/providers/program_provider.dart';
 import '../providers/assignment_provider.dart';
+import '../widgets/split_board.dart';
 
 // 봉사 담당자 배정 (039)
 //
@@ -94,7 +95,34 @@ class ServiceAssignTab extends ConsumerWidget {
                       children: [
                         _rolesButton(context, ref, roles, l10n),
                         const SizedBox(height: 12),
-                        ..._roleCards(roles, refresh, l10n),
+                        // 역할 카드는 높이가 제각각이다(사람이 없는 역할은
+                        // 두 줄, 여섯 명이 든 역할은 여덟 줄). 한 줄에
+                        // 하나씩 쌓으면 화면 절반이 빈 채로 남는다.
+                        if (roles.isEmpty)
+                          ..._roleCards(roles, refresh, l10n)
+                        else
+                          LayoutBuilder(
+                            builder: (context, inner) => MasonryColumns(
+                              columns: (inner.maxWidth / 320).floor().clamp(
+                                1,
+                                2,
+                              ),
+                              weights: [
+                                for (final r in roles)
+                                  2 +
+                                      ((r['people'] as List?)?.length ?? 0)
+                                          .toDouble(),
+                              ],
+                              children: [
+                                for (final role in roles)
+                                  _RoleCard(
+                                    programId: programId,
+                                    role: role,
+                                    onChanged: refresh,
+                                  ),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
                   ),

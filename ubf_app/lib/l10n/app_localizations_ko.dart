@@ -3256,4 +3256,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get setupGroupCapacityHint => '비워 두면 자동 배정이 고르게 나눕니다';
+
+  @override
+  String get tblAmountDue => '내야 할 금액';
+
+  @override
+  String get tblSubmittedHint => '종이로 대신 받아 적었으면 켜 주십시오';
 }

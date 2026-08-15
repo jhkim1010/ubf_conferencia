@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/constants/world_countries.dart';
+import '../../../core/utils/api_client.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/table_export.dart';
 import '../../program/providers/program_provider.dart';
@@ -161,6 +163,117 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     ];
   }
 
+  /// 한 사람의 등록 완료 여부와 입금을 그 자리에서 고친다.
+  ///
+  /// 현금을 현장에서 받는 수양회가 대부분이고, 그때는 등록자가 올릴
+  /// 영수증도 없다. 담당자가 직접 적을 수 있어야 한다 — 이것이 없어서
+  /// 입금은 등록자가 올린 것을 승인/반려하는 길뿐이었다.
+  Future<void> _editPerson(Map<String, dynamic> reg, Currency currency) async {
+    final l10n = AppLocalizations.of(context)!;
+    final pay = (reg['payment'] as Map?) ?? const {};
+    var submitted = reg['submitted'] == true;
+    // 상태는 셋이다: 아직 없음 · 받을 예정 · 받았음.
+    var status = switch (pay['status']) {
+      'confirmed' => 'confirmed',
+      'pending' => 'pending',
+      _ => 'none',
+    };
+    // 낼 돈이 아직 없으면 등록서에서 계산된 금액을 넣어 준다 — 담당자가
+    // 매번 옮겨 적을 이유가 없다.
+    final amountCtrl = TextEditingController(
+      text: (Money.parse(pay['amount']) ?? Money.parse(reg['total_cost']) ?? 0)
+          .toStringAsFixed(0),
+    );
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: Text('${reg['real_name'] ?? ''}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: submitted,
+                onChanged: (v) => setLocal(() => submitted = v),
+                title: Text(l10n.dashStatSubmitted),
+                subtitle: Text(
+                  l10n.tblSubmittedHint,
+                  style: const TextStyle(fontSize: 11.5),
+                ),
+              ),
+              const Divider(),
+              TextField(
+                controller: amountCtrl,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(
+                  labelText: l10n.tblAmountDue,
+                  prefixText: '${currency.symbol} ',
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                children: [
+                  for (final o in [
+                    (key: 'none', label: l10n.dashPayNone),
+                    (key: 'pending', label: l10n.dashPayPending),
+                    (key: 'confirmed', label: l10n.dashPayConfirmed),
+                  ])
+                    ChoiceChip(
+                      label: Text(
+                        o.label,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      selected: status == o.key,
+                      onSelected: (_) => setLocal(() => status = o.key),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.actionCancel),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.actionSave),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (saved != true || !mounted) return;
+
+    try {
+      await ApiClient.updateRegistrationAdmin(
+        widget.programId,
+        reg['id'] as String,
+        submitted: submitted,
+        // "아직 없음" 은 입금 줄을 지운다는 뜻이다.
+        payment: status == 'none'
+            ? null
+            : {
+                'amount': int.tryParse(amountCtrl.text.trim()) ?? 0,
+                'status': status,
+              },
+      );
+      ref.invalidate(programRegistrationsProvider(widget.programId));
+      ref.invalidate(programStatsProvider(widget.programId));
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   Future<void> _export(
     bool pdf,
     String programName,
@@ -309,6 +422,9 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                                 ),
                               ),
                             ),
+                          // 고치기 칸. 내보내기에는 넣지 않는다 — 종이에
+                          // 인쇄된 표에 버튼 자리가 있으면 이상하다.
+                          const DataColumn(label: Text('')),
                         ],
                         rows: [
                           for (var ri = 0; ri < rows.length; ri++)
@@ -334,6 +450,17 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                                       ),
                                     ),
                                   ),
+                                DataCell(
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.edit_outlined,
+                                      size: 18,
+                                    ),
+                                    tooltip: l10n.actionEdit,
+                                    onPressed: () =>
+                                        _editPerson(data[ri], currency),
+                                  ),
+                                ),
                               ],
                             ),
                         ],
