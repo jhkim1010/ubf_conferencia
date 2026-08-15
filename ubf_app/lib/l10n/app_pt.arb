@@ -1024,5 +1024,10 @@
   "dashLedgerSub": "Apoios, gastos e o que sobra",
   "ledgerAddExpense": "Anotar gasto",
   "ledgerAddIncome": "Anotar apoio",
-  "ledgerCount": "{count} lançamentos"
+  "ledgerCount": "{count} lançamentos",
+  "ledgerLocalAmount": "Valor em {code}",
+  "ledgerRate": "{code} por 1 {base}",
+  "ledgerRateBlue": "dólar blue de hoje — altere se usou outro",
+  "ledgerRateMarket": "cotação de hoje — altere se usou outra",
+  "ledgerRateUnavailable": "Não foi possível obter a cotação. Digite a que usou."
 }

@@ -3350,4 +3350,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String ledgerCount(int count) {
     return '$count건';
   }
+
+  @override
+  String ledgerLocalAmount(String code) {
+    return '$code 금액';
+  }
+
+  @override
+  String ledgerRate(String code, String base) {
+    return '1 $base 당 $code';
+  }
+
+  @override
+  String get ledgerRateBlue => '오늘 블루 환율 — 실제로 바꾼 값이 다르면 고치십시오';
+
+  @override
+  String get ledgerRateMarket => '오늘 환율 — 실제로 바꾼 값이 다르면 고치십시오';
+
+  @override
+  String get ledgerRateUnavailable => '환율을 못 가져왔습니다. 쓰신 환율을 적어 주십시오.';
 }

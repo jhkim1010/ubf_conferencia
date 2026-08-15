@@ -1038,5 +1038,10 @@
   "dashLedgerSub": "지원과 지출, 그리고 남은 돈",
   "ledgerAddExpense": "지출 적기",
   "ledgerAddIncome": "후원금 적기",
-  "ledgerCount": "{count}건"
+  "ledgerCount": "{count}건",
+  "ledgerLocalAmount": "{code} 금액",
+  "ledgerRate": "1 {base} 당 {code}",
+  "ledgerRateBlue": "오늘 블루 환율 — 실제로 바꾼 값이 다르면 고치십시오",
+  "ledgerRateMarket": "오늘 환율 — 실제로 바꾼 값이 다르면 고치십시오",
+  "ledgerRateUnavailable": "환율을 못 가져왔습니다. 쓰신 환율을 적어 주십시오."
 }

@@ -3433,4 +3433,24 @@ class AppLocalizationsPt extends AppLocalizations {
   String ledgerCount(int count) {
     return '$count lançamentos';
   }
+
+  @override
+  String ledgerLocalAmount(String code) {
+    return 'Valor em $code';
+  }
+
+  @override
+  String ledgerRate(String code, String base) {
+    return '$code por 1 $base';
+  }
+
+  @override
+  String get ledgerRateBlue => 'dólar blue de hoje — altere se usou outro';
+
+  @override
+  String get ledgerRateMarket => 'cotação de hoje — altere se usou outra';
+
+  @override
+  String get ledgerRateUnavailable =>
+      'Não foi possível obter a cotação. Digite a que usou.';
 }

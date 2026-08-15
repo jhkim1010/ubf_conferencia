@@ -3421,4 +3421,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String ledgerCount(int count) {
     return '$count entries';
   }
+
+  @override
+  String ledgerLocalAmount(String code) {
+    return 'Amount in $code';
+  }
+
+  @override
+  String ledgerRate(String code, String base) {
+    return '$code per 1 $base';
+  }
+
+  @override
+  String get ledgerRateBlue =>
+      'today\'s blue rate — change it if you got another';
+
+  @override
+  String get ledgerRateMarket => 'today\'s rate — change it if you got another';
+
+  @override
+  String get ledgerRateUnavailable =>
+      'Could not fetch a rate. Type the one you used.';
 }

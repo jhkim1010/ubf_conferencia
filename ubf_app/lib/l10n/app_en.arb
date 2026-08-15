@@ -2240,5 +2240,29 @@
         "type": "int"
       }
     }
-  }
+  },
+  "ledgerLocalAmount": "Amount in {code}",
+  "@ledgerLocalAmount": {
+    "description": "현지 통화 금액 칸",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerRate": "{code} per 1 {base}",
+  "@ledgerRate": {
+    "description": "환율 칸",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "base": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerRateBlue": "today's blue rate — change it if you got another",
+  "ledgerRateMarket": "today's rate — change it if you got another",
+  "ledgerRateUnavailable": "Could not fetch a rate. Type the one you used."
 }

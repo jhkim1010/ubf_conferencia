@@ -1168,6 +1168,20 @@ class ApiClient {
     return _decode(response);
   }
 
+  /// 오늘 환율(054). ARS 는 블루, 나머지는 일반 환율표.
+  ///
+  /// 못 가져오면 available:false 로 온다 — 그때는 화면이 손으로 넣게 한다.
+  static Future<Map<String, dynamic>> getFxRate(
+    String programId,
+    String currency,
+  ) async {
+    final response = await http.get(
+      _uri('/ledger/$programId/rate?currency=$currency'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
   static Future<void> addLedgerEntry(
     String programId,
     Map<String, dynamic> entry,

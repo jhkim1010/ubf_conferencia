@@ -3432,4 +3432,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String ledgerCount(int count) {
     return '$count movimientos';
   }
+
+  @override
+  String ledgerLocalAmount(String code) {
+    return 'Monto en $code';
+  }
+
+  @override
+  String ledgerRate(String code, String base) {
+    return '$code por 1 $base';
+  }
+
+  @override
+  String get ledgerRateBlue => 'dólar blue de hoy — cámbielo si usó otro';
+
+  @override
+  String get ledgerRateMarket => 'cotización de hoy — cámbiela si usó otra';
+
+  @override
+  String get ledgerRateUnavailable =>
+      'No se pudo traer la cotización. Escriba la que usó.';
 }

@@ -139,6 +139,22 @@ class LedgerScreen extends ConsumerWidget {
           : (Money.parse(entry['amount']) ?? 0).toStringAsFixed(0),
     );
 
+    // 현지 통화로 적으면 수양회 통화로 환산해 저장한다. 환율은 가져오되
+    // 고칠 수 있다 — 아르헨티나는 공식과 블루가 따로 움직이고, 그날 실제로
+    // 바꾼 값이 API 와 다를 수 있다.
+    var local = (entry?['localCurrency'] as String?) ?? '';
+    final localAmountCtrl = TextEditingController(
+      text: entry?['localAmount'] == null
+          ? ''
+          : (Money.parse(entry!['localAmount']) ?? 0).toStringAsFixed(0),
+    );
+    final rateCtrl = TextEditingController(
+      text: entry?['rate'] == null
+          ? ''
+          : (Money.parse(entry!['rate']) ?? 0).toStringAsFixed(2),
+    );
+    String rateNote = '';
+
     final action = await showDialog<String>(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -177,15 +193,94 @@ class LedgerScreen extends ConsumerWidget {
                   decoration: InputDecoration(labelText: l10n.ledgerWhat),
                 ),
                 const SizedBox(height: 8),
-                TextField(
-                  controller: amountCtrl,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: l10n.ledgerAmount,
-                    prefixText: '${currency.symbol} ',
-                  ),
+                // 현지 통화. 비워 두면 수양회 통화로 그냥 적는다.
+                Wrap(
+                  spacing: 6,
+                  children: [
+                    for (final c in ['', 'ARS', 'BRL', 'PYG', 'KRW'])
+                      ChoiceChip(
+                        label: Text(
+                          c.isEmpty ? currency.code : c,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        selected: local == c,
+                        onSelected: (_) async {
+                          setLocal(() {
+                            local = c;
+                            rateNote = '';
+                          });
+                          if (c.isEmpty) return;
+                          // 오늘 환율을 넣어 준다. 못 가져오면 손으로 적는다.
+                          final r = await ApiClient.getFxRate(programId, c);
+                          if (!ctx.mounted) return;
+                          setLocal(() {
+                            if (r['available'] == true) {
+                              rateCtrl.text = (Money.parse(r['rate']) ?? 0)
+                                  .toStringAsFixed(2);
+                              rateNote = r['source'] == 'blue'
+                                  ? l10n.ledgerRateBlue
+                                  : l10n.ledgerRateMarket;
+                            } else {
+                              rateNote = l10n.ledgerRateUnavailable;
+                            }
+                          });
+                        },
+                      ),
+                  ],
                 ),
+                const SizedBox(height: 8),
+                if (local.isEmpty)
+                  TextField(
+                    controller: amountCtrl,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      labelText: l10n.ledgerAmount,
+                      prefixText: '${currency.symbol} ',
+                    ),
+                  )
+                else ...[
+                  TextField(
+                    controller: localAmountCtrl,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    onChanged: (_) => setLocal(() {}),
+                    decoration: InputDecoration(
+                      labelText: l10n.ledgerLocalAmount(local),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: rateCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    onChanged: (_) => setLocal(() {}),
+                    decoration: InputDecoration(
+                      labelText: l10n.ledgerRate(local, currency.code),
+                      helperText: rateNote.isEmpty ? null : rateNote,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // 환산 결과를 저장 전에 보여 준다. 나중에 장부를 보고
+                  // "이게 얼마였더라" 를 겪지 않아야 한다.
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      () {
+                        final a =
+                            double.tryParse(localAmountCtrl.text.trim()) ?? 0;
+                        final r = double.tryParse(rateCtrl.text.trim()) ?? 0;
+                        if (a <= 0 || r <= 0) return '—';
+                        return '= ${currency.format(a / r)}';
+                      }(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 8),
                 TextField(
                   controller: noteCtrl,
@@ -219,11 +314,23 @@ class LedgerScreen extends ConsumerWidget {
       if (action == 'delete' && entry != null) {
         await ApiClient.deleteLedgerEntry(programId, entry['id'] as String);
       } else if (action == 'save') {
+        // 현지 통화로 적었으면 환산해 저장하고, 그때 쓴 환율도 함께
+        // 남긴다 — 나중에 다시 찾은 환율은 그날 값이 아니다.
+        final localAmount = double.tryParse(localAmountCtrl.text.trim()) ?? 0;
+        final rate = double.tryParse(rateCtrl.text.trim()) ?? 0;
+        final useLocal = local.isNotEmpty && localAmount > 0 && rate > 0;
         final body = {
           'kind': kind0,
           'title': titleCtrl.text.trim(),
-          'amount': int.tryParse(amountCtrl.text.trim()) ?? 0,
+          'amount': useLocal
+              ? (localAmount / rate)
+              : (int.tryParse(amountCtrl.text.trim()) ?? 0),
           'note': noteCtrl.text.trim(),
+          if (useLocal) ...{
+            'localAmount': localAmount,
+            'localCurrency': local,
+            'rate': rate,
+          },
         };
         if (entry == null) {
           await ApiClient.addLedgerEntry(programId, body);
@@ -355,6 +462,11 @@ class _Entries extends StatelessWidget {
               subtitle: Text(
                 [
                   '${e['occurred_on'] ?? ''}'.split('T').first,
+                  // 실제로 낸 돈과 그때 환율. 영수증과 맞춰 보려면 이것이
+                  // 있어야 한다.
+                  if (e['localAmount'] != null)
+                    '${e['localCurrency']} ${Money.parse(e['localAmount'])?.toStringAsFixed(0) ?? ''}'
+                        ' @ ${Money.parse(e['rate'])?.toStringAsFixed(2) ?? ''}',
                   '${e['note'] ?? ''}',
                 ].where((s) => s.isNotEmpty).join(' · '),
                 style: const TextStyle(fontSize: 11.5),

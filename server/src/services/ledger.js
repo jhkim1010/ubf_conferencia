@@ -31,12 +31,28 @@ export function normalizeEntry(raw) {
     ? raw.occurredOn
     : null;
 
+  // 현지 통화로 적은 경우(054). 셋이 함께 와야 한다 — 금액만 있고 환율이
+  // 없으면 나중에 무엇으로 환산했는지 알 수 없다.
+  const localAmount = Number(raw.localAmount);
+  const rate = Number(raw.rate);
+  const localCurrency =
+    typeof raw.localCurrency === 'string' && /^[A-Za-z]{3}$/.test(raw.localCurrency)
+      ? raw.localCurrency.toUpperCase()
+      : null;
+  const hasLocal =
+    Number.isFinite(localAmount) && localAmount > 0 &&
+    Number.isFinite(rate) && rate > 0 &&
+    localCurrency !== null;
+
   return {
     kind: raw.kind,
     amount: Math.round(amount * 100) / 100,
     title,
     note: note === '' ? null : note,
     occurredOn: on,
+    localAmount: hasLocal ? Math.round(localAmount * 100) / 100 : null,
+    localCurrency: hasLocal ? localCurrency : null,
+    rate: hasLocal ? Math.round(rate * 1e6) / 1e6 : null,
   };
 }
 

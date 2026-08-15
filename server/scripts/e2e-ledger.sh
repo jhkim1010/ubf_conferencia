@@ -120,6 +120,41 @@ eq "모르는 갈래는 거절" '400' "$(ADD '{"kind":"기부","amount":5,"title
 eq "내용이 없으면 거절" '400' "$(ADD '{"kind":"expense","amount":5,"title":"  "}')"
 
 echo
+echo "── 현지 통화로 적기 (054) ──"
+# 버스도 식자재도 페소로 낸다. 달러로 환산해서만 적어 두면 나중에 영수증과
+# 맞춰 볼 수가 없다 — 실제로 낸 돈과 그때 환율을 함께 남긴다.
+eq "현지 금액과 환율을 함께 적는다" '201' \
+   "$(ADD '{"kind":"expense","amount":414.24,"title":"숙소 잔금",
+            "localAmount":640000,"localCurrency":"ARS","rate":1545}')"
+LAST() { LEDGER | jq_ "(r.entries.find(x => x.title === '숙소 잔금') || {}).$1"; }
+eq "  현지 금액이 남는다" '640000' "$(LAST localAmount)"
+eq "  통화도"            'ARS'    "$(LAST localCurrency)"
+eq "  그때 환율도"       '1545'   "$(LAST rate)"
+# 합계는 수양회 통화로 낸다.
+eq "  합계는 환산한 값으로" '414.24' "$(LAST amount)"
+
+# 환율 없이 현지 금액만 오면 무엇으로 환산했는지 알 수 없다 — 그 셋은
+# 함께여야 한다. 금액은 살리고 현지 정보만 버린다.
+eq "환율이 없으면 현지 정보는 안 남긴다" '201' \
+   "$(ADD '{"kind":"expense","amount":100,"title":"환율없음","localAmount":50000,"localCurrency":"ARS"}')"
+eq "  현지 금액이 비어 있다" '' \
+   "$(LEDGER | jq_ "(r.entries.find(x => x.title === '환율없음') || {}).localAmount")"
+
+echo
+echo "── 오늘 환율 ──"
+# 못 가져와도 장부는 적을 수 있어야 한다 — 500 이 아니라 available:false 다.
+RATE=$(curl -s "$API/ledger/$P/rate?currency=ARS" -H "Authorization: Bearer $LT")
+eq "환율 요청이 통한다" '200' \
+   "$(curl -s -o /dev/null -w '%{http_code}' "$API/ledger/$P/rate?currency=ARS" \
+      -H "Authorization: Bearer $LT")"
+eq "  available 을 답한다" 'true' \
+   "$(printf '%s' "$RATE" | jq_ "typeof r.available === 'boolean'")"
+# 모르는 통화도 500 이 아니다.
+eq "모르는 통화는 조용히 없음" 'false' \
+   "$(curl -s "$API/ledger/$P/rate?currency=XYZ" -H "Authorization: Bearer $LT" \
+      | jq_ 'r.available')"
+
+echo
 echo "── 권한 ──"
 OTHER=$(login "lg-other-$$@test.local")
 eq "담당자가 아니면 403" '403' \

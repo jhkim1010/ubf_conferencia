@@ -6,6 +6,7 @@ import { Router } from 'express';
 import { sql } from '../db.js';
 import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
 import { ledgerSummary, normalizeEntry } from '../services/ledger.js';
+import { rateFor } from '../services/fx.js';
 
 const router = Router();
 
@@ -39,7 +40,8 @@ async function feeTotals(programId) {
 router.get('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
   try {
     const entries = await sql`
-      SELECT id, kind, amount, title, note, occurred_on, created_at
+      SELECT id, kind, amount, title, note, occurred_on, created_at,
+             local_amount AS "localAmount", local_currency AS "localCurrency", rate
       FROM ledger_entries
       WHERE program_id = ${req.params.programId}
       ORDER BY occurred_on DESC, created_at DESC
@@ -61,13 +63,16 @@ router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) =>
   try {
     const [row] = await sql`
       INSERT INTO ledger_entries
-        (program_id, kind, amount, title, note, occurred_on, created_by)
+        (program_id, kind, amount, title, note, occurred_on, created_by,
+         local_amount, local_currency, rate)
       VALUES (
         ${req.params.programId}, ${e.kind}, ${e.amount}, ${e.title}, ${e.note},
         COALESCE(${e.occurredOn}::date, CURRENT_DATE),
-        ${req.user.leaderId ?? null}
+        ${req.user.leaderId ?? null},
+        ${e.localAmount}, ${e.localCurrency}, ${e.rate}
       )
-      RETURNING id, kind, amount, title, note, occurred_on, created_at
+      RETURNING id, kind, amount, title, note, occurred_on, created_at,
+                local_amount AS "localAmount", local_currency AS "localCurrency", rate
     `;
     res.status(201).json(row);
   } catch (err) {
@@ -92,10 +97,14 @@ router.patch(
           kind = ${e.kind}, amount = ${e.amount}, title = ${e.title},
           note = ${e.note},
           occurred_on = COALESCE(${e.occurredOn}::date, occurred_on),
+          local_amount = ${e.localAmount},
+          local_currency = ${e.localCurrency},
+          rate = ${e.rate},
           updated_at = NOW()
         WHERE id = ${req.params.entryId}
           AND program_id = ${req.params.programId}
-        RETURNING id, kind, amount, title, note, occurred_on, created_at
+        RETURNING id, kind, amount, title, note, occurred_on, created_at,
+                  local_amount AS "localAmount", local_currency AS "localCurrency", rate
       `;
       if (!row) return res.status(404).json({ error: '항목을 찾을 수 없습니다' });
       res.json(row);
@@ -128,6 +137,24 @@ router.delete(
       console.error('장부 삭제 오류:', err);
       res.status(500).json({ error: '서버 오류' });
     }
+  },
+);
+
+// GET /ledger/:programId/rate?currency=ARS — 오늘 환율
+//
+// **가져온 값은 고칠 수 있는 기본값이다.** 아르헨티나는 공식과 블루가 따로
+// 움직이고, 그날 실제로 바꾼 환율이 이것과 다를 수 있다.
+router.get(
+  '/:programId/rate',
+  requireAuth,
+  requireProgramAdmin,
+  async (req, res) => {
+    const r = await rateFor(req.query.currency);
+    if (!r) {
+      // 못 가져와도 장부는 적을 수 있어야 한다 — 화면이 손으로 넣게 한다.
+      return res.status(200).json({ available: false });
+    }
+    res.json({ available: true, ...r });
   },
 );
 

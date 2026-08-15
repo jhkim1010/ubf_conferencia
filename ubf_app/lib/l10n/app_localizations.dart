@@ -6251,6 +6251,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} entries'**
   String ledgerCount(int count);
+
+  /// 현지 통화 금액 칸
+  ///
+  /// In en, this message translates to:
+  /// **'Amount in {code}'**
+  String ledgerLocalAmount(String code);
+
+  /// 환율 칸
+  ///
+  /// In en, this message translates to:
+  /// **'{code} per 1 {base}'**
+  String ledgerRate(String code, String base);
+
+  /// No description provided for @ledgerRateBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'today\'s blue rate — change it if you got another'**
+  String get ledgerRateBlue;
+
+  /// No description provided for @ledgerRateMarket.
+  ///
+  /// In en, this message translates to:
+  /// **'today\'s rate — change it if you got another'**
+  String get ledgerRateMarket;
+
+  /// No description provided for @ledgerRateUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not fetch a rate. Type the one you used.'**
+  String get ledgerRateUnavailable;
 }
 
 class _AppLocalizationsDelegate
