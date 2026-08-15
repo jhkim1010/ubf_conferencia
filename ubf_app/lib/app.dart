@@ -13,6 +13,7 @@ import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/profile_setup_screen.dart';
 import 'features/home/screens/home_screen.dart';
 import 'features/program/screens/become_leader_screen.dart';
+import 'features/program/screens/ledger_screen.dart';
 import 'features/program/screens/create_program_screen.dart';
 import 'features/program/screens/program_created_screen.dart';
 import 'features/registration/screens/registration_flow_screen.dart';
@@ -146,6 +147,11 @@ class _UbfAppState extends ConsumerState<UbfApp> {
         ),
         // 자료실. 담당자용(관리 가능)과 참가자용(보기)을 경로로 나눈다 —
         // 화면은 하나지만 권한이 다르고, 참가자에게 관리 버튼이 보이면 안 된다.
+        // 수양회 장부(053) — 지원·지출과 남은 돈.
+        GoRoute(
+          path: '/leader/program/:id/ledger',
+          builder: (_, s) => LedgerScreen(programId: s.pathParameters['id']!),
+        ),
         GoRoute(
           path: '/leader/program/:id/library',
           builder: (_, s) =>

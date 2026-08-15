@@ -2206,5 +2206,28 @@
   "sumRemaining": "Still owed",
   "@sumRemaining": {
     "description": "명단 옆 셈: 아직 받지 못한 총액"
-  }
+  },
+  "ledgerTitle": "Money",
+  "ledgerAdd": "Add an entry",
+  "ledgerEmpty": "Nothing written down yet",
+  "ledgerIncome": "Came in",
+  "ledgerExpense": "Went out",
+  "ledgerWhat": "What for",
+  "ledgerAmount": "Amount",
+  "ledgerNote": "Note (optional)",
+  "ledgerCollected": "Fees collected",
+  "ledgerSupport": "Support received",
+  "ledgerSpent": "Spent",
+  "ledgerBalance": "In hand",
+  "ledgerExpected": "If everyone pays",
+  "ledgerOwedNote": "Fees still owed: {amount}",
+  "@ledgerOwedNote": {
+    "description": "아직 못 받은 참가비",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dashLedgerSub": "Support, spending and what is left"
 }

@@ -6143,6 +6143,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Still owed'**
   String get sumRemaining;
+
+  /// No description provided for @ledgerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Money'**
+  String get ledgerTitle;
+
+  /// No description provided for @ledgerAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an entry'**
+  String get ledgerAdd;
+
+  /// No description provided for @ledgerEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing written down yet'**
+  String get ledgerEmpty;
+
+  /// No description provided for @ledgerIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Came in'**
+  String get ledgerIncome;
+
+  /// No description provided for @ledgerExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Went out'**
+  String get ledgerExpense;
+
+  /// No description provided for @ledgerWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'What for'**
+  String get ledgerWhat;
+
+  /// No description provided for @ledgerAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get ledgerAmount;
+
+  /// No description provided for @ledgerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get ledgerNote;
+
+  /// No description provided for @ledgerCollected.
+  ///
+  /// In en, this message translates to:
+  /// **'Fees collected'**
+  String get ledgerCollected;
+
+  /// No description provided for @ledgerSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support received'**
+  String get ledgerSupport;
+
+  /// No description provided for @ledgerSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent'**
+  String get ledgerSpent;
+
+  /// No description provided for @ledgerBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'In hand'**
+  String get ledgerBalance;
+
+  /// No description provided for @ledgerExpected.
+  ///
+  /// In en, this message translates to:
+  /// **'If everyone pays'**
+  String get ledgerExpected;
+
+  /// 아직 못 받은 참가비
+  ///
+  /// In en, this message translates to:
+  /// **'Fees still owed: {amount}'**
+  String ledgerOwedNote(String amount);
+
+  /// No description provided for @dashLedgerSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Support, spending and what is left'**
+  String get dashLedgerSub;
 }
 
 class _AppLocalizationsDelegate

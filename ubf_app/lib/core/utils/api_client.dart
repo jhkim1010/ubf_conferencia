@@ -1158,6 +1158,52 @@ class ApiClient {
     return _decode(response);
   }
 
+  // ─── 장부 (053) ──────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> getLedger(String programId) async {
+    final response = await http.get(
+      _uri('/ledger/$programId'),
+      headers: await _headers(),
+    );
+    return _decode(response);
+  }
+
+  static Future<void> addLedgerEntry(
+    String programId,
+    Map<String, dynamic> entry,
+  ) async {
+    final response = await http.post(
+      _uri('/ledger/$programId'),
+      headers: await _headers(),
+      body: jsonEncode(entry),
+    );
+    _decode(response);
+  }
+
+  static Future<void> updateLedgerEntry(
+    String programId,
+    String entryId,
+    Map<String, dynamic> entry,
+  ) async {
+    final response = await http.patch(
+      _uri('/ledger/$programId/$entryId'),
+      headers: await _headers(),
+      body: jsonEncode(entry),
+    );
+    _decode(response);
+  }
+
+  static Future<void> deleteLedgerEntry(
+    String programId,
+    String entryId,
+  ) async {
+    final response = await http.delete(
+      _uri('/ledger/$programId/$entryId'),
+      headers: await _headers(),
+    );
+    _decode(response);
+  }
+
   /// 내 텔레그램 연결 상태와 연결 링크(047).
   static Future<Map<String, dynamic>> getTelegramLink(String programId) async {
     final response = await http.get(

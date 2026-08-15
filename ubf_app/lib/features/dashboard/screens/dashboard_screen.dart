@@ -154,6 +154,14 @@ class DashboardScreen extends ConsumerWidget {
                       context.push('/leader/program/$programId/assign'),
                 ),
                 (
+                  icon: Icons.account_balance_wallet_outlined,
+                  color: Colors.pink,
+                  title: l10n.ledgerTitle,
+                  subtitle: l10n.dashLedgerSub,
+                  onTap: () =>
+                      context.push('/leader/program/$programId/ledger'),
+                ),
+                (
                   icon: Icons.directions_bus_outlined,
                   color: Colors.brown,
                   title: l10n.dspTitle,

@@ -3375,4 +3375,51 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sumRemaining => 'Falta receber';
+
+  @override
+  String get ledgerTitle => 'Caixa';
+
+  @override
+  String get ledgerAdd => 'Adicionar lançamento';
+
+  @override
+  String get ledgerEmpty => 'Ainda não há nada anotado';
+
+  @override
+  String get ledgerIncome => 'Entrou';
+
+  @override
+  String get ledgerExpense => 'Saiu';
+
+  @override
+  String get ledgerWhat => 'Referente a';
+
+  @override
+  String get ledgerAmount => 'Valor';
+
+  @override
+  String get ledgerNote => 'Observação (opcional)';
+
+  @override
+  String get ledgerCollected => 'Inscrições recebidas';
+
+  @override
+  String get ledgerSupport => 'Apoio recebido';
+
+  @override
+  String get ledgerSpent => 'Gasto';
+
+  @override
+  String get ledgerBalance => 'Em caixa';
+
+  @override
+  String get ledgerExpected => 'Se todos pagarem';
+
+  @override
+  String ledgerOwedNote(String amount) {
+    return 'Falta receber $amount';
+  }
+
+  @override
+  String get dashLedgerSub => 'Apoios, gastos e o que sobra';
 }

@@ -1020,5 +1020,20 @@
   "tblAmountPaid": "받은 금액",
   "sumWanting": "총 참가 희망자",
   "sumCollected": "지금까지 수금",
-  "sumRemaining": "아직 받을 돈"
+  "sumRemaining": "아직 받을 돈",
+  "ledgerTitle": "수양회 장부",
+  "ledgerAdd": "한 줄 적기",
+  "ledgerEmpty": "아직 적은 것이 없습니다",
+  "ledgerIncome": "들어온 돈",
+  "ledgerExpense": "나간 돈",
+  "ledgerWhat": "무엇에",
+  "ledgerAmount": "금액",
+  "ledgerNote": "메모 (선택)",
+  "ledgerCollected": "참가비 수금",
+  "ledgerSupport": "지원·후원",
+  "ledgerSpent": "지출",
+  "ledgerBalance": "지금 남은 돈",
+  "ledgerExpected": "다 걷히면",
+  "ledgerOwedNote": "아직 받을 참가비 {amount}",
+  "dashLedgerSub": "지원과 지출, 그리고 남은 돈"
 }

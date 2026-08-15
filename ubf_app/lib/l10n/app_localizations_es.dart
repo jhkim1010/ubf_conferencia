@@ -3374,4 +3374,51 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sumRemaining => 'Falta cobrar';
+
+  @override
+  String get ledgerTitle => 'Caja';
+
+  @override
+  String get ledgerAdd => 'Agregar un movimiento';
+
+  @override
+  String get ledgerEmpty => 'Todavía no hay nada anotado';
+
+  @override
+  String get ledgerIncome => 'Entró';
+
+  @override
+  String get ledgerExpense => 'Salió';
+
+  @override
+  String get ledgerWhat => 'Concepto';
+
+  @override
+  String get ledgerAmount => 'Monto';
+
+  @override
+  String get ledgerNote => 'Nota (opcional)';
+
+  @override
+  String get ledgerCollected => 'Inscripciones cobradas';
+
+  @override
+  String get ledgerSupport => 'Apoyo recibido';
+
+  @override
+  String get ledgerSpent => 'Gastado';
+
+  @override
+  String get ledgerBalance => 'En caja';
+
+  @override
+  String get ledgerExpected => 'Si todos pagan';
+
+  @override
+  String ledgerOwedNote(String amount) {
+    return 'Falta cobrar $amount';
+  }
+
+  @override
+  String get dashLedgerSub => 'Apoyos, gastos y lo que queda';
 }

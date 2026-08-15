@@ -1020,5 +1020,20 @@
   "tblAmountPaid": "Monto recibido",
   "sumWanting": "Van a venir",
   "sumCollected": "Recaudado",
-  "sumRemaining": "Falta cobrar"
+  "sumRemaining": "Falta cobrar",
+  "ledgerTitle": "Caja",
+  "ledgerAdd": "Agregar un movimiento",
+  "ledgerEmpty": "Todavía no hay nada anotado",
+  "ledgerIncome": "Entró",
+  "ledgerExpense": "Salió",
+  "ledgerWhat": "Concepto",
+  "ledgerAmount": "Monto",
+  "ledgerNote": "Nota (opcional)",
+  "ledgerCollected": "Inscripciones cobradas",
+  "ledgerSupport": "Apoyo recibido",
+  "ledgerSpent": "Gastado",
+  "ledgerBalance": "En caja",
+  "ledgerExpected": "Si todos pagan",
+  "ledgerOwedNote": "Falta cobrar {amount}",
+  "dashLedgerSub": "Apoyos, gastos y lo que queda"
 }

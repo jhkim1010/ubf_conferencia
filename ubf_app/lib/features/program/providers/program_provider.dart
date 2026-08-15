@@ -129,3 +129,9 @@ final programAdminsProvider = FutureProvider.autoDispose
     .family<List<dynamic>, String>(
       (_, programId) => ApiClient.getProgramAdmins(programId),
     );
+
+/// 수양회 장부(053). 줄 목록과 합계를 함께 준다.
+final ledgerProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>, String>(
+      (_, programId) => ApiClient.getLedger(programId),
+    );

@@ -3292,4 +3292,51 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get sumRemaining => '아직 받을 돈';
+
+  @override
+  String get ledgerTitle => '수양회 장부';
+
+  @override
+  String get ledgerAdd => '한 줄 적기';
+
+  @override
+  String get ledgerEmpty => '아직 적은 것이 없습니다';
+
+  @override
+  String get ledgerIncome => '들어온 돈';
+
+  @override
+  String get ledgerExpense => '나간 돈';
+
+  @override
+  String get ledgerWhat => '무엇에';
+
+  @override
+  String get ledgerAmount => '금액';
+
+  @override
+  String get ledgerNote => '메모 (선택)';
+
+  @override
+  String get ledgerCollected => '참가비 수금';
+
+  @override
+  String get ledgerSupport => '지원·후원';
+
+  @override
+  String get ledgerSpent => '지출';
+
+  @override
+  String get ledgerBalance => '지금 남은 돈';
+
+  @override
+  String get ledgerExpected => '다 걷히면';
+
+  @override
+  String ledgerOwedNote(String amount) {
+    return '아직 받을 참가비 $amount';
+  }
+
+  @override
+  String get dashLedgerSub => '지원과 지출, 그리고 남은 돈';
 }
