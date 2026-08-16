@@ -26,6 +26,7 @@ import assignmentsRouter from './routes/assignments.js';
 import transportRouter from './routes/transport.js';
 import serviceSignupsRouter from './routes/service_signups.js';
 import telegramRouter from './routes/telegram.js';
+import { pickLanguage, translate } from './services/messages.js';
 import ledgerRouter from './routes/ledger.js';
 import mediaRouter, { mediaStatic } from './routes/media.js';
 import libraryRouter from './routes/library.js';
@@ -92,6 +93,24 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '10mb' }));
+
+// 오류 문구를 보는 사람의 언어로 (055).
+//
+// 라우트는 한국어로 적는다 — 이 저장소의 관례이고, 109 곳을 고치면 그중
+// 하나는 반드시 빠뜨린다. 대신 응답이 나가는 길목에서 갈아 끼운다.
+// 번역표에 없는 말은 한국어 그대로 나간다.
+app.use((req, res, next) => {
+  const lang = pickLanguage(req.headers['accept-language']);
+  if (lang === 'ko') return next();
+  const json = res.json.bind(res);
+  res.json = (body) => {
+    if (body && typeof body === 'object' && typeof body.error === 'string') {
+      return json({ ...body, error: translate(body.error, lang) });
+    }
+    return json(body);
+  };
+  next();
+});
 
 // 헬스체크 (리미터 적용 전 — 모니터링이 막히면 안 된다)
 app.get('/health', (_, res) => res.json({ status: 'ok' }));

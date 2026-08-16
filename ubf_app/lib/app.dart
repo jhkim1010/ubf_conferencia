@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/utils/api_client.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/utils/join_link.dart';
 import 'core/utils/join_query_cleanup.dart';
@@ -245,6 +246,13 @@ class _UbfAppState extends ConsumerState<UbfApp> {
   Widget build(BuildContext context) {
     // 인증 상태 변화 시 라우터 리다이렉트 재평가
     ref.listen<AuthState>(authProvider, (_, _) => _router.refresh());
+
+    // 서버가 오류 문구를 어느 언어로 줄지(055). 화면이 고른 언어를 그대로
+    // 쓴다 — 기기 언어를 보내면, 앱에서 스페인어를 골라 둔 사람에게
+    // 한국어 오류가 간다.
+    ApiClient.uiLanguage =
+        ref.watch(localeProvider)?.languageCode ??
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
 
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,

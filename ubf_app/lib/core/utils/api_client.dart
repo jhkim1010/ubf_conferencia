@@ -53,10 +53,17 @@ class ApiClient {
 
   // ─── HTTP 헬퍼 ───────────────────────────────────────────
 
+  /// 앱이 지금 쓰는 언어. 서버가 오류 문구를 이 언어로 돌려준다(055).
+  ///
+  /// 화면이 정한 언어를 여기에 알려 줘야 한다 — 기기 언어를 그대로 쓰면,
+  /// 앱에서 스페인어를 골라 둔 사람에게 한국어 오류가 간다.
+  static String uiLanguage = 'ko';
+
   static Future<Map<String, String>> _headers() async {
     final token = await getToken();
     return {
       'Content-Type': 'application/json',
+      'Accept-Language': uiLanguage,
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
