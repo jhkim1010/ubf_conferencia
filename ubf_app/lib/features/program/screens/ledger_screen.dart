@@ -69,6 +69,7 @@ class LedgerScreen extends ConsumerWidget {
           final entryList = _Entries(
             entries: entries,
             onEdit: (e) => _edit(context, ref, currency, e),
+            onDelete: (e) => _delete(context, ref, currency, e),
             currency: currency,
             l10n: l10n,
           );
@@ -120,6 +121,52 @@ class LedgerScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  /// 지우기 전에 한 번 묻는다.
+  ///
+  /// 장부 줄은 지우면 합계가 그 자리에서 바뀌고 되돌릴 길이 없다. 목록에서
+  /// 손가락이 스쳐 사라지면 무엇이 없어졌는지도 모른다.
+  Future<void> _delete(
+    BuildContext context,
+    WidgetRef ref,
+    Currency currency,
+    Map<String, dynamic> entry,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.actionDelete),
+        // 무엇을 지우는지 금액까지 보여 준다.
+        content: Text(
+          '${entry['title']} · '
+          '${currency.format(Money.parse(entry['amount']) ?? 0)}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.actionDelete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    try {
+      await ApiClient.deleteLedgerEntry(programId, entry['id'] as String);
+      ref.invalidate(ledgerProvider(programId));
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Future<void> _edit(
@@ -293,6 +340,7 @@ class LedgerScreen extends ConsumerWidget {
           actions: [
             if (entry != null)
               TextButton(
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
                 onPressed: () => Navigator.pop(ctx, 'delete'),
                 child: Text(l10n.actionDelete),
               ),
@@ -312,7 +360,10 @@ class LedgerScreen extends ConsumerWidget {
 
     try {
       if (action == 'delete' && entry != null) {
-        await ApiClient.deleteLedgerEntry(programId, entry['id'] as String);
+        // 대화상자에서 눌러도 같은 확인을 거친다 — 지우는 길이 둘인데
+        // 한쪽만 물으면 그쪽으로 사고가 난다.
+        if (context.mounted) await _delete(context, ref, currency, entry);
+        return;
       } else if (action == 'save') {
         // 현지 통화로 적었으면 환산해 저장하고, 그때 쓴 환율도 함께
         // 남긴다 — 나중에 다시 찾은 환율은 그날 값이 아니다.
@@ -423,12 +474,14 @@ class _Summary extends StatelessWidget {
 class _Entries extends StatelessWidget {
   final List<Map<String, dynamic>> entries;
   final void Function(Map<String, dynamic>) onEdit;
+  final void Function(Map<String, dynamic>) onDelete;
   final Currency currency;
   final AppLocalizations l10n;
 
   const _Entries({
     required this.entries,
     required this.onEdit,
+    required this.onDelete,
     required this.currency,
     required this.l10n,
   });
@@ -465,20 +518,39 @@ class _Entries extends StatelessWidget {
                   // 실제로 낸 돈과 그때 환율. 영수증과 맞춰 보려면 이것이
                   // 있어야 한다.
                   if (e['localAmount'] != null)
-                    '${e['localCurrency']} ${Money.parse(e['localAmount'])?.toStringAsFixed(0) ?? ''}'
-                        ' @ ${Money.parse(e['rate'])?.toStringAsFixed(2) ?? ''}',
+                    '${e['localCurrency']} '
+                        '${groupDigits(Money.parse(e['localAmount']) ?? 0, 0)}'
+                        ' @ ${groupDigits(Money.parse(e['rate']) ?? 0, 2)}',
                   '${e['note'] ?? ''}',
                 ].where((s) => s.isNotEmpty).join(' · '),
                 style: const TextStyle(fontSize: 11.5),
               ),
-              trailing: Text(
-                currency.format(Money.parse(e['amount']) ?? 0),
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: e['kind'] == 'income'
-                      ? Colors.green[800]
-                      : Colors.red[800],
-                ),
+              // 고치기·지우기가 겉으로 보여야 한다. 줄을 눌러야 열리는
+              // 것만으로는 고칠 수 있다는 것을 모른다.
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    currency.format(Money.parse(e['amount']) ?? 0),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: e['kind'] == 'income'
+                          ? Colors.green[800]
+                          : Colors.red[800],
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    tooltip: l10n.actionEdit,
+                    onPressed: () => onEdit(e),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    tooltip: l10n.actionDelete,
+                    onPressed: () => onDelete(e),
+                  ),
+                ],
               ),
               onTap: () => onEdit(e),
             ),

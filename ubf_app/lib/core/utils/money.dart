@@ -77,15 +77,44 @@ class Currency {
 
   /// 금액을 표시용 문자열로. 소수점 이하가 없으면 정수로 보여준다.
   ///
-  ///   usd.format(150)   → U$ 150
-  ///   usd.format(150.5) → U$ 150.50
-  ///   krw.format(1500)  → ₩ 1500
+  ///   usd.format(150)     → U$ 150
+  ///   usd.format(150.5)   → U$ 150,50
+  ///   krw.format(1500000) → ₩ 1.500.000
+  ///
+  /// **천 단위를 점으로 끊는다.** 640000 은 한눈에 읽히지 않아 자릿수를
+  /// 손으로 세게 되고, 페소처럼 자리가 긴 통화에서는 0 을 하나 빠뜨린 채
+  /// 적어도 아무도 알아채지 못한다.
+  ///
+  /// 남미 표기를 따른다 — 천 단위는 점, 소수점은 쉼표. 이 수양회들이 쓰는
+  /// 표기이고, 화면 한 곳에서만 정하므로 어디서나 같은 모양이 된다.
   String format(num? value) {
     final v = value ?? 0;
     final hasCents = !wholeOnly && v % 1 != 0;
     final n = wholeOnly ? v.round() : v;
-    return '$symbol ${n.toStringAsFixed(hasCents ? 2 : 0)}';
+    return '$symbol ${groupDigits(n, hasCents ? 2 : 0)}';
   }
+}
+
+/// 천 단위를 점으로 끊고, 소수점은 쉼표로.
+///
+///   groupDigits(1234567, 0)   → 1.234.567
+///   groupDigits(1234.5, 2)    → 1.234,50
+///   groupDigits(-1234, 0)     → -1.234
+String groupDigits(num value, int decimals) {
+  final text = value.abs().toStringAsFixed(decimals);
+  final parts = text.split('.');
+  final digits = parts[0];
+
+  final buf = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    // 앞에서부터 세되, 남은 자릿수가 3의 배수가 될 때마다 점을 찍는다.
+    if (i > 0 && (digits.length - i) % 3 == 0) buf.write('.');
+    buf.write(digits[i]);
+  }
+
+  final sign = value < 0 ? '-' : '';
+  if (parts.length == 1) return '$sign$buf';
+  return '$sign$buf,${parts[1]}';
 }
 
 class Money {

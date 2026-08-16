@@ -12,7 +12,8 @@ void main() {
   });
 
   test('수양회가 정한 통화로 표시된다', () {
-    expect(Currency.of('KRW').format(150000), '₩ 150000');
+    // 천 단위는 점으로 끊는다 — 150000 은 한눈에 안 읽힌다.
+    expect(Currency.of('KRW').format(150000), '₩ 150.000');
     expect(Currency.of('EUR').format(120), '€ 120');
     expect(Currency.of('BRL').format(90), 'R\$ 90');
     expect(Money.format(150, Currency.of('PEN')), 'S/ 150');
@@ -20,10 +21,11 @@ void main() {
 
   test('소수점을 쓰지 않는 통화는 정수로', () {
     // ₩ 1500.50 같은 값은 뜻이 없다.
-    expect(Currency.of('KRW').format(1500.5), '₩ 1501');
+    expect(Currency.of('KRW').format(1500.5), '₩ 1.501');
     expect(Currency.of('JPY').format(999.4), '¥ 999');
     // 반대로 소수를 쓰는 통화는 두 자리를 유지한다.
-    expect(Currency.of('USD').format(150.5), 'U\$ 150.50');
+    // 천 단위가 점이므로 소수점은 쉼표다.
+    expect(Currency.of('USD').format(150.5), 'U\$ 150,50');
   });
 
   test('코드는 대소문자를 가리지 않는다', () {

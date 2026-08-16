@@ -9,8 +9,10 @@ void main() {
   });
 
   test('소수가 있으면 두 자리', () {
-    expect(Money.format(150.5), 'U\$ 150.50');
-    expect(Money.format(1200.25), 'U\$ 1200.25');
+    // 천 단위를 점으로 끊으므로 소수점은 쉼표다 — 둘 다 점이면
+    // "1.234.50" 이 되어 어느 쪽이 소수점인지 알 수 없다.
+    expect(Money.format(150.5), 'U\$ 150,50');
+    expect(Money.format(1200.25), 'U\$ 1.200,25');
   });
 
   test('null 은 0 으로', () {
