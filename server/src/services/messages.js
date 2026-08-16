@@ -569,6 +569,70 @@ const T = {
   },
 };
 
+// ── 빈칸이 들어가는 말 ────────────────────────────────────────
+//
+// 라우트가 백틱으로 짓는 오류가 있다 — `"${o.name}" 투어는 정원이
+// 마감되었습니다`. 런타임 문자열은 투어 이름마다 달라지므로 위의 표에서
+// 절대 찾을 수 없고, **번역 없이 한국어 그대로 나갔다.** 검사가 리터럴만
+// 보고 있어서 조용히 통과했다.
+//
+// 열쇠의 `{}` 는 라우트의 `${...}` 자리다. 그 자리에 있던 값(투어 이름,
+// 사람 수, 용량)은 번역하지 않고 그대로 옮긴다 — 고유명사와 숫자다.
+const P = {
+  '"{}" 투어는 신청이 마감되었습니다': {
+    es: 'La excursión "{}" ya cerró las inscripciones',
+    en: 'Sign-ups for the "{}" tour are closed',
+    pt: 'As inscrições para o passeio "{}" estão encerradas',
+  },
+  '"{}" 투어는 정원이 마감되었습니다': {
+    es: 'La excursión "{}" ya no tiene lugares',
+    en: 'The "{}" tour is full',
+    pt: 'O passeio "{}" está lotado',
+  },
+  '사용할 수 없는 항목입니다: {}': {
+    es: 'Ese ítem no está disponible: {}',
+    en: 'That item is not available: {}',
+    pt: 'Esse item não está disponível: {}',
+  },
+  '이미 배정된 {}명보다 작을 수 없습니다': {
+    es: 'No puede ser menos que las {} personas ya asignadas',
+    en: 'Cannot be fewer than the {} people already assigned',
+    pt: 'Não pode ser menor que as {} pessoas já designadas',
+  },
+  '파일이 너무 큽니다 (사진 {}KB · PDF {}MB 까지)': {
+    es: 'El archivo es muy grande (hasta {} KB en fotos · {} MB en PDF)',
+    en: 'That file is too big (up to {} KB for photos · {} MB for PDF)',
+    pt: 'O arquivo é muito grande (até {} KB em fotos · {} MB em PDF)',
+  },
+};
+
+// 열쇠를 정규식으로 굽는다. `{}` 는 아무 값이나, 나머지는 글자 그대로.
+const COMPILED = Object.entries(P).map(([shape, row]) => ({
+  shape,
+  re: new RegExp(
+    '^' +
+      shape
+        .split('{}')
+        .map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        .join('(.+?)') +
+      '$',
+  ),
+  row,
+}));
+
+/// 빈칸 있는 말을 맞춰 본다. 못 맞추면 null.
+function fillIn(text, lang) {
+  for (const { re, row } of COMPILED) {
+    const m = re.exec(text);
+    if (!m) continue;
+    const out = row[lang];
+    if (!out) return null;
+    let i = 1;
+    return out.replace(/\{\}/g, () => m[i++] ?? '');
+  }
+  return null;
+}
+
 /// Accept-Language 에서 쓸 언어를 고른다.
 ///
 /// 아는 언어가 아니면 한국어 그대로 둔다 — 라우트가 적은 말이 원본이다.
@@ -587,11 +651,13 @@ export function pickLanguage(header) {
 export function translate(text, lang) {
   if (lang === 'ko' || !lang) return text;
   const row = T[text];
-  if (!row) return text;
-  return row[lang] ?? text;
+  if (row) return row[lang] ?? text;
+  // 표에 없으면 빈칸 있는 말인지 본다.
+  return fillIn(text, lang) ?? text;
 }
 
 /// 번역표에 있는 말의 수. 검사에서 쓴다.
-export const MESSAGE_COUNT = Object.keys(T).length;
+export const MESSAGE_COUNT = Object.keys(T).length + Object.keys(P).length;
 
 export const MESSAGES = T;
+export const PATTERNS = P;

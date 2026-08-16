@@ -141,6 +141,47 @@ check_arb_parity() {
   fi
 }
 
+# 오류 문구가 스페인어로 나가는가 (055).
+#
+# 공동 관리자가 스페인어를 쓴다. 서버는 한국어로 오류를 적고 나가는 길목에서
+# 갈아 끼우는데, 그 구조에는 조용히 새는 구멍이 둘 있다.
+#
+#   1. 번역표에 없는 문구  — 그 화면만 한국어로 뜬다. 아무도 신고하지 않는다.
+#   2. 언어를 안 보내는 호출 — 표가 아무리 완전해도 서버가 한국어를 고른다.
+#      실제로 로그인 네 곳이 그랬다. 스페인어 사용자가 **가장 먼저** 만나는
+#      화면이 하필 그것이었다.
+#
+# 1 은 unit-tests 안의 messages.test.js 가 본다. 여기서는 2 를 본다 —
+# 그쪽은 Dart 라 서버 테스트가 볼 수 없다.
+check_error_i18n() {
+  command -v python3 >/dev/null || { skip error-i18n "python3 없음"; return 0; }
+  local client="$APP/lib/core/utils/api_client.dart" out
+  [ -f "$client" ] || { skip error-i18n "api_client.dart 없음"; return 0; }
+  out="$(python3 - "$client" <<'PY'
+import re, sys
+src = open(sys.argv[1]).read()
+# 손으로 지은 헤더 중 Accept-Language 가 없는 것.
+bad = []
+for m in re.finditer(r"headers:\s*\{(.*?)\}", src, re.S):
+    body = m.group(1)
+    # 헬퍼를 펼쳐 넣었으면 언어는 그 안에 있다.
+    if any(k in body for k in ('Accept-Language', '_headers()', '_publicHeaders')):
+        continue
+    line = src[:m.start()].count('\n') + 1
+    bad.append(f"{line}행: headers 를 손으로 지으면서 Accept-Language 를 뺐다")
+# 헤더 헬퍼 자체에 Accept-Language 가 있어야 한다.
+if 'Accept-Language' not in src:
+    bad.append("Accept-Language 를 아예 안 보낸다 — 서버가 늘 한국어로 답한다")
+print('\n'.join(bad))
+PY
+)"
+  if [ -z "$out" ]; then
+    pass error-i18n
+  else
+    fail error-i18n "$out"
+  fi
+}
+
 # 국가 ISO 매핑 정합성.
 #
 # 저장값은 ISO 코드이고 표시명은 영어다. 매핑이 어긋나면 아무 오류 없이
@@ -318,6 +359,7 @@ ALL_CHECKS=(
   unit-tests
   flutter-tests
   arb-parity
+  error-i18n
   country-mapping
   route-parity
   migration-numbers
@@ -352,6 +394,8 @@ select_by_changes() {
   [ -z "$files" ] && return 0
   grep -qE '^ubf_app/.*\.dart$'            <<<"$files" && sel+=(flutter-analyze dart-format flutter-tests)
   grep -qE '^ubf_app/lib/l10n/.*\.arb$'    <<<"$files" && sel+=(arb-parity)
+  grep -qE '^(ubf_app/lib/core/utils/api_client\.dart|server/src/services/messages\.js|server/src/routes/.*\.js)$' \
+                                           <<<"$files" && sel+=(error-i18n)
   grep -qE '^ubf_app/(scripts/(countries_table|gen_countries|check_countries)\.py|assets/ubf_chapters\.json|lib/core/constants/world_countries\.dart)$' \
                                            <<<"$files" && sel+=(country-mapping)
   grep -qE '^server/(src|test)/.*\.js$'     <<<"$files" && sel+=(server-syntax unit-tests route-parity server-smoke)

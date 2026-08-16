@@ -59,14 +59,48 @@ class ApiClient {
   /// 앱에서 스페인어를 골라 둔 사람에게 한국어 오류가 간다.
   static String uiLanguage = 'ko';
 
+  /// 로그인 전에 쓰는 헤더. 토큰은 없지만 **언어는 있어야 한다** —
+  /// 로그인 실패 문구는 스페인어 사용자가 이 앱에서 처음 만나는 오류다.
+  static Map<String, String> get _publicHeaders => {
+    'Content-Type': 'application/json',
+    'Accept-Language': uiLanguage,
+  };
+
   static Future<Map<String, String>> _headers() async {
     final token = await getToken();
     return {
-      'Content-Type': 'application/json',
-      'Accept-Language': uiLanguage,
+      ..._publicHeaders,
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
+
+  /// 서버가 문구를 안 줬을 때 앱이 대신 짓는 말.
+  ///
+  /// 서버 문구는 나가는 길목에서 번역되지만(055) 이건 앱이 짓는 것이라
+  /// 그 길목을 안 지난다. 그대로 두면 서버가 죽었을 때 — 하필 설명이 가장
+  /// 필요한 때 — 스페인어 사용자에게 한국어가 뜬다.
+  ///
+  /// ARB 를 쓰지 않는 이유: 여기는 static 이라 BuildContext 가 없다.
+  /// 셋뿐이므로 표를 곁에 둔다.
+  static const _fallbacks = <String, Map<String, String>>{
+    '서버 오류': {
+      'es': 'Error del servidor',
+      'en': 'Server error',
+      'pt': 'Erro do servidor',
+    },
+    '수정이 잠겨 있습니다': {
+      'es': 'La edición está bloqueada',
+      'en': 'Editing is locked',
+      'pt': 'A edição está bloqueada',
+    },
+    '확인이 필요합니다': {
+      'es': 'Hace falta confirmar',
+      'en': 'Confirmation needed',
+      'pt': 'É preciso confirmar',
+    },
+  };
+
+  static String _say(String ko) => _fallbacks[ko]?[uiLanguage] ?? ko;
 
   static Uri _uri(String path) => Uri.parse('${AppConstants.apiBaseUrl}$path');
 
@@ -75,7 +109,7 @@ class ApiClient {
     if (response.statusCode >= 400) {
       throw ApiException(
         response.statusCode,
-        (body as Map<String, dynamic>)['error'] ?? '서버 오류',
+        (body as Map<String, dynamic>)['error'] ?? _say('서버 오류'),
       );
     }
     return body as Map<String, dynamic>;
@@ -84,7 +118,7 @@ class ApiClient {
   static List<dynamic> _decodeList(http.Response response) {
     if (response.statusCode >= 400) {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
-      throw ApiException(response.statusCode, body['error'] ?? '서버 오류');
+      throw ApiException(response.statusCode, body['error'] ?? _say('서버 오류'));
     }
     return jsonDecode(response.body) as List<dynamic>;
   }
@@ -95,7 +129,7 @@ class ApiClient {
   static Future<Map<String, dynamic>> loginWithGoogle(String idToken) async {
     final response = await http.post(
       _uri('/auth/google'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _publicHeaders,
       body: jsonEncode({'idToken': idToken}),
     );
     final data = _decode(response);
@@ -109,7 +143,7 @@ class ApiClient {
   ) async {
     final response = await http.post(
       _uri('/auth/google'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _publicHeaders,
       body: jsonEncode({'accessToken': accessToken}),
     );
     final data = _decode(response);
@@ -120,7 +154,7 @@ class ApiClient {
   static Future<Map<String, dynamic>> loginWithKakao(String accessToken) async {
     final response = await http.post(
       _uri('/auth/kakao'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _publicHeaders,
       body: jsonEncode({'accessToken': accessToken}),
     );
     final data = _decode(response);
@@ -145,7 +179,7 @@ class ApiClient {
   }) async {
     final response = await http.post(
       _uri('/auth/dev-login'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _publicHeaders,
       body: jsonEncode({'email': email, 'name': name}),
     );
     final data = _decode(response);
@@ -211,7 +245,7 @@ class ApiClient {
     // 423 Locked: 시작일 이후 투어 옵션 수정 시도
     if (response.statusCode == 423) {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
-      throw ApiException(423, body['error'] as String? ?? '수정이 잠겨 있습니다');
+      throw ApiException(423, body['error'] as String? ?? _say('수정이 잠겨 있습니다'));
     }
     _decode(response);
   }
@@ -234,7 +268,7 @@ class ApiClient {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       throw ConfirmNameRequiredException(
         (body['registrationCount'] as num?)?.toInt() ?? 0,
-        body['error'] as String? ?? '확인이 필요합니다',
+        body['error'] as String? ?? _say('확인이 필요합니다'),
       );
     }
     _decode(response);
