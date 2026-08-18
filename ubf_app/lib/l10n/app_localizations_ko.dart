@@ -3380,4 +3380,27 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get regNameFromAccount => '계정에서 가져왔습니다 — 다르면 고치십시오';
+
+  @override
+  String get statByCountry => '나라별';
+
+  @override
+  String get statByGender => '성별';
+
+  @override
+  String get statByAge => '나이대별';
+
+  @override
+  String get statUnknown => '미기재';
+
+  @override
+  String get statAgeUnder20 => '20세 미만';
+
+  @override
+  String get statAge70Plus => '70세 이상';
+
+  @override
+  String statAgeDecade(int from, int to) {
+    return '$from대';
+  }
 }

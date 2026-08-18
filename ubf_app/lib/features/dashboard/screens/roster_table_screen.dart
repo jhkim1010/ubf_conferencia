@@ -482,9 +482,13 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                         flex: 1,
                         child: SingleChildScrollView(
                           padding: const EdgeInsets.fromLTRB(16, 0, 8, 16),
-                          child: _MoneySummary(
-                            people: data,
-                            currency: currency,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _MoneySummary(people: data, currency: currency),
+                              const SizedBox(height: 12),
+                              _WhoSummary(people: data),
+                            ],
                           ),
                         ),
                       ),
@@ -657,6 +661,159 @@ class _MoneySummary extends StatelessWidget {
             ),
             // 아직 받을 돈. 걷은 돈만 보면 다 끝난 것처럼 보인다.
             line(l10n.sumRemaining, currency.format(due - collected)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 누가 오는가 — 나라·성별·나이.
+///
+/// 돈 옆의 빈 자리에 붙인다. 담당자가 방을 잡고 통역을 세우고 밥을 준비할 때
+/// 먼저 묻는 것이 "어느 나라에서 몇 명, 남녀 몇 명, 나이대가 어떤가" 이고,
+/// 지금까지는 표를 눈으로 훑어 세어야 했다.
+///
+/// **표 안의 값만 쓴다.** 서버에 따로 물으면 표와 어긋날 자리가 또 생긴다 —
+/// 이 저장소에서 이미 두 번 겪었다(식사 제한 027·036).
+class _WhoSummary extends StatelessWidget {
+  final List<Map<String, dynamic>> people;
+
+  const _WhoSummary({required this.people});
+
+  /// 나이대. 10년 단위로 묶되 **20대 밑은 한 칸**이다 — 어린이와 청년은
+  /// 한둘씩이라 칸을 나누면 1명짜리 줄만 늘어난다.
+  static String _band(int age) {
+    if (age < 20) return '~19';
+    if (age >= 70) return '70+';
+    return '${(age ~/ 10) * 10}s';
+  }
+
+  static String _bandLabel(String key, AppLocalizations l10n) => switch (key) {
+    '~19' => l10n.statAgeUnder20,
+    '70+' => l10n.statAge70Plus,
+    _ => () {
+      final from = int.parse(key.replaceAll('s', ''));
+      return l10n.statAgeDecade(from, from + 9);
+    }(),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    final byCountry = <String, int>{};
+    final byBand = <String, int>{};
+    var male = 0, female = 0, unknownSex = 0, unknownAge = 0;
+
+    for (final r in people) {
+      final c = WorldCountries.display(r['country'] as String?) ?? '';
+      byCountry[c.isEmpty ? l10n.statUnknown : c] =
+          (byCountry[c.isEmpty ? l10n.statUnknown : c] ?? 0) + 1;
+
+      switch (r['gender']) {
+        case 'M':
+          male++;
+        case 'F':
+          female++;
+        default:
+          unknownSex++;
+      }
+
+      final age = r['age'] is int
+          ? r['age'] as int
+          : int.tryParse('${r['age'] ?? ''}');
+      // 나이를 안 적은 사람을 0살로 세면 "~19" 가 부풀어 방 배정을 그르친다.
+      if (age == null || age <= 0) {
+        unknownAge++;
+      } else {
+        final b = _band(age);
+        byBand[b] = (byBand[b] ?? 0) + 1;
+      }
+    }
+
+    // 많은 나라가 위로. 같으면 이름순이라 볼 때마다 순서가 흔들리지 않는다.
+    final countries = byCountry.entries.toList()
+      ..sort(
+        (a, b) => b.value != a.value
+            ? b.value.compareTo(a.value)
+            : a.key.compareTo(b.key),
+      );
+    // 나이대는 어린 쪽부터. '~19' 가 맨 앞, '70+' 가 맨 뒤.
+    final bands = byBand.keys.toList()
+      ..sort((a, b) {
+        int rank(String k) => k == '~19'
+            ? -1
+            : (k == '70+' ? 999 : int.parse(k.replaceAll('s', '')));
+        return rank(a).compareTo(rank(b));
+      });
+
+    // 한 줄에 하나씩 적으면 카드가 화면 밖으로 자란다 — 실제로 나이대가
+    // 잘려 보이지 않았다. 칸 하나에 이름과 수를 붙여 넣고 줄바꿈으로
+    // 흘린다. 좁은 패널에서도 세 묶음이 한눈에 들어온다.
+    Widget chip(String label, int n) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(text: label, style: const TextStyle(fontSize: 12.5)),
+            const TextSpan(text: '  '),
+            TextSpan(
+              text: '$n',
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    Widget group(String title, List<Widget> chips) => Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey[700],
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(spacing: 6, runSpacing: 6, children: chips),
+        ],
+      ),
+    );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            group(l10n.statByCountry, [
+              for (final e in countries) chip(e.key, e.value),
+            ]),
+            group(l10n.statByGender, [
+              if (male > 0) chip(l10n.genderMale, male),
+              if (female > 0) chip(l10n.genderFemale, female),
+              if (unknownSex > 0) chip(l10n.statUnknown, unknownSex),
+            ]),
+            group(l10n.statByAge, [
+              for (final b in bands) chip(_bandLabel(b, l10n), byBand[b]!),
+              // 안 적은 사람도 보여 준다. 합이 총원과 안 맞으면 담당자가
+              // 화면을 의심하게 된다.
+              if (unknownAge > 0) chip(l10n.statUnknown, unknownAge),
+            ]),
           ],
         ),
       ),

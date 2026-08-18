@@ -2281,5 +2281,41 @@
   "regNameFromAccount": "Filled in from your account — change it if it is not right",
   "@regNameFromAccount": {
     "description": "Helper under the name field when prefilled from the sign-in account"
+  },
+  "statByCountry": "BY COUNTRY",
+  "statByGender": "BY GENDER",
+  "statByAge": "BY AGE",
+  "statUnknown": "Not given",
+  "statAgeUnder20": "Under 20",
+  "statAge70Plus": "70 and over",
+  "statAgeDecade": "{from}–{to}",
+  "@statByCountry": {
+    "description": "Heading of the country breakdown in the roster side panel"
+  },
+  "@statByGender": {
+    "description": "Heading of the gender breakdown"
+  },
+  "@statByAge": {
+    "description": "Heading of the age breakdown"
+  },
+  "@statUnknown": {
+    "description": "Row for people who did not fill this in"
+  },
+  "@statAgeUnder20": {
+    "description": "Age band below 20"
+  },
+  "@statAge70Plus": {
+    "description": "Age band 70 and above"
+  },
+  "@statAgeDecade": {
+    "description": "Age band label, e.g. 30–39",
+    "placeholders": {
+      "from": {
+        "type": "int"
+      },
+      "to": {
+        "type": "int"
+      }
+    }
   }
 }

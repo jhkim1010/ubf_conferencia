@@ -1046,5 +1046,12 @@
   "ledgerRateUnavailable": "No se pudo traer la cotización. Escriba la que usó.",
   "rosterNoName": "Sin nombre cargado",
   "rosterAccountName": "{name} (nombre de la cuenta)",
-  "regNameFromAccount": "Tomado de su cuenta — cámbielo si no corresponde"
+  "regNameFromAccount": "Tomado de su cuenta — cámbielo si no corresponde",
+  "statByCountry": "POR PAÍS",
+  "statByGender": "POR SEXO",
+  "statByAge": "POR EDAD",
+  "statUnknown": "Sin cargar",
+  "statAgeUnder20": "Menos de 20",
+  "statAge70Plus": "70 o más",
+  "statAgeDecade": "{from}–{to}"
 }

@@ -1032,5 +1032,12 @@
   "ledgerRateUnavailable": "Não foi possível obter a cotação. Digite a que usou.",
   "rosterNoName": "Nome não preenchido",
   "rosterAccountName": "{name} (nome da conta)",
-  "regNameFromAccount": "Preenchido pela sua conta — corrija se não estiver certo"
+  "regNameFromAccount": "Preenchido pela sua conta — corrija se não estiver certo",
+  "statByCountry": "POR PAÍS",
+  "statByGender": "POR SEXO",
+  "statByAge": "POR IDADE",
+  "statUnknown": "Não informado",
+  "statAgeUnder20": "Menos de 20",
+  "statAge70Plus": "70 ou mais",
+  "statAgeDecade": "{from}–{to}"
 }

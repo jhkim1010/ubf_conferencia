@@ -6299,6 +6299,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Filled in from your account — change it if it is not right'**
   String get regNameFromAccount;
+
+  /// Heading of the country breakdown in the roster side panel
+  ///
+  /// In en, this message translates to:
+  /// **'BY COUNTRY'**
+  String get statByCountry;
+
+  /// Heading of the gender breakdown
+  ///
+  /// In en, this message translates to:
+  /// **'BY GENDER'**
+  String get statByGender;
+
+  /// Heading of the age breakdown
+  ///
+  /// In en, this message translates to:
+  /// **'BY AGE'**
+  String get statByAge;
+
+  /// Row for people who did not fill this in
+  ///
+  /// In en, this message translates to:
+  /// **'Not given'**
+  String get statUnknown;
+
+  /// Age band below 20
+  ///
+  /// In en, this message translates to:
+  /// **'Under 20'**
+  String get statAgeUnder20;
+
+  /// Age band 70 and above
+  ///
+  /// In en, this message translates to:
+  /// **'70 and over'**
+  String get statAge70Plus;
+
+  /// Age band label, e.g. 30–39
+  ///
+  /// In en, this message translates to:
+  /// **'{from}–{to}'**
+  String statAgeDecade(int from, int to);
 }
 
 class _AppLocalizationsDelegate

@@ -3454,4 +3454,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get regNameFromAccount =>
       'Filled in from your account — change it if it is not right';
+
+  @override
+  String get statByCountry => 'BY COUNTRY';
+
+  @override
+  String get statByGender => 'BY GENDER';
+
+  @override
+  String get statByAge => 'BY AGE';
+
+  @override
+  String get statUnknown => 'Not given';
+
+  @override
+  String get statAgeUnder20 => 'Under 20';
+
+  @override
+  String get statAge70Plus => '70 and over';
+
+  @override
+  String statAgeDecade(int from, int to) {
+    return '$from–$to';
+  }
 }

@@ -3465,4 +3465,27 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get regNameFromAccount =>
       'Preenchido pela sua conta — corrija se não estiver certo';
+
+  @override
+  String get statByCountry => 'POR PAÍS';
+
+  @override
+  String get statByGender => 'POR SEXO';
+
+  @override
+  String get statByAge => 'POR IDADE';
+
+  @override
+  String get statUnknown => 'Não informado';
+
+  @override
+  String get statAgeUnder20 => 'Menos de 20';
+
+  @override
+  String get statAge70Plus => '70 ou mais';
+
+  @override
+  String statAgeDecade(int from, int to) {
+    return '$from–$to';
+  }
 }

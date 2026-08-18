@@ -1046,5 +1046,12 @@
   "ledgerRateUnavailable": "환율을 못 가져왔습니다. 쓰신 환율을 적어 주십시오.",
   "rosterNoName": "이름 미기재",
   "rosterAccountName": "{name} (계정 이름)",
-  "regNameFromAccount": "계정에서 가져왔습니다 — 다르면 고치십시오"
+  "regNameFromAccount": "계정에서 가져왔습니다 — 다르면 고치십시오",
+  "statByCountry": "나라별",
+  "statByGender": "성별",
+  "statByAge": "나이대별",
+  "statUnknown": "미기재",
+  "statAgeUnder20": "20세 미만",
+  "statAge70Plus": "70세 이상",
+  "statAgeDecade": "{from}대"
 }
