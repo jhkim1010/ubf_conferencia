@@ -7,6 +7,7 @@ import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/payment_state.dart';
+import '../../../core/utils/roster_sort.dart';
 import '../../../core/utils/table_export.dart';
 import '../../program/providers/program_provider.dart';
 
@@ -130,46 +131,25 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
   ///
   /// 칸 번호는 _headers 의 차례와 같다:
   /// 0 번호 · 1 본명 · 2 국가 · 3 지부 · 4 성별/나이 · 5 상태 · 6 입금
-  Comparable<Object> _sortKey(int col, Map<String, dynamic> r) {
-    String t(Object? v) => '${v ?? ''}'.toLowerCase();
-    switch (col) {
-      case 1:
-        return t(r['bible_name']).isNotEmpty
-            ? t(r['bible_name'])
-            : t(r['real_name']);
-      case 2:
-        return t(WorldCountries.display(r['country'] as String?));
-      case 3:
-        return t(r['branch']);
-      case 4:
-        // 성별로 먼저 묶고 그 안에서 나이순. 나이를 안 적은 사람은 맨 뒤로
-        // 보낸다 — 0으로 두면 갓난아기처럼 맨 앞에 선다.
-        final age = r['age'] is int
-            ? r['age'] as int
-            : int.tryParse('${r['age'] ?? ''}') ?? 0;
-        return '${_genderKey(r)}${(age > 0 ? age : 999).toString().padLeft(3, '0')}';
-      case 5:
-        return switch (widget.view) {
-          RosterView.meals => t(r['food_requirements']),
-          RosterView.arrival => t(
-            (r['arrival_flight'] as Map?)?['scheduled_arrival'],
-          ),
-          _ => _done(r) ? '0' : '1',
-        };
-      case 6:
-        // 미납이 위로 오게. 담당자가 이 칸을 누르는 까닭은 받을 돈을
-        // 찾기 위해서다.
-        final pay = (r['payment'] as Map?) ?? const {};
-        final st = payStateOf(
-          due: Money.parse(r['amount_due']) ?? 0,
-          paid: Money.parse(pay['amount']) ?? 0,
-          status: pay['status'] as String?,
-        );
-        return '${st.index}${(Money.parse(r['amount_due']) ?? 0).toStringAsFixed(2).padLeft(12, '0')}';
-      default:
-        return '';
-    }
-  }
+  /// 한 칸의 줄 세우기 값. 실제 계산은 core/utils/roster_sort.dart 에 있다 —
+  /// 화면 안에 두면 눈으로만 확인할 수 있고, 그러면 확인하지 않게 된다.
+  ///
+  /// 칸 번호는 _headers 의 차례와 같다:
+  /// 0 번호 · 1 본명 · 2 국가 · 3 지부 · 4 성별/나이 · 5 상태 · 6 입금
+  Comparable<Object> _sortKey(int col, Map<String, dynamic> r) => switch (col) {
+    1 => rosterNameKey(r),
+    2 => rosterCountryKey(r),
+    3 => rosterBranchKey(r),
+    4 => rosterAgeKey(r),
+    5 => switch (widget.view) {
+      RosterView.meals => '${r['food_requirements'] ?? ''}'.toLowerCase(),
+      RosterView.arrival =>
+        '${(r['arrival_flight'] as Map?)?['scheduled_arrival'] ?? ''}',
+      _ => _done(r) ? '0' : '1',
+    },
+    6 => rosterPayKey(r),
+    _ => '',
+  };
 
   void _sortRows(
     List<Map<String, dynamic>> data,

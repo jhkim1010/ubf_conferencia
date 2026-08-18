@@ -273,7 +273,20 @@ router.get('/', requireAuth, requireLeader, async (req, res) => {
       LEFT JOIN registrations r ON r.program_id = p.id
       -- is_active 를 빠뜨리면 삭제한 수양회가 목록에 그대로 남는다.
       -- 단일 조회(GET /programs/:id)는 처음부터 이 조건을 보고 있었다.
-      WHERE p.leader_id = ${req.user.leaderId} AND p.is_active = true
+      --
+      -- **공동 관리자도 자기 수양회를 봐야 한다(058).** 지금까지는 만든
+      -- 사람(leader_id)만 봤다. 공동 관리자로 세워 둔 네 사람은 admin 이라
+      -- 관리자 화면까지는 들어왔는데 목록이 비어 있어서, 들어와도 아무것도
+      -- 할 수가 없었다. requireProgramAdmin 이 지키는 나머지 화면은 모두
+      -- 열어 주고 있었으므로 여기만 어긋나 있었다.
+      WHERE p.is_active = true
+        AND (
+          p.leader_id = ${req.user.leaderId}
+          OR EXISTS (
+            SELECT 1 FROM program_admins pa
+            WHERE pa.program_id = p.id AND pa.user_id = ${req.user.userId}
+          )
+        )
       GROUP BY p.id
       ORDER BY p.created_at DESC
     `;
