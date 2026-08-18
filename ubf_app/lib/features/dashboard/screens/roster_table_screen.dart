@@ -524,6 +524,12 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
           headingRowColor: WidgetStatePropertyAll(
             theme.colorScheme.surfaceContainerHighest,
           ),
+          // 글자를 키우면서 **줄 높이는 지금 그대로 둔다**. DataTable 의
+          // 기본값과 같은 값을 손으로 박아 둔다 — 비워 두면 글자에 따라
+          // 줄이 늘어나 한 화면에 보이던 사람 수가 줄어든다.
+          headingRowHeight: 56,
+          dataRowMinHeight: 48,
+          dataRowMaxHeight: 48,
           columns: [
             for (final h in headers)
               DataColumn(
@@ -531,7 +537,7 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                   h,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 12,
+                    fontSize: 14,
                   ),
                 ),
               ),
@@ -552,10 +558,15 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                   for (final cell in rows[ri])
                     DataCell(
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 220),
+                        constraints: const BoxConstraints(maxWidth: 260),
                         child: Text(
                           cell,
-                          style: const TextStyle(fontSize: 12.5),
+                          // 줄 높이를 고정했으니 세 줄로 접히면 잘린다.
+                          // 두 줄까지 두고 그 뒤는 말줄임으로 끝낸다 —
+                          // 잘린 글자보다 "…" 가 낫다.
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 15),
                         ),
                       ),
                     ),
