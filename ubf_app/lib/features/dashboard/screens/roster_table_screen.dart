@@ -42,6 +42,157 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     RosterView.arrival => l10n.dashStatArrival,
   };
 
+  // ── 칩으로 거르기 ────────────────────────────────────────
+  //
+  // 옆의 셈이 그대로 단추다. 담당자가 "아르헨티나에서 오는 20대" 를 보려면
+  // 지금까지 표를 눈으로 훑어야 했다.
+  //
+  // 한 묶음 안에서 여럿을 고르면 **또는**(아르헨티나 또는 브라질),
+  // 묶음끼리는 **그리고**(아르헨티나이면서 20대) 다. 말로 읽으면
+  // 그렇게 읽히기 때문이다.
+  final _pickedCountries = <String>{};
+  final _pickedGenders = <String>{};
+  final _pickedBands = <String>{};
+
+  bool get _filtering =>
+      _pickedCountries.isNotEmpty ||
+      _pickedGenders.isNotEmpty ||
+      _pickedBands.isNotEmpty;
+
+  void _toggle(Set<String> set, String key) {
+    setState(() => set.contains(key) ? set.remove(key) : set.add(key));
+  }
+
+  /// 고른 것에 걸리는 줄인가.
+  ///
+  /// [skip] 은 그 묶음의 조건을 빼고 본다 — 칩에 적을 수를 셀 때 쓴다.
+  /// 자기 자신까지 걸러 세면 안 고른 칩이 모두 0이 되어 더 고를 수가 없다.
+  bool _matches(Map<String, dynamic> r, {String? skip}) {
+    if (skip != 'country' && _pickedCountries.isNotEmpty) {
+      final c = WorldCountries.display(r['country'] as String?) ?? '';
+      if (!_pickedCountries.contains(c)) return false;
+    }
+    if (skip != 'gender' && _pickedGenders.isNotEmpty) {
+      if (!_pickedGenders.contains(_genderKey(r))) return false;
+    }
+    if (skip != 'band' && _pickedBands.isNotEmpty) {
+      if (!_pickedBands.contains(_bandKey(r))) return false;
+    }
+    return true;
+  }
+
+  // ── 이름으로 찾기 ────────────────────────────────────────
+  //
+  // 사람이 늘면 칩만으로는 한 사람을 못 짚는다. 세례명·본명·계정 이름을
+  // 한꺼번에 본다 — 담당자가 기억하는 이름이 셋 중 무엇일지 모른다.
+  final _nameCtl = TextEditingController();
+  String _nameQuery = '';
+
+  bool _nameHit(Map<String, dynamic> r) {
+    if (_nameQuery.isEmpty) return true;
+    final hay = [
+      r['real_name'],
+      r['bible_name'],
+      r['account_name'],
+      r['branch'],
+    ].map((v) => '${v ?? ''}').join(' ').toLowerCase();
+    return hay.contains(_nameQuery);
+  }
+
+  // ── 칼럼으로 줄 세우기 ───────────────────────────────────
+  //
+  // 기본은 나라 다음 이름이다 — 예전부터 그랬고, 아무것도 안 눌렀을 때
+  // 순서가 흔들리면 담당자가 매번 다시 훑어야 한다.
+  int? _sortCol;
+  bool _sortAsc = true;
+
+  void _sortBy(int col) {
+    setState(() {
+      if (_sortCol == col) {
+        // 같은 칸을 다시 누르면 뒤집고, 한 번 더 누르면 기본으로 돌아온다.
+        if (_sortAsc) {
+          _sortAsc = false;
+        } else {
+          _sortCol = null;
+          _sortAsc = true;
+        }
+      } else {
+        _sortCol = col;
+        _sortAsc = true;
+      }
+    });
+  }
+
+  /// 한 칸의 줄 세우기 값.
+  ///
+  /// **표에 적힌 글자가 아니라 원래 값으로 견준다.** 나이를 글자로 보면
+  /// "9" 가 "41" 보다 뒤로 가고, 담당자는 화면이 고장 났다고 여긴다.
+  ///
+  /// 칸 번호는 _headers 의 차례와 같다:
+  /// 0 번호 · 1 본명 · 2 국가 · 3 지부 · 4 성별/나이 · 5 상태 · 6 입금
+  Comparable<Object> _sortKey(int col, Map<String, dynamic> r) {
+    String t(Object? v) => '${v ?? ''}'.toLowerCase();
+    switch (col) {
+      case 1:
+        return t(r['bible_name']).isNotEmpty
+            ? t(r['bible_name'])
+            : t(r['real_name']);
+      case 2:
+        return t(WorldCountries.display(r['country'] as String?));
+      case 3:
+        return t(r['branch']);
+      case 4:
+        // 성별로 먼저 묶고 그 안에서 나이순. 나이를 안 적은 사람은 맨 뒤로
+        // 보낸다 — 0으로 두면 갓난아기처럼 맨 앞에 선다.
+        final age = r['age'] is int
+            ? r['age'] as int
+            : int.tryParse('${r['age'] ?? ''}') ?? 0;
+        return '${_genderKey(r)}${(age > 0 ? age : 999).toString().padLeft(3, '0')}';
+      case 5:
+        return switch (widget.view) {
+          RosterView.meals => t(r['food_requirements']),
+          RosterView.arrival => t(
+            (r['arrival_flight'] as Map?)?['scheduled_arrival'],
+          ),
+          _ => _done(r) ? '0' : '1',
+        };
+      case 6:
+        // 미납이 위로 오게. 담당자가 이 칸을 누르는 까닭은 받을 돈을
+        // 찾기 위해서다.
+        final pay = (r['payment'] as Map?) ?? const {};
+        final st = payStateOf(
+          due: Money.parse(r['amount_due']) ?? 0,
+          paid: Money.parse(pay['amount']) ?? 0,
+          status: pay['status'] as String?,
+        );
+        return '${st.index}${(Money.parse(r['amount_due']) ?? 0).toStringAsFixed(2).padLeft(12, '0')}';
+      default:
+        return '';
+    }
+  }
+
+  void _sortRows(
+    List<Map<String, dynamic>> data,
+    AppLocalizations l10n,
+    Currency currency,
+  ) {
+    // 아무것도 안 눌렀으면 예전 그대로 나라 다음 이름이다. 기본 순서가
+    // 흔들리면 담당자가 매번 다시 훑어야 한다.
+    if (_sortCol == null || _sortCol == 0) {
+      data.sort(
+        (a, b) => '${a['country'] ?? ''}${a['real_name'] ?? ''}'.compareTo(
+          '${b['country'] ?? ''}${b['real_name'] ?? ''}',
+        ),
+      );
+      return;
+    }
+    final col = _sortCol!;
+    data.sort((a, b) {
+      final c = _sortKey(col, a).compareTo(_sortKey(col, b));
+      return _sortAsc ? c : -c;
+    });
+  }
+
   /// 이 줄이 "끝난" 줄인가. 크림색을 입힐지 정한다.
   bool _done(Map<String, dynamic> r) => switch (widget.view) {
     RosterView.payments => (r['payment'] as Map?)?['status'] == 'confirmed',
@@ -391,6 +542,12 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
   }
 
   @override
+  void dispose() {
+    _nameCtl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
@@ -416,11 +573,12 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(l10n.commonErrorDetail('$e'))),
         data: (raw) {
-          final data = raw.cast<Map<String, dynamic>>().where(_keep).toList()
-            ..sort(
-              (a, b) => '${a['country'] ?? ''}${a['real_name'] ?? ''}'
-                  .compareTo('${b['country'] ?? ''}${b['real_name'] ?? ''}'),
-            );
+          // 셈에 쓸 전체와, 걸러 낸 것을 나눠 둔다. 칩에 적을 수는 전체에서
+          // 세야 한다 — 거른 것으로 세면 안 고른 칩이 0이 되어 더 고를 수가
+          // 없다.
+          final all = raw.cast<Map<String, dynamic>>().where(_keep).toList();
+          final data = all.where(_matches).where(_nameHit).toList();
+          _sortRows(data, l10n, currency);
           final headers = _headers(l10n);
           final rows = _rows(l10n, data, currency);
           final table = _table(l10n, theme, data, headers, rows, currency);
@@ -431,6 +589,33 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Row(
                   children: [
+                    // 이름으로 한 사람을 짚는다. 사람이 늘면 칩만으로는
+                    // 못 찾는다.
+                    SizedBox(
+                      width: 240,
+                      child: TextField(
+                        controller: _nameCtl,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          prefixIcon: const Icon(Icons.search, size: 18),
+                          hintText: l10n.tblFindName,
+                          suffixIcon: _nameQuery.isEmpty
+                              ? null
+                              : IconButton(
+                                  icon: const Icon(Icons.close, size: 18),
+                                  tooltip: l10n.commonClear,
+                                  onPressed: () {
+                                    _nameCtl.clear();
+                                    setState(() => _nameQuery = '');
+                                  },
+                                ),
+                          border: const OutlineInputBorder(),
+                        ),
+                        onChanged: (v) =>
+                            setState(() => _nameQuery = v.trim().toLowerCase()),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -485,9 +670,34 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
+                              // 돈 셈은 **지금 보고 있는 사람들** 것이다.
+                              // 표는 걸러 놓고 셈만 전체면 두 숫자가
+                              // 어긋나 어느 쪽을 믿을지 알 수 없다.
                               _MoneySummary(people: data, currency: currency),
                               const SizedBox(height: 12),
-                              _WhoSummary(people: data),
+                              _WhoSummary(
+                                // 이름으로 찾은 것도 칩의 셈에 넣는다.
+                                // 안 넣으면 "seoul" 로 2명인데 칩은
+                                // Argentina 4 라고 적혀 있고, 눌러 보면
+                                // 0명이 나온다.
+                                countBy: (skip) => all
+                                    .where((r) => _matches(r, skip: skip))
+                                    .where(_nameHit)
+                                    .toList(),
+                                pickedCountries: _pickedCountries,
+                                pickedGenders: _pickedGenders,
+                                pickedBands: _pickedBands,
+                                onCountry: (k) => _toggle(_pickedCountries, k),
+                                onGender: (k) => _toggle(_pickedGenders, k),
+                                onBand: (k) => _toggle(_pickedBands, k),
+                                onClear: _filtering
+                                    ? () => setState(() {
+                                        _pickedCountries.clear();
+                                        _pickedGenders.clear();
+                                        _pickedBands.clear();
+                                      })
+                                    : null,
+                              ),
                             ],
                           ),
                         ),
@@ -530,14 +740,35 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
           headingRowHeight: 56,
           dataRowMinHeight: 48,
           dataRowMaxHeight: 48,
+          // 머리글을 누르면 그 칸으로 줄을 세운다. DataTable 의 sortColumnIndex
+          // 대신 직접 그린다 — 저 기능은 정렬을 표 안에서만 하는데, 여기서는
+          // 걸러 낸 뒤에 세워야 해서 자료를 바깥에서 다룬다.
           columns: [
-            for (final h in headers)
+            for (var ci = 0; ci < headers.length; ci++)
               DataColumn(
-                label: Text(
-                  h,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
+                label: InkWell(
+                  onTap: ci == 0 ? null : () => _sortBy(ci),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          headers[ci],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                        if (_sortCol == ci)
+                          Icon(
+                            _sortAsc
+                                ? Icons.arrow_upward
+                                : Icons.arrow_downward,
+                            size: 15,
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -679,6 +910,27 @@ class _MoneySummary extends StatelessWidget {
   }
 }
 
+/// 성별·나이대의 **열쇠**. 화면에 적는 말이 아니라 비교용 값이다.
+///
+/// 셈을 내는 쪽과 거르는 쪽이 이 값을 함께 쓴다. 두 벌로 갈라지면
+/// 칩에 3명이라 적혀 있는데 눌러 보면 2명이 나온다.
+String _genderKey(Map<String, dynamic> r) => switch (r['gender']) {
+  'M' => 'M',
+  'F' => 'F',
+  _ => '?',
+};
+
+String _bandKey(Map<String, dynamic> r) {
+  final age = r['age'] is int
+      ? r['age'] as int
+      : int.tryParse('${r['age'] ?? ''}');
+  // 나이를 안 적은 사람을 0살로 세면 "~19" 가 부풀어 방 배정을 그르친다.
+  if (age == null || age <= 0) return '?';
+  if (age < 20) return '~19';
+  if (age >= 70) return '70+';
+  return '${(age ~/ 10) * 10}s';
+}
+
 /// 누가 오는가 — 나라·성별·나이.
 ///
 /// 돈 옆의 빈 자리에 붙인다. 담당자가 방을 잡고 통역을 세우고 밥을 준비할 때
@@ -688,60 +940,76 @@ class _MoneySummary extends StatelessWidget {
 /// **표 안의 값만 쓴다.** 서버에 따로 물으면 표와 어긋날 자리가 또 생긴다 —
 /// 이 저장소에서 이미 두 번 겪었다(식사 제한 027·036).
 class _WhoSummary extends StatelessWidget {
-  final List<Map<String, dynamic>> people;
+  /// 그 묶음의 조건을 뺀 명단. 칩에 적을 수를 여기서 센다.
+  final List<Map<String, dynamic>> Function(String skip) countBy;
+  final Set<String> pickedCountries;
+  final Set<String> pickedGenders;
+  final Set<String> pickedBands;
+  final void Function(String) onCountry;
+  final void Function(String) onGender;
+  final void Function(String) onBand;
 
-  const _WhoSummary({required this.people});
+  /// 고른 것이 하나도 없으면 null — 그때는 단추를 감춘다.
+  final VoidCallback? onClear;
 
-  /// 나이대. 10년 단위로 묶되 **20대 밑은 한 칸**이다 — 어린이와 청년은
-  /// 한둘씩이라 칸을 나누면 1명짜리 줄만 늘어난다.
-  static String _band(int age) {
-    if (age < 20) return '~19';
-    if (age >= 70) return '70+';
-    return '${(age ~/ 10) * 10}s';
-  }
+  const _WhoSummary({
+    required this.countBy,
+    required this.pickedCountries,
+    required this.pickedGenders,
+    required this.pickedBands,
+    required this.onCountry,
+    required this.onGender,
+    required this.onBand,
+    required this.onClear,
+  });
 
   static String _bandLabel(String key, AppLocalizations l10n) => switch (key) {
     '~19' => l10n.statAgeUnder20,
     '70+' => l10n.statAge70Plus,
+    '?' => l10n.statUnknown,
     _ => () {
       final from = int.parse(key.replaceAll('s', ''));
       return l10n.statAgeDecade(from, from + 9);
     }(),
   };
 
+  static String _genderLabel(String key, AppLocalizations l10n) =>
+      switch (key) {
+        'M' => l10n.genderMale,
+        'F' => l10n.genderFemale,
+        _ => l10n.statUnknown,
+      };
+
+  /// 한 묶음의 셈. 열쇠 → 사람 수.
+  ///
+  /// **고른 칩은 0명이어도 남긴다.** 다른 묶음에서 고른 것 때문에 0이 되면
+  /// 그 칩이 사라지고, 그러면 눌러서 되돌릴 수가 없다 — 표는 비어 있는데
+  /// 왜 비었는지도, 어떻게 풀어야 할지도 알 수 없는 자리가 된다.
+  Map<String, int> _tally(
+    String skip,
+    String Function(Map<String, dynamic>) key,
+    Set<String> picked,
+  ) {
+    final out = {for (final k in picked) k: 0};
+    for (final r in countBy(skip)) {
+      final k = key(r);
+      out[k] = (out[k] ?? 0) + 1;
+    }
+    return out;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
-    final byCountry = <String, int>{};
-    final byBand = <String, int>{};
-    var male = 0, female = 0, unknownSex = 0, unknownAge = 0;
-
-    for (final r in people) {
-      final c = WorldCountries.display(r['country'] as String?) ?? '';
-      byCountry[c.isEmpty ? l10n.statUnknown : c] =
-          (byCountry[c.isEmpty ? l10n.statUnknown : c] ?? 0) + 1;
-
-      switch (r['gender']) {
-        case 'M':
-          male++;
-        case 'F':
-          female++;
-        default:
-          unknownSex++;
-      }
-
-      final age = r['age'] is int
-          ? r['age'] as int
-          : int.tryParse('${r['age'] ?? ''}');
-      // 나이를 안 적은 사람을 0살로 세면 "~19" 가 부풀어 방 배정을 그르친다.
-      if (age == null || age <= 0) {
-        unknownAge++;
-      } else {
-        final b = _band(age);
-        byBand[b] = (byBand[b] ?? 0) + 1;
-      }
-    }
+    final byCountry = _tally(
+      'country',
+      (r) => WorldCountries.display(r['country'] as String?) ?? '',
+      pickedCountries,
+    );
+    final byGender = _tally('gender', _genderKey, pickedGenders);
+    final byBand = _tally('band', _bandKey, pickedBands);
 
     // 많은 나라가 위로. 같으면 이름순이라 볼 때마다 순서가 흔들리지 않는다.
     final countries = byCountry.entries.toList()
@@ -750,40 +1018,50 @@ class _WhoSummary extends StatelessWidget {
             ? b.value.compareTo(a.value)
             : a.key.compareTo(b.key),
       );
-    // 나이대는 어린 쪽부터. '~19' 가 맨 앞, '70+' 가 맨 뒤.
+    // 나이대는 어린 쪽부터. 안 적은 사람은 맨 뒤.
+    int rank(String k) => switch (k) {
+      '~19' => -1,
+      '70+' => 900,
+      '?' => 999,
+      _ => int.parse(k.replaceAll('s', '')),
+    };
     final bands = byBand.keys.toList()
-      ..sort((a, b) {
-        int rank(String k) => k == '~19'
-            ? -1
-            : (k == '70+' ? 999 : int.parse(k.replaceAll('s', '')));
-        return rank(a).compareTo(rank(b));
-      });
+      ..sort((a, b) => rank(a).compareTo(rank(b)));
+    final genders = ['M', 'F', '?'].where(byGender.containsKey).toList();
 
-    // 한 줄에 하나씩 적으면 카드가 화면 밖으로 자란다 — 실제로 나이대가
-    // 잘려 보이지 않았다. 칸 하나에 이름과 수를 붙여 넣고 줄바꿈으로
-    // 흘린다. 좁은 패널에서도 세 묶음이 한눈에 들어온다.
-    Widget chip(String label, int n) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(text: label, style: const TextStyle(fontSize: 12.5)),
-            const TextSpan(text: '  '),
-            TextSpan(
-              text: '$n',
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
+    /// 누를 수 있는 칩. 고른 것은 색으로 채워 한눈에 보이게 한다.
+    Widget chip(String label, int n, bool picked, VoidCallback onTap) =>
+        Material(
+          color: picked
+              ? theme.colorScheme.primary
+              : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(6),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(6),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(text: label),
+                    const TextSpan(text: '  '),
+                    TextSpan(
+                      text: '$n',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: picked
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurface,
+                ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
 
     Widget group(String title, List<Widget> chips) => Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -812,19 +1090,42 @@ class _WhoSummary extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             group(l10n.statByCountry, [
-              for (final e in countries) chip(e.key, e.value),
+              for (final e in countries)
+                chip(
+                  e.key.isEmpty ? l10n.statUnknown : e.key,
+                  e.value,
+                  pickedCountries.contains(e.key),
+                  () => onCountry(e.key),
+                ),
             ]),
             group(l10n.statByGender, [
-              if (male > 0) chip(l10n.genderMale, male),
-              if (female > 0) chip(l10n.genderFemale, female),
-              if (unknownSex > 0) chip(l10n.statUnknown, unknownSex),
+              for (final g in genders)
+                chip(
+                  _genderLabel(g, l10n),
+                  byGender[g]!,
+                  pickedGenders.contains(g),
+                  () => onGender(g),
+                ),
             ]),
             group(l10n.statByAge, [
-              for (final b in bands) chip(_bandLabel(b, l10n), byBand[b]!),
-              // 안 적은 사람도 보여 준다. 합이 총원과 안 맞으면 담당자가
-              // 화면을 의심하게 된다.
-              if (unknownAge > 0) chip(l10n.statUnknown, unknownAge),
+              for (final b in bands)
+                chip(
+                  _bandLabel(b, l10n),
+                  byBand[b]!,
+                  pickedBands.contains(b),
+                  () => onBand(b),
+                ),
             ]),
+            // 무엇을 골라 뒀는지 잊고 "왜 사람이 몇 없지" 하는 일을 막는다.
+            if (onClear != null)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: onClear,
+                  icon: const Icon(Icons.filter_alt_off_outlined, size: 17),
+                  label: Text(l10n.statShowAll),
+                ),
+              ),
           ],
         ),
       ),

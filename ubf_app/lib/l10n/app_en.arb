@@ -2317,5 +2317,17 @@
         "type": "int"
       }
     }
+  },
+  "tblFindName": "Find a name",
+  "statShowAll": "Show everyone",
+  "commonClear": "Clear",
+  "@tblFindName": {
+    "description": "Placeholder of the roster name search box"
+  },
+  "@statShowAll": {
+    "description": "Button that clears every chip filter"
+  },
+  "@commonClear": {
+    "description": "Tooltip on the clear-search button"
   }
 }

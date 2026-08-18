@@ -6341,6 +6341,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{from}–{to}'**
   String statAgeDecade(int from, int to);
+
+  /// Placeholder of the roster name search box
+  ///
+  /// In en, this message translates to:
+  /// **'Find a name'**
+  String get tblFindName;
+
+  /// Button that clears every chip filter
+  ///
+  /// In en, this message translates to:
+  /// **'Show everyone'**
+  String get statShowAll;
+
+  /// Tooltip on the clear-search button
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get commonClear;
 }
 
 class _AppLocalizationsDelegate

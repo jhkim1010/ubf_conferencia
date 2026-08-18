@@ -27,6 +27,41 @@ export function connectedComponents(nodeIds, edges) {
   return [...groups.values()];
 }
 
+// ── 방을 나눌 때 쓰는 또래 ────────────────────────────────────
+//
+// **50대부터는 또래끼리 재운다.** 예순 넘은 분과 스무 살이 한 방을 쓰면
+// 자는 시간도 씻는 시간도 다르고, 두 사람 다 불편하다. 마흔아홉까지는
+// 나누지 않는다 — 거기서 더 쪼개면 방이 모자란다.
+export function roomAgeBand(age) {
+  const n = Number(age);
+  if (!Number.isFinite(n) || n <= 0) return 'unknown';
+  if (n < 50) return 'young';
+  if (n >= 70) return '70+';
+  return `${Math.floor(n / 10) * 10}s`;
+}
+
+const isSenior = (band) => band !== 'young' && band !== 'unknown';
+
+/// 이 묶음을 어느 또래로 볼 것인가. 여럿이면 가장 많은 쪽.
+function dominantBand(bands) {
+  const count = new Map();
+  for (const b of bands) {
+    if (b === 'unknown') continue;
+    count.set(b, (count.get(b) ?? 0) + 1);
+  }
+  let best = 'unknown';
+  let top = 0;
+  for (const [b, n] of count) {
+    // 같은 수면 나이 많은 쪽을 따른다 — 어르신 한 분을 젊은 방에 넣는 것이
+    // 반대보다 나쁘다.
+    if (n > top || (n === top && isSenior(b) && !isSenior(best))) {
+      best = b;
+      top = n;
+    }
+  }
+  return best;
+}
+
 // ── 숙소 자동 배정 ────────────────────────────────────────────
 //
 // 같은 성별끼리 단체실(dorm)에 넣는 것이 기본이다. 다만 **동행 관계로 수락된
@@ -85,7 +120,78 @@ export function assignRooms({ rooms, people, roommateEdges, familyEdges = [] }) 
     extra: Math.max(0, Number(r.extraCapacity ?? 0) || 0),
     gender: r.gender,
     roomType: r.roomType,
+    // 지금까지 이 방에 들어간 사람들. 또래와 출신을 보고 다음 사람을 고른다.
+    bands: [],
+    countries: new Map(),
+    branches: new Map(),
   }));
+
+  const infoOf = new Map(people.map((p) => [p.id, p]));
+  const bandOf = new Map(
+    people.map((p) => [p.id, roomAgeBand(p.age)]),
+  );
+
+  /// 이 방에 이 묶음을 넣으면 얼마나 어긋나는가. 작을수록 좋다.
+  ///
+  /// 먼저 **또래**를 본다 — 50대 넘는 분을 젊은 방에 넣지 않는 것이
+  /// 나라를 흩는 것보다 중요하다. 그다음이 출신이다.
+  const ageCost = (d, unitBand) => {
+    if (unitBand === 'unknown') return 0;
+    let cost = 0;
+    for (const b of d.bands) {
+      if (b === 'unknown') continue;
+      // 둘 다 마흔아홉 아래면 나눌 것이 없다.
+      if (!isSenior(b) && !isSenior(unitBand)) continue;
+      if (b !== unitBand) cost++;
+    }
+    return cost;
+  };
+
+  /// 같은 지부가 같은 방에 몰리는 것이 같은 나라보다 더 답답하다 —
+  /// 지부는 이미 매주 보는 사이다. 그래서 더 무겁게 센다.
+  const originCost = (d, unit) => {
+    let cost = 0;
+    for (const id of unit) {
+      const p = infoOf.get(id) ?? {};
+      const c = (p.country ?? '').trim();
+      const b = (p.branch ?? '').trim();
+      if (c !== '') cost += d.countries.get(c) ?? 0;
+      if (b !== '') cost += 10 * (d.branches.get(b) ?? 0);
+    }
+    return cost;
+  };
+
+  /// 들어갈 수 있는 방 가운데 가장 덜 어긋나는 곳. 같으면 앞의 방 —
+  /// 순서를 흔들지 않아야 같은 자료로 두 번 돌렸을 때 같은 답이 나온다.
+  const pick = (unit, mixed, genders, useExtra) => {
+    const unitBand = dominantBand(unit.map((id) => bandOf.get(id)));
+    let best = null;
+    let bestKey = null;
+    for (const d of pool) {
+      if (!fits(d, unit, mixed, genders, useExtra)) continue;
+      const key = [ageCost(d, unitBand), originCost(d, unit)];
+      if (
+        bestKey === null ||
+        key[0] < bestKey[0] ||
+        (key[0] === bestKey[0] && key[1] < bestKey[1])
+      ) {
+        best = d;
+        bestKey = key;
+      }
+    }
+    return best;
+  };
+
+  const remember = (d, unit) => {
+    for (const id of unit) {
+      d.bands.push(bandOf.get(id) ?? 'unknown');
+      const p = infoOf.get(id) ?? {};
+      const c = (p.country ?? '').trim();
+      const b = (p.branch ?? '').trim();
+      if (c !== '') d.countries.set(c, (d.countries.get(c) ?? 0) + 1);
+      if (b !== '') d.branches.set(b, (d.branches.get(b) ?? 0) + 1);
+    }
+  };
 
   const fits = (d, unit, mixed, genders, useExtra) => {
     const room = d.remaining + (useExtra ? d.extra : 0);
@@ -109,18 +215,19 @@ export function assignRooms({ rooms, people, roommateEdges, familyEdges = [] }) 
     const mixed = genders.size > 1;
 
     // 1차: 정원 안에서만 찾는다.
-    const room = pool.find((d) => fits(d, unit, mixed, genders, false));
+    const room = pick(unit, mixed, genders, false);
     if (!room) {
       leftover.push({ unit, mixed, genders });
       continue;
     }
     take(room, unit.length);
+    remember(room, unit);
     for (const id of unit) assignments.push({ roomId: room.id, registrationId: id });
   }
 
   // 2차: 남은 사람에게만 여유 자리를 연다.
   for (const { unit, mixed, genders } of leftover) {
-    const room = pool.find((d) => fits(d, unit, mixed, genders, true));
+    const room = pick(unit, mixed, genders, true);
     if (!room) {
       for (const id of unit) {
         unplaced.push({
@@ -135,6 +242,7 @@ export function assignRooms({ rooms, people, roommateEdges, familyEdges = [] }) 
       continue;
     }
     take(room, unit.length);
+    remember(room, unit);
     for (const id of unit) assignments.push({ roomId: room.id, registrationId: id });
   }
 
@@ -253,7 +361,24 @@ export function assignGroups({
     size: 0,
     male: 0,
     female: 0,
+    // 이 조에 이미 들어간 사람들의 출신(056). 같은 지부가 한 조에 몰리면
+    // 조가 아니라 지부 모임이 된다.
+    countries: new Map(),
+    branches: new Map(),
   }));
+
+  /// 이 조에 이 묶음을 넣으면 출신이 얼마나 겹치는가. 지부를 더 무겁게 본다.
+  const originClash = (s, unit) => {
+    let cost = 0;
+    for (const id of unit.members) {
+      const p = byId.get(id) ?? {};
+      const c = (p.country ?? '').trim();
+      const b = (p.branch ?? '').trim();
+      if (c !== '') cost += s.countries.get(c) ?? 0;
+      if (b !== '') cost += 10 * (s.branches.get(b) ?? 0);
+    }
+    return cost;
+  };
   const openGroups = state.filter((s) => s.language === null && s.band === null);
 
   const groupsFor = (language, band) => {
@@ -313,16 +438,26 @@ export function assignGroups({
         (s) => s.capacity === null || s.size + unit.size <= s.capacity,
       );
       const pool = roomy.length > 0 ? roomy : targets;
+      // **작은 조가 먼저다.** 출신을 흩겠다고 한 조에 몰아 넣으면 조 크기가
+      // 무너지고, 그러면 흩은 보람도 없다. 크기가 비슷한 조들(가장 작은 조
+      // ±1) 안에서만 출신을 본다.
+      const minSize = Math.min(...pool.map((s) => s.size));
+      const band = pool.filter((s) => s.size <= minSize + 1);
       let best = null;
-      for (const s of pool) {
+      for (const s of band) {
+        const clash = originClash(s, unit);
         if (
           best === null ||
-          s.size < best.size ||
-          (s.size === best.size && s[dominant] < best[dominant])
+          clash < best.clash ||
+          (clash === best.clash && s.size < best.s.size) ||
+          (clash === best.clash &&
+            s.size === best.s.size &&
+            s[dominant] < best.s[dominant])
         ) {
-          best = s;
+          best = { s, clash };
         }
       }
+      best = best.s;
       if (roomy.length === 0) {
         notes.push({
           cohort: `${cohort.language ?? '?'}·${cohort.band}`,
@@ -333,6 +468,15 @@ export function assignGroups({
       best.size += unit.size;
       best.male += unit.male;
       best.female += unit.female;
+      // 넣은 사람의 출신을 남긴다. 안 남기면 다음 사람이 겹침을 못 보고
+      // 결국 한 조에 같은 지부가 모인다.
+      for (const id of unit.members) {
+        const p = byId.get(id) ?? {};
+        const c = (p.country ?? '').trim();
+        const b = (p.branch ?? '').trim();
+        if (c !== '') best.countries.set(c, (best.countries.get(c) ?? 0) + 1);
+        if (b !== '') best.branches.set(b, (best.branches.get(b) ?? 0) + 1);
+      }
       for (const id of unit.members) assignments.push({ groupId: best.id, registrationId: id });
     }
   }

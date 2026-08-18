@@ -3403,4 +3403,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String statAgeDecade(int from, int to) {
     return '$from대';
   }
+
+  @override
+  String get tblFindName => '이름 찾기';
+
+  @override
+  String get statShowAll => '전체 보기';
+
+  @override
+  String get commonClear => '지우기';
 }

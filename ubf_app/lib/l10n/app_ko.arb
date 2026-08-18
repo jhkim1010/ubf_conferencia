@@ -1053,5 +1053,8 @@
   "statUnknown": "미기재",
   "statAgeUnder20": "20세 미만",
   "statAge70Plus": "70세 이상",
-  "statAgeDecade": "{from}대"
+  "statAgeDecade": "{from}대",
+  "tblFindName": "이름 찾기",
+  "statShowAll": "전체 보기",
+  "commonClear": "지우기"
 }

@@ -1,15 +1,21 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
 import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
-import { assignRooms, assignGroups } from '../services/assignment_engine.js';
+import {
+  assignRooms,
+  assignGroups,
+  connectedComponents,
+} from '../services/assignment_engine.js';
 
 const router = Router();
 
 // ── 데이터 로더 ───────────────────────────────────────────────
 async function loadPeople(programId) {
   return sql`
-    SELECT id, gender, age, study_language AS "studyLanguage" FROM registrations
-    WHERE program_id = ${programId} AND counts_as_participant(real_name, submitted)
+    SELECT id, gender, age, study_language AS "studyLanguage",
+           country, branch
+      FROM registrations
+     WHERE program_id = ${programId} AND counts_as_participant(real_name, submitted)
   `;
 }
 async function loadAcceptedEdges(programId, kind) {
@@ -19,6 +25,30 @@ async function loadAcceptedEdges(programId, kind) {
     WHERE program_id = ${programId} AND kind = ${kind} AND status = 'accepted'
   `;
   return rows.map((r) => [r.a, r.b]);
+}
+
+/// 미배정 목록에 **같이 움직일 사람**을 붙인다(057).
+///
+/// 서로 지목하고 수락한 사람들은 자동 배정이 한 묶음으로 다룬다. 그런데
+/// 손으로 옮길 때는 한 명씩 눌러야 했고, 담당자가 한쪽만 옮기면 자동 배정이
+/// 지켜 준 짝이 손으로 깨졌다. 목록에서부터 묶어 보여 주고 함께 옮긴다.
+async function withBuddies(programId, rows, kind) {
+  if (rows.length === 0) return rows;
+  const edges = await loadAcceptedEdges(programId, kind);
+  const ids = rows.map((r) => r.registrationId);
+  const comps = connectedComponents(ids, edges);
+  const mate = new Map();
+  for (const c of comps) {
+    if (c.length < 2) continue;
+    for (const id of c) mate.set(id, c);
+  }
+  return rows.map((r) => ({
+    ...r,
+    // 자기 자신을 뺀 나머지. 없으면 빈 배열이라 앱이 그냥 한 명으로 그린다.
+    withIds: (mate.get(r.registrationId) ?? []).filter(
+      (id) => id !== r.registrationId,
+    ),
+  }));
 }
 
 // 동행(가족) 관계로 수락된 짝. 성별이 달라도 같은 방을 쓸 수 있는 근거다(022).
@@ -61,7 +91,10 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, async (req, re
         AND id NOT IN (SELECT registration_id FROM room_assignments WHERE registration_id IS NOT NULL)
       ORDER BY real_name
     `;
-    res.json({ rooms, unassigned });
+    res.json({
+      rooms,
+      unassigned: await withBuddies(programId, unassigned, 'roommate'),
+    });
   } catch (err) {
     console.error('숙소 배정 조회 오류:', err);
     res.status(500).json({ error: '서버 오류' });
@@ -102,7 +135,10 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, async (req, r
         AND id NOT IN (SELECT registration_id FROM group_members)
       ORDER BY real_name
     `;
-    res.json({ groups, unassigned });
+    res.json({
+      groups,
+      unassigned: await withBuddies(programId, unassigned, 'group'),
+    });
   } catch (err) {
     console.error('말씀조 배정 조회 오류:', err);
     res.status(500).json({ error: '서버 오류' });

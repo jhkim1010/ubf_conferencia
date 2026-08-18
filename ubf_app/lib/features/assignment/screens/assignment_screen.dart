@@ -127,6 +127,16 @@ Widget _personChip(
   );
 }
 
+/// 이 사람을 옮길 때 **함께 가는 사람들**. 본인이 맨 앞이다.
+///
+/// 서로 지목하고 수락한 사람들이다(057). 자동 배정은 이들을 한 묶음으로
+/// 다루는데 손으로 옮길 때만 한 명씩이면, 담당자가 한쪽만 옮긴 순간 짝이
+/// 깨지고 아무도 그것을 알아채지 못한다.
+List<String> _movesWith(Map<String, dynamic> person) => [
+  person['registrationId'] as String,
+  ...((person['withIds'] as List?) ?? const []).map((e) => '$e'),
+];
+
 // ═══════════════════════════════════════════════════════════
 //  숙소 배정 탭
 // ═══════════════════════════════════════════════════════════
@@ -389,11 +399,11 @@ class _RoomsAssignTab extends ConsumerWidget {
     );
     if (roomId == null) return;
     try {
-      await ApiClient.assignToRoom(
-        programId,
-        roomId,
-        person['registrationId'] as String,
-      );
+      // 같이 있고 싶다고 서로 수락한 사람은 함께 옮긴다(057). 한 명만
+      // 옮기면 자동 배정이 지켜 준 짝이 손으로 깨진다.
+      for (final id in _movesWith(person)) {
+        await ApiClient.assignToRoom(programId, roomId, id);
+      }
       refresh();
     } on ApiException catch (e) {
       if (context.mounted) {
@@ -609,11 +619,9 @@ class _GroupsAssignTab extends ConsumerWidget {
     );
     if (groupId == null) return;
     try {
-      await ApiClient.assignToGroup(
-        programId,
-        groupId,
-        person['registrationId'] as String,
-      );
+      for (final id in _movesWith(person)) {
+        await ApiClient.assignToGroup(programId, groupId, id);
+      }
       refresh();
     } on ApiException catch (e) {
       if (context.mounted) {
@@ -699,12 +707,20 @@ class _UnassignedCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    // 짝이 있으면 몇 명이 함께 가는지 적는다(057). 눌렀을
+                    // 때 여럿이 한꺼번에 옮겨 가는 것을 미리 알아야 한다.
                     label: Text(() {
                       final lang = languageOf?.call(p) ?? '';
-                      return lang.isEmpty
+                      final mates = _movesWith(p).length;
+                      final base = lang.isEmpty
                           ? '${p['name']}'
                           : '${p['name']} · $lang';
+                      return mates > 1 ? '$base  +${mates - 1}' : base;
                     }(), style: const TextStyle(fontSize: 12)),
+                    // 짝이 있는 사람은 테두리로 구별한다.
+                    side: _movesWith(p).length > 1
+                        ? BorderSide(color: Colors.indigo.shade300, width: 1.4)
+                        : null,
                     onPressed: () => onTap(p),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),

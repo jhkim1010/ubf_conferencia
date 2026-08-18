@@ -1039,5 +1039,8 @@
   "statUnknown": "Não informado",
   "statAgeUnder20": "Menos de 20",
   "statAge70Plus": "70 ou mais",
-  "statAgeDecade": "{from}–{to}"
+  "statAgeDecade": "{from}–{to}",
+  "tblFindName": "Procurar um nome",
+  "statShowAll": "Ver todos",
+  "commonClear": "Limpar"
 }

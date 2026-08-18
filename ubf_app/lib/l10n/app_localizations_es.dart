@@ -3487,4 +3487,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String statAgeDecade(int from, int to) {
     return '$from–$to';
   }
+
+  @override
+  String get tblFindName => 'Buscar un nombre';
+
+  @override
+  String get statShowAll => 'Ver a todos';
+
+  @override
+  String get commonClear => 'Borrar';
 }

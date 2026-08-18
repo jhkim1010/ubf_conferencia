@@ -3488,4 +3488,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String statAgeDecade(int from, int to) {
     return '$from–$to';
   }
+
+  @override
+  String get tblFindName => 'Procurar um nome';
+
+  @override
+  String get statShowAll => 'Ver todos';
+
+  @override
+  String get commonClear => 'Limpar';
 }
