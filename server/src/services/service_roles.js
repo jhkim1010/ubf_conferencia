@@ -63,31 +63,34 @@ function cleanNeeded(v) {
 //
 // 화면의 이름은 앱이 네 언어로 붙인다(service_role_label.dart). 서버는 키만
 // 아는데, 푸시와 텔레그램은 서버가 문장을 만들어 보내므로 여기에도 이름이
-// 있어야 한다. 서버가 보내는 다른 알림과 같이 한국어로 적는다.
+// 있어야 한다. 받는 사람의 언어로 적는다(056) — 알림 본문 한가운데에
+// 들어가므로 여기만 한국어면 문장이 반씩 갈라진다.
 //
 // **담당자가 그 자리에서 만든 역할(custom:)은 적어 준 이름을 그대로 쓴다** —
 // 번역할 방법이 없고, 번역해서도 안 된다.
-const ROLE_NAMES_KO = {
-  special_song: '특송',
-  mc: '사회',
-  pickup: '픽업',
-  cleaning: '청소',
-  tour_guide: '투어 안내',
-  meal_prep: '식사 준비',
-  lodging_backup: '숙소 백업',
-  registration_desk: '등록 데스크',
-  interpreter: '통역',
-  photo_video: '사진·영상',
-  medical: '의료',
-  group_study_leader: '말씀조 리더',
-  other: '봉사',
+const ROLE_NAMES = {
+  special_song:      { ko: '특송',        es: 'canto especial',      en: 'special song',      pt: 'canto especial' },
+  mc:                { ko: '사회',        es: 'presentar',           en: 'hosting',           pt: 'apresentar' },
+  pickup:            { ko: '픽업',        es: 'buscar en el aeropuerto', en: 'airport pickup', pt: 'buscar no aeroporto' },
+  cleaning:          { ko: '청소',        es: 'limpieza',            en: 'cleaning',          pt: 'limpeza' },
+  tour_guide:        { ko: '투어 안내',    es: 'guiar la excursión',  en: 'guiding the tour',  pt: 'guiar o passeio' },
+  meal_prep:         { ko: '식사 준비',    es: 'preparar la comida',  en: 'preparing meals',   pt: 'preparar a comida' },
+  lodging_backup:    { ko: '숙소 백업',    es: 'apoyo en alojamiento', en: 'lodging backup',   pt: 'apoio no alojamento' },
+  registration_desk: { ko: '등록 데스크',  es: 'mesa de inscripción', en: 'registration desk', pt: 'mesa de inscrição' },
+  interpreter:       { ko: '통역',        es: 'traducir',            en: 'interpreting',      pt: 'traduzir' },
+  photo_video:       { ko: '사진·영상',    es: 'fotos y video',       en: 'photos and video',  pt: 'fotos e vídeo' },
+  medical:           { ko: '의료',        es: 'atención médica',     en: 'medical care',      pt: 'atendimento médico' },
+  group_study_leader:{ ko: '말씀조 리더',  es: 'guiar un grupo',      en: 'leading a group',   pt: 'guiar um grupo' },
+  other:             { ko: '봉사',        es: 'ayudar',              en: 'helping',           pt: 'ajudar' },
 };
 
-export function roleName(role) {
-  if (!role) return '봉사';
+export function roleName(role, lang = 'ko') {
+  const fallback = ROLE_NAMES.other[lang] ?? ROLE_NAMES.other.ko;
+  if (!role) return fallback;
   const label = cleanLabel(role.label);
   if (label !== '') return label;
-  return ROLE_NAMES_KO[role.key] ?? '봉사';
+  const row = ROLE_NAMES[role.key];
+  return row ? (row[lang] ?? row.ko) : fallback;
 }
 
 export function normalizeServiceRoles(raw) {

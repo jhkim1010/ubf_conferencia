@@ -4,6 +4,7 @@
 // 자격 판정은 **서버에서도 한다**. 클라이언트만 믿으면 우회가 된다.
 
 import { Router } from 'express';
+import { say } from '../services/notify_text.js';
 import { sql } from '../db.js';
 import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
 import {
@@ -409,10 +410,12 @@ router.post(
 
       // 다른 수양회의 등록을 지명할 수 없다.
       const [reg] = await sql`
-        SELECT id, real_name, fcm_token, volunteer_resources
-        FROM registrations
-        WHERE id = ${registrationId} AND program_id = ${programId}
-          AND counts_as_participant(real_name, submitted)
+        SELECT r.id, r.real_name, r.fcm_token, r.volunteer_resources,
+               u.ui_language
+        FROM registrations r
+        LEFT JOIN users u ON u.id = r.user_id
+        WHERE r.id = ${registrationId} AND r.program_id = ${programId}
+          AND counts_as_participant(r.real_name, r.submitted)
       `;
       if (!reg) {
         return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
@@ -458,21 +461,25 @@ router.post(
       //
       // 여럿을 부탁해도 **알림은 한 통** 이다. 역할마다 따로 보내면 세 번
       // 울리고, 세 번째쯤에는 아무도 읽지 않는다.
-      const what = roles.map(roleName).join(', ');
+      // roles.map(roleName) 로 넘기면 map 이 **인덱스**를 두 번째 인자로
+      // 밀어 넣어 언어 자리가 숫자가 된다. 감싸서 부른다.
+      const whatIn = (lang) => roles.map((r) => roleName(r, lang)).join(', ');
       // **답을 기다리는 것과 알리는 것은 다른 말이다.** 스스로 하겠다고
       // 적어 낸 일을 두고 "수락해 주십시오" 라고 하면 무엇을 더 해야 하는
       // 줄 알고, 반대로 묻지도 않고 "맡기셨습니다" 라고 하면 하겠다고 한
       // 적 없는 일이 통보로 온다.
       const asking = invited.some((i) => i.status === 'invited');
-      const title = asking ? '봉사 부탁' : '봉사 배정';
-      const line = asking
-        ? `${reg.real_name} 님, ${what} 을(를) 부탁드립니다. 앱에서 수락 여부를 알려 주십시오.`
-        : `${reg.real_name} 님, 적어 주신 대로 ${what} 을(를) 맡아 주시게 되었습니다.`;
+      // 완성된 문장 대신 열쇠를 넘긴다(056). 받는 사람의 언어는 보내는
+      // 쪽에서 정해지고, 여기서는 아직 모른다.
+      const titleKey = asking ? 'serviceAskTitle' : 'serviceAssignedTitle';
+      const bodyKey = asking ? 'serviceAskBody' : 'serviceAssignedBody';
+      const lang = reg.ui_language || 'ko';
+      const params = { name: reg.real_name, what: whatIn(lang) };
       if (reg.fcm_token) {
         sendPushNotification(
           [reg.fcm_token],
-          title,
-          line,
+          say(titleKey, params, lang),
+          say(bodyKey, params, lang),
           { type: 'service_invite', programId, serviceKey: roles[0].key },
         ).catch((e) => console.error('봉사 지명 알림 실패:', e));
       }
@@ -481,7 +488,7 @@ router.post(
       notifyRegistrations(
         programId,
         [registrationId],
-        `<b>${title}</b>\n${line}`,
+        `<b>${say(titleKey, params, lang)}</b>\n${say(bodyKey, params, lang)}`,
       ).catch((e) => console.error('봉사 지명 텔레그램 실패:', e));
 
       console.log(`[SERVICE] 지명 | programId=${programId} keys=${keys.join(',')} registrationId=${registrationId} leaderId=${req.user.leaderId}`);
@@ -711,7 +718,7 @@ router.post(
       // 담당자는 보냈는지 안 보냈는지 알 수 없다.
       const title = program.name;
       const bodyText = (message ?? '').trim()
-        || `봉사자를 찾습니다 — ${tally.short}자리`;
+        || { key: 'serviceCallDefault', params: { n: tally.short } };
       notifyAudience(sql, programId, audience, title, bodyText, {
         type: 'service_call',
         programId,
@@ -719,7 +726,7 @@ router.post(
       }).catch((e) => console.error('봉사 요청 알림 실패:', e));
       notifyProgramAdmins(
         programId,
-        `[봉사] ${serviceKey} — ${tally.short}자리 도움 요청을 보냈습니다`,
+        { key: 'admServiceCallSent', params: { what: serviceKey, n: tally.short } },
       ).catch((e) => console.error('봉사 요청 텔레그램 실패:', e));
 
       console.log(`[SERVICE] 도움요청 | programId=${programId} key=${serviceKey} short=${tally.short} leaderId=${req.user.leaderId}`);
@@ -842,7 +849,7 @@ router.post('/:programId/apply', requireAuth, async (req, res) => {
 
     notifyProgramAdmins(
       programId,
-      `[봉사] ${me.real_name} 님이 ${serviceKey} 에 손을 들었습니다`,
+      { key: 'admServiceVolunteered', params: { who: me.real_name, what: serviceKey } },
     ).catch((e) => console.error('봉사 지원 알림 실패:', e));
 
     console.log(`[SERVICE] 지원 | programId=${programId} key=${serviceKey} registrationId=${me.id}`);

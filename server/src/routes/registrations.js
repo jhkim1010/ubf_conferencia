@@ -285,11 +285,14 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     // 수정(재저장)인 경우 프로그램 관리자에게 Telegram 알림 전송 (비동기, 응답 지연 없음)
     if (isUpdate) {
       const name = realName ?? req.user.name ?? '참가자';
-      const msg =
-        `✏️ <b>[${program.name}] 등록 정보 수정</b>\n\n` +
-        `👤 ${name}` +
-        (country ? ` (${country}${branch ? ' / ' + branch : ''})` : '') +
-        '\n이 등록 내용을 수정했습니다.';
+      // 완성된 문장 대신 열쇠를 넘긴다(056) — 담당자마다 언어가 다르다.
+      const where = country
+        ? ` (${country}${branch ? ' / ' + branch : ''})`
+        : '';
+      const msg = {
+        key: 'admRegistrationEdited',
+        params: { program: program.name, who: `${name}${where}` },
+      };
 
       notifyProgramAdmins(req.params.programId, msg).catch(err =>
         console.error('관리자 알림 전송 오류:', err.message)
@@ -366,9 +369,10 @@ router.post('/:programId/me/submit', requireAuth, async (req, res) => {
     // 최종 제출 시에도 관리자 알림
     const [program] = await sql`SELECT name FROM programs WHERE id = ${req.params.programId}`;
     const name = result[0].real_name ?? req.user.name ?? '참가자';
-    const msg =
-      `🎉 <b>[${program?.name ?? ''}] 최종 등록 제출</b>\n\n` +
-      `👤 ${name} 이(가) 등록을 최종 제출했습니다.`;
+    const msg = {
+      key: 'admRegistrationSubmitted',
+      params: { program: program?.name ?? '', who: name },
+    };
 
     notifyProgramAdmins(req.params.programId, msg).catch(err =>
       console.error('제출 알림 전송 오류:', err.message)
@@ -420,12 +424,20 @@ router.put('/:programId/departure-check', requireAuth, async (req, res) => {
     // 정상 출발은 알리지 않는다 — 수백 명이 "정상"이라고 답할 때마다 울리면
     // 담당자는 곧 알림을 꺼 버리고, 정작 결항 소식을 놓친다.
     if (status !== 'on_time') {
-      const label = status === 'delayed' ? `지연 → ${payload.new_time}` : '결항·변경';
-      notifyProgramAdmins(
-        req.params.programId,
-        `✈️ <b>출발 변경</b>\n\n👤 ${rows[0].real_name ?? '참가자'}\n${label}` +
-          (payload.note ? `\n📝 ${payload.note}` : ''),
-      ).catch((err) => console.error('출발 변경 알림 오류:', err.message));
+      // 문장 안에 또 문장이 들어간다(지연이냐 결항이냐). 열쇠를 값으로
+      // 넘기면 say 가 같은 언어로 마저 짓는다(056).
+      //
+      // 참가자가 덧붙인 말(note)은 그 사람의 말이라 옮기지 않는다.
+      notifyProgramAdmins(req.params.programId, {
+        key: 'admDepartureChanged',
+        params: {
+          who: rows[0].real_name,
+          what: status === 'delayed'
+            ? { key: 'admDepartureDelayed', params: { when: payload.new_time } }
+            : { key: 'admDepartureCancelled' },
+          note: payload.note ? `\n📝 ${payload.note}` : '',
+        },
+      }).catch((err) => console.error('출발 변경 알림 오류:', err.message));
     }
 
     res.json({ departureCheck: payload });

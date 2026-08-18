@@ -1,6 +1,7 @@
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import { sql } from '../db.js';
+import { pickLanguage } from '../services/messages.js';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -66,11 +67,16 @@ export async function googleLogin(req, res) {
     }
 
     // users 테이블에 upsert (첫 로그인 시 자동 생성)
+    // 이 사람이 앱을 무슨 언어로 보는지 남긴다(056). 알림은 나중에 그 사람이
+    // 없는 자리에서 만들어지므로, 그때 가서는 물어볼 수가 없다.
+    const lang = pickLanguage(req.headers['accept-language']);
+
     const [user] = await sql`
-      INSERT INTO users (google_id, email, name)
-      VALUES (${googleId}, ${email}, ${name})
+      INSERT INTO users (google_id, email, name, ui_language)
+      VALUES (${googleId}, ${email}, ${name}, ${lang})
       ON CONFLICT (google_id)
-      DO UPDATE SET email = EXCLUDED.email, name = EXCLUDED.name, updated_at = NOW()
+      DO UPDATE SET email = EXCLUDED.email, name = EXCLUDED.name,
+                    ui_language = EXCLUDED.ui_language, updated_at = NOW()
       RETURNING id, email, name, role
     `;
 
@@ -131,11 +137,13 @@ export async function kakaoLogin(req, res) {
     // google_id 컬럼에 kakao:{id} 형태로 저장 (기존 스키마 재활용)
     const syntheticId = `kakao:${kakaoId}`;
 
+    const kakaoLang = pickLanguage(req.headers['accept-language']);
     const [user] = await sql`
-      INSERT INTO users (google_id, email, name)
-      VALUES (${syntheticId}, ${email}, ${name})
+      INSERT INTO users (google_id, email, name, ui_language)
+      VALUES (${syntheticId}, ${email}, ${name}, ${kakaoLang})
       ON CONFLICT (google_id)
-      DO UPDATE SET name = EXCLUDED.name, updated_at = NOW()
+      DO UPDATE SET name = EXCLUDED.name,
+                    ui_language = EXCLUDED.ui_language, updated_at = NOW()
       RETURNING id, email, name, role
     `;
 

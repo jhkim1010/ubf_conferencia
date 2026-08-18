@@ -7,6 +7,7 @@
 // 토큰은 비밀값이다. 로그에도 남기지 않는다 — 전송 실패 본문에 토큰이 섞여
 // 나오는 일은 없지만, 우리가 먼저 찍지 않는다.
 import { sql } from '../db.js';
+import { say } from './notify_text.js';
 
 const ENV_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -61,6 +62,17 @@ export async function sendMessage(chatId, text, token) {
 //
 // 어느 쪽도 없으면 조용히 지나간다. 알림은 부가 기능이고, 여기서 던지면
 // 등록 저장 자체가 실패한다.
+
+/// 알림 문구를 그 사람의 언어로 짓는다(056).
+///
+/// 문자열이 그대로 오면 손대지 않는다 — 담당자가 적은 공지 본문이 그렇다.
+/// 그 말은 그 사람의 말이므로 옮기지 않는다.
+function render(message, lang) {
+  if (typeof message === 'string') return message;
+  if (!message || typeof message !== 'object') return '';
+  return say(message.key, message.params, lang || 'ko');
+}
+
 export async function notifyProgramAdmins(programId, message) {
   try {
     const [program] = await sql`
@@ -70,12 +82,20 @@ export async function notifyProgramAdmins(programId, message) {
     const token = program?.telegram_bot_token || ENV_BOT_TOKEN;
     if (!token) return;
 
-    const targets = new Set();
-    if (program?.telegram_chat_id) targets.add(program.telegram_chat_id);
+    // 언어별로 나눠 보낸다(056). 공동 관리자가 스페인어를 쓰는데 한 벌로
+    // 지어 보내면 그 사람만 못 읽는다.
+    //
+    // 수양회에 적어 둔 단체 채팅방은 누가 읽을지 알 수 없다. 그 방에는
+    // 수양회를 만든 사람의 언어로 보낸다 — 아무 언어나 고르는 것보다 낫다.
+    const byLang = new Map();
+    const put = (lang, chat) => {
+      const k = lang || 'ko';
+      if (!byLang.has(k)) byLang.set(k, new Set());
+      byLang.get(k).add(chat);
+    };
 
-    // 프로그램 관리자(program_admins) + 프로그램 생성 리더(leader_id → users)
     const admins = await sql`
-      SELECT DISTINCT u.telegram_chat_id
+      SELECT DISTINCT u.telegram_chat_id, u.ui_language
       FROM users u
       WHERE u.telegram_chat_id IS NOT NULL
         AND (
@@ -93,9 +113,17 @@ export async function notifyProgramAdmins(programId, message) {
           )
         )
     `;
-    for (const a of admins) targets.add(a.telegram_chat_id);
+    for (const a of admins) put(a.ui_language, a.telegram_chat_id);
+    if (program?.telegram_chat_id) {
+      put(admins[0]?.ui_language, program.telegram_chat_id);
+    }
 
-    await Promise.all([...targets].map((c) => sendMessage(c, message, token)));
+    await Promise.all(
+      [...byLang].flatMap(([lang, chats]) => {
+        const text = render(message, lang);
+        return [...chats].map((c) => sendMessage(c, text, token));
+      }),
+    );
   } catch (err) {
     console.error('관리자 알림 오류:', err.message);
   }
@@ -119,13 +147,17 @@ export async function notifyRegistrations(programId, registrationIds, message) {
     if (!token) return 0;
 
     const rows = await sql`
-      SELECT telegram_chat_id FROM registrations
-      WHERE program_id = ${programId}
-        AND id = ANY(${registrationIds})
-        AND telegram_chat_id IS NOT NULL
+      SELECT r.telegram_chat_id, u.ui_language
+      FROM registrations r
+      LEFT JOIN users u ON u.id = r.user_id
+      WHERE r.program_id = ${programId}
+        AND r.id = ANY(${registrationIds})
+        AND r.telegram_chat_id IS NOT NULL
     `;
     await Promise.all(
-      rows.map((r) => sendMessage(r.telegram_chat_id, message, token)),
+      rows.map((r) =>
+        sendMessage(r.telegram_chat_id, render(message, r.ui_language), token),
+      ),
     );
     return rows.length;
   } catch (err) {
@@ -179,6 +211,9 @@ export async function sendDailySummary() {
     // telegram_chat_id가 설정된 활성 프로그램 전체
     const programs = await sql`
       SELECT p.id, p.name, p.telegram_chat_id, p.telegram_bot_token,
+        (SELECT u.ui_language FROM users u
+          JOIN leaders l ON l.user_id = u.id
+         WHERE l.id = p.leader_id) AS owner_language,
         COUNT(r.id)                                              AS total,
         COUNT(r.id) FILTER (WHERE r.submitted = true)           AS submitted,
         COUNT(pay.id) FILTER (WHERE pay.status = 'pending')     AS pending_payments,
@@ -188,17 +223,20 @@ export async function sendDailySummary() {
       LEFT JOIN payments pay      ON pay.registration_id = r.id
       WHERE p.is_active = true
         AND p.telegram_chat_id IS NOT NULL
-      GROUP BY p.id, p.name, p.telegram_chat_id, p.telegram_bot_token
+      GROUP BY p.id, p.name, p.telegram_chat_id, p.telegram_bot_token, p.leader_id
     `;
 
     for (const prog of programs) {
-      const text =
-        `📊 <b>[${prog.name}] 일일 등록 현황</b>\n\n` +
-        `👥 총 등록: ${prog.total}명\n` +
-        `✅ 등록 완료: ${prog.submitted}명\n` +
-        `⏳ 진행 중: ${prog.total - prog.submitted}명\n` +
-        `💰 입금 대기: ${prog.pending_payments}건\n` +
-        `✔️ 입금 확인: ${prog.confirmed_payments}건`;
+      // 단체 채팅방은 누가 읽을지 알 수 없다. 수양회를 만든 사람의
+      // 언어로 보낸다(056).
+      const text = say('admDailySummary', {
+        program: prog.name,
+        total: prog.total,
+        done: prog.submitted,
+        doing: prog.total - prog.submitted,
+        pending: prog.pending_payments,
+        confirmed: prog.confirmed_payments,
+      }, prog.owner_language || 'ko');
 
       await sendMessage(prog.telegram_chat_id, text, prog.telegram_bot_token);
     }

@@ -1,3 +1,5 @@
+import { say } from './notify_text.js';
+
 // Firebase Cloud Messaging (FCM) 서비스
 // 환경변수: FIREBASE_SERVICE_ACCOUNT (서비스 계정 JSON 문자열)
 // Firebase Console → 프로젝트 설정 → 서비스 계정 → 새 비공개 키 생성
@@ -79,6 +81,15 @@ export async function sendPushNotification(tokens, title, body, data = {}) {
 //
 // **좁히려던 것이 넓어지는 쪽이 가장 나쁘다.** 그래서 모르는 갈래가 오면
 // 아무에게도 보내지 않는다 — 전체로 떨어뜨리지 않는다.
+
+/// 알림 문구를 그 사람의 언어로 짓는다(056).
+/// 문자열은 그대로 둔다 — 담당자가 손으로 적은 말이다.
+export function renderPush(v, lang) {
+  if (typeof v === 'string') return v;
+  if (!v || typeof v !== 'object') return '';
+  return say(v.key, v.params, lang || 'ko');
+}
+
 export async function notifyAudience(sql, programId, audience, title, body, data = {}) {
   try {
     const kind = audience?.kind;
@@ -87,13 +98,15 @@ export async function notifyAudience(sql, programId, audience, title, body, data
 
     if (kind === 'all') {
       rows = await sql`
-        SELECT fcm_token FROM registrations
-        WHERE program_id = ${programId} AND fcm_token IS NOT NULL
-          AND counts_as_participant(real_name, submitted)
+        SELECT r.fcm_token, u.ui_language FROM registrations r
+        LEFT JOIN users u ON u.id = r.user_id
+        WHERE r.program_id = ${programId} AND r.fcm_token IS NOT NULL
+          AND counts_as_participant(r.real_name, r.submitted)
       `;
     } else if (kind === 'room') {
       rows = await sql`
-        SELECT r.fcm_token FROM registrations r
+        SELECT r.fcm_token, u.ui_language FROM registrations r
+        LEFT JOIN users u ON u.id = r.user_id
         JOIN room_assignments ra ON ra.registration_id = r.id
         JOIN rooms rm ON rm.id = ra.room_id
         WHERE rm.id = ${id} AND rm.program_id = ${programId}
@@ -101,7 +114,8 @@ export async function notifyAudience(sql, programId, audience, title, body, data
       `;
     } else if (kind === 'group') {
       rows = await sql`
-        SELECT r.fcm_token FROM registrations r
+        SELECT r.fcm_token, u.ui_language FROM registrations r
+        LEFT JOIN users u ON u.id = r.user_id
         JOIN group_members gm ON gm.registration_id = r.id
         JOIN groups g ON g.id = gm.group_id
         WHERE g.id = ${id} AND g.program_id = ${programId}
@@ -109,13 +123,15 @@ export async function notifyAudience(sql, programId, audience, title, body, data
       `;
     } else if (kind === 'unsubmitted') {
       rows = await sql`
-        SELECT fcm_token FROM registrations
-        WHERE program_id = ${programId} AND submitted = false
-          AND fcm_token IS NOT NULL AND counts_as_participant(real_name, submitted)
+        SELECT r.fcm_token, u.ui_language FROM registrations r
+        LEFT JOIN users u ON u.id = r.user_id
+        WHERE r.program_id = ${programId} AND r.submitted = false
+          AND r.fcm_token IS NOT NULL AND counts_as_participant(r.real_name, r.submitted)
       `;
     } else if (kind === 'unpaid') {
       rows = await sql`
-        SELECT r.fcm_token FROM registrations r
+        SELECT r.fcm_token, u.ui_language FROM registrations r
+        LEFT JOIN users u ON u.id = r.user_id
         LEFT JOIN payments pay ON pay.registration_id = r.id
         WHERE r.program_id = ${programId}
           AND COALESCE(pay.status, 'none') <> 'confirmed'
@@ -125,7 +141,8 @@ export async function notifyAudience(sql, programId, audience, title, body, data
       // 그 역할을 **맡은** 사람. 거절·반려는 뺀다 — 안 하겠다고 한 사람에게
       // 그 일의 공지를 보내면 안 된다.
       rows = await sql`
-        SELECT r.fcm_token FROM registrations r
+        SELECT r.fcm_token, u.ui_language FROM registrations r
+        LEFT JOIN users u ON u.id = r.user_id
         JOIN service_signups ss ON ss.registration_id = r.id
         WHERE r.program_id = ${programId}
           AND ss.service_key = ${id}
@@ -137,9 +154,23 @@ export async function notifyAudience(sql, programId, audience, title, body, data
       return 0;
     }
 
-    const tokens = [...new Set(rows.map((r) => r.fcm_token))];
-    await sendPushNotification(tokens, title, body, data);
-    return tokens.length;
+    // 언어별로 나눠 보낸다(056). 한 벌로 지어 보내면 스페인어를 쓰는
+    // 사람에게 한국어 알림이 간다.
+    const byLang = new Map();
+    for (const r of rows) {
+      const k = r.ui_language || 'ko';
+      if (!byLang.has(k)) byLang.set(k, new Set());
+      byLang.get(k).add(r.fcm_token);
+    }
+    let sent = 0;
+    for (const [lang, set] of byLang) {
+      const tokens = [...set];
+      await sendPushNotification(
+        tokens, renderPush(title, lang), renderPush(body, lang), data,
+      );
+      sent += tokens.length;
+    }
+    return sent;
   } catch (err) {
     console.error('대상 알림 전송 오류:', err.message);
     return 0;

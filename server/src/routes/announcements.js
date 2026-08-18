@@ -100,7 +100,7 @@ router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) =>
       RETURNING id, title, body, audience_kind, audience_id, recipients, sent_at
     `;
 
-    notifyProgramAdmins(programId, `[공지] ${body}`).catch((e) =>
+    notifyProgramAdmins(programId, { key: 'admAnnouncement', params: { body } }).catch((e) =>
       console.error('공지 텔레그램 실패:', e),
     );
 

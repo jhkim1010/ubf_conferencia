@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { say } from './services/notify_text.js';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -169,6 +170,15 @@ app.post('/auth/dev-login', authLimiter, async (req, res) => {
 // /auth/me — DB에서 최신 프로필 조회
 app.get('/auth/me', requireAuth, async (req, res) => {
   try {
+    // 앱을 켤 때마다 불린다. 사람이 앱 언어를 바꾸면 여기서 따라온다(056) —
+    // 로그인 때만 남기면 한 번 정한 언어에 영영 묶인다.
+    const lang = pickLanguage(req.headers['accept-language']);
+    await sql`
+      UPDATE users SET ui_language = ${lang}
+      WHERE id = ${req.user.userId}
+        AND COALESCE(ui_language, '') IS DISTINCT FROM ${lang}
+    `;
+
     const [user] = await sql`
       SELECT id AS "userId", email, name, role, age, region, profile_completed AS "profileCompleted"
       FROM users WHERE id = ${req.user.userId}
@@ -342,13 +352,14 @@ cron.schedule('* * * * *', async () => {
 cron.schedule('* * * * *', async () => {
   try {
     const due = await sql`
-      SELECT r.id, r.program_id, r.fcm_token,
+      SELECT r.id, r.program_id, r.fcm_token, u.ui_language,
              COALESCE(
                r.departure_flight->>'scheduled_departure',
                r.arrival_flight->>'scheduled_departure'
              ) AS depart_at
         FROM registrations r
         JOIN programs p ON p.id = r.program_id
+        LEFT JOIN users u ON u.id = r.user_id
        WHERE r.departure_check_asked_at IS NULL
          AND r.submitted = true
          AND p.is_active = true
@@ -364,8 +375,8 @@ cron.schedule('* * * * *', async () => {
       if (r.fcm_token) {
         await sendPushNotification(
           [r.fcm_token],
-          '✈️ 예정대로 출발합니까?',
-          '3시간 뒤 출발입니다. 지연이나 결항이 있으면 알려 주십시오.',
+          say('departureCheckTitle', {}, r.ui_language),
+          say('departureCheckBody', {}, r.ui_language),
           { type: 'departure_check', programId: r.program_id },
         );
       }

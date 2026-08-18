@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { say } from '../services/notify_text.js';
 import { sql } from '../db.js';
 import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
@@ -6,10 +7,11 @@ import { sendPushNotification } from '../services/fcm.js';
 
 const router = Router();
 
-const SITUATION_LABELS = {
-  health:  '🚑 건강/의료 응급',
-  safety:  '🆘 신변 위협',
-  lost:    '🗺️ 길을 잃음',
+// 상황 이름은 문구표에 있다(056) — 담당자마다 언어가 다르다.
+const SITUATION_KEYS = {
+  health: 'sosHealth',
+  safety: 'sosSafety',
+  lost: 'sosLost',
 };
 
 // POST /sos - SOS 발령 (참가자)
@@ -41,20 +43,24 @@ router.post('/', requireAuth, async (req, res) => {
       RETURNING id, created_at
     `;
 
-    const name = realName ?? req.user.name ?? '참가자';
-    const label = SITUATION_LABELS[situationType] ?? situationType;
-    const locationLine = latitude && longitude
-      ? `\n📍 위치: https://maps.google.com/?q=${latitude},${longitude}`
-      : '\n📍 위치: 수신 불가';
-    const msgLine = message ? `\n💬 "${message}"` : '';
+    const where = latitude && longitude
+      ? { key: 'sosWhere',
+          params: { url: `https://maps.google.com/?q=${latitude},${longitude}` } }
+      : { key: 'sosWhereUnknown' };
 
-    const telegramMsg =
-      `🆘 <b>[${program.name}] SOS 긴급 알림</b>\n\n` +
-      `👤 ${name}\n` +
-      `⚠️ 상황: ${label}` +
-      locationLine +
-      msgLine +
-      `\n\n<i>앱에서 확인하고 즉시 대응해 주세요.</i>`;
+    // 본인이 적어 보낸 말은 옮기지 않는다 — 그 사람의 말이다.
+    const telegramMsg = {
+      key: 'admSos',
+      params: {
+        program: program.name,
+        who: realName ?? req.user.name,
+        what: SITUATION_KEYS[situationType]
+          ? { key: SITUATION_KEYS[situationType] }
+          : situationType,
+        where,
+        note: message ? `\n💬 "${message}"` : '',
+      },
+    };
 
     // Telegram 관리자 알림 (즉시)
     notifyProgramAdmins(programId, telegramMsg).catch(err =>
@@ -63,7 +69,7 @@ router.post('/', requireAuth, async (req, res) => {
 
     // 관리자 FCM 푸시 알림
     const adminTokens = await sql`
-      SELECT DISTINCT r.fcm_token
+      SELECT DISTINCT r.fcm_token, u.ui_language
       FROM registrations r
       JOIN users u ON u.id = r.user_id
       WHERE r.program_id = ${programId}
@@ -76,13 +82,21 @@ router.post('/', requireAuth, async (req, res) => {
           )
         )
     `;
-    const tokens = adminTokens.map(t => t.fcm_token);
-    sendPushNotification(
-      tokens,
-      `🆘 SOS: ${name}`,
-      `${label}${locationLine.replace('\n', '')}`,
-      { type: 'sos', alertId: alert.id, programId }
-    ).catch(console.error);
+    // 담당자마다 언어가 다르다 — 나눠 보낸다(056).
+    const byLang = new Map();
+    for (const a of adminTokens) {
+      const k = a.ui_language || 'ko';
+      if (!byLang.has(k)) byLang.set(k, []);
+      byLang.get(k).push(a.fcm_token);
+    }
+    for (const [lang, tokens] of byLang) {
+      sendPushNotification(
+        tokens,
+        say('admSosPushTitle', { who: realName ?? req.user.name }, lang),
+        say(telegramMsg.params.what?.key ?? 'sosHealth', {}, lang),
+        { type: 'sos', alertId: alert.id, programId },
+      ).catch(console.error);
+    }
 
     res.status(201).json({ id: alert.id, createdAt: alert.created_at });
   } catch (err) {
