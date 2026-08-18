@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
-import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
+import { requireAuth, requireProgramAdmin, requireScope } from '../middleware/auth.js';
 import { deleteByUrl } from '../services/media_store.js';
 
 const router = Router();
@@ -34,7 +34,8 @@ router.get('/:programId', requireAuth, async (req, res) => {
 });
 
 // GET /library/:programId/all — 담당자용 (안 보이게 둔 것까지)
-router.get('/:programId/all', requireAuth, requireProgramAdmin, async (req, res) => {
+router.get('/:programId/all', requireAuth, requireProgramAdmin,
+  requireScope('comms'), async (req, res) => {
   try {
     const rows = await sql`
       SELECT id, title, description, file_url, mime, bytes, sort_order,
@@ -51,7 +52,8 @@ router.get('/:programId/all', requireAuth, requireProgramAdmin, async (req, res)
 });
 
 // POST /library/:programId — 자료 등록
-router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId', requireAuth, requireProgramAdmin,
+  requireScope('comms'), async (req, res) => {
   const { title, description, fileUrl, mime, bytes, isPublished } = req.body ?? {};
   const t = String(title ?? '').trim();
   if (!t) return res.status(400).json({ error: '제목이 필요합니다' });
@@ -85,7 +87,8 @@ router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) =>
 });
 
 // PATCH /library/:programId/:id — 제목·설명·공개 여부·순서
-router.patch('/:programId/:id', requireAuth, requireProgramAdmin, async (req, res) => {
+router.patch('/:programId/:id', requireAuth, requireProgramAdmin,
+  requireScope('comms'), async (req, res) => {
   const { title, description, isPublished, sortOrder } = req.body ?? {};
   try {
     const [row] = await sql`
@@ -107,7 +110,8 @@ router.patch('/:programId/:id', requireAuth, requireProgramAdmin, async (req, re
 });
 
 // DELETE /library/:programId/:id — 자료 삭제 (파일까지)
-router.delete('/:programId/:id', requireAuth, requireProgramAdmin, async (req, res) => {
+router.delete('/:programId/:id', requireAuth, requireProgramAdmin,
+  requireScope('comms'), async (req, res) => {
   try {
     const [row] = await sql`
       DELETE FROM program_library

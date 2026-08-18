@@ -562,6 +562,16 @@ const T = {
     en: 'Please enter your name',
     pt: 'Escreva seu nome',
   },
+  '이 분야는 맡지 않으셨습니다': {
+    es: 'Esta área no está a su cargo',
+    en: 'That area is not yours to look after',
+    pt: 'Essa área não está a seu cargo',
+  },
+  '사용자 없음': {
+    es: 'Usuario no encontrado',
+    en: 'User not found',
+    pt: 'Usuário não encontrado',
+  },
   'accessToken이 필요합니다': {
     es: 'Falta el accessToken',
     en: 'accessToken is required',

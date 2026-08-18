@@ -3496,4 +3496,83 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get commonClear => 'Borrar';
+
+  @override
+  String get scopeTransport => 'Traslados';
+
+  @override
+  String get scopeTransportHint =>
+      'Combis, llegadas y salidas del aeropuerto, pedidos de traslado';
+
+  @override
+  String get scopeRooms => 'Alojamiento';
+
+  @override
+  String get scopeRoomsHint =>
+      'Cuartos y lugares, asignación, responsable de cuarto';
+
+  @override
+  String get scopeGroups => 'Estudio bíblico';
+
+  @override
+  String get scopeGroupsHint => 'Grupos, idioma y lugares, asignación';
+
+  @override
+  String get scopeLedger => 'Dinero';
+
+  @override
+  String get scopeLedgerHint =>
+      'Libro de cuentas, pagos recibidos, aprobar pagos y descuentos';
+
+  @override
+  String get scopeService => 'Servicio';
+
+  @override
+  String get scopeServiceHint =>
+      'Equipos de servicio, pedir ayuda, lista de quienes se ofrecen';
+
+  @override
+  String get scopeRegistration => 'Inscripciones';
+
+  @override
+  String get scopeRegistrationHint =>
+      'Lista, marcar inscripción terminada, cargar por otro';
+
+  @override
+  String get scopeComms => 'Avisos';
+
+  @override
+  String get scopeCommsHint => 'Avisos y materiales';
+
+  @override
+  String get scopeSchedule => 'Horario';
+
+  @override
+  String get scopeScheduleHint => 'Programa y horarios';
+
+  @override
+  String get scopeMedical => 'Salud y seguridad';
+
+  @override
+  String get scopeMedicalHint =>
+      'Alertas SOS y datos de salud. Lo más privado que hay acá.';
+
+  @override
+  String get scopeAll => 'Todo — ve lo mismo que yo';
+
+  @override
+  String get scopeAllHint =>
+      'No hace falta elegir uno por uno. Editar y borrar el retiro queda para quien lo creó.';
+
+  @override
+  String get scopeTitle => '¿De qué se encarga?';
+
+  @override
+  String get scopeSaved => 'Guardado. Le vamos a avisar.';
+
+  @override
+  String get scopeNone => 'Elija al menos un área';
+
+  @override
+  String get scopeEdit => 'Cambiar las áreas';
 }

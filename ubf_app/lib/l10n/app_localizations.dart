@@ -6359,6 +6359,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear'**
   String get commonClear;
+
+  /// No description provided for @scopeTransport.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup and transport'**
+  String get scopeTransport;
+
+  /// No description provided for @scopeTransportHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Vans, airport arrivals and departures, pickup requests'**
+  String get scopeTransportHint;
+
+  /// No description provided for @scopeRooms.
+  ///
+  /// In en, this message translates to:
+  /// **'Lodging'**
+  String get scopeRooms;
+
+  /// No description provided for @scopeRoomsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rooms and capacity, assignment, room leaders'**
+  String get scopeRoomsHint;
+
+  /// No description provided for @scopeGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Bible study'**
+  String get scopeGroups;
+
+  /// No description provided for @scopeGroupsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups, language and capacity, assignment'**
+  String get scopeGroupsHint;
+
+  /// No description provided for @scopeLedger.
+  ///
+  /// In en, this message translates to:
+  /// **'Money'**
+  String get scopeLedger;
+
+  /// No description provided for @scopeLedgerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ledger, fees received, approving payments and discounts'**
+  String get scopeLedgerHint;
+
+  /// No description provided for @scopeService.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get scopeService;
+
+  /// No description provided for @scopeServiceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Service teams, asking people, volunteer list'**
+  String get scopeServiceHint;
+
+  /// No description provided for @scopeRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration'**
+  String get scopeRegistration;
+
+  /// No description provided for @scopeRegistrationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Roster, marking someone registered, filling a form for them'**
+  String get scopeRegistrationHint;
+
+  /// No description provided for @scopeComms.
+  ///
+  /// In en, this message translates to:
+  /// **'Notices'**
+  String get scopeComms;
+
+  /// No description provided for @scopeCommsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcements and the library'**
+  String get scopeCommsHint;
+
+  /// No description provided for @scopeSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get scopeSchedule;
+
+  /// No description provided for @scopeScheduleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Programme and times'**
+  String get scopeScheduleHint;
+
+  /// No description provided for @scopeMedical.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical and safety'**
+  String get scopeMedical;
+
+  /// No description provided for @scopeMedicalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS alerts and health notes. The most private thing here.'**
+  String get scopeMedicalHint;
+
+  /// No description provided for @scopeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything — the same view as mine'**
+  String get scopeAll;
+
+  /// No description provided for @scopeAllHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No need to pick one by one. Editing and deleting the conference stays with whoever created it.'**
+  String get scopeAllHint;
+
+  /// No description provided for @scopeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What do they look after?'**
+  String get scopeTitle;
+
+  /// No description provided for @scopeSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. They will be told.'**
+  String get scopeSaved;
+
+  /// No description provided for @scopeNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least one area'**
+  String get scopeNone;
+
+  /// No description provided for @scopeEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Change areas'**
+  String get scopeEdit;
 }
 
 class _AppLocalizationsDelegate

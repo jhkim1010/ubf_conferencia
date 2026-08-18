@@ -6,7 +6,7 @@
 import { Router } from 'express';
 import { say } from '../services/notify_text.js';
 import { sql } from '../db.js';
-import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
+import { requireAuth, requireProgramAdmin, requireScope } from '../middleware/auth.js';
 import {
   DEFAULT_SERVICE_ROLES,
   canBroadcast,
@@ -283,6 +283,7 @@ router.get(
   '/:programId/board',
   requireAuth,
   requireProgramAdmin,
+  requireScope('service'),
   async (req, res) => {
     const programId = req.params.programId;
     try {
@@ -341,6 +342,7 @@ router.put(
   '/:programId/roles',
   requireAuth,
   requireProgramAdmin,
+  requireScope('service'),
   async (req, res) => {
     try {
       const roles = normalizeServiceRoles(req.body?.roles);
@@ -373,6 +375,7 @@ router.post(
   '/:programId/invite',
   requireAuth,
   requireProgramAdmin,
+  requireScope('service'),
   async (req, res) => {
     const programId = req.params.programId;
     const { registrationId, serviceKey, serviceKeys } = req.body ?? {};
@@ -511,6 +514,7 @@ router.patch(
   '/:programId/:signupId',
   requireAuth,
   requireProgramAdmin,
+  requireScope('service'),
   async (req, res) => {
     const { programId, signupId } = req.params;
     const { action, isLead } = req.body ?? {};
@@ -667,6 +671,7 @@ router.post(
   '/:programId/calls',
   requireAuth,
   requireProgramAdmin,
+  requireScope('service'),
   async (req, res) => {
     const programId = req.params.programId;
     const { serviceKey, message } = req.body ?? {};
@@ -743,6 +748,7 @@ router.patch(
   '/:programId/calls/:callId',
   requireAuth,
   requireProgramAdmin,
+  requireScope('service'),
   async (req, res) => {
     try {
       // 채워졌는데도 알림이 남아 있으면 참가자 화면에 쓸데없는 부탁이

@@ -6,7 +6,7 @@
 
 import { Router } from 'express';
 import { sql } from '../db.js';
-import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
+import { requireAuth, requireProgramAdmin, requireScope } from '../middleware/auth.js';
 import { notifyAudience } from '../services/fcm.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
 import { audienceFromBody } from '../services/audience.js';
@@ -22,7 +22,8 @@ function clean(v, max) {
 }
 
 // GET /announcements/:programId — 지난 공지 (담당자)
-router.get('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.get('/:programId', requireAuth, requireProgramAdmin,
+  requireScope('comms'), async (req, res) => {
   try {
     const rows = await sql`
       SELECT id, title, body, audience_kind, audience_id, recipients, sent_at
@@ -39,7 +40,8 @@ router.get('/:programId', requireAuth, requireProgramAdmin, async (req, res) => 
 });
 
 // POST /announcements/:programId — 공지 보내기 (담당자)
-router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId', requireAuth, requireProgramAdmin,
+  requireScope('comms'), async (req, res) => {
   const programId = req.params.programId;
   const title = clean(req.body?.title, MAX_TITLE);
   const body = clean(req.body?.body, MAX_BODY);

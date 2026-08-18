@@ -4,7 +4,7 @@
 // 지원과 지출은 여기에 있으므로 합계는 둘을 더해서 낸다.
 import { Router } from 'express';
 import { sql } from '../db.js';
-import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
+import { requireAuth, requireProgramAdmin, requireScope } from '../middleware/auth.js';
 import { ledgerSummary, normalizeEntry } from '../services/ledger.js';
 import { rateFor } from '../services/fx.js';
 
@@ -37,7 +37,8 @@ async function feeTotals(programId) {
 }
 
 // GET /ledger/:programId — 줄 목록 + 합계
-router.get('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.get('/:programId', requireAuth, requireProgramAdmin,
+  requireScope('ledger'), async (req, res) => {
   try {
     const entries = await sql`
       SELECT id, kind, amount, title, note, occurred_on, created_at,
@@ -55,7 +56,8 @@ router.get('/:programId', requireAuth, requireProgramAdmin, async (req, res) => 
 });
 
 // POST /ledger/:programId — 한 줄 적기
-router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId', requireAuth, requireProgramAdmin,
+  requireScope('ledger'), async (req, res) => {
   const e = normalizeEntry(req.body);
   if (!e) {
     return res.status(400).json({ error: '항목·금액·내용을 확인해 주십시오' });
@@ -86,6 +88,7 @@ router.patch(
   '/:programId/:entryId',
   requireAuth,
   requireProgramAdmin,
+  requireScope('ledger'),
   async (req, res) => {
     const e = normalizeEntry(req.body);
     if (!e) {
@@ -123,6 +126,7 @@ router.delete(
   '/:programId/:entryId',
   requireAuth,
   requireProgramAdmin,
+  requireScope('ledger'),
   async (req, res) => {
     try {
       const [row] = await sql`
@@ -148,6 +152,7 @@ router.get(
   '/:programId/rate',
   requireAuth,
   requireProgramAdmin,
+  requireScope('ledger'),
   async (req, res) => {
     const r = await rateFor(req.query.currency);
     if (!r) {

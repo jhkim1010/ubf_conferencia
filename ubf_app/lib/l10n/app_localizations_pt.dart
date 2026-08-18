@@ -3497,4 +3497,83 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get commonClear => 'Limpar';
+
+  @override
+  String get scopeTransport => 'Traslados';
+
+  @override
+  String get scopeTransportHint =>
+      'Vans, chegadas e saídas do aeroporto, pedidos de traslado';
+
+  @override
+  String get scopeRooms => 'Alojamento';
+
+  @override
+  String get scopeRoomsHint =>
+      'Quartos e vagas, designação, responsável do quarto';
+
+  @override
+  String get scopeGroups => 'Estudo bíblico';
+
+  @override
+  String get scopeGroupsHint => 'Grupos, idioma e vagas, designação';
+
+  @override
+  String get scopeLedger => 'Dinheiro';
+
+  @override
+  String get scopeLedgerHint =>
+      'Livro de contas, taxas recebidas, aprovar pagamentos e descontos';
+
+  @override
+  String get scopeService => 'Serviço';
+
+  @override
+  String get scopeServiceHint =>
+      'Equipes de serviço, pedir ajuda, lista de voluntários';
+
+  @override
+  String get scopeRegistration => 'Inscrições';
+
+  @override
+  String get scopeRegistrationHint =>
+      'Lista, marcar inscrição concluída, preencher por outro';
+
+  @override
+  String get scopeComms => 'Avisos';
+
+  @override
+  String get scopeCommsHint => 'Avisos e materiais';
+
+  @override
+  String get scopeSchedule => 'Programação';
+
+  @override
+  String get scopeScheduleHint => 'Programa e horários';
+
+  @override
+  String get scopeMedical => 'Saúde e segurança';
+
+  @override
+  String get scopeMedicalHint =>
+      'Alertas SOS e dados de saúde. O mais privado que existe aqui.';
+
+  @override
+  String get scopeAll => 'Tudo — vê o mesmo que eu';
+
+  @override
+  String get scopeAllHint =>
+      'Não precisa escolher um a um. Editar e apagar o retiro fica com quem o criou.';
+
+  @override
+  String get scopeTitle => 'Do que ele cuida?';
+
+  @override
+  String get scopeSaved => 'Salvo. Vamos avisar.';
+
+  @override
+  String get scopeNone => 'Escolha ao menos uma área';
+
+  @override
+  String get scopeEdit => 'Mudar as áreas';
 }

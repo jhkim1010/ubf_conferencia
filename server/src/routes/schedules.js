@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
-import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
+import { requireAuth, requireProgramAdmin, requireScope } from '../middleware/auth.js';
 import { isValidRoleKey } from '../services/service_roles.js';
 
 /// 일정에 이을 봉사 역할(045). 모르는 값이면 잇지 않는다 — 알림에
@@ -30,7 +30,8 @@ router.get('/:programId', requireAuth, async (req, res) => {
 });
 
 // POST /schedules/:programId - 일정 추가 (admin 이상)
-router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId', requireAuth, requireProgramAdmin,
+  requireScope('schedule'), async (req, res) => {
   const { title, description, scheduledAt, timezone } = req.body;
   const serviceKey = serviceKeyOf(req.body?.serviceKey);
   if (!title || !scheduledAt) {
@@ -59,7 +60,8 @@ router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) =>
 });
 
 // PATCH /schedules/:programId/:scheduleId - 일정 수정 (admin 이상)
-router.patch('/:programId/:scheduleId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.patch('/:programId/:scheduleId', requireAuth, requireProgramAdmin,
+  requireScope('schedule'), async (req, res) => {
   const { title, description, scheduledAt, timezone } = req.body;
   // 본문에 없으면 그대로 둔다. 제목만 고치는 저장이 이어 둔 역할을 지우면
   // 안 된다. 빈 문자열은 "끊겠다" 는 뜻이다.
@@ -103,7 +105,8 @@ router.patch('/:programId/:scheduleId', requireAuth, requireProgramAdmin, async 
 });
 
 // DELETE /schedules/:programId/:scheduleId - 일정 삭제 (admin 이상)
-router.delete('/:programId/:scheduleId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.delete('/:programId/:scheduleId', requireAuth, requireProgramAdmin,
+  requireScope('schedule'), async (req, res) => {
   try {
     await sql`
       DELETE FROM program_schedules

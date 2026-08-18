@@ -4,7 +4,9 @@ import {
   requireAuth,
   requireDirector,
   requireProgramOwner,
+  SCOPES,
 } from '../middleware/auth.js';
+import { notifyUsers } from '../services/telegram.js';
 
 const router = Router();
 
@@ -23,13 +25,13 @@ router.get('/programs/:programId', requireAuth, requireProgramOwner, async (req,
     // 보여 주는 것이지 program_admins 표를 보여 주는 것이 아니다.
     const admins = await sql`
       SELECT u.id, u.email, u.name, u.role, u.telegram_chat_id,
-             pa.assigned_at, false AS is_owner
+             pa.assigned_at, false AS is_owner, pa.scopes
       FROM program_admins pa
       JOIN users u ON u.id = pa.user_id
       WHERE pa.program_id = ${req.params.programId}
       UNION ALL
       SELECT u.id, u.email, u.name, u.role, u.telegram_chat_id,
-             p.created_at AS assigned_at, true AS is_owner
+             p.created_at AS assigned_at, true AS is_owner, NULL::text[] AS scopes
       FROM programs p
       JOIN leaders l ON l.id = p.leader_id
       JOIN users u ON u.id = l.user_id
@@ -46,6 +48,8 @@ router.get('/programs/:programId', requireAuth, requireProgramOwner, async (req,
 // POST /admins/programs/:programId - 관리자 지정 (이메일로 사용자 검색 후 추가)
 router.post('/programs/:programId', requireAuth, requireProgramOwner, async (req, res) => {
   const { email, registrationId } = req.body ?? {};
+  // 맡길 분야(059). 안 보내면 전부다 — 예전 화면에서 부르던 그대로 둔다.
+  const scopes = cleanScopes(req.body?.scopes);
   if (!email && !registrationId) {
     return res.status(400).json({ error: 'email 또는 registrationId 가 필요합니다' });
   }
@@ -83,9 +87,10 @@ router.post('/programs/:programId', requireAuth, requireProgramOwner, async (req
 
     // program_admins에 추가
     await sql`
-      INSERT INTO program_admins (program_id, user_id, assigned_by)
-      VALUES (${req.params.programId}, ${user.id}, ${req.user.userId})
-      ON CONFLICT (program_id, user_id) DO NOTHING
+      INSERT INTO program_admins (program_id, user_id, assigned_by, scopes)
+      VALUES (${req.params.programId}, ${user.id}, ${req.user.userId}, ${scopes})
+      ON CONFLICT (program_id, user_id)
+      DO UPDATE SET scopes = EXCLUDED.scopes
     `;
 
     console.log(`[ADMIN] 지정 | programId=${req.params.programId} userId=${user.id} by=${req.user.userId}`);
@@ -95,6 +100,50 @@ router.post('/programs/:programId', requireAuth, requireProgramOwner, async (req
     res.status(500).json({ error: '서버 오류' });
   }
 });
+
+/// 아는 분야 이름만 남긴다. null 이면 전부라는 뜻이다.
+///
+/// 모르는 이름이 들어오면 **버린다** — 오타 하나로 아무 분야도 못 맡은
+/// 사람이 생기느니, 그 이름이 없었던 셈 치는 편이 낫다.
+function cleanScopes(raw) {
+  if (!Array.isArray(raw)) return null;
+  const ok = raw.filter((x) => SCOPES.includes(x));
+  // 전부를 고르면 하나하나 적어 두지 않는다. 나중에 분야가 늘면 그 사람도
+  // 자동으로 함께 늘어야 한다.
+  if (ok.length === 0 || raw.includes('all')) return null;
+  return ok;
+}
+
+// PATCH /admins/programs/:programId/:userId — 맡은 분야 고치기 (059)
+//
+// 화면이 조용히 바뀌면 본인이 알 길이 없다. 그래서 바꾼 뒤 **그 사람에게**
+// 알린다.
+router.patch(
+  '/programs/:programId/:userId',
+  requireAuth,
+  requireProgramOwner,
+  async (req, res) => {
+    const scopes = cleanScopes(req.body?.scopes);
+    try {
+      const rows = await sql`
+        UPDATE program_admins SET scopes = ${scopes}
+        WHERE program_id = ${req.params.programId} AND user_id = ${req.params.userId}
+        RETURNING user_id
+      `;
+      if (rows.length === 0) {
+        return res.status(404).json({ error: '사용자 없음' });
+      }
+      notifyUsers([req.params.userId], {
+        key: 'admScopesChanged',
+        params: { what: scopes === null ? 'all' : scopes.join(', ') },
+      }).catch((e) => console.error('분야 변경 알림 실패:', e.message));
+      res.json({ success: true, scopes });
+    } catch (err) {
+      console.error('관리자 분야 변경 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
 
 // DELETE /admins/programs/:programId/:userId - 관리자 제거
 router.delete('/programs/:programId/:userId', requireAuth, requireProgramOwner, async (req, res) => {

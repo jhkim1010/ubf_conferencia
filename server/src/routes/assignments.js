@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
-import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
+import {
+  requireAuth,
+  requireProgramAdmin,
+  requireScope,
+} from '../middleware/auth.js';
 import {
   assignRooms,
   assignGroups,
@@ -63,7 +67,7 @@ async function loadFamilyEdges(programId) {
 }
 
 // ── GET 숙소 배정 현황 ────────────────────────────────────────
-router.get('/:programId/rooms', requireAuth, requireProgramAdmin, async (req, res) => {
+router.get('/:programId/rooms', requireAuth, requireProgramAdmin, requireScope('rooms'), async (req, res) => {
   const { programId } = req.params;
   try {
     const rooms = await sql`
@@ -102,7 +106,7 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, async (req, re
 });
 
 // ── GET 말씀조 배정 현황 ──────────────────────────────────────
-router.get('/:programId/groups', requireAuth, requireProgramAdmin, async (req, res) => {
+router.get('/:programId/groups', requireAuth, requireProgramAdmin, requireScope('groups'), async (req, res) => {
   const { programId } = req.params;
   try {
     // 조의 언어(025)를 함께 보낸다. 담당자가 사람을 조에 넣을 때 가장 먼저
@@ -146,7 +150,7 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, async (req, r
 });
 
 // ── POST 숙소 자동 배정 ──────────────────────────────────────
-router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, requireScope('rooms'), async (req, res) => {
   const { programId } = req.params;
   try {
     const [rooms, people, roommateEdges] = await Promise.all([
@@ -201,7 +205,7 @@ router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, async (r
 });
 
 // ── POST 말씀조 자동 배정 ────────────────────────────────────
-router.post('/:programId/groups/auto', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId/groups/auto', requireAuth, requireProgramAdmin, requireScope('groups'), async (req, res) => {
   const { programId } = req.params;
   try {
     const [groups, people, groupEdges, [program]] = await Promise.all([
@@ -245,7 +249,7 @@ router.post('/:programId/groups/auto', requireAuth, requireProgramAdmin, async (
 });
 
 // ── POST 숙소 수동 배정 { roomId, registrationId } (방침 검증) ──
-router.post('/:programId/rooms/assign', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId/rooms/assign', requireAuth, requireProgramAdmin, requireScope('rooms'), async (req, res) => {
   const { programId } = req.params;
   const { roomId, registrationId } = req.body;
   if (!roomId || !registrationId) {
@@ -289,7 +293,7 @@ router.post('/:programId/rooms/assign', requireAuth, requireProgramAdmin, async 
 });
 
 // ── DELETE 숙소 배정 해제 ────────────────────────────────────
-router.delete('/:programId/rooms/:registrationId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.delete('/:programId/rooms/:registrationId', requireAuth, requireProgramAdmin, requireScope('rooms'), async (req, res) => {
   try {
     await sql`DELETE FROM room_assignments WHERE registration_id = ${req.params.registrationId}`;
     // 방에서 뺐으면 방장도 아니다.
@@ -311,7 +315,7 @@ router.delete('/:programId/rooms/:registrationId', requireAuth, requireProgramAd
 // 표현할 수 없어(배정이 다른 표에 있다) 여기서 본다.
 //
 // registrationId 를 비우면 방장을 내린다.
-router.put('/:programId/rooms/:roomId/leader', requireAuth, requireProgramAdmin, async (req, res) => {
+router.put('/:programId/rooms/:roomId/leader', requireAuth, requireProgramAdmin, requireScope('rooms'), async (req, res) => {
   const { programId, roomId } = req.params;
   const registrationId = req.body?.registrationId ?? null;
   try {
@@ -342,7 +346,7 @@ router.put('/:programId/rooms/:roomId/leader', requireAuth, requireProgramAdmin,
 });
 
 // ── POST 말씀조 수동 배정 { groupId, registrationId } ─────────
-router.post('/:programId/groups/assign', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId/groups/assign', requireAuth, requireProgramAdmin, requireScope('groups'), async (req, res) => {
   const { programId } = req.params;
   const { groupId, registrationId } = req.body;
   if (!groupId || !registrationId) {
@@ -367,7 +371,7 @@ router.post('/:programId/groups/assign', requireAuth, requireProgramAdmin, async
 });
 
 // ── DELETE 말씀조 배정 해제 ──────────────────────────────────
-router.delete('/:programId/groups/:registrationId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.delete('/:programId/groups/:registrationId', requireAuth, requireProgramAdmin, requireScope('groups'), async (req, res) => {
   try {
     await sql`DELETE FROM group_members WHERE registration_id = ${req.params.registrationId}`;
     res.json({ success: true });

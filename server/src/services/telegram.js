@@ -129,6 +129,34 @@ export async function notifyProgramAdmins(programId, message) {
   }
 }
 
+// ─── 사용자에게 직접 (059) ───────────────────────────────────
+//
+// 공동 관리자에게 보낼 때 쓴다. 참가자와 달리 수양회에 매인 사람이 아니라
+// 계정이므로 users.telegram_chat_id 를 본다.
+//
+// **연결하지 않은 사람은 조용히 건너뛴다.** 여기서 던지면 분야를 바꾸는
+// 일 자체가 실패한다.
+export async function notifyUsers(userIds, message) {
+  try {
+    if (!userIds || userIds.length === 0) return 0;
+    const token = ENV_BOT_TOKEN;
+    if (!token) return 0;
+    const rows = await sql`
+      SELECT telegram_chat_id, ui_language FROM users
+      WHERE id = ANY(${userIds}) AND telegram_chat_id IS NOT NULL
+    `;
+    await Promise.all(
+      rows.map((r) =>
+        sendMessage(r.telegram_chat_id, render(message, r.ui_language), token),
+      ),
+    );
+    return rows.length;
+  } catch (err) {
+    console.error('관리자 알림 오류:', err.message);
+    return 0;
+  }
+}
+
 // ─── 참가자 개인에게 (047) ───────────────────────────────────
 //
 // 앱 푸시는 앱을 지웠거나 알림을 꺼 뒀거나 웹으로만 쓰는 사람에게는 가지

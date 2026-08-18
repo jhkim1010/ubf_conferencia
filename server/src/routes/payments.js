@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
-import { requireAuth, requireLeader } from '../middleware/auth.js';
+import { requireAuth, requireLeader, mayTouch } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -39,24 +39,30 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // PATCH /payments/:id/confirm - 입금 승인 (리더)
-router.patch('/:id/confirm', requireAuth, requireLeader, async (req, res) => {
+router.patch('/:id/confirm', requireAuth, async (req, res) => {
   const { note } = req.body;
 
   try {
-    // 리더 소유 프로그램의 입금인지 확인
+    // **회계 담당과 만든 사람이 승인한다(059).** 예전에는 만든 사람만
+    // 했는데, 명단에서 받은 금액을 고치는 것은 공동 관리자도 되고 있어서
+    // 같은 일을 두 길로 하는데 권한이 달랐다.
     const [payment] = await sql`
-      SELECT pay.id FROM payments pay
+      SELECT pay.id, r.program_id AS "programId" FROM payments pay
       JOIN registrations r ON r.id = pay.registration_id
-      JOIN programs p ON p.id = r.program_id
       WHERE pay.id = ${req.params.id}
-        AND p.leader_id = ${req.user.leaderId}
     `;
-    if (!payment) return res.status(403).json({ error: '권한 없음' });
+    if (!payment) return res.status(404).json({ error: '항목을 찾을 수 없습니다' });
+    if (!(await mayTouch(payment.programId, req.user, 'ledger'))) {
+      return res.status(403).json({ error: '이 분야는 맡지 않으셨습니다' });
+    }
 
     await sql`
       UPDATE payments
       SET status = 'confirmed',
-          confirmed_by = ${req.user.leaderId},
+          -- 만든 사람이면 leaders 행이 있고, 회계 담당이면 없다. 둘 다
+          -- 남겨 둬야 누가 승인했는지 알 수 있다(059).
+          confirmed_by = ${req.user.leaderId ?? null},
+          confirmed_by_user = ${req.user.userId},
           confirmed_at = NOW(),
           note = ${note ?? null}
       WHERE id = ${req.params.id}
@@ -70,18 +76,22 @@ router.patch('/:id/confirm', requireAuth, requireLeader, async (req, res) => {
 });
 
 // PATCH /payments/:id/reject - 입금 반려 (리더)
-router.patch('/:id/reject', requireAuth, requireLeader, async (req, res) => {
+router.patch('/:id/reject', requireAuth, async (req, res) => {
   const { note } = req.body;
 
   try {
+    // **회계 담당과 만든 사람이 승인한다(059).** 예전에는 만든 사람만
+    // 했는데, 명단에서 받은 금액을 고치는 것은 공동 관리자도 되고 있어서
+    // 같은 일을 두 길로 하는데 권한이 달랐다.
     const [payment] = await sql`
-      SELECT pay.id FROM payments pay
+      SELECT pay.id, r.program_id AS "programId" FROM payments pay
       JOIN registrations r ON r.id = pay.registration_id
-      JOIN programs p ON p.id = r.program_id
       WHERE pay.id = ${req.params.id}
-        AND p.leader_id = ${req.user.leaderId}
     `;
-    if (!payment) return res.status(403).json({ error: '권한 없음' });
+    if (!payment) return res.status(404).json({ error: '항목을 찾을 수 없습니다' });
+    if (!(await mayTouch(payment.programId, req.user, 'ledger'))) {
+      return res.status(403).json({ error: '이 분야는 맡지 않으셨습니다' });
+    }
 
     await sql`
       UPDATE payments

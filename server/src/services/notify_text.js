@@ -134,6 +134,12 @@ const T = {
     en: '📊 <b>[{program}] Where registration stands</b>\n\n👥 Signed up: {total}\n✅ Finished: {done}\n⏳ Half done: {doing}\n💰 Payments to confirm: {pending}\n✔️ Payments confirmed: {confirmed}',
     pt: '📊 <b>[{program}] Como vai a inscrição</b>\n\n👥 Inscritos: {total}\n✅ Concluíram: {done}\n⏳ Pela metade: {doing}\n💰 Pagamentos a confirmar: {pending}\n✔️ Pagamentos confirmados: {confirmed}',
   },
+  admScopesChanged: {
+    ko: '🔑 맡으신 분야가 바뀌었습니다\n\n{what}\n\n앱을 열면 그 분야 화면이 보입니다.',
+    es: '🔑 Cambió lo que tiene a su cargo\n\n{what}\n\nAbra la aplicación y verá esas pantallas.',
+    en: '🔑 What you look after has changed\n\n{what}\n\nOpen the app and those screens will be there.',
+    pt: '🔑 Mudou o que está a seu cargo\n\n{what}\n\nAbra o aplicativo e verá essas telas.',
+  },
   admSosPushTitle: {
     ko: '🆘 SOS: {who}', es: '🆘 SOS: {who}', en: '🆘 SOS: {who}', pt: '🆘 SOS: {who}',
   },

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
-import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
+import { requireAuth, requireProgramAdmin, requireScope } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -102,7 +102,8 @@ function normalizeExtra(v) {
 }
 
 // POST /rooms/:programId — 방 1개 생성 (admin 이상)
-router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId', requireAuth, requireProgramAdmin,
+  requireScope('rooms'), async (req, res) => {
   const { name, floor, roomType, capacity, gender } = req.body;
   const extra = normalizeExtra(req.body?.extraCapacity);
   if (!name || !capacity) {
@@ -132,7 +133,8 @@ router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) =>
 
 // POST /rooms/:programId/bulk — 방 일괄 생성 (admin 이상)
 // body: { namePattern, startNumber, count, floor, roomType, capacity, gender }
-router.post('/:programId/bulk', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId/bulk', requireAuth, requireProgramAdmin,
+  requireScope('rooms'), async (req, res) => {
   const { namePattern, startNumber, count, floor, roomType, capacity, gender } = req.body;
   const extra = normalizeExtra(req.body?.extraCapacity);
   if (!namePattern || !count || !capacity) {
@@ -173,7 +175,8 @@ router.post('/:programId/bulk', requireAuth, requireProgramAdmin, async (req, re
 });
 
 // PATCH /rooms/:programId/:roomId — 방 수정 (admin 이상)
-router.patch('/:programId/:roomId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.patch('/:programId/:roomId', requireAuth, requireProgramAdmin,
+  requireScope('rooms'), async (req, res) => {
   const { name, floor, roomType, capacity, gender } = req.body;
   // 여유 자리(042)도 여기서 고칠 수 있어야 한다. 만들 때만 정할 수 있으면,
   // 2인실에 한 명 더 받기로 한 뒤에는 방을 지우고 다시 만들어야 한다.
@@ -216,7 +219,8 @@ router.patch('/:programId/:roomId', requireAuth, requireProgramAdmin, async (req
 });
 
 // DELETE /rooms/:programId/:roomId — 방 삭제 (admin 이상)
-router.delete('/:programId/:roomId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.delete('/:programId/:roomId', requireAuth, requireProgramAdmin,
+  requireScope('rooms'), async (req, res) => {
   try {
     await sql`
       DELETE FROM rooms

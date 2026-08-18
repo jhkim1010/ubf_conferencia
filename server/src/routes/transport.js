@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
-import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
+import { requireAuth, requireProgramAdmin, requireScope } from '../middleware/auth.js';
 import {
   autoDispatch,
   departureDeadline,
@@ -116,7 +116,8 @@ async function loadDispatchPeople(programId, direction) {
 }
 
 // ── GET 배차판 (밴 + 탑승자 + 미배차) ─────────────────────────
-router.get('/:programId/runs', requireAuth, requireProgramAdmin, async (req, res) => {
+router.get('/:programId/runs', requireAuth, requireProgramAdmin,
+  requireScope('transport'), async (req, res) => {
   const { programId } = req.params;
   const direction = req.query.direction === 'departure' ? 'departure' : 'arrival';
   try {
@@ -216,7 +217,8 @@ router.get('/:programId/runs', requireAuth, requireProgramAdmin, async (req, res
 });
 
 // ── POST 밴(명부) 생성 ────────────────────────────────────────
-router.post('/:programId/runs', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId/runs', requireAuth, requireProgramAdmin,
+  requireScope('transport'), async (req, res) => {
   const { programId } = req.params;
   const { direction, airport, capacity, vehicle, driverName, driverPhone, departAt, meetPoint } = req.body;
   if (!['arrival', 'departure'].includes(direction) || !airport) {
@@ -243,7 +245,8 @@ router.post('/:programId/runs', requireAuth, requireProgramAdmin, async (req, re
 });
 
 // ── PATCH 밴 수정 ─────────────────────────────────────────────
-router.patch('/:programId/runs/:runId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.patch('/:programId/runs/:runId', requireAuth, requireProgramAdmin,
+  requireScope('transport'), async (req, res) => {
   const { programId, runId } = req.params;
   const { airport, capacity, vehicle, driverName, driverPhone, departAt, meetPoint } = req.body;
   try {
@@ -280,7 +283,8 @@ router.patch('/:programId/runs/:runId', requireAuth, requireProgramAdmin, async 
 });
 
 // ── DELETE 밴 삭제 (배정도 CASCADE 해제) ──────────────────────
-router.delete('/:programId/runs/:runId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.delete('/:programId/runs/:runId', requireAuth, requireProgramAdmin,
+  requireScope('transport'), async (req, res) => {
   try {
     await sql`DELETE FROM transport_runs WHERE id = ${req.params.runId} AND program_id = ${req.params.programId}`;
     res.json({ ok: true });
@@ -291,7 +295,8 @@ router.delete('/:programId/runs/:runId', requireAuth, requireProgramAdmin, async
 });
 
 // ── POST 자동 배차 (명부에 승객 채움) ─────────────────────────
-router.post('/:programId/runs/auto', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId/runs/auto', requireAuth, requireProgramAdmin,
+  requireScope('transport'), async (req, res) => {
   const { programId } = req.params;
   const direction = req.query.direction === 'departure' ? 'departure' : 'arrival';
   const windowMin = Number(req.body?.windowMin) > 0 ? Number(req.body.windowMin) : 90;
@@ -329,7 +334,8 @@ router.post('/:programId/runs/auto', requireAuth, requireProgramAdmin, async (re
 });
 
 // ── POST 수동 배정 { registrationId | companionId } (정원 검증) ─
-router.post('/:programId/runs/:runId/assign', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId/runs/:runId/assign', requireAuth, requireProgramAdmin,
+  requireScope('transport'), async (req, res) => {
   const { programId, runId } = req.params;
   const { registrationId, companionId } = req.body;
   if (!registrationId === !companionId) {
@@ -378,7 +384,8 @@ router.post('/:programId/runs/:runId/assign', requireAuth, requireProgramAdmin, 
 });
 
 // ── DELETE 탑승 해제 { registrationId | companionId } ─────────
-router.delete('/:programId/runs/:runId/pax', requireAuth, requireProgramAdmin, async (req, res) => {
+router.delete('/:programId/runs/:runId/pax', requireAuth, requireProgramAdmin,
+  requireScope('transport'), async (req, res) => {
   const { runId } = req.params;
   const { registrationId, companionId } = req.body;
   try {

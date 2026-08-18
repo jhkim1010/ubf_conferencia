@@ -3486,4 +3486,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonClear => 'Clear';
+
+  @override
+  String get scopeTransport => 'Pickup and transport';
+
+  @override
+  String get scopeTransportHint =>
+      'Vans, airport arrivals and departures, pickup requests';
+
+  @override
+  String get scopeRooms => 'Lodging';
+
+  @override
+  String get scopeRoomsHint => 'Rooms and capacity, assignment, room leaders';
+
+  @override
+  String get scopeGroups => 'Bible study';
+
+  @override
+  String get scopeGroupsHint => 'Groups, language and capacity, assignment';
+
+  @override
+  String get scopeLedger => 'Money';
+
+  @override
+  String get scopeLedgerHint =>
+      'Ledger, fees received, approving payments and discounts';
+
+  @override
+  String get scopeService => 'Service';
+
+  @override
+  String get scopeServiceHint => 'Service teams, asking people, volunteer list';
+
+  @override
+  String get scopeRegistration => 'Registration';
+
+  @override
+  String get scopeRegistrationHint =>
+      'Roster, marking someone registered, filling a form for them';
+
+  @override
+  String get scopeComms => 'Notices';
+
+  @override
+  String get scopeCommsHint => 'Announcements and the library';
+
+  @override
+  String get scopeSchedule => 'Schedule';
+
+  @override
+  String get scopeScheduleHint => 'Programme and times';
+
+  @override
+  String get scopeMedical => 'Medical and safety';
+
+  @override
+  String get scopeMedicalHint =>
+      'SOS alerts and health notes. The most private thing here.';
+
+  @override
+  String get scopeAll => 'Everything — the same view as mine';
+
+  @override
+  String get scopeAllHint =>
+      'No need to pick one by one. Editing and deleting the conference stays with whoever created it.';
+
+  @override
+  String get scopeTitle => 'What do they look after?';
+
+  @override
+  String get scopeSaved => 'Saved. They will be told.';
+
+  @override
+  String get scopeNone => 'Pick at least one area';
+
+  @override
+  String get scopeEdit => 'Change areas';
 }

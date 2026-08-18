@@ -3412,4 +3412,76 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get commonClear => '지우기';
+
+  @override
+  String get scopeTransport => '픽업 · 교통';
+
+  @override
+  String get scopeTransportHint => '배차, 공항 도착·출발, 픽업 요청';
+
+  @override
+  String get scopeRooms => '숙소';
+
+  @override
+  String get scopeRoomsHint => '방 만들기와 정원, 배정, 방장';
+
+  @override
+  String get scopeGroups => '말씀 공부';
+
+  @override
+  String get scopeGroupsHint => '조 만들기와 언어·정원, 조 배정';
+
+  @override
+  String get scopeLedger => '회계';
+
+  @override
+  String get scopeLedgerHint => '장부, 참가비 입금, 입금·할인 승인';
+
+  @override
+  String get scopeService => '봉사';
+
+  @override
+  String get scopeServiceHint => '봉사팀 편성, 부탁하기, 자원자 명단';
+
+  @override
+  String get scopeRegistration => '등록 · 명단';
+
+  @override
+  String get scopeRegistrationHint => '참가자 명단, 등록 완료 처리, 대신 받아 적기';
+
+  @override
+  String get scopeComms => '공지 · 자료실';
+
+  @override
+  String get scopeCommsHint => '공지 보내기, 교재 나눠 주기';
+
+  @override
+  String get scopeSchedule => '일정';
+
+  @override
+  String get scopeScheduleHint => '순서지, 시간표';
+
+  @override
+  String get scopeMedical => '의료 · 안전';
+
+  @override
+  String get scopeMedicalHint => 'SOS 알림과 질병 정보. 여기서 가장 민감한 것입니다.';
+
+  @override
+  String get scopeAll => '모든 결정 — 저와 똑같이 봅니다';
+
+  @override
+  String get scopeAllHint => '하나하나 고를 필요가 없습니다. 수양회 수정·삭제는 만든 사람만 합니다.';
+
+  @override
+  String get scopeTitle => '무엇을 맡깁니까?';
+
+  @override
+  String get scopeSaved => '저장했습니다. 그분에게 알려 드립니다.';
+
+  @override
+  String get scopeNone => '분야를 하나는 고르십시오';
+
+  @override
+  String get scopeEdit => '맡은 분야 바꾸기';
 }

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { say } from '../services/notify_text.js';
 import { sql } from '../db.js';
-import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
+import { requireAuth, requireProgramAdmin, requireScope } from '../middleware/auth.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
 import { sendPushNotification } from '../services/fcm.js';
 
@@ -106,7 +106,8 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // GET /sos/:programId - 프로그램의 SOS 목록 (admin 이상)
-router.get('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.get('/:programId', requireAuth, requireProgramAdmin,
+  requireScope('medical'), async (req, res) => {
   try {
     const alerts = await sql`
       SELECT s.*,

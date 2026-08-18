@@ -13,7 +13,13 @@ import { normalizeRoutes, routesOf } from '../services/arrival_routes.js';
 
 // 옵션 id 는 우리가 만든 uuid 만 받는다.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-import { requireAuth, requireLeader, requireProgramAdmin } from '../middleware/auth.js';
+import {
+  requireAuth,
+  requireLeader,
+  requireProgramAdmin,
+  requireScope,
+  SCOPES,
+} from '../middleware/auth.js';
 import { isValidBotToken } from '../services/telegram.js';
 
 const router = Router();
@@ -703,7 +709,7 @@ router.delete('/:id', requireAuth, requireLeader, async (req, res) => {
 });
 
 // GET /programs/:id/stats - 대시보드 통계 (리더 전용)
-router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
+router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPES), async (req, res) => {
   try {
     // 권한은 requireProgramAdmin 이 이미 봤다(만든 사람 · 공동 관리자 ·
     // director). 여기서 leader_id 로 다시 좁히면 공동 관리자가 막힌다.
@@ -860,6 +866,9 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
     ]);
 
     res.json({
+      // 이 사람이 맡은 분야(059). null 이면 전부다. 앱은 이것으로 안 맡은
+      // 카드를 **감춘다** — 자물쇠로 남기면 못 여는 문을 계속 보게 된다.
+      myScopes: req.adminScopes ?? null,
       ...(stats ?? {}),
       // 입금 카드를 보여 줄지 여기서 정한다. 앱이 따로 판단하면 규칙이
       // 두 곳에 생긴다.
@@ -881,7 +890,8 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
 });
 
 // GET /programs/:id/registrations - 참가자 전체 목록 (리더 전용)
-router.get('/:id/registrations', requireAuth, requireProgramAdmin, async (req, res) => {
+router.get('/:id/registrations', requireAuth, requireProgramAdmin,
+  requireScope('registration'), async (req, res) => {
   try {
     // 권한은 requireProgramAdmin 이 봤다(공동 관리자 포함).
     const [program] = await sql`
@@ -973,6 +983,8 @@ router.patch(
   '/:id/registrations/:registrationId',
   requireAuth,
   requireProgramAdmin,
+  // 등록 완료는 등록 담당이, 낼 돈·받은 돈은 회계 담당이 손댄다.
+  requireScope('registration', 'ledger'),
   async (req, res) => {
     const { id: programId, registrationId } = req.params;
     const body = req.body ?? {};
@@ -1041,7 +1053,8 @@ router.patch(
 router.patch(
   '/:id/registrations/:registrationId/discount',
   requireAuth,
-  requireLeader,
+  requireProgramAdmin,
+  requireScope('ledger'),
   async (req, res) => {
     const { status, amount, note } = req.body;
 
@@ -1093,7 +1106,9 @@ router.patch(
 router.get(
   '/:id/registrations/:registrationId/medical',
   requireAuth,
-  requireLeader,
+  // 의료 담당과 만든 사람만 본다(059). 열람 기록은 그대로 남는다.
+  requireProgramAdmin,
+  requireScope('medical'),
   async (req, res) => {
     try {
       const [program] = await sql`
@@ -1142,7 +1157,8 @@ function daysBetween(from, to) {
   return Math.floor((new Date(to) - new Date(from)) / 86400000);
 }
 
-router.get('/:id/readiness', requireAuth, requireProgramAdmin, async (req, res) => {
+router.get('/:id/readiness', requireAuth, requireProgramAdmin,
+  requireScope('registration'), async (req, res) => {
   const programId = req.params.id;
   try {
     const [program] = await sql`
@@ -1356,7 +1372,8 @@ router.get('/:id/readiness', requireAuth, requireProgramAdmin, async (req, res) 
 // **총액은 서버가 다시 계산한다**(등급 + 투어 − 승인된 할인).
 // registrations.js 의 식과 같아야 한다 — 다르면 이 버튼을 누른 사람만
 // 다른 금액이 된다.
-router.post('/:id/fee-tier-backfill', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:id/fee-tier-backfill', requireAuth, requireProgramAdmin,
+  requireScope('ledger'), async (req, res) => {
   const tier = req.body?.tier === 'premium' ? 'premium' : 'basic';
   try {
     const [program] = await sql`
@@ -1409,7 +1426,8 @@ router.post('/:id/fee-tier-backfill', requireAuth, requireProgramAdmin, async (r
 // 공동 관리자도 봐야 한다. 식단은 주방·구매 담당이 챙기는 일이지 수양회를
 // 만든 사람만의 일이 아니다. 그래서 requireLeader 가 아니라
 // requireProgramAdmin 이다.
-router.get('/:id/meals', requireAuth, requireProgramAdmin, async (req, res) => {
+router.get('/:id/meals', requireAuth, requireProgramAdmin,
+  requireScope('registration'), async (req, res) => {
   const programId = req.params.id;
   try {
     const [program] = await sql`
@@ -1476,6 +1494,7 @@ router.get(
   '/:id/tour-signups',
   requireAuth,
   requireProgramAdmin,
+  requireScope('registration'),
   async (req, res) => {
     const programId = req.params.id;
     try {

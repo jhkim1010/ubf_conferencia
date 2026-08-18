@@ -529,6 +529,20 @@ class ApiClient {
     return _decode(response);
   }
 
+  /// 맡은 분야 바꾸기(059). 빈 목록이면 전부.
+  static Future<Map<String, dynamic>> setAdminScopes(
+    String programId,
+    String userId,
+    List<String> scopes,
+  ) async {
+    final response = await http.patch(
+      _uri('/admins/programs/$programId/$userId'),
+      headers: await _headers(),
+      body: jsonEncode({'scopes': scopes}),
+    );
+    return _decode(response);
+  }
+
   /// 관리자 제거. 만든 사람은 서버가 막는다.
   static Future<Map<String, dynamic>> removeProgramAdmin(
     String programId,

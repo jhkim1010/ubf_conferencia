@@ -2329,5 +2329,29 @@
   },
   "@commonClear": {
     "description": "Tooltip on the clear-search button"
-  }
+  },
+  "scopeTransport": "Pickup and transport",
+  "scopeTransportHint": "Vans, airport arrivals and departures, pickup requests",
+  "scopeRooms": "Lodging",
+  "scopeRoomsHint": "Rooms and capacity, assignment, room leaders",
+  "scopeGroups": "Bible study",
+  "scopeGroupsHint": "Groups, language and capacity, assignment",
+  "scopeLedger": "Money",
+  "scopeLedgerHint": "Ledger, fees received, approving payments and discounts",
+  "scopeService": "Service",
+  "scopeServiceHint": "Service teams, asking people, volunteer list",
+  "scopeRegistration": "Registration",
+  "scopeRegistrationHint": "Roster, marking someone registered, filling a form for them",
+  "scopeComms": "Notices",
+  "scopeCommsHint": "Announcements and the library",
+  "scopeSchedule": "Schedule",
+  "scopeScheduleHint": "Programme and times",
+  "scopeMedical": "Medical and safety",
+  "scopeMedicalHint": "SOS alerts and health notes. The most private thing here.",
+  "scopeAll": "Everything — the same view as mine",
+  "scopeAllHint": "No need to pick one by one. Editing and deleting the conference stays with whoever created it.",
+  "scopeTitle": "What do they look after?",
+  "scopeSaved": "Saved. They will be told.",
+  "scopeNone": "Pick at least one area",
+  "scopeEdit": "Change areas"
 }

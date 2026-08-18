@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
-import { requireAuth, requireProgramAdmin } from '../middleware/auth.js';
+import { requireAuth, requireProgramAdmin, requireScope } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -75,7 +75,8 @@ function cleanCapacity(v) {
   return Math.min(999, n);
 }
 
-router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId', requireAuth, requireProgramAdmin,
+  requireScope('groups'), async (req, res) => {
   const { name, passage, location, leaderRegistrationId, leaderName, leaderPhone, sortOrder } = req.body;
   if (!name) return res.status(400).json({ error: 'name이 필요합니다' });
   const language = cleanLanguage(req.body?.studyLanguage) ?? null;
@@ -101,7 +102,8 @@ router.post('/:programId', requireAuth, requireProgramAdmin, async (req, res) =>
 
 // POST /groups/:programId/generate — 조 일괄 생성 (admin 이상)
 // body: { count, namePattern }  기본 이름 "{n}조" (예: 1조 … 8조)
-router.post('/:programId/generate', requireAuth, requireProgramAdmin, async (req, res) => {
+router.post('/:programId/generate', requireAuth, requireProgramAdmin,
+  requireScope('groups'), async (req, res) => {
   const { count, namePattern } = req.body;
   if (!count || count < 1 || count > 100) {
     return res.status(400).json({ error: 'count는 1~100 사이여야 합니다' });
@@ -141,7 +143,8 @@ router.post('/:programId/generate', requireAuth, requireProgramAdmin, async (req
 });
 
 // PATCH /groups/:programId/:groupId — 조 수정 (admin 이상)
-router.patch('/:programId/:groupId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.patch('/:programId/:groupId', requireAuth, requireProgramAdmin,
+  requireScope('groups'), async (req, res) => {
   const { name, passage, location, leaderRegistrationId, leaderName, leaderPhone, sortOrder } = req.body;
   // undefined 면 본문에 없거나 모르는 값이다 — 그때는 손대지 않는다.
   const language = cleanLanguage(req.body?.studyLanguage);
@@ -176,7 +179,8 @@ router.patch('/:programId/:groupId', requireAuth, requireProgramAdmin, async (re
 });
 
 // DELETE /groups/:programId/:groupId — 조 삭제 (admin 이상)
-router.delete('/:programId/:groupId', requireAuth, requireProgramAdmin, async (req, res) => {
+router.delete('/:programId/:groupId', requireAuth, requireProgramAdmin,
+  requireScope('groups'), async (req, res) => {
   try {
     await sql`
       DELETE FROM groups

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/admin_scopes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../program/providers/program_provider.dart';
@@ -20,6 +21,13 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final programAsync = ref.watch(programByIdProvider(programId));
     final statsAsync = ref.watch(programStatsProvider(programId));
+    // 안 맡은 분야는 메뉴에서도 뺀다(059). 카드만 감추고 메뉴를 남기면
+    // 눌러 들어갔다가 403 을 만난다.
+    //
+    // 아직 못 읽었으면 전부 보여 준다 — 잠깐 나왔다 사라지는 편이,
+    // 있어야 할 메뉴가 늦게 나타나는 것보다 덜 놀랍다.
+    final mine = scopesOf(statsAsync.valueOrNull?['myScopes']);
+    bool sees(String scope) => canSee(mine, scope);
     final registrationsAsync = ref.watch(
       programRegistrationsProvider(programId),
     );
@@ -97,21 +105,24 @@ class DashboardScreen extends ConsumerWidget {
             // 넓으면 세 개씩 늘어놓는다.
             _MenuGrid(
               items: [
-                (
-                  icon: Icons.fact_check_outlined,
-                  color: Theme.of(context).colorScheme.primary,
-                  title: l10n.rdyOpenCard,
-                  subtitle: l10n.rdyOpenCardSub,
-                  onTap: () =>
-                      context.push('/leader/program/$programId/readiness'),
-                ),
-                (
-                  icon: Icons.dashboard_customize_outlined,
-                  color: Colors.indigo,
-                  title: l10n.setupTitle,
-                  subtitle: l10n.dashSetupSubtitle,
-                  onTap: () => context.push('/leader/program/$programId/setup'),
-                ),
+                if (sees('registration'))
+                  (
+                    icon: Icons.fact_check_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                    title: l10n.rdyOpenCard,
+                    subtitle: l10n.rdyOpenCardSub,
+                    onTap: () =>
+                        context.push('/leader/program/$programId/readiness'),
+                  ),
+                if (sees('rooms') || sees('groups'))
+                  (
+                    icon: Icons.dashboard_customize_outlined,
+                    color: Colors.indigo,
+                    title: l10n.setupTitle,
+                    subtitle: l10n.dashSetupSubtitle,
+                    onTap: () =>
+                        context.push('/leader/program/$programId/setup'),
+                  ),
                 // 담당자도 참석자다. 이 수양회를 열어 둔 채로 자기 등록을
                 // 바로 열 수 있어야 한다.
                 (
@@ -121,54 +132,60 @@ class DashboardScreen extends ConsumerWidget {
                   subtitle: l10n.homeAlsoAttendingSub,
                   onTap: () => context.push('/registration/$programId'),
                 ),
-                (
-                  icon: Icons.folder_copy_outlined,
-                  color: Colors.deepOrange,
-                  title: l10n.libTitle,
-                  subtitle: l10n.dashLibrarySubtitle,
-                  onTap: () =>
-                      context.push('/leader/program/$programId/library'),
-                ),
-                (
-                  icon: Icons.campaign_outlined,
-                  color: Colors.amber,
-                  title: l10n.annTitle,
-                  subtitle: l10n.dashAnnounceSub,
-                  onTap: () =>
-                      context.push('/leader/program/$programId/notify'),
-                ),
-                (
-                  icon: Icons.admin_panel_settings_outlined,
-                  color: Colors.blueGrey,
-                  title: l10n.dashAdmins,
-                  subtitle: l10n.dashAdminsSub,
-                  onTap: () =>
-                      context.push('/leader/program/$programId/admins'),
-                ),
-                (
-                  icon: Icons.assignment_ind_outlined,
-                  color: Colors.green,
-                  title: l10n.asnTitle,
-                  subtitle: l10n.dashAssignSubtitle,
-                  onTap: () =>
-                      context.push('/leader/program/$programId/assign'),
-                ),
-                (
-                  icon: Icons.account_balance_wallet_outlined,
-                  color: Colors.pink,
-                  title: l10n.ledgerTitle,
-                  subtitle: l10n.dashLedgerSub,
-                  onTap: () =>
-                      context.push('/leader/program/$programId/ledger'),
-                ),
-                (
-                  icon: Icons.directions_bus_outlined,
-                  color: Colors.brown,
-                  title: l10n.dspTitle,
-                  subtitle: l10n.dashDispatchSubtitle,
-                  onTap: () =>
-                      context.push('/leader/program/$programId/dispatch'),
-                ),
+                if (sees('comms'))
+                  (
+                    icon: Icons.folder_copy_outlined,
+                    color: Colors.deepOrange,
+                    title: l10n.libTitle,
+                    subtitle: l10n.dashLibrarySubtitle,
+                    onTap: () =>
+                        context.push('/leader/program/$programId/library'),
+                  ),
+                if (sees('comms'))
+                  (
+                    icon: Icons.campaign_outlined,
+                    color: Colors.amber,
+                    title: l10n.annTitle,
+                    subtitle: l10n.dashAnnounceSub,
+                    onTap: () =>
+                        context.push('/leader/program/$programId/notify'),
+                  ),
+                if (mine == null)
+                  (
+                    icon: Icons.admin_panel_settings_outlined,
+                    color: Colors.blueGrey,
+                    title: l10n.dashAdmins,
+                    subtitle: l10n.dashAdminsSub,
+                    onTap: () =>
+                        context.push('/leader/program/$programId/admins'),
+                  ),
+                if (sees('rooms') || sees('groups'))
+                  (
+                    icon: Icons.assignment_ind_outlined,
+                    color: Colors.green,
+                    title: l10n.asnTitle,
+                    subtitle: l10n.dashAssignSubtitle,
+                    onTap: () =>
+                        context.push('/leader/program/$programId/assign'),
+                  ),
+                if (sees('ledger'))
+                  (
+                    icon: Icons.account_balance_wallet_outlined,
+                    color: Colors.pink,
+                    title: l10n.ledgerTitle,
+                    subtitle: l10n.dashLedgerSub,
+                    onTap: () =>
+                        context.push('/leader/program/$programId/ledger'),
+                  ),
+                if (sees('transport'))
+                  (
+                    icon: Icons.directions_bus_outlined,
+                    color: Colors.brown,
+                    title: l10n.dspTitle,
+                    subtitle: l10n.dashDispatchSubtitle,
+                    onTap: () =>
+                        context.push('/leader/program/$programId/dispatch'),
+                  ),
               ],
             ),
             const SizedBox(height: 20),
@@ -329,6 +346,11 @@ class _StatsGrid extends StatelessWidget {
       return Center(child: Text(l10n.dashNoStats));
     }
     int n(String key) => ((stats![key] ?? 0) as num).toInt();
+    // 안 맡은 분야는 **아예 안 보인다**(059). 자물쇠로 남기면 못 여는 문을
+    // 계속 보게 되고 화면만 복잡해진다. 맡은 분야가 늘면 그때 나타나고,
+    // 늘었다는 것은 서버가 텔레그램으로 알려 준다.
+    final mine = scopesOf(stats!['myScopes']);
+    bool sees(String scope) => canSee(mine, scope);
     // 미리보기는 숫자와 같은 응답에서 온다. 따로 조회하면 카드 숫자와
     // 미리보기가 어긋날 자리가 또 생긴다 — 이미 두 번 겪었다.
     final preview = (stats!['preview'] as Map?) ?? const {};
@@ -404,65 +426,71 @@ class _StatsGrid extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           childAspectRatio: cardWidth / cardHeight,
           children: [
-            _StatCard(
-              label: l10n.dashStatTotal,
-              total: n('total_registrations'),
-              preview: rows('recent'),
-              value: l10n.unitPeople(n('total_registrations')),
-              icon: Icons.people,
-              color: Colors.blue,
-              onOpen: () => _openTable(context, programId, RosterView.all),
-            ),
+            if (sees('registration'))
+              _StatCard(
+                label: l10n.dashStatTotal,
+                total: n('total_registrations'),
+                preview: rows('recent'),
+                value: l10n.unitPeople(n('total_registrations')),
+                icon: Icons.people,
+                color: Colors.blue,
+                onOpen: () => _openTable(context, programId, RosterView.all),
+              ),
             // "등록 완료" 카드가 있던 자리. 완료 여부는 참가자 표 안에서 한
             // 사람씩 노란 줄로 보이므로 카드 하나를 통째로 쓸 일이 아니었고,
             // 담당자가 급히 알아야 하는 것은 어느 투어가 얼마나 찼는가였다.
-            _StatCard(
-              label: l10n.dashStatTours,
-              tourPreview: rows('tours'),
-              value: l10n.unitPeople(n('tour_signup_count')),
-              icon: Icons.tour,
-              color: Colors.green,
-              onOpen: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => TourSignupsScreen(programId: programId),
+            if (sees('registration'))
+              _StatCard(
+                label: l10n.dashStatTours,
+                tourPreview: rows('tours'),
+                value: l10n.unitPeople(n('tour_signup_count')),
+                icon: Icons.tour,
+                color: Colors.green,
+                onOpen: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => TourSignupsScreen(programId: programId),
+                  ),
                 ),
               ),
-            ),
-            _StatCard(
-              label: l10n.dashStatFoodRestriction,
-              total: n('food_restriction_count'),
-              preview: rows('meals'),
-              value: l10n.unitPeople(n('food_restriction_count')),
-              icon: Icons.restaurant,
-              color: Colors.orange,
-              onOpen: () => _openTable(context, programId, RosterView.meals),
-            ),
+            if (sees('registration'))
+              _StatCard(
+                label: l10n.dashStatFoodRestriction,
+                total: n('food_restriction_count'),
+                preview: rows('meals'),
+                value: l10n.unitPeople(n('food_restriction_count')),
+                icon: Icons.restaurant,
+                color: Colors.orange,
+                onOpen: () => _openTable(context, programId, RosterView.meals),
+              ),
             // 입금 카드는 두지 않는다. 입금은 이제 참가자 표 안에서
             // 사람마다 적고 고치므로(053), 같은 것을 카드로 한 번 더
             // 보여 주면 어느 쪽이 최신인지 헷갈릴 뿐이다.
             // 봉사. 큰 숫자는 **자원자 수** 다 — 등록할 때 "할 수 있다" 고
             // 적어 낸 사람. 역할을 맡은 것은 아니고, 누구에게 맡길지는
             // 담당자가 정한다. 미리보기에는 역할별 확정/필요를 보여 준다.
-            _StatCard(
-              label: l10n.dashStatVolunteers,
-              total: n('volunteer_count'),
-              preview: serviceRows(),
-              value: l10n.unitPeople(n('volunteer_count')),
-              openLabel: l10n.dashOpenService,
-              icon: Icons.volunteer_activism_outlined,
-              color: Colors.pink,
-              onOpen: () =>
-                  context.push('/leader/program/$programId/assign?tab=2'),
-            ),
-            _StatCard(
-              label: l10n.dashStatArrival,
-              total: n('arrival_flight_count'),
-              preview: rows('arrival'),
-              value: l10n.unitPeople(n('arrival_flight_count')),
-              icon: Icons.flight_land,
-              color: Colors.purple,
-              onOpen: () => _openTable(context, programId, RosterView.arrival),
-            ),
+            if (sees('service'))
+              _StatCard(
+                label: l10n.dashStatVolunteers,
+                total: n('volunteer_count'),
+                preview: serviceRows(),
+                value: l10n.unitPeople(n('volunteer_count')),
+                openLabel: l10n.dashOpenService,
+                icon: Icons.volunteer_activism_outlined,
+                color: Colors.pink,
+                onOpen: () =>
+                    context.push('/leader/program/$programId/assign?tab=2'),
+              ),
+            if (sees('transport'))
+              _StatCard(
+                label: l10n.dashStatArrival,
+                total: n('arrival_flight_count'),
+                preview: rows('arrival'),
+                value: l10n.unitPeople(n('arrival_flight_count')),
+                icon: Icons.flight_land,
+                color: Colors.purple,
+                onOpen: () =>
+                    _openTable(context, programId, RosterView.arrival),
+              ),
           ],
         );
       },
