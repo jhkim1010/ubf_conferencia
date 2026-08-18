@@ -3460,4 +3460,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String rosterAccountName(String name) {
     return '$name (nombre de la cuenta)';
   }
+
+  @override
+  String get regNameFromAccount =>
+      'Tomado de su cuenta — cámbielo si no corresponde';
 }

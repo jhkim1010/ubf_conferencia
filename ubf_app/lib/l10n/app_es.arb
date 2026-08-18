@@ -1045,5 +1045,6 @@
   "ledgerRateMarket": "cotización de hoy — cámbiela si usó otra",
   "ledgerRateUnavailable": "No se pudo traer la cotización. Escriba la que usó.",
   "rosterNoName": "Sin nombre cargado",
-  "rosterAccountName": "{name} (nombre de la cuenta)"
+  "rosterAccountName": "{name} (nombre de la cuenta)",
+  "regNameFromAccount": "Tomado de su cuenta — cámbielo si no corresponde"
 }

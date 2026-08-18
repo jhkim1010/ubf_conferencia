@@ -2277,5 +2277,9 @@
         "type": "String"
       }
     }
+  },
+  "regNameFromAccount": "Filled in from your account — change it if it is not right",
+  "@regNameFromAccount": {
+    "description": "Helper under the name field when prefilled from the sign-in account"
   }
 }

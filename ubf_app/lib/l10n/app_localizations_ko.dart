@@ -3377,4 +3377,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String rosterAccountName(String name) {
     return '$name (계정 이름)';
   }
+
+  @override
+  String get regNameFromAccount => '계정에서 가져왔습니다 — 다르면 고치십시오';
 }

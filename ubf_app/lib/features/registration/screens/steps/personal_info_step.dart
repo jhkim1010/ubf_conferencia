@@ -3,6 +3,7 @@ import '../../../../../core/utils/country_guess.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/ubf_chapters.dart';
 import '../../../../../core/constants/world_countries.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../../providers/registration_provider.dart';
 import '../../widgets/privacy_notice.dart';
 import 'package:mana/l10n/app_localizations.dart';
@@ -26,6 +27,9 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
   late final TextEditingController _ageController;
   String? _gender;
 
+  /// 이름 칸을 계정에서 가져다 채웠는가. 본인이 손대면 꺼진다.
+  bool _nameFromAccount = false;
+
   // JSON에서 로드된 챕터 데이터
   List<UbfNationData> _chaptersData = [];
   String? _savedIso;
@@ -39,7 +43,22 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
     // 표기라서(챕터 조회에 필요하다) 데이터 로드 후 변환한다.
     _savedIso = WorldCountries.isoForLegacy(state.country);
     _branchController = TextEditingController(text: state.branch ?? '');
-    _realNameController = TextEditingController(text: state.realName ?? '');
+    // 이름도 짐작해서 채운다 — 구글로 로그인할 때 이미 받은 이름이다.
+    //
+    // 국가를 시간대로 채워 두는 것과 같은 뜻이다. 백지보다 고칠 것이 있는
+    // 편이 낫고, 무엇보다 **이름 칸이 빈 채로 제출되는 일**을 줄인다.
+    // 실제로 그렇게 제출한 사람이 있었고, 그 사람은 명단에서 통째로
+    // 사라졌다(055).
+    //
+    // 저장된 값이 있으면 절대 덮어쓰지 않는다 — 짐작이 사람이 적은 것을
+    // 이기면 안 된다. 계정 이름은 구글이 준 것이라 본인이 이 공동체에서
+    // 쓰는 이름과 다를 수 있고, 그래서 고칠 수 있어야 한다.
+    final saved = (state.realName ?? '').trim();
+    final fromAccount = (ref.read(currentUserProvider).name ?? '').trim();
+    _realNameController = TextEditingController(
+      text: saved.isNotEmpty ? saved : fromAccount,
+    );
+    _nameFromAccount = saved.isEmpty && fromAccount.isNotEmpty;
     _bibleNameController = TextEditingController(text: state.bibleName ?? '');
     _ageController = TextEditingController(text: state.age?.toString() ?? '');
     _gender = state.gender;
@@ -262,8 +281,18 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
         // ── 본명 ───────────────────────────────────────
         TextField(
           controller: _realNameController,
-          decoration: InputDecoration(labelText: l10n.regRealName),
-          onChanged: (_) => _save(),
+          decoration: InputDecoration(
+            labelText: l10n.regRealName,
+            // 계정에서 가져다 채운 것임을 밝힌다. 말없이 채워 두면 본인이
+            // 적은 줄 알고 지나치고, 구글 계정 이름은 여권 이름과 다른
+            // 경우가 흔하다.
+            helperText: _nameFromAccount ? l10n.regNameFromAccount : null,
+          ),
+          onChanged: (_) {
+            // 한 글자라도 손대면 더 이상 짐작이 아니다.
+            if (_nameFromAccount) setState(() => _nameFromAccount = false);
+            _save();
+          },
         ),
         const SizedBox(height: 12),
 

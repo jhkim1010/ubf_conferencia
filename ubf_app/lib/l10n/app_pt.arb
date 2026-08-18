@@ -1031,5 +1031,6 @@
   "ledgerRateMarket": "cotação de hoje — altere se usou outra",
   "ledgerRateUnavailable": "Não foi possível obter a cotação. Digite a que usou.",
   "rosterNoName": "Nome não preenchido",
-  "rosterAccountName": "{name} (nome da conta)"
+  "rosterAccountName": "{name} (nome da conta)",
+  "regNameFromAccount": "Preenchido pela sua conta — corrija se não estiver certo"
 }

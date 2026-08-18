@@ -3461,4 +3461,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String rosterAccountName(String name) {
     return '$name (nome da conta)';
   }
+
+  @override
+  String get regNameFromAccount =>
+      'Preenchido pela sua conta — corrija se não estiver certo';
 }

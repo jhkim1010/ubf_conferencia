@@ -6293,6 +6293,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} (from their account)'**
   String rosterAccountName(String name);
+
+  /// Helper under the name field when prefilled from the sign-in account
+  ///
+  /// In en, this message translates to:
+  /// **'Filled in from your account — change it if it is not right'**
+  String get regNameFromAccount;
 }
 
 class _AppLocalizationsDelegate
