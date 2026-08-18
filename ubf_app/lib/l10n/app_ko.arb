@@ -1043,5 +1043,7 @@
   "ledgerRate": "1 {base} 당 {code}",
   "ledgerRateBlue": "오늘 블루 환율 — 실제로 바꾼 값이 다르면 고치십시오",
   "ledgerRateMarket": "오늘 환율 — 실제로 바꾼 값이 다르면 고치십시오",
-  "ledgerRateUnavailable": "환율을 못 가져왔습니다. 쓰신 환율을 적어 주십시오."
+  "ledgerRateUnavailable": "환율을 못 가져왔습니다. 쓰신 환율을 적어 주십시오.",
+  "rosterNoName": "이름 미기재",
+  "rosterAccountName": "{name} (계정 이름)"
 }

@@ -308,10 +308,17 @@ router.post('/:programId/me/submit', requireAuth, async (req, res) => {
   try {
     // 이 등록이 선택한 투어 옵션의 정원·마감 검증 (F6 선착순)
     const [me] = await sql`
-      SELECT id, selected_options FROM registrations
+      SELECT id, selected_options, real_name FROM registrations
       WHERE program_id = ${req.params.programId} AND user_id = ${req.user.userId}
     `;
     if (!me) return res.status(404).json({ error: '등록 정보가 없습니다' });
+
+    // 이름 없이 제출하면 그 사람은 명단에서 **사라진다**(055). 운영에서
+    // 실제로 한 명이 그렇게 되었다 — 나라·지부·나이를 다 적고 제출까지
+    // 했는데 이름 칸만 비어서 담당자 화면 어디에도 없었다. 여기서 막는다.
+    if (String(me.real_name ?? '').trim() === '') {
+      return res.status(400).json({ error: '이름을 적어 주세요' });
+    }
 
     const selected = me.selected_options ?? [];
     if (selected.length > 0) {

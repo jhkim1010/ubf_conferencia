@@ -1043,5 +1043,7 @@
   "ledgerRate": "{code} por 1 {base}",
   "ledgerRateBlue": "dólar blue de hoy — cámbielo si usó otro",
   "ledgerRateMarket": "cotización de hoy — cámbiela si usó otra",
-  "ledgerRateUnavailable": "No se pudo traer la cotización. Escriba la que usó."
+  "ledgerRateUnavailable": "No se pudo traer la cotización. Escriba la que usó.",
+  "rosterNoName": "Sin nombre cargado",
+  "rosterAccountName": "{name} (nombre de la cuenta)"
 }

@@ -737,7 +737,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
       -- 이름을 적기 전의 행은 세지 않는다(038). 앱을 열면 등록 행이 먼저
       -- 생기므로, 열어만 보고 만 사람이 참가자 수에 섞인다.
       LEFT JOIN registrations r
-        ON r.program_id = p.id AND has_registrant_name(r.real_name)
+        ON r.program_id = p.id AND counts_as_participant(r.real_name, r.submitted)
       LEFT JOIN payments pay ON pay.registration_id = r.id
       WHERE p.id = ${req.params.id}
       GROUP BY p.id, p.name, p.fee_payment, p.tour_payment
@@ -759,7 +759,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
       SELECT ss.service_key, ss.status
       FROM service_signups ss
       JOIN registrations r ON r.id = ss.registration_id
-      WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+      WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted)
     `;
     const serviceRoles = sortRoles(
       rolesOf(progRow?.service_options).filter((x) => x.enabled !== false),
@@ -788,7 +788,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
                  AND ss.status NOT IN ('declined', 'rejected')
              ) AS assigned
       FROM registrations r
-      WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+      WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted)
         AND COALESCE(array_length(r.volunteer_resources, 1), 0) > 0
       ORDER BY array_length(r.volunteer_resources, 1) DESC, r.real_name
       LIMIT ${LIMIT}
@@ -798,7 +798,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
       sql`
         SELECT display_name(r.bible_name, r.real_name) AS name, r.country, r.submitted
         FROM registrations r
-        WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+        WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted)
         ORDER BY r.created_at DESC LIMIT ${LIMIT}
       `,
       // 투어는 사람이 아니라 투어별 줄을 보여 준다 — 담당자가 먼저 보는 것이
@@ -809,7 +809,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
         FROM program_options o
         LEFT JOIN registrations r
           ON r.program_id = ${id} AND o.id = ANY(r.selected_options)
-             AND has_registrant_name(r.real_name)
+             AND counts_as_participant(r.real_name, r.submitted)
         WHERE o.program_id = ${id} AND o.is_active
         GROUP BY o.id, o.name, o.capacity
         ORDER BY COUNT(r.id) DESC, o.name
@@ -819,7 +819,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
         SELECT display_name(r.bible_name, r.real_name) AS name, r.country, r.food_requirements AS detail,
                r.submitted
         FROM registrations r
-        WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+        WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted)
           AND has_food_restriction(r.food_requirements)
         ORDER BY r.country NULLS LAST, r.real_name LIMIT ${LIMIT}
       `,
@@ -828,7 +828,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
                COALESCE(r.arrival_flight->>'flight_no', '') AS detail,
                r.submitted
         FROM registrations r
-        WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+        WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted)
           AND flight_confirmed(r.arrival_flight)
         ORDER BY r.arrival_flight->>'scheduled_arrival' LIMIT ${LIMIT}
       `,
@@ -840,7 +840,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, async (req, res) => {
                pay.amount::text AS detail
         FROM registrations r
         LEFT JOIN payments pay ON pay.registration_id = r.id
-        WHERE r.program_id = ${id} AND has_registrant_name(r.real_name)
+        WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted)
         ORDER BY (COALESCE(pay.status, 'none') = 'confirmed'), r.real_name
         LIMIT ${LIMIT}
       `,
@@ -888,6 +888,12 @@ router.get('/:id/registrations', requireAuth, requireProgramAdmin, async (req, r
       SELECT
         r.id, r.program_id, r.user_id, r.country, r.branch,
         r.real_name, r.bible_name, r.gender, r.age,
+        -- 이름을 안 적고 제출한 사람이 빈 줄로 보이면 담당자가 누구인지
+        -- 알 수 없다(055). 로그인한 계정 이름을 대신 준다 — 본인이 적은
+        -- 것은 아니므로 앱이 "계정 이름" 이라고 밝혀 보여 준다.
+        CASE WHEN COALESCE(btrim(r.real_name), '') = ''
+                  AND COALESCE(btrim(r.bible_name), '') = ''
+             THEN NULLIF(btrim(COALESCE(u.name, '')), '') END AS account_name,
         r.arrival_flight, r.departure_flight,
         -- 확정 항공편인지. 예상 날짜만 적은 사람을 담당자가 구분해야 한다.
         flight_confirmed(r.arrival_flight) AS arrival_confirmed,
@@ -922,10 +928,12 @@ router.get('/:id/registrations', requireAuth, requireProgramAdmin, async (req, r
       FROM registrations r
       JOIN programs p ON p.id = r.program_id
       LEFT JOIN payments pay ON pay.registration_id = r.id
-      -- 이름이 없으면 아직 참가자가 아니다(038). 카드의 숫자도 같은 판정을
-      -- 쓴다 — 한쪽만 거르면 "10명인데 9명만 보인다" 가 된다.
+      LEFT JOIN users u ON u.id = r.user_id
+      -- 아직 아무것도 안 적은 행은 참가자가 아니다(038). 카드의 숫자도 같은
+      -- 판정을 쓴다 — 한쪽만 거르면 "10명인데 9명만 보인다" 가 된다.
+      -- 제출한 사람은 이름이 비어도 넣는다(055).
       WHERE r.program_id = ${req.params.id}
-        AND has_registrant_name(r.real_name)
+        AND counts_as_participant(r.real_name, r.submitted)
       ORDER BY r.created_at ASC
     `;
 
@@ -1486,7 +1494,7 @@ router.get(
         JOIN registrations r
           ON r.program_id = ${programId} AND o.id = ANY(r.selected_options)
         WHERE o.program_id = ${programId} AND o.is_active = true
-          AND has_registrant_name(r.real_name)
+          AND counts_as_participant(r.real_name, r.submitted)
         ORDER BY r.country NULLS LAST, r.real_name
       `;
 

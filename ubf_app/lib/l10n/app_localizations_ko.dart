@@ -3369,4 +3369,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ledgerRateUnavailable => '환율을 못 가져왔습니다. 쓰신 환율을 적어 주십시오.';
+
+  @override
+  String get rosterNoName => '이름 미기재';
+
+  @override
+  String rosterAccountName(String name) {
+    return '$name (계정 이름)';
+  }
 }

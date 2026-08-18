@@ -282,7 +282,7 @@ cron.schedule('* * * * *', async () => {
             FROM service_signups ss
             JOIN registrations r ON r.id = ss.registration_id
             WHERE r.program_id = ${schedule.program_id}
-              AND has_registrant_name(r.real_name)
+              AND counts_as_participant(r.real_name, r.submitted)
           `;
           const role = rolesOf(schedule.service_options).find(
             (x) => x.key === schedule.service_key,

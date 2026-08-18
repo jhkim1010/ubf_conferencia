@@ -89,7 +89,7 @@ export async function notifyAudience(sql, programId, audience, title, body, data
       rows = await sql`
         SELECT fcm_token FROM registrations
         WHERE program_id = ${programId} AND fcm_token IS NOT NULL
-          AND has_registrant_name(real_name)
+          AND counts_as_participant(real_name, submitted)
       `;
     } else if (kind === 'room') {
       rows = await sql`
@@ -111,7 +111,7 @@ export async function notifyAudience(sql, programId, audience, title, body, data
       rows = await sql`
         SELECT fcm_token FROM registrations
         WHERE program_id = ${programId} AND submitted = false
-          AND fcm_token IS NOT NULL AND has_registrant_name(real_name)
+          AND fcm_token IS NOT NULL AND counts_as_participant(real_name, submitted)
       `;
     } else if (kind === 'unpaid') {
       rows = await sql`
@@ -119,7 +119,7 @@ export async function notifyAudience(sql, programId, audience, title, body, data
         LEFT JOIN payments pay ON pay.registration_id = r.id
         WHERE r.program_id = ${programId}
           AND COALESCE(pay.status, 'none') <> 'confirmed'
-          AND r.fcm_token IS NOT NULL AND has_registrant_name(r.real_name)
+          AND r.fcm_token IS NOT NULL AND counts_as_participant(r.real_name, r.submitted)
       `;
     } else if (kind === 'service') {
       // 그 역할을 **맡은** 사람. 거절·반려는 뺀다 — 안 하겠다고 한 사람에게
@@ -130,7 +130,7 @@ export async function notifyAudience(sql, programId, audience, title, body, data
         WHERE r.program_id = ${programId}
           AND ss.service_key = ${id}
           AND ss.status NOT IN ('declined', 'rejected')
-          AND r.fcm_token IS NOT NULL AND has_registrant_name(r.real_name)
+          AND r.fcm_token IS NOT NULL AND counts_as_participant(r.real_name, r.submitted)
       `;
     } else {
       console.error('알 수 없는 알림 대상:', kind);

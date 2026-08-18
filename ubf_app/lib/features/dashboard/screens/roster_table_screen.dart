@@ -148,6 +148,15 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
               final hasBible = bible
                   .replaceAll(RegExp(r'[^\p{L}\p{N}]', unicode: true), '')
                   .isNotEmpty;
+              if (!hasBible && legal.isEmpty) {
+                // 이름을 안 적고 제출한 사람(055). 빈 줄로 두면 담당자가
+                // 누구인지 알 수 없어 물어볼 수조차 없다. 로그인한 계정
+                // 이름을 대신 보이되, 본인이 적은 것이 아님을 밝힌다.
+                final account = '${data[i]['account_name'] ?? ''}'.trim();
+                return account.isEmpty
+                    ? l10n.rosterNoName
+                    : l10n.rosterAccountName(account);
+              }
               if (!hasBible) return legal;
               if (legal.isEmpty) return bible;
               return '$bible ($legal)';

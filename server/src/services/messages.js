@@ -557,6 +557,11 @@ const T = {
     en: 'The Telegram chat is missing',
     pt: 'Falta o chat do Telegram',
   },
+  '이름을 적어 주세요': {
+    es: 'Escriba su nombre',
+    en: 'Please enter your name',
+    pt: 'Escreva seu nome',
+  },
   'accessToken이 필요합니다': {
     es: 'Falta el accessToken',
     en: 'accessToken is required',

@@ -3452,4 +3452,12 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get ledgerRateUnavailable =>
       'No se pudo traer la cotización. Escriba la que usó.';
+
+  @override
+  String get rosterNoName => 'Sin nombre cargado';
+
+  @override
+  String rosterAccountName(String name) {
+    return '$name (nombre de la cuenta)';
+  }
 }

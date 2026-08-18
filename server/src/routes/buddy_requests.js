@@ -22,7 +22,7 @@ router.get('/:programId/candidates', requireAuth, async (req, res) => {
       SELECT id, real_name, bible_name, gender, branch, country
       FROM registrations
       WHERE program_id = ${programId}
-        AND real_name IS NOT NULL AND real_name <> ''
+        AND counts_as_participant(real_name, submitted)
         AND id <> ${me?.id ?? '00000000-0000-0000-0000-000000000000'}
       ORDER BY real_name ASC
     `;

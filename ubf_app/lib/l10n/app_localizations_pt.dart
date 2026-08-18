@@ -3453,4 +3453,12 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get ledgerRateUnavailable =>
       'Não foi possível obter a cotação. Digite a que usou.';
+
+  @override
+  String get rosterNoName => 'Nome não preenchido';
+
+  @override
+  String rosterAccountName(String name) {
+    return '$name (nome da conta)';
+  }
 }

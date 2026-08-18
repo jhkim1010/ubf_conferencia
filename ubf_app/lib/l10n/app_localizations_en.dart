@@ -3442,4 +3442,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ledgerRateUnavailable =>
       'Could not fetch a rate. Type the one you used.';
+
+  @override
+  String get rosterNoName => 'Name not filled in';
+
+  @override
+  String rosterAccountName(String name) {
+    return '$name (from their account)';
+  }
 }

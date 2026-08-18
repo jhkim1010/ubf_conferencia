@@ -42,8 +42,9 @@ async function loadDispatchPeople(programId, direction) {
       SELECT id, display_name(bible_name, real_name) AS name, country, needs_pickup, pickup_from,
              arrival_flight, departure_flight
       FROM registrations
-      WHERE program_id = ${programId} AND submitted = true
-        AND real_name IS NOT NULL AND real_name <> ''
+      WHERE program_id = ${programId}
+        AND counts_as_participant(real_name, submitted)
+        AND submitted = true
     `,
     sql`
       SELECT c.id, c.real_name AS name, c.needs_pickup, c.same_flight_as_primary,

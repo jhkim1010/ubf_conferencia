@@ -2264,5 +2264,18 @@
   },
   "ledgerRateBlue": "today's blue rate — change it if you got another",
   "ledgerRateMarket": "today's rate — change it if you got another",
-  "ledgerRateUnavailable": "Could not fetch a rate. Type the one you used."
+  "ledgerRateUnavailable": "Could not fetch a rate. Type the one you used.",
+  "rosterNoName": "Name not filled in",
+  "rosterAccountName": "{name} (from their account)",
+  "@rosterNoName": {
+    "description": "Roster row for someone who submitted without a name"
+  },
+  "@rosterAccountName": {
+    "description": "Fallback name taken from the sign-in account",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

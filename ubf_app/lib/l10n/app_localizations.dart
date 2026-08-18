@@ -6281,6 +6281,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not fetch a rate. Type the one you used.'**
   String get ledgerRateUnavailable;
+
+  /// Roster row for someone who submitted without a name
+  ///
+  /// In en, this message translates to:
+  /// **'Name not filled in'**
+  String get rosterNoName;
+
+  /// Fallback name taken from the sign-in account
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (from their account)'**
+  String rosterAccountName(String name);
 }
 
 class _AppLocalizationsDelegate
