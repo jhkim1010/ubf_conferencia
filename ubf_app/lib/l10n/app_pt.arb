@@ -1066,5 +1066,6 @@
   "scopeTitle": "Do que ele cuida?",
   "scopeSaved": "Salvo. Vamos avisar.",
   "scopeNone": "Escolha ao menos uma área",
-  "scopeEdit": "Mudar as áreas"
+  "scopeEdit": "Mudar as áreas",
+  "scopeNotYours": "Essa área não está a seu cargo"
 }

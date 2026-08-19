@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../program/providers/program_provider.dart';
+import '../../../core/constants/admin_scopes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/api_client.dart';
 import '../providers/assignment_provider.dart';
@@ -7,7 +9,7 @@ import '../widgets/split_board.dart';
 import 'package:mana/l10n/app_localizations.dart';
 
 // PRD F4 — 관리자 배정 화면 (숙소 · 말씀조)
-class AssignmentScreen extends StatelessWidget {
+class AssignmentScreen extends ConsumerWidget {
   final String programId;
 
   /// 처음 열 탭. 대시보드의 봉사 카드가 곧바로 봉사 탭으로 보낸다 —
@@ -21,38 +23,51 @@ class AssignmentScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    // 안 맡은 분야는 탭 자체가 없다(059). 탭을 남겨 두면 눌러 들어갔다가
+    // 403 을 만나고, 담당자는 앱이 고장 났다고 여긴다.
+    final mine = scopesOf(
+      ref.watch(programStatsProvider(programId)).valueOrNull?['myScopes'],
+    );
+    final tabs = <({IconData icon, String text, Widget body})>[
+      if (canSee(mine, 'rooms'))
+        (
+          icon: Icons.meeting_room_outlined,
+          text: l10n.setupTabRooms,
+          body: _RoomsAssignTab(programId: programId),
+        ),
+      if (canSee(mine, 'groups'))
+        (
+          icon: Icons.groups_outlined,
+          text: l10n.setupTabGroups,
+          body: _GroupsAssignTab(programId: programId),
+        ),
+      if (canSee(mine, 'service'))
+        (
+          icon: Icons.volunteer_activism_outlined,
+          text: l10n.asnTabService,
+          body: ServiceAssignTab(programId: programId),
+        ),
+    ];
+    if (tabs.isEmpty) {
+      // 여기까지 올 길이 없어야 하지만, 깊은 링크로 들어올 수는 있다.
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.asnTitle)),
+        body: _emptyHint(Icons.lock_outline, l10n.scopeNotYours),
+      );
+    }
     return DefaultTabController(
-      length: 3,
-      initialIndex: initialTab.clamp(0, 2),
+      length: tabs.length,
+      initialIndex: initialTab.clamp(0, tabs.length - 1),
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.asnTitle),
           bottom: TabBar(
-            tabs: [
-              Tab(
-                icon: const Icon(Icons.meeting_room_outlined),
-                text: l10n.setupTabRooms,
-              ),
-              Tab(
-                icon: const Icon(Icons.groups_outlined),
-                text: l10n.setupTabGroups,
-              ),
-              Tab(
-                icon: const Icon(Icons.volunteer_activism_outlined),
-                text: l10n.asnTabService,
-              ),
-            ],
+            tabs: [for (final t in tabs) Tab(icon: Icon(t.icon), text: t.text)],
           ),
         ),
-        body: TabBarView(
-          children: [
-            _RoomsAssignTab(programId: programId),
-            _GroupsAssignTab(programId: programId),
-            ServiceAssignTab(programId: programId),
-          ],
-        ),
+        body: TabBarView(children: [for (final t in tabs) t.body]),
       ),
     );
   }

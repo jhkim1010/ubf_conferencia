@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../program/providers/program_provider.dart';
+import '../../../core/constants/admin_scopes.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/api_client.dart';
@@ -8,37 +10,56 @@ import 'package:mana/l10n/app_localizations.dart';
 
 // 편성 준비 (PRD F2) — 숙소 설정 + 말씀조 설정
 // 배정(F4) 전에 방·조의 "그릇"을 정의한다.
-class SetupScreen extends StatelessWidget {
+class SetupScreen extends ConsumerWidget {
   final String programId;
   const SetupScreen({super.key, required this.programId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    // 배정 화면과 같은 규칙(059) — 안 맡은 분야는 탭이 없다.
+    final mine = scopesOf(
+      ref.watch(programStatsProvider(programId)).valueOrNull?['myScopes'],
+    );
+    final tabs = <({IconData icon, String text, Widget body})>[
+      if (canSee(mine, 'rooms'))
+        (
+          icon: Icons.meeting_room_outlined,
+          text: l10n.setupTabRooms,
+          body: _RoomsTab(programId: programId),
+        ),
+      if (canSee(mine, 'groups'))
+        (
+          icon: Icons.groups_outlined,
+          text: l10n.setupTabGroups,
+          body: _GroupsTab(programId: programId),
+        ),
+    ];
+    if (tabs.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.setupTitle)),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Text(
+              l10n.scopeNotYours,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ),
+        ),
+      );
+    }
     return DefaultTabController(
-      length: 2,
+      length: tabs.length,
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.setupTitle),
           bottom: TabBar(
-            tabs: [
-              Tab(
-                icon: const Icon(Icons.meeting_room_outlined),
-                text: l10n.setupTabRooms,
-              ),
-              Tab(
-                icon: const Icon(Icons.groups_outlined),
-                text: l10n.setupTabGroups,
-              ),
-            ],
+            tabs: [for (final t in tabs) Tab(icon: Icon(t.icon), text: t.text)],
           ),
         ),
-        body: TabBarView(
-          children: [
-            _RoomsTab(programId: programId),
-            _GroupsTab(programId: programId),
-          ],
-        ),
+        body: TabBarView(children: [for (final t in tabs) t.body]),
       ),
     );
   }

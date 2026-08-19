@@ -3576,4 +3576,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get scopeEdit => 'Mudar as áreas';
+
+  @override
+  String get scopeNotYours => 'Essa área não está a seu cargo';
 }

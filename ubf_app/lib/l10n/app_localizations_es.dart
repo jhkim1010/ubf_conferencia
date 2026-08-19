@@ -3575,4 +3575,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get scopeEdit => 'Cambiar las áreas';
+
+  @override
+  String get scopeNotYours => 'Esta área no está a su cargo';
 }

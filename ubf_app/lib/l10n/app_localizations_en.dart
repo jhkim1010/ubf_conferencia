@@ -3563,4 +3563,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scopeEdit => 'Change areas';
+
+  @override
+  String get scopeNotYours => 'This area is not yours to look after';
 }

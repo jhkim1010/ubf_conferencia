@@ -2353,5 +2353,9 @@
   "scopeTitle": "What do they look after?",
   "scopeSaved": "Saved. They will be told.",
   "scopeNone": "Pick at least one area",
-  "scopeEdit": "Change areas"
+  "scopeEdit": "Change areas",
+  "scopeNotYours": "This area is not yours to look after",
+  "@scopeNotYours": {
+    "description": "Shown if someone deep-links into an area they were not given"
+  }
 }

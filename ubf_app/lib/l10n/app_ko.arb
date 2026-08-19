@@ -1080,5 +1080,6 @@
   "scopeTitle": "무엇을 맡깁니까?",
   "scopeSaved": "저장했습니다. 그분에게 알려 드립니다.",
   "scopeNone": "분야를 하나는 고르십시오",
-  "scopeEdit": "맡은 분야 바꾸기"
+  "scopeEdit": "맡은 분야 바꾸기",
+  "scopeNotYours": "이 분야는 맡지 않으셨습니다"
 }

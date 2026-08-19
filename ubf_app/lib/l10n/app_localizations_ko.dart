@@ -3484,4 +3484,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get scopeEdit => '맡은 분야 바꾸기';
+
+  @override
+  String get scopeNotYours => '이 분야는 맡지 않으셨습니다';
 }

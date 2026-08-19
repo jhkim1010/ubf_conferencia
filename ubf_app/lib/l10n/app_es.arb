@@ -1080,5 +1080,6 @@
   "scopeTitle": "¿De qué se encarga?",
   "scopeSaved": "Guardado. Le vamos a avisar.",
   "scopeNone": "Elija al menos un área",
-  "scopeEdit": "Cambiar las áreas"
+  "scopeEdit": "Cambiar las áreas",
+  "scopeNotYours": "Esta área no está a su cargo"
 }

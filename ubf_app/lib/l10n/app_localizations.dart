@@ -6503,6 +6503,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change areas'**
   String get scopeEdit;
+
+  /// Shown if someone deep-links into an area they were not given
+  ///
+  /// In en, this message translates to:
+  /// **'This area is not yours to look after'**
+  String get scopeNotYours;
 }
 
 class _AppLocalizationsDelegate
