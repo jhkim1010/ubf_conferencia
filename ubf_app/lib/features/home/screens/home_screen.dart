@@ -306,7 +306,7 @@ class _DirectorHomeView extends ConsumerWidget {
 }
 
 // ─── Admin(리더) 홈 화면 ─────────────────────────────────────
-class _LeaderHomeView extends ConsumerWidget {
+class _LeaderHomeView extends ConsumerStatefulWidget {
   final String userEmail;
   final TextEditingController uuidController;
 
@@ -316,9 +316,39 @@ class _LeaderHomeView extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_LeaderHomeView> createState() => _LeaderHomeViewState();
+}
+
+class _LeaderHomeViewState extends ConsumerState<_LeaderHomeView> {
+  /// 한 번만 보낸다. 안 그러면 뒤로 눌러 돌아올 때마다 다시 끌려간다.
+  bool _jumped = false;
+
+  /// 공동 관리자가 맡은 수양회가 하나뿐이면 그 대시보드로 곧장 보낸다(059).
+  ///
+  /// 그 사람에게 이 목록은 늘 한 줄짜리다. 앱을 켤 때마다 한 번 더 눌러야
+  /// 일이 시작되는데, 그 한 번이 매일 쌓인다.
+  ///
+  /// **만든 사람은 보내지 않는다.** 수양회를 새로 만들거나 여럿을 오갈 수
+  /// 있어야 하고, 그 길이 이 화면에만 있다.
+  void _maybeJump(List<dynamic> programs) {
+    if (_jumped || programs.length != 1) return;
+    final mine = ref.read(currentUserProvider).leaderId;
+    final owner = '${(programs.first as Map)['leader_id'] ?? ''}';
+    if (mine != null && owner == mine) return; // 만든 사람이다
+    _jumped = true;
+    final id = '${(programs.first as Map)['id']}';
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.push('/leader/program/$id/dashboard');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    ref.watch(leaderProgramsProvider).whenData(_maybeJump);
+    final userEmail = widget.userEmail;
+    final uuidController = widget.uuidController;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
