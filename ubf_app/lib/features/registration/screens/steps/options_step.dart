@@ -446,9 +446,13 @@ class _Coverage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final extras = TourExtras.of([option]);
+    // 정해 둔 셋은 갈래로, 담당자가 더한 항목(062)은 따로 모은다.
     final missing = {
-      for (final i in TourExtras.of([option]).items) i.kind: i,
+      for (final i in extras.items)
+        if (i.kind != null) i.kind!: i,
     };
+    final added = extras.items.where((i) => i.kind == null).toList();
 
     String out(ExtraKind k) => switch (k) {
       ExtraKind.meals => l10n.epTourNoMeals,
@@ -508,6 +512,37 @@ class _Coverage extends StatelessWidget {
                         color: Colors.orange[900],
                       ),
                     ),
+                ],
+              ),
+            ),
+          // 담당자가 이름 붙여 더한 것들(062). 정해 둔 셋과 같은 줄 모양이다.
+          for (final i in added)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.remove_circle_outline,
+                    size: 14,
+                    color: Colors.orange[800],
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      i.label ?? '',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  Text(
+                    i.amount == null
+                        ? l10n.regExtrasTbd
+                        : currency.format(i.amount!),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.orange[900],
+                    ),
+                  ),
                 ],
               ),
             ),

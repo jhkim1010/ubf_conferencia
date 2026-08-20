@@ -12,9 +12,19 @@ library;
 enum ExtraKind { meals, lodging, airfare }
 
 class ExtraItem {
-  const ExtraItem({required this.kind, required this.amount, this.tour});
+  const ExtraItem({
+    required this.kind,
+    required this.amount,
+    this.label,
+    this.tour,
+  });
 
-  final ExtraKind kind;
+  /// 정해 둔 셋 중 하나. 담당자가 이름 붙여 더한 항목(062)은 null 이고,
+  /// 그때는 [label] 을 쓴다.
+  final ExtraKind? kind;
+
+  /// 더한 항목의 이름. 정해 둔 셋에서는 null 이다.
+  final String? label;
 
   /// null 이면 "안 들어 있는데 금액을 아직 모른다". 0 과 다르다 — 0 으로
   /// 세면 참가자가 돈을 덜 챙겨 온다.
@@ -28,6 +38,7 @@ class TourExtras {
     required this.lodging,
     required this.airfare,
     required this.known,
+    required this.other,
     required this.items,
     required this.unknown,
   });
@@ -35,6 +46,9 @@ class TourExtras {
   final double meals;
   final double lodging;
   final double airfare;
+
+  /// 담당자가 이름 붙여 더한 항목들의 합(062).
+  final double other;
 
   /// 금액이 적힌 것들의 합.
   final double known;
@@ -73,6 +87,7 @@ class TourExtras {
     };
     final items = <ExtraItem>[];
     final unknown = <ExtraItem>[];
+    var other = 0.0;
 
     for (final t in tours) {
       for (final kind in ExtraKind.values) {
@@ -92,14 +107,39 @@ class TourExtras {
           }
         }
       }
+
+      // 담당자가 이름 붙여 더한 항목들(062). 이름이 없는 줄은 버린다 —
+      // 이름 없이 금액만 있으면 무엇에 쓰는 돈인지 알 수 없다.
+      final raw = t['extraItems'];
+      if (raw is List) {
+        for (final it in raw) {
+          if (it is! Map) continue;
+          final label = '${it['name'] ?? ''}'.trim();
+          if (label.isEmpty) continue;
+          final amount = amountOf(it['cost']);
+          final item = ExtraItem(
+            kind: null,
+            label: label,
+            amount: amount,
+            tour: t['name'] as String?,
+          );
+          items.add(item);
+          if (amount == null) {
+            unknown.add(item);
+          } else {
+            other += amount;
+          }
+        }
+      }
     }
 
-    final known = sums.values.fold(0.0, (a, b) => a + b);
+    final known = sums.values.fold(0.0, (a, b) => a + b) + other;
     return TourExtras(
       meals: sums[ExtraKind.meals]!,
       lodging: sums[ExtraKind.lodging]!,
       airfare: sums[ExtraKind.airfare]!,
       known: (known * 100).roundToDouble() / 100,
+      other: (other * 100).roundToDouble() / 100,
       items: items,
       unknown: unknown,
     );

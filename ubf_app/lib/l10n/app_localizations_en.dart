@@ -3650,4 +3650,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get regExtrasCoverage => 'What the tour price covers';
+
+  @override
+  String get epTourAddItem => 'Add an item';
+
+  @override
+  String get epTourItemName => 'What it is';
+
+  @override
+  String get epTourItemHint => 'e.g. Park entrance fee';
+
+  @override
+  String get epTourItemRemove => 'Remove this item';
+
+  @override
+  String epTourItemsFull(int max) {
+    return 'Up to $max items';
+  }
 }

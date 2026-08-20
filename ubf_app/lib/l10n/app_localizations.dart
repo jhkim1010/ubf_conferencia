@@ -6659,6 +6659,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What the tour price covers'**
   String get regExtrasCoverage;
+
+  /// No description provided for @epTourAddItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an item'**
+  String get epTourAddItem;
+
+  /// No description provided for @epTourItemName.
+  ///
+  /// In en, this message translates to:
+  /// **'What it is'**
+  String get epTourItemName;
+
+  /// No description provided for @epTourItemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Park entrance fee'**
+  String get epTourItemHint;
+
+  /// No description provided for @epTourItemRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this item'**
+  String get epTourItemRemove;
+
+  /// No description provided for @epTourItemsFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {max} items'**
+  String epTourItemsFull(int max);
 }
 
 class _AppLocalizationsDelegate

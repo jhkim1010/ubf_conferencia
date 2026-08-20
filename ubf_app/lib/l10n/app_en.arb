@@ -2403,5 +2403,17 @@
   "epTourYesMeals": "Meals included",
   "epTourYesLodging": "Hotel nights included",
   "epTourYesAirfare": "Airfare included",
-  "regExtrasCoverage": "What the tour price covers"
+  "regExtrasCoverage": "What the tour price covers",
+  "epTourAddItem": "Add an item",
+  "epTourItemName": "What it is",
+  "epTourItemHint": "e.g. Park entrance fee",
+  "epTourItemRemove": "Remove this item",
+  "epTourItemsFull": "Up to {max} items",
+  "@epTourItemsFull": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -930,6 +930,14 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
   final _estMealsCtrl = TextEditingController();
   final _estLodgingCtrl = TextEditingController();
   final _estAirfareCtrl = TextEditingController();
+
+  /// 담당자가 이름 붙여 더한 항목들(062) — 입장료, 가이드 팁 같은 것.
+  /// 정해 둔 셋으로 다 담기지 않아서, 이름과 금액을 직접 적게 한다.
+  /// 칸을 직접 들고 있어야 화면을 다시 그려도 적던 글자가 안 날아간다.
+  final List<({TextEditingController name, TextEditingController cost})>
+  _extraItems = [];
+
+  static const _maxExtraItems = 20;
   final _brochureCtrl = TextEditingController();
   final _videoCtrl = TextEditingController();
   DateTime? _startDate;
@@ -959,6 +967,13 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
       _estMealsCtrl.text = _money(e['estMealsCost']);
       _estLodgingCtrl.text = _money(e['estLodgingCost']);
       _estAirfareCtrl.text = _money(e['estAirfareCost']);
+      for (final it in (e['extraItems'] as List? ?? const [])) {
+        if (it is! Map) continue;
+        _extraItems.add((
+          name: TextEditingController(text: '${it['name'] ?? ''}'),
+          cost: TextEditingController(text: _money(it['cost'])),
+        ));
+      }
       _brochureCtrl.text = e['brochureUrl'] as String? ?? '';
       _videoCtrl.text = e['videoUrl'] as String? ?? '';
       if (e['startDate'] != null) {
@@ -993,6 +1008,10 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
     _estMealsCtrl.dispose();
     _estLodgingCtrl.dispose();
     _estAirfareCtrl.dispose();
+    for (final it in _extraItems) {
+      it.name.dispose();
+      it.cost.dispose();
+    }
     super.dispose();
   }
 
@@ -1294,6 +1313,73 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               includedLabel: l10n.epTourYesAirfare,
               onChanged: (v) => setState(() => _includesAirfare = !v),
             ),
+            // 정해 둔 셋으로 안 담기는 것들(062).
+            for (var i = 0; i < _extraItems.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: TextField(
+                        controller: _extraItems[i].name,
+                        decoration: InputDecoration(
+                          labelText: l10n.epTourItemName,
+                          hintText: l10n.epTourItemHint,
+                          isDense: true,
+                          border: const OutlineInputBorder(),
+                        ),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 4,
+                      child: TextField(
+                        controller: _extraItems[i].cost,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: l10n.epTourEstimate,
+                          hintText: l10n.epTourEstimateUnknown,
+                          isDense: true,
+                          border: const OutlineInputBorder(),
+                        ),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: l10n.epTourItemRemove,
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () => setState(() {
+                        final it = _extraItems.removeAt(i);
+                        it.name.dispose();
+                        it.cost.dispose();
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _extraItems.length >= _maxExtraItems
+                    ? null
+                    : () => setState(
+                        () => _extraItems.add((
+                          name: TextEditingController(),
+                          cost: TextEditingController(),
+                        )),
+                      ),
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(
+                  _extraItems.length >= _maxExtraItems
+                      ? l10n.epTourItemsFull(_maxExtraItems)
+                      : l10n.epTourAddItem,
+                ),
+              ),
+            ),
             const SizedBox(height: 12),
             // 정원 + 신청 마감
             Row(
@@ -1530,6 +1616,12 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               'estAirfareCost': _includesAirfare
                   ? null
                   : _estAirfareCtrl.text.trim(),
+              // 이름 없는 줄은 보내지 않는다 — 무엇에 쓰는 돈인지 알 수 없다.
+              'extraItems': [
+                for (final it in _extraItems)
+                  if (it.name.text.trim().isNotEmpty)
+                    {'name': it.name.text.trim(), 'cost': it.cost.text.trim()},
+              ],
               'brochureUrl': _brochureCtrl.text.trim(),
               'videoUrl': _videoCtrl.text.trim(),
             });

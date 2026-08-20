@@ -79,6 +79,94 @@ void main() {
   });
 
   _lineTests();
+  _itemTests();
+}
+
+// ── 062: 담당자가 이름 붙여 더한 항목 ──────────────────────────────
+//
+// server/test/tour_extras.test.js 의 같은 이름 테스트와 **같은 예**다.
+
+void _itemTests() {
+  test('더한 항목도 합계에 들어간다', () {
+    final e = TourExtras.of([
+      {
+        'name': 'Iguazú',
+        'extraItems': [
+          {'name': '국립공원 입장료', 'cost': 35},
+        ],
+      },
+    ]);
+    expect(e.other, 35);
+    expect(e.known, 35);
+    expect(e.items.first.label, '국립공원 입장료');
+    expect(e.items.first.kind, isNull);
+  });
+
+  test('더한 항목의 금액도 비워 둘 수 있다', () {
+    final e = TourExtras.of([
+      {
+        'name': 'X',
+        'extraItems': [
+          {'name': '가이드 팁'},
+        ],
+      },
+    ]);
+    expect(e.known, 0);
+    expect(e.unknown.length, 1);
+    expect(e.unknown.first.label, '가이드 팁');
+  });
+
+  test('이름 없는 줄은 버린다', () {
+    final e = TourExtras.of([
+      {
+        'name': 'X',
+        'extraItems': [
+          {'name': '  ', 'cost': 50},
+          {'cost': 10},
+        ],
+      },
+    ]);
+    expect(e.isEmpty, isTrue);
+    expect(e.known, 0);
+  });
+
+  test('정해 둔 셋과 더한 항목이 함께 더해진다', () {
+    final e = TourExtras.of([
+      {
+        'name': 'Iguazú',
+        'includesAirfare': false,
+        'estAirfareCost': 300,
+        'extraItems': [
+          {'name': '보트', 'cost': 45},
+        ],
+      },
+    ]);
+    expect(e.airfare, 300);
+    expect(e.other, 45);
+    expect(e.known, 345);
+  });
+
+  test('extraItems 가 배열이 아니면 무시한다', () {
+    // 예전 줄에는 이 칸이 아예 없다.
+    expect(
+      TourExtras.of([
+        {'name': 'X'},
+      ]).isEmpty,
+      isTrue,
+    );
+    expect(
+      TourExtras.of([
+        {'name': 'X', 'extraItems': null},
+      ]).isEmpty,
+      isTrue,
+    );
+    expect(
+      TourExtras.of([
+        {'name': 'X', 'extraItems': 'oops'},
+      ]).isEmpty,
+      isTrue,
+    );
+  });
 }
 
 // ── 최종 비용 옆에 뭐라고 적을 것인가 (061) ─────────────────────────

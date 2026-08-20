@@ -70,3 +70,53 @@ test('어느 투어에서 나온 것인지 남긴다', () => {
   const e = tourExtras([iguazu]);
   assert.deepEqual([...new Set(e.items.map((i) => i.tour))], ['Iguazú']);
 });
+
+// ── 062: 담당자가 이름 붙여 더한 항목 ──────────────────────────────
+
+test('더한 항목도 합계에 들어간다', () => {
+  const e = tourExtras([
+    { name: 'Iguazú', extraItems: [{ name: '국립공원 입장료', cost: 35 }] },
+  ]);
+  assert.equal(e.other, 35);
+  assert.equal(e.known, 35);
+  assert.equal(e.items[0].label, '국립공원 입장료');
+  assert.equal(e.items[0].kind, null);
+});
+
+test('더한 항목의 금액도 비워 둘 수 있다', () => {
+  const e = tourExtras([
+    { name: 'X', extraItems: [{ name: '가이드 팁' }] },
+  ]);
+  assert.equal(e.known, 0);
+  assert.equal(e.unknown.length, 1);
+  assert.equal(e.unknown[0].label, '가이드 팁');
+});
+
+test('이름 없는 줄은 버린다', () => {
+  // 이름 없이 금액만 있으면 무엇에 쓰는 돈인지 알 수 없다.
+  const e = tourExtras([
+    { name: 'X', extraItems: [{ name: '  ', cost: 50 }, { cost: 10 }] },
+  ]);
+  assert.equal(e.isEmpty, true);
+  assert.equal(e.known, 0);
+});
+
+test('정해 둔 셋과 더한 항목이 함께 더해진다', () => {
+  const e = tourExtras([
+    {
+      name: 'Iguazú',
+      includesAirfare: false, estAirfareCost: 300,
+      extraItems: [{ name: '보트', cost: 45 }],
+    },
+  ]);
+  assert.equal(e.airfare, 300);
+  assert.equal(e.other, 45);
+  assert.equal(e.known, 345);
+});
+
+test('extraItems 가 배열이 아니면 무시한다', () => {
+  // 예전 줄에는 이 칸이 아예 없다.
+  assert.equal(tourExtras([{ name: 'X' }]).isEmpty, true);
+  assert.equal(tourExtras([{ name: 'X', extraItems: null }]).isEmpty, true);
+  assert.equal(tourExtras([{ name: 'X', extraItems: 'oops' }]).isEmpty, true);
+});

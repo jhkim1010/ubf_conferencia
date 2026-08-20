@@ -32,13 +32,31 @@ export function amountOf(v) {
 ///
 /// 안 적힌 것은 **포함으로 본다**(061). 060 과 같은 이유로, 잘못 잡았을 때
 /// 덜 받는 쪽이 더 받는 쪽보다 낫다.
+///
+/// 정해 둔 셋 뒤에, 담당자가 이름 붙여 더한 항목들이 온다(062) — 입장료,
+/// 가이드 팁 같은 것들. 그쪽은 `kind` 가 없고 `label` 을 갖는다.
 export function missingFrom(tour) {
   const out = [];
   for (const kind of EXTRA_KINDS) {
     const f = FIELD[kind];
     if (tour?.[f.includes] === false) {
-      out.push({ kind, amount: amountOf(tour?.[f.est]) });
+      out.push({ kind, label: null, amount: amountOf(tour?.[f.est]) });
     }
+  }
+  for (const it of extraItemsOf(tour)) out.push(it);
+  return out;
+}
+
+/// 담당자가 더한 항목들(062). 이름이 없는 줄은 버린다 — 이름 없이 금액만
+/// 있으면 참가자가 무엇에 쓰는 돈인지 알 수 없다.
+export function extraItemsOf(tour) {
+  const raw = tour?.extraItems;
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const it of raw) {
+    const label = String(it?.name ?? '').trim();
+    if (!label) continue;
+    out.push({ kind: null, label, amount: amountOf(it?.cost) });
   }
   return out;
 }
@@ -54,18 +72,24 @@ export function tourExtras(tours = []) {
   const items = [];
   const unknown = [];
 
+  // 담당자가 더한 항목은 정해 둔 셋 중 어디에도 안 들어간다. 따로 센다.
+  let other = 0;
+
   for (const t of tours ?? []) {
-    for (const { kind, amount } of missingFrom(t)) {
-      const entry = { kind, amount, tour: t?.name ?? null };
+    for (const { kind, label, amount } of missingFrom(t)) {
+      const entry = { kind, label, amount, tour: t?.name ?? null };
       items.push(entry);
       if (amount === null) unknown.push(entry);
-      else byKind[kind] += amount;
+      else if (kind) byKind[kind] += amount;
+      else other += amount;
     }
   }
 
-  const known = Math.round((byKind.meals + byKind.lodging + byKind.airfare) * 100) / 100;
+  const known =
+    Math.round((byKind.meals + byKind.lodging + byKind.airfare + other) * 100) / 100;
   return {
     ...byKind,
+    other: Math.round(other * 100) / 100,
     known,
     unknown,
     items,

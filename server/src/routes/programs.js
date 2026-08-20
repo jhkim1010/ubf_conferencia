@@ -17,6 +17,21 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // 예상 금액 한 칸. 빈 값·못 읽는 값은 null 이다 — 0 이 아니다.
 // 0 은 "더 들 것이 없다", null 은 "아직 모른다" 이고, 둘을 같게 두면
 // 모르는 것을 없는 것으로 알려 주게 된다(061).
+// 더한 항목들을 저장할 꼴로 다듬는다(062).
+//
+// **이름 없는 줄은 버린다.** 이름 없이 금액만 있으면 참가자가 무엇에 쓰는
+// 돈인지 알 수 없다. 금액은 num() 과 같은 규칙 — 빈 값은 0 이 아니라 null.
+function extraItems(v) {
+  if (!Array.isArray(v)) return [];
+  const out = [];
+  for (const it of v) {
+    const name = String(it?.name ?? '').trim();
+    if (!name) continue;
+    out.push({ name: name.slice(0, 80), cost: num(it?.cost) });
+  }
+  return out.slice(0, 20);
+}
+
 function num(v) {
   if (v === null || v === undefined || v === '') return null;
   const n = Number(v);
@@ -248,6 +263,7 @@ router.get('/:id', requireAuth, async (req, res) => {
             'estMealsCost', po.est_meals_cost,
             'estLodgingCost', po.est_lodging_cost,
             'estAirfareCost', po.est_airfare_cost,
+            'extraItems', COALESCE(po.extra_items, '[]'::jsonb),
             'brochureUrl', po.brochure_url,
             'planDocs', COALESCE(po.plan_docs, '[]'::jsonb),
             'videoUrl', po.video_url,
@@ -452,7 +468,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
     // 옵션 일괄 삽입
     if (Array.isArray(options2) && options2.length > 0) {
       await sql`
-        INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url, plan_docs, includes_lodging, includes_meals, includes_airfare, est_meals_cost, est_lodging_cost, est_airfare_cost)
+        INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url, plan_docs, includes_lodging, includes_meals, includes_airfare, est_meals_cost, est_lodging_cost, est_airfare_cost, extra_items)
         SELECT
           ${program.id},
           o->>'name',
@@ -476,7 +492,9 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
           -- 빈 문자열은 0 이 아니라 "아직 모른다" 다.
           NULLIF(o->>'estMealsCost', '')::numeric,
           NULLIF(o->>'estLodgingCost', '')::numeric,
-          NULLIF(o->>'estAirfareCost', '')::numeric
+          NULLIF(o->>'estAirfareCost', '')::numeric,
+          -- 담당자가 이름 붙여 더한 항목들(062).
+          COALESCE(o->'extraItems', '[]'::json)::jsonb
         FROM json_array_elements(${JSON.stringify(options2)}::json) AS o
       `;
     }
@@ -667,6 +685,7 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
             num(o.estMealsCost),
             num(o.estLodgingCost),
             num(o.estAirfareCost),
+            JSON.stringify(extraItems(o.extraItems)),
           ];
           const hasId = typeof o.id === 'string' && UUID_RE.test(o.id);
           if (hasId) {
@@ -679,8 +698,9 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
                  includes_lodging = $14, includes_meals = $15,
                  includes_airfare = $16, est_meals_cost = $17,
                  est_lodging_cost = $18, est_airfare_cost = $19,
+                 extra_items = $20::jsonb,
                  is_active = true
-               WHERE id = $20 AND program_id = $1`,
+               WHERE id = $21 AND program_id = $1`,
               [...vals, o.id],
             );
             if (r.rowCount > 0) continue;
@@ -692,9 +712,10 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
                 contact_name, photo_urls, capacity, signup_deadline,
                 brochure_url, video_url, plan_docs, includes_lodging,
                 includes_meals, includes_airfare,
-                est_meals_cost, est_lodging_cost, est_airfare_cost)
+                est_meals_cost, est_lodging_cost, est_airfare_cost,
+                extra_items)
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14,
-                     $15,$16,$17,$18,$19)`,
+                     $15,$16,$17,$18,$19,$20::jsonb)`,
             vals,
           );
         }

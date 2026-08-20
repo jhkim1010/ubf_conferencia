@@ -3570,4 +3570,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get regExtrasCoverage => '투어 값에 든 것';
+
+  @override
+  String get epTourAddItem => '항목 추가';
+
+  @override
+  String get epTourItemName => '무엇인지';
+
+  @override
+  String get epTourItemHint => '예: 국립공원 입장료';
+
+  @override
+  String get epTourItemRemove => '이 항목 지우기';
+
+  @override
+  String epTourItemsFull(int max) {
+    return '항목은 $max개까지';
+  }
 }

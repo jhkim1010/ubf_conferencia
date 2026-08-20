@@ -1092,5 +1092,10 @@
   "epTourYesMeals": "Refeições incluídas",
   "epTourYesLodging": "Hotel incluído",
   "epTourYesAirfare": "Passagem aérea incluída",
-  "regExtrasCoverage": "O que o preço do passeio cobre"
+  "regExtrasCoverage": "O que o preço do passeio cobre",
+  "epTourAddItem": "Adicionar um item",
+  "epTourItemName": "O que é",
+  "epTourItemHint": "ex. Entrada do parque",
+  "epTourItemRemove": "Remover este item",
+  "epTourItemsFull": "Até {max} itens"
 }
