@@ -201,6 +201,9 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
       RosterView.payments => l10n.colPayment,
       _ => l10n.colStatus,
     },
+    // 숙박비는 참가비와 섞지 않는다 — 호텔에 따로 내는 돈이라
+    // 합계에 더해 두면 담당자가 받을 금액을 잘못 세게 된다.
+    if (widget.view == RosterView.payments) l10n.colHotel,
     // 전체 명단에서는 입금도 한 칸으로 본다. 돈은 담당자가 가장 자주
     // 확인하는 것인데 지금까지 다른 표로 넘어가야 보였다.
     if (widget.view == RosterView.all) l10n.colPayment,
@@ -209,6 +212,7 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
   List<double> get _flex => switch (widget.view) {
     RosterView.meals => [0.5, 2.0, 1.3, 1.3, 0.9, 3.6],
     RosterView.all => [0.5, 2.2, 1.4, 1.5, 1.0, 1.2, 2.0],
+    RosterView.payments => [0.5, 2.0, 1.2, 1.3, 0.9, 1.9, 1.4],
     _ => [0.5, 2.2, 1.4, 1.5, 1.0, 2.0],
   };
 
@@ -305,8 +309,32 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
           ].where((s) => s.isNotEmpty).join(' / '),
           last(data[i]),
           if (widget.view == RosterView.all) _payCell(l10n, data[i], currency),
+          if (widget.view == RosterView.payments)
+            _hotelCell(l10n, data[i], currency),
         ],
     ];
+  }
+
+  /// 숙박비 한 칸: "3박 · 300".
+  ///
+  /// 수양회 기간 안에만 머무는 사람은 낼 것이 없으므로 빈 칸으로 둔다 —
+  /// 0 을 적어 두면 아직 안 센 것인지 낼 것이 없는 것인지 알 수 없다.
+  String _hotelCell(
+    AppLocalizations l10n,
+    Map<String, dynamic> r,
+    Currency currency,
+  ) {
+    final nights =
+        ((r['hotel_nights_before'] as num?)?.toInt() ?? 0) +
+        ((r['hotel_nights_after'] as num?)?.toInt() ?? 0);
+    if (nights <= 0) return '';
+    final cost = Money.parse(r['hotel_cost']) ?? 0;
+    return [
+      l10n.rosterHotelNights(nights),
+      // 호텔 등급을 아직 안 고른 사람은 박수만 나온다. 값을 모르는 것을
+      // 0 원으로 적으면 낼 것이 없다는 뜻이 되어 버린다.
+      if (cost > 0) currency.format(cost),
+    ].join(' · ');
   }
 
   /// 입금 한 칸: "부분납금 · 50 / 200".

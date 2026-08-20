@@ -3487,4 +3487,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get scopeNotYours => '이 분야는 맡지 않으셨습니다';
+
+  @override
+  String get epTourLodging => '투어 값에 숙박이 들어 있음';
+
+  @override
+  String get epTourLodgingOn => '투어 기간의 잠자리는 이미 값에 들어 있습니다';
+
+  @override
+  String get epTourLodgingOff => '그 기간은 호텔비로 따로 매깁니다';
+
+  @override
+  String get colHotel => '숙박비';
+
+  @override
+  String rosterHotelNights(int n) {
+    return '$n박';
+  }
 }

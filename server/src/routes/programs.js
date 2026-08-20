@@ -233,6 +233,7 @@ router.get('/:id', requireAuth, async (req, res) => {
             'photoUrls', po.photo_urls,
             'capacity', po.capacity,
             'signupDeadline', po.signup_deadline,
+            'includesLodging', po.includes_lodging,
             'brochureUrl', po.brochure_url,
             'planDocs', COALESCE(po.plan_docs, '[]'::jsonb),
             'videoUrl', po.video_url,
@@ -437,7 +438,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
     // 옵션 일괄 삽입
     if (Array.isArray(options2) && options2.length > 0) {
       await sql`
-        INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url, plan_docs)
+        INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url, plan_docs, includes_lodging)
         SELECT
           ${program.id},
           o->>'name',
@@ -451,7 +452,10 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
           NULLIF(o->>'signupDeadline', '')::timestamptz,
           NULLIF(o->>'brochureUrl', ''),
           NULLIF(o->>'videoUrl', ''),
-          COALESCE(o->'planDocs', '[]'::json)::jsonb
+          COALESCE(o->'planDocs', '[]'::json)::jsonb,
+          -- 이 투어 값에 잠자리가 들어 있는가(060). 안 보내면 들어 있는
+          -- 것으로 본다 — 더 받는 것보다 덜 받는 편이 낫다.
+          COALESCE((o->>'includesLodging')::boolean, true)
         FROM json_array_elements(${JSON.stringify(options2)}::json) AS o
       `;
     }
@@ -633,6 +637,8 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
             o.brochureUrl || null,
             o.videoUrl || null,
             JSON.stringify(o.planDocs ?? []),
+            // 안 보내면 숙박이 들어 있는 것으로 본다(060).
+            o.includesLodging !== false,
           ];
           const hasId = typeof o.id === 'string' && UUID_RE.test(o.id);
           if (hasId) {
@@ -642,8 +648,9 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
                  start_date = $5, end_date = $6, contact_name = $7,
                  photo_urls = $8, capacity = $9, signup_deadline = $10,
                  brochure_url = $11, video_url = $12, plan_docs = $13::jsonb,
+                 includes_lodging = $14,
                  is_active = true
-               WHERE id = $14 AND program_id = $1`,
+               WHERE id = $15 AND program_id = $1`,
               [...vals, o.id],
             );
             if (r.rowCount > 0) continue;
@@ -653,8 +660,8 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
             `INSERT INTO program_options
                (program_id, name, description, cost, start_date, end_date,
                 contact_name, photo_urls, capacity, signup_deadline,
-                brochure_url, video_url, plan_docs)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb)`,
+                brochure_url, video_url, plan_docs, includes_lodging)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14)`,
             vals,
           );
         }
@@ -929,6 +936,16 @@ router.get('/:id/registrations', requireAuth, requireProgramAdmin,
         -- 수양회 전후 숙박(028). 담당자가 호텔에 방을 잡으려면 등급과 박수를
         -- 함께 봐야 한다.
         r.hotel_option_key, r.hotel_nights_before, r.hotel_nights_after,
+        -- 숙박비는 **참가비와 따로** 본다(060). 합치면 "참가비가 왜 이렇게
+        -- 비싸냐" 는 물음에 담당자가 답할 수 없다.
+        (
+          SELECT COALESCE(
+            (COALESCE(r.hotel_nights_before,0) + COALESCE(r.hotel_nights_after,0))
+            * NULLIF((o->>'pricePerNight')::numeric, 0), 0)
+          FROM jsonb_array_elements(COALESCE(p.hotel_options, '[]'::jsonb)) o
+          WHERE o->>'key' = r.hotel_option_key
+          LIMIT 1
+        )::numeric AS hotel_cost,
         r.total_cost, r.submitted, r.created_at, r.updated_at,
         r.fee_tier,
         r.discount_requested, r.discount_option_key, r.discount_option_label,

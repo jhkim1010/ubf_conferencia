@@ -6509,6 +6509,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This area is not yours to look after'**
   String get scopeNotYours;
+
+  /// No description provided for @epTourLodging.
+  ///
+  /// In en, this message translates to:
+  /// **'Lodging is part of the tour price'**
+  String get epTourLodging;
+
+  /// No description provided for @epTourLodgingOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Nights during this tour are already paid for'**
+  String get epTourLodgingOn;
+
+  /// No description provided for @epTourLodgingOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Those nights are charged as hotel'**
+  String get epTourLodgingOff;
+
+  /// No description provided for @colHotel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotel'**
+  String get colHotel;
+
+  /// No description provided for @rosterHotelNights.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} night(s)'**
+  String rosterHotelNights(int n);
 }
 
 class _AppLocalizationsDelegate

@@ -3566,4 +3566,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scopeNotYours => 'This area is not yours to look after';
+
+  @override
+  String get epTourLodging => 'Lodging is part of the tour price';
+
+  @override
+  String get epTourLodgingOn => 'Nights during this tour are already paid for';
+
+  @override
+  String get epTourLodgingOff => 'Those nights are charged as hotel';
+
+  @override
+  String get colHotel => 'Hotel';
+
+  @override
+  String rosterHotelNights(int n) {
+    return '$n night(s)';
+  }
 }

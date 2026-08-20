@@ -1067,5 +1067,10 @@
   "scopeSaved": "Salvo. Vamos avisar.",
   "scopeNone": "Escolha ao menos uma área",
   "scopeEdit": "Mudar as áreas",
-  "scopeNotYours": "Essa área não está a seu cargo"
+  "scopeNotYours": "Essa área não está a seu cargo",
+  "epTourLodging": "A hospedagem está incluída no passeio",
+  "epTourLodgingOn": "As noites do passeio já estão pagas",
+  "epTourLodgingOff": "Essas noites são cobradas como hotel",
+  "colHotel": "Hotel",
+  "rosterHotelNights": "{n} noite(s)"
 }

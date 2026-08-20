@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,6 +12,19 @@ import 'money.dart';
 // 헤더·값은 관리자(호출자)의 현재 언어로 출력된다.
 class ExportService {
   // 공통 헤더 (현재 언어)
+  @visibleForTesting
+  static List<String> headersForTest(
+    AppLocalizations l10n, {
+    required bool withOptions,
+  }) => _headers(l10n, withOptions: withOptions);
+
+  @visibleForTesting
+  static List<dynamic> rowForTest(
+    AppLocalizations l10n,
+    Map<String, dynamic> r, {
+    required bool withOptions,
+  }) => _row(l10n, 0, r, withOptions: withOptions, currency: Currency.usd);
+
   static List<String> _headers(
     AppLocalizations l10n, {
     required bool withOptions,
@@ -32,6 +46,8 @@ class ExportService {
     if (withOptions) l10n.expOptions,
     l10n.summarySectionRoommate,
     l10n.expTotalCost,
+    // 숙박비는 합계에 섞지 않고 자기 칸을 갖는다 — 호텔에 따로 내는 돈이다.
+    l10n.colHotel,
     // 금액 옆에 통화를 따로 둔다. 숫자에 기호를 붙이면 엑셀에서 문자열이 되어
     // 합계를 낼 수 없고, 통화를 아예 빼면 수양회마다 단위가 달라 뜻이 없어진다.
     l10n.cpCurrency,
@@ -82,6 +98,13 @@ class ExportService {
       if (withOptions) '', // 옵션명은 별도 조인 필요
       r['roommate_preference'] ?? '',
       Money.parse(r['total_cost']) ?? 0,
+      // 박수가 0 이면 낼 것이 없다는 뜻이므로 빈 칸으로 둔다. 0 을 적으면
+      // 표에서 합계를 낼 때 아직 안 센 사람과 구별되지 않는다.
+      ((r['hotel_nights_before'] as num?)?.toInt() ?? 0) +
+                  ((r['hotel_nights_after'] as num?)?.toInt() ?? 0) >
+              0
+          ? (Money.parse(r['hotel_cost']) ?? 0)
+          : '',
       currency.code,
       r['payment_status'] ?? l10n.expUnregistered,
       r['submitted'] == true ? l10n.dashStatusDone : l10n.expIncomplete,

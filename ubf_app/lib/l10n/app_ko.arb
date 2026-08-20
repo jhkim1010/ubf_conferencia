@@ -1081,5 +1081,10 @@
   "scopeSaved": "저장했습니다. 그분에게 알려 드립니다.",
   "scopeNone": "분야를 하나는 고르십시오",
   "scopeEdit": "맡은 분야 바꾸기",
-  "scopeNotYours": "이 분야는 맡지 않으셨습니다"
+  "scopeNotYours": "이 분야는 맡지 않으셨습니다",
+  "epTourLodging": "투어 값에 숙박이 들어 있음",
+  "epTourLodgingOn": "투어 기간의 잠자리는 이미 값에 들어 있습니다",
+  "epTourLodgingOff": "그 기간은 호텔비로 따로 매깁니다",
+  "colHotel": "숙박비",
+  "rosterHotelNights": "{n}박"
 }

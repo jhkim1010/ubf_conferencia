@@ -44,7 +44,6 @@ class HotelStep extends ConsumerStatefulWidget {
 class _HotelStepState extends ConsumerState<HotelStep> {
   // 자동 계산을 화면당 한 번만 적용한다. 매 build 마다 밀어 넣으면
   // 참가자가 고친 값을 되돌려 버려 숫자를 바꿀 수 없게 된다.
-  bool _applied = false;
 
   HotelNights _compute(RegistrationFormState form) {
     final selected = form.selectedOptions.toSet();
@@ -53,8 +52,11 @@ class _HotelStepState extends ConsumerState<HotelStep> {
       departure: form.departureFlight?['scheduled_departure'],
       programStart: widget.programStart,
       programEnd: widget.programEnd,
+      // **숙박이 들어 있는 투어만** 기간을 늘려 준다(060). 당일치기 시내
+      // 투어는 그날 밤 잘 곳을 따로 잡아야 하므로 호텔이 필요하다.
       stayEndDates: widget.tours
           .where((t) => selected.contains(t['id']))
+          .where((t) => t['includesLodging'] != false)
           .map((t) => t['endDate'] ?? t['end_date']),
     );
   }
@@ -77,13 +79,13 @@ class _HotelStepState extends ConsumerState<HotelStep> {
 
     final computed = _compute(form);
 
-    // 아직 아무것도 안 적은 사람에게만 계산값을 넣어 준다. 이미 값이 있으면
-    // 본인이 정한 것일 수 있으므로 건드리지 않고 "다시 계산" 버튼만 준다.
-    if (!_applied &&
-        computed.hasAny &&
-        form.hotelNightsBefore == 0 &&
-        form.hotelNightsAfter == 0) {
-      _applied = true;
+    // **박수는 이제 서버가 정한다(060).** 저장할 때마다 비행 일정에서 다시
+    // 세므로, 손으로 적어 두어도 그 값은 남지 않는다. 그래서 화면에서도
+    // 계산값을 그대로 따라간다 — 고칠 수 있는 것처럼 보여 놓고 버리는 것이
+    // 가장 나쁘다.
+    if (computed.hasAny &&
+        (form.hotelNightsBefore != computed.beforeOrZero ||
+            form.hotelNightsAfter != computed.afterOrZero)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _apply(computed);
       });

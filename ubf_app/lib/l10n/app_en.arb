@@ -2357,5 +2357,17 @@
   "scopeNotYours": "This area is not yours to look after",
   "@scopeNotYours": {
     "description": "Shown if someone deep-links into an area they were not given"
+  },
+  "epTourLodging": "Lodging is part of the tour price",
+  "epTourLodgingOn": "Nights during this tour are already paid for",
+  "epTourLodgingOff": "Those nights are charged as hotel",
+  "colHotel": "Hotel",
+  "rosterHotelNights": "{n} night(s)",
+  "@rosterHotelNights": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   }
 }

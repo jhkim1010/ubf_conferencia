@@ -79,7 +79,10 @@ void main() {
     expect(c.read(registrationFormProvider(_programId)).hotelNightsBefore, 0);
   });
 
-  testWidgets('참가자가 고친 값을 자동 계산이 되돌리지 않는다', (tester) async {
+  testWidgets('박수는 비행 일정을 따라간다 — 손으로 고쳐도 되돌아온다', (tester) async {
+    // 060 이전에는 본인이 고친 값을 그대로 두었다. 이제는 저장할 때마다
+    // **서버가 비행 일정에서 다시 센다** — 화면에서만 고칠 수 있게 두면
+    // 고쳐 놓고도 저장되지 않아, 어느 쪽이 맞는지 아무도 모르게 된다.
     final c = _container();
     final n = c.read(registrationFormProvider(_programId).notifier);
     n.updateArrivalFlight({'scheduled_arrival': '2027-07-03'});
@@ -89,15 +92,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(c.read(registrationFormProvider(_programId)).hotelNightsBefore, 2);
 
-    // 본인이 1박으로 줄인다
+    // 손으로 1박으로 줄여 본다
     n.setHotelNights(before: 1);
     await tester.pumpAndSettle();
-    expect(c.read(registrationFormProvider(_programId)).hotelNightsBefore, 1);
 
-    // 다시 그려도 2박으로 돌아가지 않는다
-    await tester.pump();
-    await tester.pumpAndSettle();
-    expect(c.read(registrationFormProvider(_programId)).hotelNightsBefore, 1);
+    // 다시 그리면 비행 일정에서 나온 값으로 돌아온다
+    expect(c.read(registrationFormProvider(_programId)).hotelNightsBefore, 2);
   });
 
   testWidgets('등급을 고르면 예상 금액이 박수와 곱해져 나온다', (tester) async {

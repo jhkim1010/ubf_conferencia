@@ -1081,5 +1081,10 @@
   "scopeSaved": "Guardado. Le vamos a avisar.",
   "scopeNone": "Elija al menos un área",
   "scopeEdit": "Cambiar las áreas",
-  "scopeNotYours": "Esta área no está a su cargo"
+  "scopeNotYours": "Esta área no está a su cargo",
+  "epTourLodging": "El alojamiento está incluido en la excursión",
+  "epTourLodgingOn": "Las noches de la excursión ya están pagas",
+  "epTourLodgingOff": "Esas noches se cobran como hotel",
+  "colHotel": "Hotel",
+  "rosterHotelNights": "{n} noche(s)"
 }

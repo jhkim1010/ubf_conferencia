@@ -914,6 +914,12 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
   final _contactCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _capacityCtrl = TextEditingController();
+
+  /// 이 투어 값에 잠자리가 들어 있는가(060).
+  ///
+  /// 여러 날 가는 투어는 대개 들어 있다. 당일치기 시내 투어는 그날 밤 잘
+  /// 곳을 따로 잡아야 하고, 그때는 꺼 두어야 호텔비가 자동으로 붙는다.
+  bool _includesLodging = true;
   final _brochureCtrl = TextEditingController();
   final _videoCtrl = TextEditingController();
   DateTime? _startDate;
@@ -937,6 +943,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
       _contactCtrl.text = e['contactName'] as String? ?? '';
       _descCtrl.text = e['description'] as String? ?? '';
       if (e['capacity'] != null) _capacityCtrl.text = '${e['capacity']}';
+      _includesLodging = e['includesLodging'] != false;
       _brochureCtrl.text = e['brochureUrl'] as String? ?? '';
       _videoCtrl.text = e['videoUrl'] as String? ?? '';
       if (e['startDate'] != null) {
@@ -1228,6 +1235,20 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
                 alignment: Alignment.centerLeft,
               ),
             ),
+            const SizedBox(height: 4),
+            // 숙박이 들어 있는지(060). 안 들어 있으면 그 기간의 호텔비를
+            // 참가자에게 따로 매긴다.
+            SwitchListTile(
+              value: _includesLodging,
+              onChanged: (v) => setState(() => _includesLodging = v),
+              title: Text(l10n.epTourLodging),
+              subtitle: Text(
+                _includesLodging ? l10n.epTourLodgingOn : l10n.epTourLodgingOff,
+                style: const TextStyle(fontSize: 12),
+              ),
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
             const SizedBox(height: 12),
             // 정원 + 신청 마감
             Row(
@@ -1452,6 +1473,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               'planDocs': List<Map<String, dynamic>>.from(_planDocs),
               'capacity': int.tryParse(_capacityCtrl.text.trim()),
               'signupDeadline': _deadline?.toIso8601String(),
+              'includesLodging': _includesLodging,
               'brochureUrl': _brochureCtrl.text.trim(),
               'videoUrl': _videoCtrl.text.trim(),
             });

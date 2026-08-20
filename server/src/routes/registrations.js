@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
+import { hotelNights } from '../services/hotel_nights.js';
 import { resolveHotelChoice } from '../services/hotel.js';
 import { requireAuth } from '../middleware/auth.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
@@ -65,7 +66,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
   try {
     const [program] = await sql`
       SELECT id, name, fee_basic, fee_premium, discount_options, host_country,
-             hotel_options
+             hotel_options, start_date, end_date
       FROM programs WHERE id = ${req.params.programId} AND is_active = true
     `;
     if (!program) return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
@@ -182,6 +183,29 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     const approvedDiscount =
       discountStatus === 'approved' ? Number(discountAmount ?? 0) : 0;
 
+    // ── 수양회 전후 호텔 (060) ──────────────────────────────
+    //
+    // **박수를 묻지 않고 비행 일정에서 낸다.** 물어보면 둘이 어긋나고,
+    // 어긋나면 어느 쪽이 맞는지 아무도 모른다.
+    //
+    // 신청한 투어의 끝날까지는 이미 묵는 것으로 본다.
+    const tours = picked_ids.length
+      ? (
+          await sql`
+            SELECT end_date AS end, includes_lodging AS "includesLodging"
+              FROM program_options
+             WHERE program_id = ${req.params.programId}
+               AND id = ANY(${picked_ids}) AND end_date IS NOT NULL`
+        )
+      : [];
+    const stay = hotelNights({
+      start: program.start_date,
+      end: program.end_date,
+      arrival: arrivalFlight?.scheduled_arrival,
+      departure: departureFlight?.scheduled_departure,
+      tours,
+    });
+
     const computedTotal = Math.max(0, tierFee + optionsCost - approvedDiscount);
 
     const [registration] = await sql`
@@ -226,8 +250,8 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         ${studyLang},
         ${langList ?? (studyLang ? [studyLang] : [])},
         ${hotel.key},
-        ${hotel.nightsBefore},
-        ${hotel.nightsAfter},
+        ${stay.before},
+        ${stay.after},
         ${needsPickup !== false},
         ${pickupFrom?.toString().trim() || null}
       )
@@ -268,10 +292,11 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
           THEN EXCLUDED.study_languages ELSE registrations.study_languages END,
         hotel_option_key = CASE WHEN ${sentHotel}
           THEN EXCLUDED.hotel_option_key ELSE registrations.hotel_option_key END,
-        hotel_nights_before = CASE WHEN ${sentHotel}
-          THEN EXCLUDED.hotel_nights_before ELSE registrations.hotel_nights_before END,
-        hotel_nights_after = CASE WHEN ${sentHotel}
-          THEN EXCLUDED.hotel_nights_after ELSE registrations.hotel_nights_after END,
+        -- 박수는 사람이 적는 것이 아니라 비행 일정에서 나온다(060).
+        -- 임시저장이든 아니든 늘 다시 센다 — 비행편만 고쳐 저장했을 때
+        -- 박수가 옛것으로 남으면 숙박비가 조용히 틀린다.
+        hotel_nights_before = EXCLUDED.hotel_nights_before,
+        hotel_nights_after = EXCLUDED.hotel_nights_after,
         -- 픽업은 이 화면 말고 "내 이동 정보" 에서도 끄고 켠다. 안 보낸
         -- 저장이 그 설정을 덮으면 안 된다.
         needs_pickup = CASE WHEN ${needsPickup !== undefined}

@@ -3578,4 +3578,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get scopeNotYours => 'Esta área no está a su cargo';
+
+  @override
+  String get epTourLodging => 'El alojamiento está incluido en la excursión';
+
+  @override
+  String get epTourLodgingOn => 'Las noches de la excursión ya están pagas';
+
+  @override
+  String get epTourLodgingOff => 'Esas noches se cobran como hotel';
+
+  @override
+  String get colHotel => 'Hotel';
+
+  @override
+  String rosterHotelNights(int n) {
+    return '$n noche(s)';
+  }
 }
