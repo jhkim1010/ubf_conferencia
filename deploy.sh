@@ -68,6 +68,23 @@ if [ "$DO_API" = "1" ]; then
     --exclude node_modules --exclude .env --exclude '.env.*' \
     -e ssh "$ROOT/server/" "$HOST:$REMOTE/api/" || exit 1
 
+  # systemd 유닛도 함께 맞춘다.
+  #
+  # 지금까지는 보내지 않아서 저장소와 서버가 갈라져 있었다. 서버 유닛의
+  # ReadWritePaths 에 /srv/ubf/media 가 빠져 있었고, 그래서 사진·PDF 업로드가
+  # 500 으로 떨어졌다 — 저장소만 고쳐서는 아무 일도 일어나지 않는다.
+  # 달라졌을 때만 넣고 daemon-reload 한다.
+  if ! ssh -o BatchMode=yes "$HOST" 'cat /etc/systemd/system/ubf-api.service' 2>/dev/null \
+       | diff -q - "$ROOT/deploy/ubf-api.service" >/dev/null 2>&1; then
+    say "systemd 유닛 갱신"
+    scp -o BatchMode=yes "$ROOT/deploy/ubf-api.service" "$HOST:/tmp/ubf-api.service" >/dev/null || exit 1
+    ssh -o BatchMode=yes "$HOST" '
+      sudo cp /tmp/ubf-api.service /etc/systemd/system/ubf-api.service
+      rm -f /tmp/ubf-api.service
+      sudo systemctl daemon-reload
+    ' || exit 1
+  fi
+
   say "의존성 설치 + 재시작"
   ssh -o BatchMode=yes "$HOST" '
     cd /srv/ubf/api && npm ci --omit=dev --silent 2>&1 | tail -3

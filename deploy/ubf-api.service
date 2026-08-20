@@ -42,7 +42,11 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/srv/ubf/api
+# 올린 사진·PDF 는 /srv/ubf/media 에 쌓인다. ProtectSystem=strict 아래에서는
+# 여기 적지 않은 자리가 전부 읽기 전용이라, 새 갈래 폴더를 만들 수 없어
+# 업로드가 500 으로 떨어졌다 — mkdir 이 ENOENT 로 실패한다.
+# 8/3 에 만들어진 media/library 만 남아 있었던 것이 그 흔적이다.
+ReadWritePaths=/srv/ubf/api /srv/ubf/media
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true
