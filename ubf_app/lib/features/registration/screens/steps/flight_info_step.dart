@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/flight_api_service.dart';
+import '../../../../core/utils/flight_date_window.dart';
+import '../../../program/providers/program_provider.dart';
 import '../../providers/registration_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
 
@@ -95,8 +97,7 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
 
   Future<void> _pickDate() async {
     // 출발 스텝이면 도착일 +3일부터 선택 가능
-    DateTime firstDate = DateTime(2020);
-    DateTime initialDate = _selectedDate ?? DateTime.now();
+    DateTime? notBefore;
 
     if (!widget.isArrival) {
       final arrivalStr =
@@ -107,18 +108,28 @@ class _FlightInfoStepState extends ConsumerState<FlightInfoStep> {
       if (arrivalStr != null && arrivalStr.isNotEmpty) {
         final arrivalDate = DateTime.tryParse(arrivalStr);
         if (arrivalDate != null) {
-          firstDate = arrivalDate.add(const Duration(days: 3));
-          // initialDate가 firstDate보다 이전이면 조정
-          if (initialDate.isBefore(firstDate)) initialDate = firstDate;
+          notBefore = arrivalDate.add(const Duration(days: 3));
         }
       }
     }
 
+    // 수양회 기간을 중심으로 연다. 오늘 날짜로 열면 아무것도 고르지 않고
+    // 확인만 눌러도 오늘이 도착일이 되고, 이제 그것이 숙박비가 된다(060).
+    final program = ref.read(programByIdProvider(widget.programId)).valueOrNull;
+    final window = FlightDateWindow.of(
+      start: DateTime.tryParse('${program?['start_date'] ?? ''}'),
+      end: DateTime.tryParse('${program?['end_date'] ?? ''}'),
+      isArrival: widget.isArrival,
+      chosen: _selectedDate,
+      notBefore: notBefore,
+      fallback: DateTime.now(),
+    );
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: initialDate,
-      firstDate: firstDate,
-      lastDate: DateTime(2030),
+      initialDate: window.initial,
+      firstDate: window.first,
+      lastDate: window.last,
     );
     if (picked == null) return;
     setState(() {
