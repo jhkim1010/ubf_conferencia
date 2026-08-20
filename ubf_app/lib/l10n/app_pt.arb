@@ -1104,5 +1104,8 @@
   "epTourMinSignups": "Mínimo",
   "epTourMinSignupsHelp": "Pessoas necessárias para o passeio acontecer. 1 significa que sempre acontece.",
   "optionsNeedsMore": "São necessárias {min} pessoas — há {now}",
-  "optionsWillRun": "Vai acontecer ({now} inscritos)"
+  "optionsWillRun": "Vai acontecer ({now} inscritos)",
+  "flightStaleTitle": "Ainda há dados de voo salvos, embora você não venha de avião.",
+  "flightStaleClear": "Remover",
+  "flightStaleDone": "Dados de voo removidos"
 }

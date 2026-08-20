@@ -2439,5 +2439,8 @@
         "type": "int"
       }
     }
-  }
+  },
+  "flightStaleTitle": "You still have flight details saved, though you are not flying in.",
+  "flightStaleClear": "Remove them",
+  "flightStaleDone": "Flight details removed"
 }

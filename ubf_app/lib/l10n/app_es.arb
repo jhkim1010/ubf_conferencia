@@ -1118,5 +1118,8 @@
   "epTourMinSignups": "Mínimo",
   "epTourMinSignupsHelp": "Personas necesarias para que el tour se realice. 1 significa que siempre se realiza.",
   "optionsNeedsMore": "Se necesitan {min} personas — hay {now}",
-  "optionsWillRun": "Se realiza ({now} anotados)"
+  "optionsWillRun": "Se realiza ({now} anotados)",
+  "flightStaleTitle": "Todavía hay datos de vuelo guardados, aunque usted no llega en avión.",
+  "flightStaleClear": "Quitarlos",
+  "flightStaleDone": "Datos de vuelo quitados"
 }

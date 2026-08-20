@@ -1118,5 +1118,8 @@
   "epTourMinSignups": "최소 인원",
   "epTourMinSignupsHelp": "이 인원이 모여야 투어가 열립니다. 1 이면 언제나 열립니다.",
   "optionsNeedsMore": "{min}명이 모여야 열립니다 — 지금 {now}명",
-  "optionsWillRun": "열립니다 ({now}명 신청)"
+  "optionsWillRun": "열립니다 ({now}명 신청)",
+  "flightStaleTitle": "비행기로 오지 않으시는데 예전에 적어 두신 항공편이 남아 있습니다.",
+  "flightStaleClear": "지우기",
+  "flightStaleDone": "항공편을 지웠습니다"
 }

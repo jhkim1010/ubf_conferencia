@@ -3705,4 +3705,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String optionsWillRun(int now) {
     return 'Se realiza ($now anotados)';
   }
+
+  @override
+  String get flightStaleTitle =>
+      'Todavía hay datos de vuelo guardados, aunque usted no llega en avión.';
+
+  @override
+  String get flightStaleClear => 'Quitarlos';
+
+  @override
+  String get flightStaleDone => 'Datos de vuelo quitados';
 }

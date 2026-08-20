@@ -6731,6 +6731,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Going ahead ({now} signed up)'**
   String optionsWillRun(int now);
+
+  /// No description provided for @flightStaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You still have flight details saved, though you are not flying in.'**
+  String get flightStaleTitle;
+
+  /// No description provided for @flightStaleClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove them'**
+  String get flightStaleClear;
+
+  /// No description provided for @flightStaleDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Flight details removed'**
+  String get flightStaleDone;
 }
 
 class _AppLocalizationsDelegate

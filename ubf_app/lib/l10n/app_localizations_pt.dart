@@ -3706,4 +3706,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String optionsWillRun(int now) {
     return 'Vai acontecer ($now inscritos)';
   }
+
+  @override
+  String get flightStaleTitle =>
+      'Ainda há dados de voo salvos, embora você não venha de avião.';
+
+  @override
+  String get flightStaleClear => 'Remover';
+
+  @override
+  String get flightStaleDone => 'Dados de voo removidos';
 }

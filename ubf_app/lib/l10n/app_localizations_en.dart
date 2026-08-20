@@ -3693,4 +3693,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String optionsWillRun(int now) {
     return 'Going ahead ($now signed up)';
   }
+
+  @override
+  String get flightStaleTitle =>
+      'You still have flight details saved, though you are not flying in.';
+
+  @override
+  String get flightStaleClear => 'Remove them';
+
+  @override
+  String get flightStaleDone => 'Flight details removed';
 }

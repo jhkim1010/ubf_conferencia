@@ -328,6 +328,82 @@ class _RegistrationFlowScreenState
           ),
           body: Column(
             children: [
+              // 건너뛰었는데 예전 항공편이 남아 있는 경우(063).
+              //
+              // 화면을 안 보여 주니 본인은 그 값이 있는 줄도 모르는데,
+              // 숙박비는 그것으로 센다(060). 운영에서 셋이 그 상태였고
+              // 그중 하나는 등록한 날이 도착일이라 154박으로 잡혔다.
+              // **자동으로 지우지는 않는다** — 국내선을 타고 오시는 분의
+              // 값을 말없이 없애면 그것대로 잘못이다. 물어보고 지운다.
+              if (skipFlightSteps)
+                Consumer(
+                  builder: (context, ref2, _) {
+                    final form = ref2.watch(
+                      registrationFormProvider(widget.programId),
+                    );
+                    if (form.arrivalFlight == null &&
+                        form.departureFlight == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.orange[100]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 18,
+                            color: Colors.orange[800],
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.flightStaleTitle,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.orange[900],
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              ref2
+                                  .read(
+                                    registrationFormProvider(
+                                      widget.programId,
+                                    ).notifier,
+                                  )
+                                  .clearFlights();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(l10n.flightStaleDone)),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              l10n.flightStaleClear,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               // 항공편 스텝을 건너뛴 국내 참석자에게만 보이는 되살리기 배너.
               // 국토가 넓은 나라는 국내에서도 비행기로 오는 경우가 있다.
               if (skipFlightSteps)

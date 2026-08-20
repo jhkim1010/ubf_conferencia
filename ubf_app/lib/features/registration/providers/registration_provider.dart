@@ -91,6 +91,10 @@ class RegistrationFormState {
     int? age,
     Map<String, dynamic>? arrivalFlight,
     Map<String, dynamic>? departureFlight,
+
+    /// 항공편을 **지우려면** 이것을 쓴다. copyWith 는 `??` 로 합치므로
+    /// null 을 넘겨도 지워지지 않는다 — 안 넘긴 것과 구별되지 않는다.
+    bool clearFlights = false,
     String? foodRequirements,
     String? medicalConditions,
     bool? skipsBreakfast,
@@ -122,8 +126,12 @@ class RegistrationFormState {
       bibleName: bibleName ?? this.bibleName,
       gender: gender ?? this.gender,
       age: age ?? this.age,
-      arrivalFlight: arrivalFlight ?? this.arrivalFlight,
-      departureFlight: departureFlight ?? this.departureFlight,
+      arrivalFlight: clearFlights
+          ? null
+          : (arrivalFlight ?? this.arrivalFlight),
+      departureFlight: clearFlights
+          ? null
+          : (departureFlight ?? this.departureFlight),
       foodRequirements: foodRequirements ?? this.foodRequirements,
       medicalConditions: medicalConditions ?? this.medicalConditions,
       skipsBreakfast: skipsBreakfast ?? this.skipsBreakfast,
@@ -290,6 +298,14 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
 
   void updateDepartureFlight(Map<String, dynamic> flight) =>
       _update(state.copyWith(departureFlight: flight));
+
+  /// 항공편을 지운다 — 비행기로 오지 않는 분.
+  ///
+  /// 개최국에서 오시는 분은 항공편 화면 자체를 보지 않으므로(035), 예전에
+  /// 들어간 값이 남아 있어도 **본인이 지울 길이 없었다.** 그 값이 이제
+  /// 숙박비를 끌고 가므로(060), 지우는 자리가 있어야 한다. 운영 자료에
+  /// 실제로 셋이 그 상태였고, 그중 하나는 등록한 날이 도착일이었다.
+  void clearFlights() => _update(state.copyWith(clearFlights: true));
 
   void updateFood({
     String? foodRequirements,

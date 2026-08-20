@@ -3612,4 +3612,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String optionsWillRun(int now) {
     return '열립니다 ($now명 신청)';
   }
+
+  @override
+  String get flightStaleTitle => '비행기로 오지 않으시는데 예전에 적어 두신 항공편이 남아 있습니다.';
+
+  @override
+  String get flightStaleClear => '지우기';
+
+  @override
+  String get flightStaleDone => '항공편을 지웠습니다';
 }
