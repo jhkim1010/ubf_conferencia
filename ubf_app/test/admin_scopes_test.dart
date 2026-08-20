@@ -12,11 +12,15 @@ import 'package:mana/core/constants/admin_scopes.dart';
 void main() {
   test('서버가 아는 분야와 이름이 하나하나 같다', () {
     // 서버 소스를 그대로 읽는다. 목록을 여기 다시 적으면 그것도 두 벌이다.
-    final src = File('../server/src/middleware/auth.js').readAsStringSync();
-    final block = src.substring(
-      src.indexOf('export const SCOPES = ['),
-      src.indexOf('];', src.indexOf('export const SCOPES = [')),
-    );
+    final src = File(
+      '../server/src/services/admin_scopes.js',
+    ).readAsStringSync();
+    final at = src.indexOf('export const SCOPES = [');
+    // 파일이 옮겨 가면 indexOf 가 -1 을 주고 substring 이 터진다. 그때
+    // "목록이 다르다"가 아니라 "어디서 읽어야 하는지 모르겠다"고 말해야
+    // 고칠 곳을 바로 찾는다.
+    expect(at, isNonNegative, reason: '서버에서 SCOPES 목록을 못 찾았다');
+    final block = src.substring(at, src.indexOf('];', at));
     final server = RegExp(
       "'([a-z]+)'",
     ).allMatches(block).map((m) => m.group(1)!).toList();

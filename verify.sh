@@ -92,7 +92,13 @@ check_unit_tests() {
   command -v node >/dev/null || { skip unit-tests "node 없음"; return 0; }
   [ -d "$SRV/test" ] || { skip unit-tests "server/test 없음"; return 0; }
   local out
-  out="$(cd "$SRV" && node --test 2>&1)"
+  # **DATABASE_URL 을 지우고 돌린다.** db.js 는 불러오는 순간 그것을 요구하므로,
+  # DB 를 타는 모듈을 실수로 import 한 테스트는 .env 가 있는 개발자 기계에서만
+  # 통과하고 CI 에서는 늘 실패한다. 실제로 admin_scopes.test.js 가 그랬다.
+  # 여기서 지워 두면 로컬에서 먼저 걸린다.
+  # DOTENV_CONFIG_PATH 까지 돌려야 한다 — db.js 는 `import 'dotenv/config'` 로
+  # server/.env 를 읽으므로, 환경변수만 지우면 파일에서 그대로 다시 읽어 온다.
+  out="$(cd "$SRV" && env -u DATABASE_URL DOTENV_CONFIG_PATH=/dev/null node --test 2>&1)"
   if [ $? -eq 0 ]; then
     pass "unit-tests ($(printf '%s' "$out" | grep -oE '^# pass [0-9]+|^ℹ pass [0-9]+' | grep -oE '[0-9]+' | head -1) 통과)"
   else

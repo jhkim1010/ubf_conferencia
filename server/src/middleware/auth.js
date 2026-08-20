@@ -1,7 +1,51 @@
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
+// 분야 목록과 requireScope 는 DB 를 타지 않는 곳에 둔다(위 파일의 설명 참조).
+import { SCOPES, requireScope } from '../services/admin_scopes.js';
+
 import { sql } from '../db.js';
 import { pickLanguage } from '../services/messages.js';
+
+export { SCOPES, requireScope };
+
+export async function scopesFor(programId, userId, role) {
+  if (role === 'director') return null;
+  if (!userId) return false;
+  const [row] = await sql`
+    SELECT
+      -- 만든 사람은 분야를 나누지 않는다.
+      EXISTS (
+        SELECT 1 FROM programs p JOIN leaders l ON l.id = p.leader_id
+        WHERE p.id = ${programId} AND l.user_id = ${userId}
+      ) AS owner,
+      (SELECT pa.scopes FROM program_admins pa
+        WHERE pa.program_id = ${programId} AND pa.user_id = ${userId}) AS scopes,
+      EXISTS (
+        SELECT 1 FROM program_admins pa
+        WHERE pa.program_id = ${programId} AND pa.user_id = ${userId}
+      ) AS listed
+  `;
+  if (!row || (!row.owner && !row.listed)) return false;
+  if (row.owner) return null;
+  // 059 이전에 세운 사람은 scopes 가 비어 있다. 그때는 전부다 — 어제까지
+  // 되던 일이 오늘 안 되면 아무도 이유를 모른다.
+  const s = row.scopes;
+  if (!Array.isArray(s) || s.length === 0 || s.includes('all')) return null;
+  return s;
+}
+
+/// programId 를 URL 에서 못 얻는 곳에서 쓴다(입금 승인처럼 :id 가 다른 것일 때).
+export async function mayTouch(programId, user, scope) {
+  const mine = await scopesFor(programId, user?.userId, user?.role);
+  if (mine === false) return false;
+  if (mine === null) return true;
+  return mine.includes(scope);
+}
+
+/// 이 분야를 맡았는지 본다. requireProgramAdmin 뒤에 붙인다.
+///
+/// 여럿을 적으면 그중 하나만 맡아도 된다 — 대시보드처럼 여러 분야가
+/// 함께 보이는 화면이 있다.
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -245,69 +289,6 @@ export async function requireProgramOwner(req, res, next) {
 // 수양회를 만든 사람과 "모든 결정" 을 맡은 사람은 전부 본다. 나머지는
 // 맡은 분야만 본다.
 //
-// 이름은 화면이 갈라지는 자리를 따라 지었다. 라우트마다 requireScope 로
-// 어느 분야인지 적어야 하고, **안 적으면 검사가 막는다**(admin_scopes.test.js)
-// — 안 적힌 라우트는 조용히 아무나 통과하기 때문이다.
-export const SCOPES = [
-  'transport',    // 픽업·교통·배차
-  'rooms',        // 숙소
-  'groups',       // 말씀공부 조
-  'ledger',       // 장부·참가비
-  'service',      // 봉사
-  'registration', // 등록·명단
-  'comms',        // 공지·자료실
-  'schedule',     // 일정
-  'medical',      // 의료·안전(SOS·질병 정보)
-];
-
-/// 이 사람이 이 수양회에서 맡은 분야.
-/// null = 전부 · false = 권한 없음 · 배열 = 그 분야만.
-export async function scopesFor(programId, userId, role) {
-  if (role === 'director') return null;
-  if (!userId) return false;
-  const [row] = await sql`
-    SELECT
-      -- 만든 사람은 분야를 나누지 않는다.
-      EXISTS (
-        SELECT 1 FROM programs p JOIN leaders l ON l.id = p.leader_id
-        WHERE p.id = ${programId} AND l.user_id = ${userId}
-      ) AS owner,
-      (SELECT pa.scopes FROM program_admins pa
-        WHERE pa.program_id = ${programId} AND pa.user_id = ${userId}) AS scopes,
-      EXISTS (
-        SELECT 1 FROM program_admins pa
-        WHERE pa.program_id = ${programId} AND pa.user_id = ${userId}
-      ) AS listed
-  `;
-  if (!row || (!row.owner && !row.listed)) return false;
-  if (row.owner) return null;
-  // 059 이전에 세운 사람은 scopes 가 비어 있다. 그때는 전부다 — 어제까지
-  // 되던 일이 오늘 안 되면 아무도 이유를 모른다.
-  const s = row.scopes;
-  if (!Array.isArray(s) || s.length === 0 || s.includes('all')) return null;
-  return s;
-}
-
-/// programId 를 URL 에서 못 얻는 곳에서 쓴다(입금 승인처럼 :id 가 다른 것일 때).
-export async function mayTouch(programId, user, scope) {
-  const mine = await scopesFor(programId, user?.userId, user?.role);
-  if (mine === false) return false;
-  if (mine === null) return true;
-  return mine.includes(scope);
-}
-
-/// 이 분야를 맡았는지 본다. requireProgramAdmin 뒤에 붙인다.
-///
-/// 여럿을 적으면 그중 하나만 맡아도 된다 — 대시보드처럼 여러 분야가
-/// 함께 보이는 화면이 있다.
-export function requireScope(...needed) {
-  return (req, res, next) => {
-    const mine = req.adminScopes;
-    if (mine === null || mine === undefined) return next(); // 전부
-    if (needed.some((n) => mine.includes(n))) return next();
-    return res.status(403).json({ error: '이 분야는 맡지 않으셨습니다' });
-  };
-}
 
 // 특정 프로그램의 admin 이상 확인 미들웨어 팩토리
 // router.get('/route', requireAuth, requireProgramAdmin, handler) 형식으로 사용

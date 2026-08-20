@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { SCOPES, requireScope } from '../src/middleware/auth.js';
+import { SCOPES, requireScope } from '../src/services/admin_scopes.js';
 
 // 공동 관리자가 맡은 분야 (059)
 //
