@@ -1097,5 +1097,12 @@
   "epTourItemName": "O que é",
   "epTourItemHint": "ex. Entrada do parque",
   "epTourItemRemove": "Remover este item",
-  "epTourItemsFull": "Até {max} itens"
+  "epTourItemsFull": "Até {max} itens",
+  "optionsWhoSignedUp": "Quem se inscreveu",
+  "optionsNobodyYet": "Ainda ninguém — você seria o primeiro",
+  "optionsSignupsFailed": "Não foi possível carregar a lista",
+  "epTourMinSignups": "Mínimo",
+  "epTourMinSignupsHelp": "Pessoas necessárias para o passeio acontecer. 1 significa que sempre acontece.",
+  "optionsNeedsMore": "São necessárias {min} pessoas — há {now}",
+  "optionsWillRun": "Vai acontecer ({now} inscritos)"
 }

@@ -2415,5 +2415,29 @@
         "type": "int"
       }
     }
+  },
+  "optionsWhoSignedUp": "Who has signed up",
+  "optionsNobodyYet": "Nobody yet — you would be first",
+  "optionsSignupsFailed": "Could not load the list",
+  "epTourMinSignups": "Runs from",
+  "epTourMinSignupsHelp": "People needed for this tour to go ahead. 1 means it always runs.",
+  "optionsNeedsMore": "Needs {min} people to run — {now} so far",
+  "optionsWillRun": "Going ahead ({now} signed up)",
+  "@optionsNeedsMore": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "now": {
+        "type": "int"
+      }
+    }
+  },
+  "@optionsWillRun": {
+    "placeholders": {
+      "now": {
+        "type": "int"
+      }
+    }
   }
 }

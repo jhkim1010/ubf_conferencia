@@ -17,6 +17,14 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // 예상 금액 한 칸. 빈 값·못 읽는 값은 null 이다 — 0 이 아니다.
 // 0 은 "더 들 것이 없다", null 은 "아직 모른다" 이고, 둘을 같게 두면
 // 모르는 것을 없는 것으로 알려 주게 된다(061).
+// 몇 명이 모여야 투어가 열리는가(063). 못 읽으면 3 — 지금 쓰는 규칙이다.
+// 0 이나 음수를 받으면 "언제나 열린다" 가 되어 규칙이 조용히 사라지므로
+// 1 아래로는 내리지 않는다.
+function minSignups(v) {
+  const n = Number(String(v ?? '').trim());
+  return Number.isFinite(n) && n >= 1 ? Math.min(Math.round(n), 999) : 3;
+}
+
 // 더한 항목들을 저장할 꼴로 다듬는다(062).
 //
 // **이름 없는 줄은 버린다.** 이름 없이 금액만 있으면 참가자가 무엇에 쓰는
@@ -41,6 +49,7 @@ import {
   requireAuth,
   requireLeader,
   requireProgramAdmin,
+  scopesFor,
   requireScope,
   SCOPES,
 } from '../middleware/auth.js';
@@ -264,6 +273,7 @@ router.get('/:id', requireAuth, async (req, res) => {
             'estLodgingCost', po.est_lodging_cost,
             'estAirfareCost', po.est_airfare_cost,
             'extraItems', COALESCE(po.extra_items, '[]'::jsonb),
+            'minSignups', po.min_signups,
             'brochureUrl', po.brochure_url,
             'planDocs', COALESCE(po.plan_docs, '[]'::jsonb),
             'videoUrl', po.video_url,
@@ -468,7 +478,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
     // 옵션 일괄 삽입
     if (Array.isArray(options2) && options2.length > 0) {
       await sql`
-        INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url, plan_docs, includes_lodging, includes_meals, includes_airfare, est_meals_cost, est_lodging_cost, est_airfare_cost, extra_items)
+        INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url, plan_docs, includes_lodging, includes_meals, includes_airfare, est_meals_cost, est_lodging_cost, est_airfare_cost, extra_items, min_signups)
         SELECT
           ${program.id},
           o->>'name',
@@ -494,7 +504,9 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
           NULLIF(o->>'estLodgingCost', '')::numeric,
           NULLIF(o->>'estAirfareCost', '')::numeric,
           -- 담당자가 이름 붙여 더한 항목들(062).
-          COALESCE(o->'extraItems', '[]'::json)::jsonb
+          COALESCE(o->'extraItems', '[]'::json)::jsonb,
+          -- 몇 명이 모여야 열리는가(063). 안 보내면 3.
+          COALESCE(NULLIF(o->>'minSignups', '')::integer, 3)
         FROM json_array_elements(${JSON.stringify(options2)}::json) AS o
       `;
     }
@@ -686,6 +698,7 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
             num(o.estLodgingCost),
             num(o.estAirfareCost),
             JSON.stringify(extraItems(o.extraItems)),
+            minSignups(o.minSignups),
           ];
           const hasId = typeof o.id === 'string' && UUID_RE.test(o.id);
           if (hasId) {
@@ -698,9 +711,9 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
                  includes_lodging = $14, includes_meals = $15,
                  includes_airfare = $16, est_meals_cost = $17,
                  est_lodging_cost = $18, est_airfare_cost = $19,
-                 extra_items = $20::jsonb,
+                 extra_items = $20::jsonb, min_signups = $21,
                  is_active = true
-               WHERE id = $21 AND program_id = $1`,
+               WHERE id = $22 AND program_id = $1`,
               [...vals, o.id],
             );
             if (r.rowCount > 0) continue;
@@ -713,9 +726,9 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
                 brochure_url, video_url, plan_docs, includes_lodging,
                 includes_meals, includes_airfare,
                 est_meals_cost, est_lodging_cost, est_airfare_cost,
-                extra_items)
+                extra_items, min_signups)
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14,
-                     $15,$16,$17,$18,$19,$20::jsonb)`,
+                     $15,$16,$17,$18,$19,$20::jsonb,$21)`,
             vals,
           );
         }
@@ -1549,6 +1562,53 @@ router.get('/:id/meals', requireAuth, requireProgramAdmin,
     });
   } catch (err) {
     console.error('식사 제한 명단 조회 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// GET /programs/:id/option-signups - 투어별 신청자 (참가자도 볼 수 있음)
+//
+// 같이 갈 사람이 누구인지 알고 고르고 싶다는 요청이다. 위의 tour-signups 를
+// 그대로 열지 않는 이유는 그쪽이 **담당자용**이라서다 — 성별·나이·제출 여부가
+// 들어 있고, 그것은 남에게 보일 것이 아니다. 여기서는 이름과 소속만 준다.
+//
+// **그 수양회에 등록한 사람에게만** 보인다. 로그인만 하면 누구나 볼 수 있게
+// 하면, 이 서버는 사람 명단을 나눠 주는 곳이 된다.
+router.get('/:id/option-signups', requireAuth, async (req, res) => {
+  const programId = req.params.id;
+  try {
+    const [mine] = await sql`
+      SELECT 1 FROM registrations
+       WHERE program_id = ${programId} AND user_id = ${req.user.userId}
+       LIMIT 1
+    `;
+    const scopes = await scopesFor(programId, req.user.userId, req.user.role);
+    if (!mine && scopes === false) {
+      return res.status(403).json({ error: '이 수양회에 등록하신 분만 보실 수 있습니다' });
+    }
+
+    const rows = await sql`
+      SELECT o.id AS option_id, r.real_name, r.bible_name, r.country, r.branch
+        FROM program_options o
+        JOIN registrations r
+          ON r.program_id = ${programId} AND o.id = ANY(r.selected_options)
+       WHERE o.program_id = ${programId} AND o.is_active = true
+         AND counts_as_participant(r.real_name, r.submitted)
+       ORDER BY r.country NULLS LAST, r.real_name
+    `;
+
+    const byOption = {};
+    for (const p of rows) {
+      (byOption[p.option_id] ??= []).push({
+        realName: p.real_name,
+        bibleName: p.bible_name,
+        country: p.country,
+        branch: p.branch,
+      });
+    }
+    res.json(byOption);
+  } catch (err) {
+    console.error('투어 신청자 조회 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });

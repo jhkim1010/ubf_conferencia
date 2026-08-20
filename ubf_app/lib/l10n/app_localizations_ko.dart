@@ -3587,4 +3587,29 @@ class AppLocalizationsKo extends AppLocalizations {
   String epTourItemsFull(int max) {
     return '항목은 $max개까지';
   }
+
+  @override
+  String get optionsWhoSignedUp => '신청한 사람';
+
+  @override
+  String get optionsNobodyYet => '아직 없습니다 — 첫 번째가 되십니다';
+
+  @override
+  String get optionsSignupsFailed => '명단을 불러오지 못했습니다';
+
+  @override
+  String get epTourMinSignups => '최소 인원';
+
+  @override
+  String get epTourMinSignupsHelp => '이 인원이 모여야 투어가 열립니다. 1 이면 언제나 열립니다.';
+
+  @override
+  String optionsNeedsMore(int min, int now) {
+    return '$min명이 모여야 열립니다 — 지금 $now명';
+  }
+
+  @override
+  String optionsWillRun(int now) {
+    return '열립니다 ($now명 신청)';
+  }
 }

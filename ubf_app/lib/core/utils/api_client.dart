@@ -494,6 +494,20 @@ class ApiClient {
     return _decode(response) as Map<String, dynamic>?;
   }
 
+  /// 투어별 신청자 — 참가자도 볼 수 있는 쪽(062).
+  ///
+  /// 위의 getTourSignups 와 다르다. 그쪽은 담당자용이라 성별·나이·제출
+  /// 여부가 들어 있다. 여기서는 이름과 소속만 온다.
+  static Future<Map<String, dynamic>?> getOptionSignups(
+    String programId,
+  ) async {
+    final response = await http.get(
+      _uri('/programs/$programId/option-signups'),
+      headers: await _headers(),
+    );
+    return _decode(response) as Map<String, dynamic>?;
+  }
+
   // ── 봉사 담당자 배정 (039) ─────────────────────────────────
 
   /// 역할별 배정 현황 (담당자 전용).

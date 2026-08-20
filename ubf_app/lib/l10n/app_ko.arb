@@ -1111,5 +1111,12 @@
   "epTourItemName": "무엇인지",
   "epTourItemHint": "예: 국립공원 입장료",
   "epTourItemRemove": "이 항목 지우기",
-  "epTourItemsFull": "항목은 {max}개까지"
+  "epTourItemsFull": "항목은 {max}개까지",
+  "optionsWhoSignedUp": "신청한 사람",
+  "optionsNobodyYet": "아직 없습니다 — 첫 번째가 되십니다",
+  "optionsSignupsFailed": "명단을 불러오지 못했습니다",
+  "epTourMinSignups": "최소 인원",
+  "epTourMinSignupsHelp": "이 인원이 모여야 투어가 열립니다. 1 이면 언제나 열립니다.",
+  "optionsNeedsMore": "{min}명이 모여야 열립니다 — 지금 {now}명",
+  "optionsWillRun": "열립니다 ({now}명 신청)"
 }

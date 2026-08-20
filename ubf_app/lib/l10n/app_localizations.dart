@@ -6689,6 +6689,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Up to {max} items'**
   String epTourItemsFull(int max);
+
+  /// No description provided for @optionsWhoSignedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Who has signed up'**
+  String get optionsWhoSignedUp;
+
+  /// No description provided for @optionsNobodyYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody yet — you would be first'**
+  String get optionsNobodyYet;
+
+  /// No description provided for @optionsSignupsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the list'**
+  String get optionsSignupsFailed;
+
+  /// No description provided for @epTourMinSignups.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs from'**
+  String get epTourMinSignups;
+
+  /// No description provided for @epTourMinSignupsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'People needed for this tour to go ahead. 1 means it always runs.'**
+  String get epTourMinSignupsHelp;
+
+  /// No description provided for @optionsNeedsMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs {min} people to run — {now} so far'**
+  String optionsNeedsMore(int min, int now);
+
+  /// No description provided for @optionsWillRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Going ahead ({now} signed up)'**
+  String optionsWillRun(int now);
 }
 
 class _AppLocalizationsDelegate

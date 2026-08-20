@@ -3667,4 +3667,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String epTourItemsFull(int max) {
     return 'Up to $max items';
   }
+
+  @override
+  String get optionsWhoSignedUp => 'Who has signed up';
+
+  @override
+  String get optionsNobodyYet => 'Nobody yet — you would be first';
+
+  @override
+  String get optionsSignupsFailed => 'Could not load the list';
+
+  @override
+  String get epTourMinSignups => 'Runs from';
+
+  @override
+  String get epTourMinSignupsHelp =>
+      'People needed for this tour to go ahead. 1 means it always runs.';
+
+  @override
+  String optionsNeedsMore(int min, int now) {
+    return 'Needs $min people to run — $now so far';
+  }
+
+  @override
+  String optionsWillRun(int now) {
+    return 'Going ahead ($now signed up)';
+  }
 }

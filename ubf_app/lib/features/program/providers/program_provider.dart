@@ -31,6 +31,15 @@ final programTourSignupsProvider = FutureProvider.autoDispose
       (_, programId) => ApiClient.getTourSignups(programId),
     );
 
+/// 투어별 신청자 — 참가자가 보는 쪽(062).
+///
+/// 투어를 고를 때만 필요하므로 프로그램 본문에 얹지 않고 따로 부른다.
+/// 얹으면 투어를 안 보는 사람까지 남의 이름을 받아 간다.
+final optionSignupsProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>?, String>(
+      (_, programId) => ApiClient.getOptionSignups(programId),
+    );
+
 final programMealsProvider = FutureProvider.autoDispose
     .family<Map<String, dynamic>?, String>(
       (_, programId) => ApiClient.getProgramMeals(programId),

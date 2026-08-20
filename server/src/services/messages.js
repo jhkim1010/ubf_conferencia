@@ -562,6 +562,11 @@ const T = {
     en: 'Please enter your name',
     pt: 'Escreva seu nome',
   },
+  '이 수양회에 등록하신 분만 보실 수 있습니다': {
+    es: 'Solo pueden verlo quienes se inscribieron en este retiro',
+    en: 'Only people registered for this retreat can see this',
+    pt: 'Somente quem se inscreveu neste retiro pode ver isto',
+  },
   '이 분야는 맡지 않으셨습니다': {
     es: 'Esta área no está a su cargo',
     en: 'That area is not yours to look after',

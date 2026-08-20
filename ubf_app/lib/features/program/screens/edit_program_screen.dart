@@ -938,6 +938,9 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
   _extraItems = [];
 
   static const _maxExtraItems = 20;
+
+  /// 몇 명이 모여야 이 투어가 열리는가(063). 기본 3.
+  final _minSignupsCtrl = TextEditingController(text: '3');
   final _brochureCtrl = TextEditingController();
   final _videoCtrl = TextEditingController();
   DateTime? _startDate;
@@ -967,6 +970,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
       _estMealsCtrl.text = _money(e['estMealsCost']);
       _estLodgingCtrl.text = _money(e['estLodgingCost']);
       _estAirfareCtrl.text = _money(e['estAirfareCost']);
+      _minSignupsCtrl.text = '${e['minSignups'] ?? 3}';
       for (final it in (e['extraItems'] as List? ?? const [])) {
         if (it is! Map) continue;
         _extraItems.add((
@@ -1008,6 +1012,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
     _estMealsCtrl.dispose();
     _estLodgingCtrl.dispose();
     _estAirfareCtrl.dispose();
+    _minSignupsCtrl.dispose();
     for (final it in _extraItems) {
       it.name.dispose();
       it.cost.dispose();
@@ -1275,6 +1280,21 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
             const SizedBox(height: 4),
             // 투어 값에 안 들어 있는 것과, 그때 더 들 것 같은 돈(061).
             // 숙박은 060 의 값을 뒤집어 보인다 — 저장은 한 곳이다.
+            // 몇 명이 모여야 열리는가(063). 참가자는 고르는 자리에서 이것을
+            // 보고, 모자라면 아직 안 열린다는 것을 미리 안다.
+            TextField(
+              controller: _minSignupsCtrl,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: l10n.epTourMinSignups,
+                helperText: l10n.epTourMinSignupsHelp,
+                helperMaxLines: 2,
+                isDense: true,
+                border: const OutlineInputBorder(),
+              ),
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 12),
             Text(
               l10n.epTourNotIncluded,
               style: Theme.of(context).textTheme.labelLarge,
@@ -1617,6 +1637,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
                   ? null
                   : _estAirfareCtrl.text.trim(),
               // 이름 없는 줄은 보내지 않는다 — 무엇에 쓰는 돈인지 알 수 없다.
+              'minSignups': _minSignupsCtrl.text.trim(),
               'extraItems': [
                 for (final it in _extraItems)
                   if (it.name.text.trim().isNotEmpty)

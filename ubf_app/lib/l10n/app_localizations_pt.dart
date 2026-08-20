@@ -3680,4 +3680,30 @@ class AppLocalizationsPt extends AppLocalizations {
   String epTourItemsFull(int max) {
     return 'Até $max itens';
   }
+
+  @override
+  String get optionsWhoSignedUp => 'Quem se inscreveu';
+
+  @override
+  String get optionsNobodyYet => 'Ainda ninguém — você seria o primeiro';
+
+  @override
+  String get optionsSignupsFailed => 'Não foi possível carregar a lista';
+
+  @override
+  String get epTourMinSignups => 'Mínimo';
+
+  @override
+  String get epTourMinSignupsHelp =>
+      'Pessoas necessárias para o passeio acontecer. 1 significa que sempre acontece.';
+
+  @override
+  String optionsNeedsMore(int min, int now) {
+    return 'São necessárias $min pessoas — há $now';
+  }
+
+  @override
+  String optionsWillRun(int now) {
+    return 'Vai acontecer ($now inscritos)';
+  }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../program/providers/program_provider.dart';
+import '../../../../core/constants/world_countries.dart';
 import '../../../../core/utils/tour_extras.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -222,6 +224,49 @@ class _TourCard extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
               child: _Coverage(option: option, currency: currency),
+            ),
+            // 셋(또는 담당자가 정한 수)이 모여야 열린다(063). 신청하기 전에
+            // 보여야 한다 — 신청하고 나서 안 열린다는 말을 들으면 늦다.
+            Builder(
+              builder: (context) {
+                final min = Money.parse(option['minSignups'])?.toInt() ?? 3;
+                if (min <= 1) return const SizedBox.shrink();
+                final short = signupCount < min;
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Row(
+                    children: [
+                      Icon(
+                        short
+                            ? Icons.hourglass_empty
+                            : Icons.check_circle_outline,
+                        size: 15,
+                        color: short ? Colors.orange[800] : Colors.green[700],
+                      ),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          short
+                              ? l10n.optionsNeedsMore(min, signupCount)
+                              : l10n.optionsWillRun(signupCount),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: short
+                                ? Colors.orange[900]
+                                : Colors.green[800],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            // 누가 신청했는지(062). 접어 둔다 — 투어마다 펼쳐 두면 카드가
+            // 길어져 정작 값과 일정이 화면 밖으로 밀린다.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+              child: _SignedUp(programId: programId, optionId: optionId),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
@@ -549,5 +594,92 @@ class _Coverage extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// "신청한 사람 (7)" — 눌러서 펼치면 이름이 나온다.
+///
+/// 이름과 소속만 보인다. 성별·나이·제출 여부는 담당자가 보는 것이고,
+/// 같이 갈 사람을 알아보는 데는 필요하지 않다.
+class _SignedUp extends ConsumerWidget {
+  const _SignedUp({required this.programId, required this.optionId});
+
+  final String programId;
+  final String optionId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final asyncAll = ref.watch(optionSignupsProvider(programId));
+
+    return asyncAll.when(
+      // 못 불러왔다고 카드를 망가뜨리지 않는다 — 투어를 고르는 일이 먼저다.
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Text(
+          l10n.optionsSignupsFailed,
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        ),
+      ),
+      data: (all) {
+        final people = ((all?[optionId] as List?) ?? const [])
+            .whereType<Map>()
+            .toList();
+        return Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 8),
+            childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            dense: true,
+            leading: const Icon(Icons.groups_outlined, size: 18),
+            title: Text(
+              '${l10n.optionsWhoSignedUp} (${people.length})',
+              style: const TextStyle(fontSize: 13),
+            ),
+            children: [
+              if (people.isEmpty)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.optionsNobodyYet,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    for (final p in people)
+                      Chip(
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        label: Text(
+                          _who(p),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// 이 공동체에서 서로 부르는 이름이 먼저다(049). 소속은 뒤에 붙인다 —
+  /// 같은 이름이 여럿일 때 그것으로 가린다.
+  static String _who(Map p) {
+    final bible = '${p['bibleName'] ?? ''}'.trim();
+    final legal = '${p['realName'] ?? ''}'.trim();
+    final name = bible.isNotEmpty ? bible : legal;
+    final where = [
+      WorldCountries.display(p['country'] as String?) ?? '',
+      '${p['branch'] ?? ''}'.trim(),
+    ].where((e) => e.isNotEmpty).join(' · ');
+    if (name.isEmpty) return where;
+    return where.isEmpty ? name : '$name · $where';
   }
 }
