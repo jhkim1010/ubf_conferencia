@@ -3651,4 +3651,16 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get summaryExtrasHelp =>
       'São estimativas e não fazem parte da taxa que você nos envia. Traga esse dinheiro à parte.';
+
+  @override
+  String get epTourYesMeals => 'Refeições incluídas';
+
+  @override
+  String get epTourYesLodging => 'Hotel incluído';
+
+  @override
+  String get epTourYesAirfare => 'Passagem aérea incluída';
+
+  @override
+  String get regExtrasCoverage => 'O que o preço do passeio cobre';
 }

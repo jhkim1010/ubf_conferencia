@@ -1102,5 +1102,9 @@
   "summaryPlusEstimated": "이 밖에 따로 내실 돈이 약 {amount} 더 있습니다",
   "summaryPlusEstimatedSome": "이 밖에 따로 내실 돈이 약 {amount} 있고, 아직 미정인 것도 있습니다",
   "summaryPlusUnknownOnly": "이 밖에 따로 내실 돈이 있습니다 — 금액은 아직 미정입니다",
-  "summaryExtrasHelp": "예상 금액이며 저희에게 내시는 참가비가 아닙니다. 그만큼 따로 준비해 오십시오."
+  "summaryExtrasHelp": "예상 금액이며 저희에게 내시는 참가비가 아닙니다. 그만큼 따로 준비해 오십시오.",
+  "epTourYesMeals": "식사 포함",
+  "epTourYesLodging": "호텔 숙박비 포함",
+  "epTourYesAirfare": "비행기표 포함",
+  "regExtrasCoverage": "투어 값에 든 것"
 }

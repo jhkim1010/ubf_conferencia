@@ -2399,5 +2399,9 @@
     }
   },
   "summaryPlusUnknownOnly": "There is more to pay separately — the amount is not confirmed yet",
-  "summaryExtrasHelp": "Estimates only, and not part of the fee you send us. Bring enough for these."
+  "summaryExtrasHelp": "Estimates only, and not part of the fee you send us. Bring enough for these.",
+  "epTourYesMeals": "Meals included",
+  "epTourYesLodging": "Hotel nights included",
+  "epTourYesAirfare": "Airfare included",
+  "regExtrasCoverage": "What the tour price covers"
 }

@@ -1088,5 +1088,9 @@
   "summaryPlusEstimated": "Além disso, cerca de {amount} que você paga à parte",
   "summaryPlusEstimatedSome": "Além disso, cerca de {amount} à parte, e ainda há valores a confirmar",
   "summaryPlusUnknownOnly": "Há mais gastos à parte — o valor ainda não foi confirmado",
-  "summaryExtrasHelp": "São estimativas e não fazem parte da taxa que você nos envia. Traga esse dinheiro à parte."
+  "summaryExtrasHelp": "São estimativas e não fazem parte da taxa que você nos envia. Traga esse dinheiro à parte.",
+  "epTourYesMeals": "Refeições incluídas",
+  "epTourYesLodging": "Hotel incluído",
+  "epTourYesAirfare": "Passagem aérea incluída",
+  "regExtrasCoverage": "O que o preço do passeio cobre"
 }

@@ -1273,6 +1273,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               amount: _estMealsCtrl,
               hint: l10n.epTourEstimate,
               unknownHint: l10n.epTourEstimateUnknown,
+              includedLabel: l10n.epTourYesMeals,
               onChanged: (v) => setState(() => _includesMeals = !v),
             ),
             _NotIncludedRow(
@@ -1281,6 +1282,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               amount: _estLodgingCtrl,
               hint: l10n.epTourEstimate,
               unknownHint: l10n.epTourEstimateUnknown,
+              includedLabel: l10n.epTourYesLodging,
               onChanged: (v) => setState(() => _includesLodging = !v),
             ),
             _NotIncludedRow(
@@ -1289,6 +1291,7 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               amount: _estAirfareCtrl,
               hint: l10n.epTourEstimate,
               unknownHint: l10n.epTourEstimateUnknown,
+              includedLabel: l10n.epTourYesAirfare,
               onChanged: (v) => setState(() => _includesAirfare = !v),
             ),
             const SizedBox(height: 12),
@@ -1559,6 +1562,7 @@ class _NotIncludedRow extends StatelessWidget {
     required this.amount,
     required this.hint,
     required this.unknownHint,
+    required this.includedLabel,
     required this.onChanged,
   });
 
@@ -1567,6 +1571,12 @@ class _NotIncludedRow extends StatelessWidget {
   final TextEditingController amount;
   final String hint;
   final String unknownHint;
+
+  /// 체크가 없을 때 그 자리에 적을 말 — "식사 포함".
+  ///
+  /// 잠긴 빈 칸만 두면 "아직 금액을 안 정한 것" 처럼 보인다. 실제로는
+  /// 정할 것이 없다는 뜻이므로, 그렇다고 말해 주어야 한다.
+  final String includedLabel;
   final ValueChanged<bool> onChanged;
 
   @override
@@ -1595,19 +1605,40 @@ class _NotIncludedRow extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           flex: 4,
-          child: TextField(
-            controller: amount,
-            enabled: checked,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: hint,
-              // 비워 두면 0 이 아니라 "미정" 이라는 것을 여기서 말해 준다.
-              hintText: checked ? unknownHint : null,
-              isDense: true,
-              border: const OutlineInputBorder(),
-            ),
-            style: const TextStyle(fontSize: 14),
-          ),
+          child: checked
+              ? TextField(
+                  controller: amount,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: hint,
+                    // 비워 두면 0 이 아니라 "미정" 이라는 것을 여기서 말한다.
+                    hintText: unknownHint,
+                    isDense: true,
+                    border: const OutlineInputBorder(),
+                  ),
+                  style: const TextStyle(fontSize: 14),
+                )
+              : Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle_outline,
+                      size: 16,
+                      color: Colors.green[700],
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        includedLabel,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.green[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ],
     );

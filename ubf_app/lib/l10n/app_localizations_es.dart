@@ -3650,4 +3650,16 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get summaryExtrasHelp =>
       'Son estimaciones y no forman parte de la cuota que nos envía. Traiga ese dinero aparte.';
+
+  @override
+  String get epTourYesMeals => 'Comidas incluidas';
+
+  @override
+  String get epTourYesLodging => 'Hotel incluido';
+
+  @override
+  String get epTourYesAirfare => 'Pasaje aéreo incluido';
+
+  @override
+  String get regExtrasCoverage => 'Qué cubre el precio del tour';
 }

@@ -3558,4 +3558,16 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get summaryExtrasHelp =>
       '예상 금액이며 저희에게 내시는 참가비가 아닙니다. 그만큼 따로 준비해 오십시오.';
+
+  @override
+  String get epTourYesMeals => '식사 포함';
+
+  @override
+  String get epTourYesLodging => '호텔 숙박비 포함';
+
+  @override
+  String get epTourYesAirfare => '비행기표 포함';
+
+  @override
+  String get regExtrasCoverage => '투어 값에 든 것';
 }

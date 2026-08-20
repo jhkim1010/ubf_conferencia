@@ -6635,6 +6635,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Estimates only, and not part of the fee you send us. Bring enough for these.'**
   String get summaryExtrasHelp;
+
+  /// No description provided for @epTourYesMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'Meals included'**
+  String get epTourYesMeals;
+
+  /// No description provided for @epTourYesLodging.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotel nights included'**
+  String get epTourYesLodging;
+
+  /// No description provided for @epTourYesAirfare.
+  ///
+  /// In en, this message translates to:
+  /// **'Airfare included'**
+  String get epTourYesAirfare;
+
+  /// No description provided for @regExtrasCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'What the tour price covers'**
+  String get regExtrasCoverage;
 }
 
 class _AppLocalizationsDelegate

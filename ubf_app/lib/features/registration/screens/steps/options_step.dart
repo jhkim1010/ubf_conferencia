@@ -216,16 +216,13 @@ class _TourCard extends ConsumerWidget {
               value: isSelected,
               onChanged: locked ? null : (_) => toggle(),
             ),
-            // 이 투어 값에 안 들어 있는 것(061). **고르기 전에** 보여야 한다 —
-            // 값만 보고 고른 뒤에 항공권이 따로라는 것을 알면 늦다.
-            if (TourExtras.of([option]).items.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                child: _NotIncluded(
-                  extras: TourExtras.of([option]),
-                  currency: currency,
-                ),
-              ),
+            // 이 투어 값에 무엇이 들었고 무엇이 안 들었는지(061).
+            // **고르기 전에** 보여야 한다 — 값만 보고 고른 뒤에 항공권이
+            // 따로라는 것을 알면 늦다.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: _Coverage(option: option, currency: currency),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
               child: Column(
@@ -432,23 +429,36 @@ class _StatusChip extends StatelessWidget {
   }
 }
 
-/// "투어 값에 안 들어 있는 것 — 식사 US$120 · 비행기표 미정" 한 덩이.
+/// 투어 값에 든 것과 안 든 것을 셋 다 적는다.
 ///
-/// 금액을 모르는 것은 **빼지 않고 "미정" 으로 적는다.** 빼 버리면 참가자는
+/// 안 든 것만 적으면 나머지가 어떤지 읽는 사람이 알 수 없다 — 담당자가
+/// 아직 안 정한 것인지, 값에 들어 있는 것인지 구별이 안 간다. 그래서
+/// **포함인 것도 포함이라고 말한다.**
+///
+/// 금액을 모르는 것은 빼지 않고 "미정" 으로 적는다. 빼 버리면 참가자는
 /// 그것이 값에 들어 있는 줄 안다.
-class _NotIncluded extends StatelessWidget {
-  const _NotIncluded({required this.extras, required this.currency});
+class _Coverage extends StatelessWidget {
+  const _Coverage({required this.option, required this.currency});
 
-  final TourExtras extras;
+  final Map<String, dynamic> option;
   final Currency currency;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    String name(ExtraKind k) => switch (k) {
-      ExtraKind.meals => l10n.regExtrasMeals,
-      ExtraKind.lodging => l10n.regExtrasLodging,
-      ExtraKind.airfare => l10n.regExtrasAirfare,
+    final missing = {
+      for (final i in TourExtras.of([option]).items) i.kind: i,
+    };
+
+    String out(ExtraKind k) => switch (k) {
+      ExtraKind.meals => l10n.epTourNoMeals,
+      ExtraKind.lodging => l10n.epTourNoLodging,
+      ExtraKind.airfare => l10n.epTourNoAirfare,
+    };
+    String inc(ExtraKind k) => switch (k) {
+      ExtraKind.meals => l10n.epTourYesMeals,
+      ExtraKind.lodging => l10n.epTourYesLodging,
+      ExtraKind.airfare => l10n.epTourYesAirfare,
     };
 
     return Container(
@@ -462,22 +472,45 @@ class _NotIncluded extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.regExtrasTitle,
+            l10n.regExtrasCoverage,
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 2),
-          Wrap(
-            spacing: 10,
-            runSpacing: 2,
-            children: [
-              for (final i in extras.items)
-                Text(
-                  '${name(i.kind)} '
-                  '${i.amount == null ? l10n.regExtrasTbd : currency.format(i.amount!)}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-            ],
-          ),
+          const SizedBox(height: 4),
+          for (final kind in ExtraKind.values)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Row(
+                children: [
+                  Icon(
+                    missing.containsKey(kind)
+                        ? Icons.remove_circle_outline
+                        : Icons.check_circle_outline,
+                    size: 14,
+                    color: missing.containsKey(kind)
+                        ? Colors.orange[800]
+                        : Colors.green[700],
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      missing.containsKey(kind) ? out(kind) : inc(kind),
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  if (missing.containsKey(kind))
+                    Text(
+                      missing[kind]!.amount == null
+                          ? l10n.regExtrasTbd
+                          : currency.format(missing[kind]!.amount!),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.orange[900],
+                      ),
+                    ),
+                ],
+              ),
+            ),
         ],
       ),
     );

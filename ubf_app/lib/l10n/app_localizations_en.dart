@@ -3638,4 +3638,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get summaryExtrasHelp =>
       'Estimates only, and not part of the fee you send us. Bring enough for these.';
+
+  @override
+  String get epTourYesMeals => 'Meals included';
+
+  @override
+  String get epTourYesLodging => 'Hotel nights included';
+
+  @override
+  String get epTourYesAirfare => 'Airfare included';
+
+  @override
+  String get regExtrasCoverage => 'What the tour price covers';
 }
