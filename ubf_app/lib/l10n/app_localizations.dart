@@ -6539,6 +6539,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{n} night(s)'**
   String rosterHotelNights(int n);
+
+  /// No description provided for @epTourNotIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not covered by the tour price'**
+  String get epTourNotIncluded;
+
+  /// No description provided for @epTourNotIncludedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Tick what participants pay for separately, and roughly how much. Leave the amount blank if you do not know it yet — blank means \"to be confirmed\", not \"nothing\".'**
+  String get epTourNotIncludedHelp;
+
+  /// No description provided for @epTourNoMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'Meals not included'**
+  String get epTourNoMeals;
+
+  /// No description provided for @epTourNoLodging.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotel nights not included'**
+  String get epTourNoLodging;
+
+  /// No description provided for @epTourNoAirfare.
+  ///
+  /// In en, this message translates to:
+  /// **'Airfare not included'**
+  String get epTourNoAirfare;
+
+  /// No description provided for @epTourEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated'**
+  String get epTourEstimate;
+
+  /// No description provided for @epTourEstimateUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'to be confirmed'**
+  String get epTourEstimateUnknown;
+
+  /// No description provided for @regExtrasTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not covered by the tour price'**
+  String get regExtrasTitle;
+
+  /// No description provided for @regExtrasMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'Meals'**
+  String get regExtrasMeals;
+
+  /// No description provided for @regExtrasLodging.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotel nights'**
+  String get regExtrasLodging;
+
+  /// No description provided for @regExtrasAirfare.
+  ///
+  /// In en, this message translates to:
+  /// **'Airfare'**
+  String get regExtrasAirfare;
+
+  /// No description provided for @regExtrasTbd.
+  ///
+  /// In en, this message translates to:
+  /// **'to be confirmed'**
+  String get regExtrasTbd;
+
+  /// No description provided for @summaryPlusEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Plus about {amount} you pay separately'**
+  String summaryPlusEstimated(String amount);
+
+  /// No description provided for @summaryPlusEstimatedSome.
+  ///
+  /// In en, this message translates to:
+  /// **'Plus about {amount} you pay separately, and more still to be confirmed'**
+  String summaryPlusEstimatedSome(String amount);
+
+  /// No description provided for @summaryPlusUnknownOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'There is more to pay separately — the amount is not confirmed yet'**
+  String get summaryPlusUnknownOnly;
+
+  /// No description provided for @summaryExtrasHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimates only, and not part of the fee you send us. Bring enough for these.'**
+  String get summaryExtrasHelp;
 }
 
 class _AppLocalizationsDelegate

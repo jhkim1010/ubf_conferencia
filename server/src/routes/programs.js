@@ -13,6 +13,15 @@ import { normalizeRoutes, routesOf } from '../services/arrival_routes.js';
 
 // 옵션 id 는 우리가 만든 uuid 만 받는다.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// 예상 금액 한 칸. 빈 값·못 읽는 값은 null 이다 — 0 이 아니다.
+// 0 은 "더 들 것이 없다", null 은 "아직 모른다" 이고, 둘을 같게 두면
+// 모르는 것을 없는 것으로 알려 주게 된다(061).
+function num(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
 import {
   requireAuth,
   requireLeader,
@@ -234,6 +243,11 @@ router.get('/:id', requireAuth, async (req, res) => {
             'capacity', po.capacity,
             'signupDeadline', po.signup_deadline,
             'includesLodging', po.includes_lodging,
+            'includesMeals', po.includes_meals,
+            'includesAirfare', po.includes_airfare,
+            'estMealsCost', po.est_meals_cost,
+            'estLodgingCost', po.est_lodging_cost,
+            'estAirfareCost', po.est_airfare_cost,
             'brochureUrl', po.brochure_url,
             'planDocs', COALESCE(po.plan_docs, '[]'::jsonb),
             'videoUrl', po.video_url,
@@ -438,7 +452,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
     // 옵션 일괄 삽입
     if (Array.isArray(options2) && options2.length > 0) {
       await sql`
-        INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url, plan_docs, includes_lodging)
+        INSERT INTO program_options (program_id, name, description, cost, start_date, end_date, contact_name, photo_urls, capacity, signup_deadline, brochure_url, video_url, plan_docs, includes_lodging, includes_meals, includes_airfare, est_meals_cost, est_lodging_cost, est_airfare_cost)
         SELECT
           ${program.id},
           o->>'name',
@@ -455,7 +469,14 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
           COALESCE(o->'planDocs', '[]'::json)::jsonb,
           -- 이 투어 값에 잠자리가 들어 있는가(060). 안 보내면 들어 있는
           -- 것으로 본다 — 더 받는 것보다 덜 받는 편이 낫다.
-          COALESCE((o->>'includesLodging')::boolean, true)
+          COALESCE((o->>'includesLodging')::boolean, true),
+          -- 밥값·항공권도 같은 규칙이다(061).
+          COALESCE((o->>'includesMeals')::boolean, true),
+          COALESCE((o->>'includesAirfare')::boolean, true),
+          -- 빈 문자열은 0 이 아니라 "아직 모른다" 다.
+          NULLIF(o->>'estMealsCost', '')::numeric,
+          NULLIF(o->>'estLodgingCost', '')::numeric,
+          NULLIF(o->>'estAirfareCost', '')::numeric
         FROM json_array_elements(${JSON.stringify(options2)}::json) AS o
       `;
     }
@@ -637,8 +658,15 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
             o.brochureUrl || null,
             o.videoUrl || null,
             JSON.stringify(o.planDocs ?? []),
-            // 안 보내면 숙박이 들어 있는 것으로 본다(060).
+            // 안 보내면 숙박이 들어 있는 것으로 본다(060). 밥값·항공권도 같다(061).
             o.includesLodging !== false,
+            o.includesMeals !== false,
+            o.includesAirfare !== false,
+            // 빈 값은 0 이 아니라 null 이다 — 0 으로 두면 더 들 것이 없다는
+            // 뜻이 되어, 참가자가 돈을 안 챙겨 온다.
+            num(o.estMealsCost),
+            num(o.estLodgingCost),
+            num(o.estAirfareCost),
           ];
           const hasId = typeof o.id === 'string' && UUID_RE.test(o.id);
           if (hasId) {
@@ -648,9 +676,11 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
                  start_date = $5, end_date = $6, contact_name = $7,
                  photo_urls = $8, capacity = $9, signup_deadline = $10,
                  brochure_url = $11, video_url = $12, plan_docs = $13::jsonb,
-                 includes_lodging = $14,
+                 includes_lodging = $14, includes_meals = $15,
+                 includes_airfare = $16, est_meals_cost = $17,
+                 est_lodging_cost = $18, est_airfare_cost = $19,
                  is_active = true
-               WHERE id = $15 AND program_id = $1`,
+               WHERE id = $20 AND program_id = $1`,
               [...vals, o.id],
             );
             if (r.rowCount > 0) continue;
@@ -660,8 +690,11 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
             `INSERT INTO program_options
                (program_id, name, description, cost, start_date, end_date,
                 contact_name, photo_urls, capacity, signup_deadline,
-                brochure_url, video_url, plan_docs, includes_lodging)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14)`,
+                brochure_url, video_url, plan_docs, includes_lodging,
+                includes_meals, includes_airfare,
+                est_meals_cost, est_lodging_cost, est_airfare_cost)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14,
+                     $15,$16,$17,$18,$19)`,
             vals,
           );
         }

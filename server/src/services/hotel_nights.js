@@ -31,6 +31,15 @@ export function nightsBetween(a, b) {
   return Math.round(ms / 86400000);
 }
 
+/// 그 투어의 잠자리 값을 담당자가 따로 적어 두었는가(061).
+/// 0 도 적어 둔 것이다 — "그 기간은 잘 곳이 딸려 있어 더 들 것이 없다".
+function hasOwnLodgingCost(t) {
+  const v = t?.estLodgingCost;
+  if (v === null || v === undefined || v === '') return false;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0;
+}
+
 /// 이 사람이 며칠 밤을 더 자야 하는가.
 ///
 /// tours 는 신청한 투어다 — `{ end, includesLodging }`.
@@ -58,9 +67,17 @@ export function hotelNights({
   if (!s) return { before: 0, after: 0, nights: 0, stayEnd: null, suspect: false };
 
   // 숙박이 들어 있는 투어의 끝날까지는 이미 묵는다.
+  //
+  // **끝날 밤은 덮지 않는다.** 1/25~27 투어면 투어에서 자는 마지막 밤은
+  // 26일→27일 밤이고, 27일에는 돌아온다. 그러니 27일에 떠나면 0박,
+  // 30일에 떠나면 3박이다 — stayEnd 부터 세므로 그렇게 나온다.
+  //
+  // 숙박이 안 든 투어라도 **담당자가 그 기간 예상 숙박비를 적어 두었으면**
+  // 덮은 것으로 본다(061). 적어 둔 금액을 따로 보여 주면서 같은 기간을
+  // 수양회 호텔 요금으로 또 세면 두 번 받는 셈이 된다.
   let stayEnd = e;
   for (const t of tours) {
-    if (t?.includesLodging === false) continue;
+    if (t?.includesLodging === false && !hasOwnLodgingCost(t)) continue;
     const d = dayOf(t?.end ?? t);
     if (d && (!stayEnd || d > stayEnd)) stayEnd = d;
   }

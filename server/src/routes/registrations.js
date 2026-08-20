@@ -192,7 +192,8 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     const tours = picked_ids.length
       ? (
           await sql`
-            SELECT end_date AS end, includes_lodging AS "includesLodging"
+            SELECT end_date AS end, includes_lodging AS "includesLodging",
+                   est_lodging_cost AS "estLodgingCost"
               FROM program_options
              WHERE program_id = ${req.params.programId}
                AND id = ANY(${picked_ids}) AND end_date IS NOT NULL`

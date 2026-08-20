@@ -3596,4 +3596,59 @@ class AppLocalizationsPt extends AppLocalizations {
   String rosterHotelNights(int n) {
     return '$n noite(s)';
   }
+
+  @override
+  String get epTourNotIncluded => 'Não incluído no preço do passeio';
+
+  @override
+  String get epTourNotIncludedHelp =>
+      'Marque o que cada participante paga à parte e quanto custa aproximadamente. Se ainda não souber, deixe o valor em branco — em branco significa \"a confirmar\", não \"nada\".';
+
+  @override
+  String get epTourNoMeals => 'Refeições não incluídas';
+
+  @override
+  String get epTourNoLodging => 'Hotel não incluído';
+
+  @override
+  String get epTourNoAirfare => 'Passagem aérea não incluída';
+
+  @override
+  String get epTourEstimate => 'Valor estimado';
+
+  @override
+  String get epTourEstimateUnknown => 'a confirmar';
+
+  @override
+  String get regExtrasTitle => 'Não incluído no preço do passeio';
+
+  @override
+  String get regExtrasMeals => 'Refeições';
+
+  @override
+  String get regExtrasLodging => 'Hotel';
+
+  @override
+  String get regExtrasAirfare => 'Passagem aérea';
+
+  @override
+  String get regExtrasTbd => 'a confirmar';
+
+  @override
+  String summaryPlusEstimated(String amount) {
+    return 'Além disso, cerca de $amount que você paga à parte';
+  }
+
+  @override
+  String summaryPlusEstimatedSome(String amount) {
+    return 'Além disso, cerca de $amount à parte, e ainda há valores a confirmar';
+  }
+
+  @override
+  String get summaryPlusUnknownOnly =>
+      'Há mais gastos à parte — o valor ainda não foi confirmado';
+
+  @override
+  String get summaryExtrasHelp =>
+      'São estimativas e não fazem parte da taxa que você nos envia. Traga esse dinheiro à parte.';
 }

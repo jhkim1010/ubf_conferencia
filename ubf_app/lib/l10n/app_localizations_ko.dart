@@ -3504,4 +3504,58 @@ class AppLocalizationsKo extends AppLocalizations {
   String rosterHotelNights(int n) {
     return '$n박';
   }
+
+  @override
+  String get epTourNotIncluded => '투어 값에 안 들어 있는 것';
+
+  @override
+  String get epTourNotIncludedHelp =>
+      '참가자가 따로 내야 하는 것을 고르고, 얼마쯤 드는지 적어 주십시오. 아직 모르면 금액을 비워 두십시오 — 빈 칸은 \"미정\" 이고 \"없음\" 이 아닙니다.';
+
+  @override
+  String get epTourNoMeals => '식사 미포함';
+
+  @override
+  String get epTourNoLodging => '호텔 숙박비 미포함';
+
+  @override
+  String get epTourNoAirfare => '비행기표 미포함';
+
+  @override
+  String get epTourEstimate => '예상 금액';
+
+  @override
+  String get epTourEstimateUnknown => '미정';
+
+  @override
+  String get regExtrasTitle => '투어 값에 안 들어 있는 것';
+
+  @override
+  String get regExtrasMeals => '식사';
+
+  @override
+  String get regExtrasLodging => '호텔 숙박비';
+
+  @override
+  String get regExtrasAirfare => '비행기표';
+
+  @override
+  String get regExtrasTbd => '미정';
+
+  @override
+  String summaryPlusEstimated(String amount) {
+    return '이 밖에 따로 내실 돈이 약 $amount 더 있습니다';
+  }
+
+  @override
+  String summaryPlusEstimatedSome(String amount) {
+    return '이 밖에 따로 내실 돈이 약 $amount 있고, 아직 미정인 것도 있습니다';
+  }
+
+  @override
+  String get summaryPlusUnknownOnly => '이 밖에 따로 내실 돈이 있습니다 — 금액은 아직 미정입니다';
+
+  @override
+  String get summaryExtrasHelp =>
+      '예상 금액이며 저희에게 내시는 참가비가 아닙니다. 그만큼 따로 준비해 오십시오.';
 }

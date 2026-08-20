@@ -156,3 +156,53 @@ test('포함인 투어와 아닌 투어가 섞이면 포함인 쪽까지만 덮�
   assert.equal(r.stayEnd, '2027-01-26');
   assert.equal(r.after, 4);
 });
+
+// ── 061: 투어 끝날과 두 번 셈 ────────────────────────────────────────
+
+const R = { start: '2027-01-21', end: '2027-01-24' };
+
+test('숙박 투어의 끝날 밤은 덮지 않는다 — 그날은 돌아오는 날이다', () => {
+  const tour = { end: '2027-01-27', includesLodging: true };
+  // 27일에 돌아와 그날 떠나면 더 잘 것이 없다
+  assert.equal(
+    hotelNights({ ...R, arrival: '2027-01-21', departure: '2027-01-27', tours: [tour] }).after,
+    0,
+  );
+  // 27일에 돌아와 28일에 떠나면 27일 밤은 호텔에서 잔다
+  assert.equal(
+    hotelNights({ ...R, arrival: '2027-01-21', departure: '2027-01-28', tours: [tour] }).after,
+    1,
+  );
+  // 30일에 떠나면 27·28·29 세 밤
+  assert.equal(
+    hotelNights({ ...R, arrival: '2027-01-21', departure: '2027-01-30', tours: [tour] }).after,
+    3,
+  );
+});
+
+test('숙박이 안 든 투어에 예상 금액이 적혀 있으면 그 기간을 또 세지 않는다', () => {
+  // 적어 둔 금액을 따로 보여 주면서 같은 밤을 호텔 요금으로 또 세면
+  // 참가자는 한 밤에 두 번 낸다.
+  const paid = { end: '2027-01-27', includesLodging: false, estLodgingCost: 240 };
+  assert.equal(
+    hotelNights({ ...R, arrival: '2027-01-21', departure: '2027-01-27', tours: [paid] }).after,
+    0,
+  );
+});
+
+test('금액을 안 적었으면 예전대로 그 기간도 호텔비로 센다', () => {
+  // 아무 값도 없으면 그것이 우리가 아는 전부다.
+  const unknown = { end: '2027-01-27', includesLodging: false };
+  assert.equal(
+    hotelNights({ ...R, arrival: '2027-01-21', departure: '2027-01-27', tours: [unknown] }).after,
+    3,
+  );
+});
+
+test('예상 금액 0 도 적어 둔 것이다', () => {
+  const free = { end: '2027-01-27', includesLodging: false, estLodgingCost: 0 };
+  assert.equal(
+    hotelNights({ ...R, arrival: '2027-01-21', departure: '2027-01-27', tours: [free] }).after,
+    0,
+  );
+});

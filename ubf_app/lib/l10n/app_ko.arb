@@ -1086,5 +1086,21 @@
   "epTourLodgingOn": "투어 기간의 잠자리는 이미 값에 들어 있습니다",
   "epTourLodgingOff": "그 기간은 호텔비로 따로 매깁니다",
   "colHotel": "숙박비",
-  "rosterHotelNights": "{n}박"
+  "rosterHotelNights": "{n}박",
+  "epTourNotIncluded": "투어 값에 안 들어 있는 것",
+  "epTourNotIncludedHelp": "참가자가 따로 내야 하는 것을 고르고, 얼마쯤 드는지 적어 주십시오. 아직 모르면 금액을 비워 두십시오 — 빈 칸은 \"미정\" 이고 \"없음\" 이 아닙니다.",
+  "epTourNoMeals": "식사 미포함",
+  "epTourNoLodging": "호텔 숙박비 미포함",
+  "epTourNoAirfare": "비행기표 미포함",
+  "epTourEstimate": "예상 금액",
+  "epTourEstimateUnknown": "미정",
+  "regExtrasTitle": "투어 값에 안 들어 있는 것",
+  "regExtrasMeals": "식사",
+  "regExtrasLodging": "호텔 숙박비",
+  "regExtrasAirfare": "비행기표",
+  "regExtrasTbd": "미정",
+  "summaryPlusEstimated": "이 밖에 따로 내실 돈이 약 {amount} 더 있습니다",
+  "summaryPlusEstimatedSome": "이 밖에 따로 내실 돈이 약 {amount} 있고, 아직 미정인 것도 있습니다",
+  "summaryPlusUnknownOnly": "이 밖에 따로 내실 돈이 있습니다 — 금액은 아직 미정입니다",
+  "summaryExtrasHelp": "예상 금액이며 저희에게 내시는 참가비가 아닙니다. 그만큼 따로 준비해 오십시오."
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/tour_extras.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/registration_provider.dart';
@@ -215,6 +216,16 @@ class _TourCard extends ConsumerWidget {
               value: isSelected,
               onChanged: locked ? null : (_) => toggle(),
             ),
+            // 이 투어 값에 안 들어 있는 것(061). **고르기 전에** 보여야 한다 —
+            // 값만 보고 고른 뒤에 항공권이 따로라는 것을 알면 늦다.
+            if (TourExtras.of([option]).items.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: _NotIncluded(
+                  extras: TourExtras.of([option]),
+                  currency: currency,
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
               child: Column(
@@ -416,6 +427,58 @@ class _StatusChip extends StatelessWidget {
           fontWeight: FontWeight.bold,
           color: color,
         ),
+      ),
+    );
+  }
+}
+
+/// "투어 값에 안 들어 있는 것 — 식사 US$120 · 비행기표 미정" 한 덩이.
+///
+/// 금액을 모르는 것은 **빼지 않고 "미정" 으로 적는다.** 빼 버리면 참가자는
+/// 그것이 값에 들어 있는 줄 안다.
+class _NotIncluded extends StatelessWidget {
+  const _NotIncluded({required this.extras, required this.currency});
+
+  final TourExtras extras;
+  final Currency currency;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    String name(ExtraKind k) => switch (k) {
+      ExtraKind.meals => l10n.regExtrasMeals,
+      ExtraKind.lodging => l10n.regExtrasLodging,
+      ExtraKind.airfare => l10n.regExtrasAirfare,
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.regExtrasTitle,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 2),
+          Wrap(
+            spacing: 10,
+            runSpacing: 2,
+            children: [
+              for (final i in extras.items)
+                Text(
+                  '${name(i.kind)} '
+                  '${i.amount == null ? l10n.regExtrasTbd : currency.format(i.amount!)}',
+                  style: const TextStyle(fontSize: 12),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

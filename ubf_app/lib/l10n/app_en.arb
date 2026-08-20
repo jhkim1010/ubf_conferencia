@@ -2369,5 +2369,35 @@
         "type": "int"
       }
     }
-  }
+  },
+  "epTourNotIncluded": "Not covered by the tour price",
+  "epTourNotIncludedHelp": "Tick what participants pay for separately, and roughly how much. Leave the amount blank if you do not know it yet — blank means \"to be confirmed\", not \"nothing\".",
+  "epTourNoMeals": "Meals not included",
+  "epTourNoLodging": "Hotel nights not included",
+  "epTourNoAirfare": "Airfare not included",
+  "epTourEstimate": "Estimated",
+  "epTourEstimateUnknown": "to be confirmed",
+  "regExtrasTitle": "Not covered by the tour price",
+  "regExtrasMeals": "Meals",
+  "regExtrasLodging": "Hotel nights",
+  "regExtrasAirfare": "Airfare",
+  "regExtrasTbd": "to be confirmed",
+  "summaryPlusEstimated": "Plus about {amount} you pay separately",
+  "@summaryPlusEstimated": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryPlusEstimatedSome": "Plus about {amount} you pay separately, and more still to be confirmed",
+  "@summaryPlusEstimatedSome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryPlusUnknownOnly": "There is more to pay separately — the amount is not confirmed yet",
+  "summaryExtrasHelp": "Estimates only, and not part of the fee you send us. Bring enough for these."
 }

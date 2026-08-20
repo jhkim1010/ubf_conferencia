@@ -1086,5 +1086,21 @@
   "epTourLodgingOn": "Las noches de la excursión ya están pagas",
   "epTourLodgingOff": "Esas noches se cobran como hotel",
   "colHotel": "Hotel",
-  "rosterHotelNights": "{n} noche(s)"
+  "rosterHotelNights": "{n} noche(s)",
+  "epTourNotIncluded": "No incluido en el precio del tour",
+  "epTourNotIncludedHelp": "Marque lo que cada participante paga aparte y cuánto cuesta aproximadamente. Si todavía no lo sabe, deje el monto vacío — vacío significa \"a confirmar\", no \"nada\".",
+  "epTourNoMeals": "Comidas no incluidas",
+  "epTourNoLodging": "Hotel no incluido",
+  "epTourNoAirfare": "Pasaje aéreo no incluido",
+  "epTourEstimate": "Monto estimado",
+  "epTourEstimateUnknown": "a confirmar",
+  "regExtrasTitle": "No incluido en el precio del tour",
+  "regExtrasMeals": "Comidas",
+  "regExtrasLodging": "Hotel",
+  "regExtrasAirfare": "Pasaje aéreo",
+  "regExtrasTbd": "a confirmar",
+  "summaryPlusEstimated": "Además, unos {amount} que usted paga aparte",
+  "summaryPlusEstimatedSome": "Además, unos {amount} que usted paga aparte, y algo más a confirmar",
+  "summaryPlusUnknownOnly": "Hay más gastos aparte — el monto todavía no está confirmado",
+  "summaryExtrasHelp": "Son estimaciones y no forman parte de la cuota que nos envía. Traiga ese dinero aparte."
 }

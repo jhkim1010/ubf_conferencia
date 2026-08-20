@@ -3583,4 +3583,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String rosterHotelNights(int n) {
     return '$n night(s)';
   }
+
+  @override
+  String get epTourNotIncluded => 'Not covered by the tour price';
+
+  @override
+  String get epTourNotIncludedHelp =>
+      'Tick what participants pay for separately, and roughly how much. Leave the amount blank if you do not know it yet — blank means \"to be confirmed\", not \"nothing\".';
+
+  @override
+  String get epTourNoMeals => 'Meals not included';
+
+  @override
+  String get epTourNoLodging => 'Hotel nights not included';
+
+  @override
+  String get epTourNoAirfare => 'Airfare not included';
+
+  @override
+  String get epTourEstimate => 'Estimated';
+
+  @override
+  String get epTourEstimateUnknown => 'to be confirmed';
+
+  @override
+  String get regExtrasTitle => 'Not covered by the tour price';
+
+  @override
+  String get regExtrasMeals => 'Meals';
+
+  @override
+  String get regExtrasLodging => 'Hotel nights';
+
+  @override
+  String get regExtrasAirfare => 'Airfare';
+
+  @override
+  String get regExtrasTbd => 'to be confirmed';
+
+  @override
+  String summaryPlusEstimated(String amount) {
+    return 'Plus about $amount you pay separately';
+  }
+
+  @override
+  String summaryPlusEstimatedSome(String amount) {
+    return 'Plus about $amount you pay separately, and more still to be confirmed';
+  }
+
+  @override
+  String get summaryPlusUnknownOnly =>
+      'There is more to pay separately — the amount is not confirmed yet';
+
+  @override
+  String get summaryExtrasHelp =>
+      'Estimates only, and not part of the fee you send us. Bring enough for these.';
 }

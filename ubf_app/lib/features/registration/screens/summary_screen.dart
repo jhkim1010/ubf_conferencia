@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/tour_extras.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../program/providers/program_provider.dart';
@@ -152,6 +153,30 @@ class SummaryScreen extends ConsumerWidget {
             0.0,
             double.infinity,
           );
+
+          // 따로 나갈 돈 한 줄(061). 호텔 숙박비 + 투어에 안 들어 있는 것.
+          //
+          // 금액을 모르는 것이 섞이면 그 사실을 함께 말한다 — 아는 것만
+          // 더해 놓으면 그것이 전부인 줄 알고 돈을 덜 챙겨 온다.
+          final extras = TourExtras.of(selectedOptionDetails);
+          final extrasKnown = extras.known + (hotelEstimate?.toDouble() ?? 0);
+          final extrasUnsure =
+              extras.unknown.isNotEmpty ||
+              // 호텔 등급을 아직 안 골랐는데 묵을 밤은 있다.
+              (hotelNights > 0 && hotelEstimate == null);
+          final extrasLine = switch (extrasLineOf(
+            known: extrasKnown,
+            unsure: extrasUnsure,
+          )) {
+            ExtrasLine.none => null,
+            ExtrasLine.known => l10n.summaryPlusEstimated(
+              currency.format(extrasKnown),
+            ),
+            ExtrasLine.knownAndUnsure => l10n.summaryPlusEstimatedSome(
+              currency.format(extrasKnown),
+            ),
+            ExtrasLine.unsureOnly => l10n.summaryPlusUnknownOnly,
+          };
 
           return ListView(
             padding: const EdgeInsets.all(20),
@@ -362,6 +387,28 @@ class SummaryScreen extends ConsumerWidget {
                           color: Colors.grey[600],
                         ),
                       ),
+                    // 참가비 옆에 **따로 나갈 돈**을 함께 말해 준다(061).
+                    // 호텔 숙박비와 투어에 안 들어 있는 것들이다. 합계에
+                    // 더하지는 않는다 — 우리에게 내는 돈이 아니고 예상일
+                    // 뿐이라, 더하면 확정된 청구서처럼 보인다.
+                    if (extrasLine != null) ...[
+                      const Divider(height: 20),
+                      Text(
+                        extrasLine,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.summaryExtrasHelp,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

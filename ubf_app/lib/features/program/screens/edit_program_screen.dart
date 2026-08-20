@@ -915,11 +915,21 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
   final _descCtrl = TextEditingController();
   final _capacityCtrl = TextEditingController();
 
-  /// 이 투어 값에 잠자리가 들어 있는가(060).
+  /// 이 투어 값에 무엇이 들어 있는가 (060 숙박 · 061 식사·항공권).
   ///
-  /// 여러 날 가는 투어는 대개 들어 있다. 당일치기 시내 투어는 그날 밤 잘
-  /// 곳을 따로 잡아야 하고, 그때는 꺼 두어야 호텔비가 자동으로 붙는다.
+  /// 화면에는 **"미포함" 으로 뒤집어** 보인다 — 담당자가 손대는 것은 대개
+  /// 빠진 쪽이고, 빠진 것에만 금액을 적기 때문이다. 저장은 포함 여부로
+  /// 한 곳에서 한다.
   bool _includesLodging = true;
+  bool _includesMeals = true;
+  bool _includesAirfare = true;
+
+  /// 안 들어 있을 때 얼마쯤 더 드는가. 비워 두면 "아직 모른다" 이고 0 과
+  /// 다르다 — 0 으로 두면 더 들 것이 없다는 뜻이 되어, 참가자가 돈을 안
+  /// 챙겨 온다.
+  final _estMealsCtrl = TextEditingController();
+  final _estLodgingCtrl = TextEditingController();
+  final _estAirfareCtrl = TextEditingController();
   final _brochureCtrl = TextEditingController();
   final _videoCtrl = TextEditingController();
   DateTime? _startDate;
@@ -944,6 +954,11 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
       _descCtrl.text = e['description'] as String? ?? '';
       if (e['capacity'] != null) _capacityCtrl.text = '${e['capacity']}';
       _includesLodging = e['includesLodging'] != false;
+      _includesMeals = e['includesMeals'] != false;
+      _includesAirfare = e['includesAirfare'] != false;
+      _estMealsCtrl.text = _money(e['estMealsCost']);
+      _estLodgingCtrl.text = _money(e['estLodgingCost']);
+      _estAirfareCtrl.text = _money(e['estAirfareCost']);
       _brochureCtrl.text = e['brochureUrl'] as String? ?? '';
       _videoCtrl.text = e['videoUrl'] as String? ?? '';
       if (e['startDate'] != null) {
@@ -975,6 +990,9 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
     _capacityCtrl.dispose();
     _brochureCtrl.dispose();
     _videoCtrl.dispose();
+    _estMealsCtrl.dispose();
+    _estLodgingCtrl.dispose();
+    _estAirfareCtrl.dispose();
     super.dispose();
   }
 
@@ -1236,18 +1254,42 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               ),
             ),
             const SizedBox(height: 4),
-            // 숙박이 들어 있는지(060). 안 들어 있으면 그 기간의 호텔비를
-            // 참가자에게 따로 매긴다.
-            SwitchListTile(
-              value: _includesLodging,
-              onChanged: (v) => setState(() => _includesLodging = v),
-              title: Text(l10n.epTourLodging),
-              subtitle: Text(
-                _includesLodging ? l10n.epTourLodgingOn : l10n.epTourLodgingOff,
-                style: const TextStyle(fontSize: 12),
+            // 투어 값에 안 들어 있는 것과, 그때 더 들 것 같은 돈(061).
+            // 숙박은 060 의 값을 뒤집어 보인다 — 저장은 한 곳이다.
+            Text(
+              l10n.epTourNotIncluded,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 2, bottom: 4),
+              child: Text(
+                l10n.epTourNotIncludedHelp,
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
-              contentPadding: EdgeInsets.zero,
-              dense: true,
+            ),
+            _NotIncludedRow(
+              label: l10n.epTourNoMeals,
+              checked: !_includesMeals,
+              amount: _estMealsCtrl,
+              hint: l10n.epTourEstimate,
+              unknownHint: l10n.epTourEstimateUnknown,
+              onChanged: (v) => setState(() => _includesMeals = !v),
+            ),
+            _NotIncludedRow(
+              label: l10n.epTourNoLodging,
+              checked: !_includesLodging,
+              amount: _estLodgingCtrl,
+              hint: l10n.epTourEstimate,
+              unknownHint: l10n.epTourEstimateUnknown,
+              onChanged: (v) => setState(() => _includesLodging = !v),
+            ),
+            _NotIncludedRow(
+              label: l10n.epTourNoAirfare,
+              checked: !_includesAirfare,
+              amount: _estAirfareCtrl,
+              hint: l10n.epTourEstimate,
+              unknownHint: l10n.epTourEstimateUnknown,
+              onChanged: (v) => setState(() => _includesAirfare = !v),
             ),
             const SizedBox(height: 12),
             // 정원 + 신청 마감
@@ -1474,11 +1516,98 @@ class _OptionDetailDialogState extends State<_OptionDetailDialog> {
               'capacity': int.tryParse(_capacityCtrl.text.trim()),
               'signupDeadline': _deadline?.toIso8601String(),
               'includesLodging': _includesLodging,
+              'includesMeals': _includesMeals,
+              'includesAirfare': _includesAirfare,
+              // 포함이면 금액은 보내지 않는다. 껐다 켠 뒤 남은 숫자가
+              // 그대로 저장되면, 담당자가 지웠다고 여긴 값이 살아난다.
+              'estMealsCost': _includesMeals ? null : _estMealsCtrl.text.trim(),
+              'estLodgingCost': _includesLodging
+                  ? null
+                  : _estLodgingCtrl.text.trim(),
+              'estAirfareCost': _includesAirfare
+                  ? null
+                  : _estAirfareCtrl.text.trim(),
               'brochureUrl': _brochureCtrl.text.trim(),
               'videoUrl': _videoCtrl.text.trim(),
             });
           },
           child: Text(l10n.actionConfirm),
+        ),
+      ],
+    );
+  }
+}
+
+/// 저장된 금액을 칸에 넣을 글자로. null 이면 빈 칸이다 — 0 이 아니다(061).
+String _money(dynamic v) {
+  if (v == null) return '';
+  final n = num.tryParse('$v');
+  if (n == null) return '';
+  // 120.00 을 120 으로 보여 준다. 소수점 두 자리가 붙어 있으면 담당자가
+  // 고치려고 커서를 옮기는 품이 는다.
+  return n == n.roundToDouble() ? '${n.toInt()}' : '$n';
+}
+
+/// "□ 식사 미포함 · [예상 금액]" 한 줄.
+///
+/// 체크를 꺼 두면 금액 칸을 잠근다. 포함인데 금액이 적혀 있으면 그 숫자가
+/// 무슨 뜻인지 읽는 사람이 알 수 없다.
+class _NotIncludedRow extends StatelessWidget {
+  const _NotIncludedRow({
+    required this.label,
+    required this.checked,
+    required this.amount,
+    required this.hint,
+    required this.unknownHint,
+    required this.onChanged,
+  });
+
+  final String label;
+  final bool checked;
+  final TextEditingController amount;
+  final String hint;
+  final String unknownHint;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          flex: 5,
+          child: InkWell(
+            onTap: () => onChanged(!checked),
+            child: Row(
+              children: [
+                Checkbox(
+                  value: checked,
+                  onChanged: (v) => onChanged(v ?? false),
+                  visualDensity: VisualDensity.compact,
+                ),
+                Expanded(
+                  child: Text(label, style: const TextStyle(fontSize: 14)),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 4,
+          child: TextField(
+            controller: amount,
+            enabled: checked,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: hint,
+              // 비워 두면 0 이 아니라 "미정" 이라는 것을 여기서 말해 준다.
+              hintText: checked ? unknownHint : null,
+              isDense: true,
+              border: const OutlineInputBorder(),
+            ),
+            style: const TextStyle(fontSize: 14),
+          ),
         ),
       ],
     );
