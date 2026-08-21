@@ -562,6 +562,11 @@ const T = {
     en: 'Please enter your name',
     pt: 'Escreva seu nome',
   },
+  '묵으실 방을 골라 주세요': {
+    es: 'Elija la habitación en la que se alojará',
+    en: 'Please choose the room you will stay in',
+    pt: 'Escolha o quarto em que você vai ficar',
+  },
   '이 수양회에 등록하신 분만 보실 수 있습니다': {
     es: 'Solo pueden verlo quienes se inscribieron en este retiro',
     en: 'Only people registered for this retreat can see this',

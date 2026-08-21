@@ -124,4 +124,53 @@ void main() {
     );
     expect(find.textContaining('참가비에는 포함되지 않습니다'), findsOneWidget);
   });
+
+  _mustPickTests();
+}
+
+// ── 064: 묵을 밤이 있으면 방을 반드시 고른다 ────────────────────────
+
+void _mustPickTests() {
+  testWidgets('묵을 밤이 있으면 가장 싼 방이 먼저 골라져 있다', (tester) async {
+    // 백지로 두면 대부분 아무것도 안 누르고 넘어간다. 그러면 담당자는
+    // 호텔에 몇 방을 잡아야 하는지 알 수 없다.
+    final c = _container();
+    final n = c.read(registrationFormProvider(_programId).notifier);
+    n.updateArrivalFlight({'scheduled_arrival': '2027-07-03'});
+    n.updateDepartureFlight({'scheduled_departure': '2027-07-12'});
+
+    await tester.pumpWidget(_harness(c));
+    await tester.pumpAndSettle();
+
+    // _tiers 는 h1(50) · h2(80) 이므로 싼 쪽은 h1
+    expect(c.read(registrationFormProvider(_programId)).hotelOptionKey, 'h1');
+  });
+
+  testWidgets('묵을 밤이 있으면 "숙소 필요 없음" 을 내밀지 않는다', (tester) async {
+    final c = _container();
+    final n = c.read(registrationFormProvider(_programId).notifier);
+    n.updateArrivalFlight({'scheduled_arrival': '2027-07-03'});
+    n.updateDepartureFlight({'scheduled_departure': '2027-07-12'});
+
+    await tester.pumpWidget(_harness(c));
+    await tester.pumpAndSettle();
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('ko'));
+    expect(find.text(l10n.hotelNone), findsNothing);
+  });
+
+  testWidgets('묵을 밤이 없으면 아무것도 강요하지 않는다', (tester) async {
+    // 수양회 기간 안에만 있는 사람. 고를 것이 없다.
+    final c = _container();
+    final n = c.read(registrationFormProvider(_programId).notifier);
+    n.updateArrivalFlight({'scheduled_arrival': '2027-07-05'});
+    n.updateDepartureFlight({'scheduled_departure': '2027-07-09'});
+
+    await tester.pumpWidget(_harness(c));
+    await tester.pumpAndSettle();
+
+    expect(c.read(registrationFormProvider(_programId)).hotelOptionKey, isNull);
+    final l10n = await AppLocalizations.delegate.load(const Locale('ko'));
+    expect(find.text(l10n.hotelNone), findsOneWidget);
+  });
 }

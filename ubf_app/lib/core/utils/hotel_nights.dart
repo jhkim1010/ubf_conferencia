@@ -80,3 +80,32 @@ HotelNights computeHotelNights({
         : null,
   );
 }
+
+/// 어느 방을 기본으로 내밀 것인가 (064).
+///
+/// **가장 싼 방**이다. 이름으로 "일반실" 을 찾지 않는다 — 수양회마다 이름이
+/// 다르고 언어도 넷이라, 이름에 기대면 어느 수양회에서는 조용히 아무것도
+/// 안 골라진다. 값이 그 뜻을 그대로 담고 있다.
+///
+/// 서버의 `services/hotel_choice.js` 와 같은 규칙이다.
+/// `test/hotel_choice_test.dart` 가 서버 쪽 테스트와 같은 예를 본다.
+String? defaultHotelKey(List<Map<String, dynamic>> options) {
+  if (options.isEmpty) return null;
+  Map<String, dynamic>? best;
+  num bestPrice = double.infinity;
+  for (final o in options) {
+    final p = num.tryParse('${o['pricePerNight'] ?? ''}');
+    if (p != null && p >= 0 && p < bestPrice) {
+      bestPrice = p;
+      best = o;
+    }
+  }
+  return (best ?? options.first)['key'] as String?;
+}
+
+/// 이 사람은 방을 골라야 하는가.
+///
+/// 묵을 밤이 없으면 고를 것도 없다. 주최 측이 등급을 아직 안 만들었으면
+/// 고를 수가 없으므로 막지 않는다 — 막으면 제출 자체를 못 한다.
+bool mustPickHotel({required int nights, required List<dynamic> options}) =>
+    nights > 0 && options.isNotEmpty;

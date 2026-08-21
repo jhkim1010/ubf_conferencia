@@ -3621,4 +3621,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get flightStaleDone => '항공편을 지웠습니다';
+
+  @override
+  String hotelMustPick(int nights) {
+    return '수양회 기간 밖에서 $nights박 묵으시므로 방을 반드시 고르셔야 합니다.';
+  }
+
+  @override
+  String get hotelDefaultNote => '가장 싼 방으로 골라 두었습니다. 다른 방을 원하시면 바꾸십시오.';
 }

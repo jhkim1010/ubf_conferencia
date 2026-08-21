@@ -1107,5 +1107,7 @@
   "optionsWillRun": "Vai acontecer ({now} inscritos)",
   "flightStaleTitle": "Ainda há dados de voo salvos, embora você não venha de avião.",
   "flightStaleClear": "Remover",
-  "flightStaleDone": "Dados de voo removidos"
+  "flightStaleDone": "Dados de voo removidos",
+  "hotelMustPick": "Você fica {nights} noite(s) fora do retiro, então precisa escolher um quarto.",
+  "hotelDefaultNote": "Escolhemos o quarto mais barato. Troque se preferir outro."
 }

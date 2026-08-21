@@ -2442,5 +2442,14 @@
   },
   "flightStaleTitle": "You still have flight details saved, though you are not flying in.",
   "flightStaleClear": "Remove them",
-  "flightStaleDone": "Flight details removed"
+  "flightStaleDone": "Flight details removed",
+  "hotelMustPick": "You are staying {nights} night(s) outside the retreat, so a room must be chosen.",
+  "hotelDefaultNote": "The lowest-priced room is chosen for you. Pick another if you prefer.",
+  "@hotelMustPick": {
+    "placeholders": {
+      "nights": {
+        "type": "int"
+      }
+    }
+  }
 }

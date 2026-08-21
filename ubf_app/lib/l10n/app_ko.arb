@@ -1121,5 +1121,7 @@
   "optionsWillRun": "열립니다 ({now}명 신청)",
   "flightStaleTitle": "비행기로 오지 않으시는데 예전에 적어 두신 항공편이 남아 있습니다.",
   "flightStaleClear": "지우기",
-  "flightStaleDone": "항공편을 지웠습니다"
+  "flightStaleDone": "항공편을 지웠습니다",
+  "hotelMustPick": "수양회 기간 밖에서 {nights}박 묵으시므로 방을 반드시 고르셔야 합니다.",
+  "hotelDefaultNote": "가장 싼 방으로 골라 두었습니다. 다른 방을 원하시면 바꾸십시오."
 }

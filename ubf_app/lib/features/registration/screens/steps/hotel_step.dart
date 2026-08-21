@@ -91,6 +91,22 @@ class _HotelStepState extends ConsumerState<HotelStep> {
       });
     }
 
+    // 묵을 밤이 있으면 방을 반드시 골라야 한다(064). 그런데 백지로 두면
+    // 대부분 "숙소 필요 없음" 인 채로 넘어간다 — 아무것도 안 누르는 것이
+    // 가장 쉬운 길이기 때문이다. 그래서 **가장 싼 방을 먼저 골라 둔다.**
+    final needsRoom = mustPickHotel(
+      nights: form.hotelNightsBefore + form.hotelNightsAfter,
+      options: widget.options,
+    );
+    if (needsRoom && form.hotelOptionKey == null) {
+      final fallback = defaultHotelKey(widget.options);
+      if (fallback != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) notifier.selectHotelOption(fallback);
+        });
+      }
+    }
+
     final picked = widget.options.cast<Map<String, dynamic>?>().firstWhere(
       (o) => o?['key'] == form.hotelOptionKey,
       orElse: () => null,
@@ -154,6 +170,20 @@ class _HotelStepState extends ConsumerState<HotelStep> {
           l10n.hotelPickPrompt,
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
+        if (needsRoom) ...[
+          const SizedBox(height: 4),
+          Text(
+            l10n.hotelMustPick(form.hotelNightsBefore + form.hotelNightsAfter),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Text(
+            l10n.hotelDefaultNote,
+            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          ),
+        ],
         const SizedBox(height: 10),
 
         // 주최 측이 아직 등급을 안 정했을 수 있다. 빈 화면 대신 그렇게 말한다.
@@ -180,12 +210,16 @@ class _HotelStepState extends ConsumerState<HotelStep> {
               selected: form.hotelOptionKey == o['key'],
               onTap: () => notifier.selectHotelOption(o['key'] as String),
             ),
-          _TierCard(
-            label: l10n.hotelNone,
-            price: '',
-            selected: form.hotelOptionKey == null,
-            onTap: notifier.clearHotelChoice,
-          ),
+          // 묵을 밤이 있으면 "필요 없음" 을 내밀지 않는다. 내밀어 두면
+          // 그것을 고르고 넘어가는데, 그러면 담당자는 그 사람이 스스로
+          // 잡았다는 것인지 아직 안 정했다는 것인지 알 수 없다.
+          if (!needsRoom)
+            _TierCard(
+              label: l10n.hotelNone,
+              price: '',
+              selected: form.hotelOptionKey == null,
+              onTap: notifier.clearHotelChoice,
+            ),
 
           if (form.hotelOptionKey != null) ...[
             const SizedBox(height: 10),

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { sql } from '../db.js';
 import { hotelNights } from '../services/hotel_nights.js';
+import { hotelChoiceOk } from '../services/hotel_choice.js';
 import { resolveHotelChoice } from '../services/hotel.js';
 import { requireAuth } from '../middleware/auth.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
@@ -337,8 +338,10 @@ router.post('/:programId/me/submit', requireAuth, async (req, res) => {
   try {
     // 이 등록이 선택한 투어 옵션의 정원·마감 검증 (F6 선착순)
     const [me] = await sql`
-      SELECT id, selected_options, real_name FROM registrations
-      WHERE program_id = ${req.params.programId} AND user_id = ${req.user.userId}
+      SELECT id, selected_options, real_name, country,
+             hotel_option_key, hotel_nights_before, hotel_nights_after
+        FROM registrations
+       WHERE program_id = ${req.params.programId} AND user_id = ${req.user.userId}
     `;
     if (!me) return res.status(404).json({ error: '등록 정보가 없습니다' });
 
@@ -347,6 +350,22 @@ router.post('/:programId/me/submit', requireAuth, async (req, res) => {
     // 했는데 이름 칸만 비어서 담당자 화면 어디에도 없었다. 여기서 막는다.
     if (String(me.real_name ?? '').trim() === '') {
       return res.status(400).json({ error: '이름을 적어 주세요' });
+    }
+
+    // 수양회 기간 밖에서 자야 하는 밤이 있으면 어느 방을 쓸지 골라야
+    // 한다(064). 안 고르고 넘어가면 담당자는 그 사람이 스스로 잡았다는
+    // 것인지 아직 안 정했다는 것인지 알 수 없고, 호텔에 몇 방을 잡아야
+    // 하는지도 셀 수 없다. 화면에서도 막지만 화면만 믿을 수는 없다.
+    const nights =
+      (me.hotel_nights_before ?? 0) + (me.hotel_nights_after ?? 0);
+    if (nights > 0) {
+      const [prog] = await sql`
+        SELECT hotel_options FROM programs WHERE id = ${req.params.programId}
+      `;
+      const levels = Array.isArray(prog?.hotel_options) ? prog.hotel_options : [];
+      if (!hotelChoiceOk({ nights, options: levels, key: me.hotel_option_key })) {
+        return res.status(400).json({ error: '묵으실 방을 골라 주세요' });
+      }
     }
 
     const selected = me.selected_options ?? [];

@@ -6749,6 +6749,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Flight details removed'**
   String get flightStaleDone;
+
+  /// No description provided for @hotelMustPick.
+  ///
+  /// In en, this message translates to:
+  /// **'You are staying {nights} night(s) outside the retreat, so a room must be chosen.'**
+  String hotelMustPick(int nights);
+
+  /// No description provided for @hotelDefaultNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The lowest-priced room is chosen for you. Pick another if you prefer.'**
+  String get hotelDefaultNote;
 }
 
 class _AppLocalizationsDelegate

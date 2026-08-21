@@ -3703,4 +3703,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get flightStaleDone => 'Flight details removed';
+
+  @override
+  String hotelMustPick(int nights) {
+    return 'You are staying $nights night(s) outside the retreat, so a room must be chosen.';
+  }
+
+  @override
+  String get hotelDefaultNote =>
+      'The lowest-priced room is chosen for you. Pick another if you prefer.';
 }
