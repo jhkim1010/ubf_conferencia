@@ -302,13 +302,72 @@ Flutter 쪽 변경에 대해 "테스트가 통과했다"를 완료 근거로 삼
   (정합성 · 서버 · Flutter)으로 나눠 돌리는 머지 전 게이트입니다.
   `server-smoke`는 `DATABASE_URL_CI` 시크릿이 설정된 경우에만 실제로 동작하고,
   없으면 SKIP됩니다.
-- **`build-release.yml`** — `v*` 태그 푸시에서만 동작하는 릴리스 빌드.
-  web/android(APK)/windows/linux/macos.
+- **`build-release.yml`** — 여섯 산출물(web · android APK · windows 설치본 ·
+  windows 무설치 · linux · macos)을 만듭니다. `v*` 태그 푸시로도 돌고,
+  **수동 실행(`workflow_dispatch`)으로도 돕니다.** 수동일 때는 릴리스를 만들지
+  않고 아티팩트만 올립니다 — 설치 파일을 새로 낼 때는 이쪽을 씁니다.
 
 두 워크플로 모두 Flutter 3.44.6으로 고정돼 있습니다. 버전을 올릴 때 양쪽의
 `FLUTTER_VERSION`을 함께 맞추십시오.
 
-Windows 인스톨러 등 산출물은 `~/Dropbox/Personal de m. Marcos`에 복사하는 것이 관례입니다.
+---
+
+## 설치 파일 내는 절차
+
+배포와 별개입니다. `deploy.sh` 는 웹과 API 만 올리고, 데스크톱·안드로이드
+설치 파일은 만들지 않습니다.
+
+```bash
+gh workflow run build-release.yml --ref main      # 15~20분
+gh run download <run-id> -D <받을 곳>
+```
+
+**리눅스·윈도우 빌드는 맥에서 안 됩니다.** 여섯 개를 한 번에 얻는 길은 이
+워크플로뿐입니다. 손으로 `flutter build` 하지 마십시오.
+
+받은 것은 `~/Dropbox/ARGENTINA UBF/instaladores` 에 복사합니다.
+(2026-08-01 이전 경로였던 `~/Dropbox/Personal de m. Marcos` 가 아닙니다.)
+
+**파일 이름에 판 번호를 붙이지 않습니다.**
+
+```
+mana-android.apk            mana-macos.dmg
+mana-windows-setup.exe      mana-linux.tar.gz
+mana-windows-portable.zip   mana-web.zip
+README.txt
+```
+
+같은 이름에 **덮어씁니다.** 판 번호를 붙이면 폴더에 여러 벌이 쌓여 받는 분이
+어느 것이 최신인지 골라야 하는데, 그건 파일을 내주는 쪽이 할 일입니다.
+지난 판은 남기지 않습니다 — 필요하면 그 커밋에서 다시 만들 수 있습니다.
+어느 시점 빌드인지는 `README.txt` 넷째 줄에 커밋과 날짜로 적습니다.
+
+`README.txt` 는 사용자용 안내입니다(한국어). 새로 낼 때마다:
+
+- 넷째 줄의 빌드 날짜·커밋을 갱신
+- "이번에 고친 것" 을 이번 변경으로 바꾸고, 지난 것은 아래로 밀기
+- 담당자가 **해야 할 일**이 있으면 적기(예: 날짜가 잘못 들어간 사람 이름)
+
+**드롭박스에 넣기 전에 안을 확인하십시오.** 실제로 한 번, 다섯 플랫폼 모두
+`API_BASE_URL` 이 빠진 채 나가 `localhost:3000` 을 보고 있었습니다.
+
+```bash
+unzip -q -d apkx mana-android.apk 'lib/arm64-v8a/libapp.so'
+```
+
+`libapp.so` 안에서 이번에 넣은 문자열과 `ubf.coolsistema.com` 이 보이고
+`localhost:3000` 이 없어야 합니다. **세 가지 인코딩을 다 봐야 합니다** —
+Dart 는 ASCII·Latin-1 로 표현되는 문자열을 1바이트로, 나머지를 UTF-16 으로
+저장합니다. `utf-8` 로만 찾으면 한국어가 없다고 나오고, `POR PAÍS` 같은
+스페인어는 `latin-1` 로만 잡힙니다. 웹 번들(`main.dart.js`)은 또 달라서,
+dart2js 가 비 ASCII 만 골라 `\u` 로 바꾸므로 "식사 포함" 처럼 공백이 섞이면
+원문으로도 전부-이스케이프로도 안 걸립니다.
+
+압축이 실제로 열리는지도 보십시오(`unzip -t` · `tar -tzf` · `hdiutil imageinfo`).
+크기만으로는 잘린 파일을 구별할 수 없습니다.
+
+안드로이드 서명 키는 `~/.ubf-keys/mana-release.jks` 이며 **사용자가 가진 백업이
+없습니다.** 이 키를 잃으면 기존 설치본 위에 덮어쓰는 갱신이 영영 불가능합니다.
 
 ---
 
