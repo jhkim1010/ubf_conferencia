@@ -108,10 +108,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
         : null,
   );
 
+  // 부팅 검사가 안 끝날 때 손님으로 떨어뜨리기까지 기다리는 시간.
+  //
+  // ApiClient 에는 타임아웃이 없다. 그래서 이 시간을 정하는 것은 우리가 아니라
+  // 밑에 깔린 것들이었다 — 응답 없는 서버를 세워 재어 보니 웹(브라우저가
+  // 소켓을 끊어 줌)에서 40초와 70초 사이였다. 네이티브의 dart:io 는 응답
+  // 대기에 기본 상한이 없어 더 오래 걸릴 수 있다.
+  static const _bootTimeout = Duration(seconds: 10);
+
   // 앱 시작 시 저장된 JWT로 인증 복원
+  //
+  // **시간 안에 끝나야 한다.** 안 끝나는 동안 isLoading 이 true 로 남고,
+  // app.dart 의 redirect 가 앱을 /loading 에 붙잡아 둔다. 그 화면에는 동그라미
+  // 하나뿐이라 사용자가 할 수 있는 것이 없다.
+  //
+  // 시간이 지나면 TimeoutException 이 나고 아래 catch 가 손님으로 떨어뜨린다.
+  // 기다리는 시간을 1분 남짓에서 10초로 줄이는 것이고, 그 끝에 나오는 것이
+  // 흰 화면이 아니라 로그인 화면이 되게 하는 것이다. 토큰이 멀쩡한데 회선만
+  // 느렸던 경우에는 다시 로그인하면 그대로 들어간다.
   Future<void> _init() async {
     try {
-      final me = await ApiClient.getMe();
+      final me = await ApiClient.getMe().timeout(_bootTimeout);
       if (me != null) {
         final role = _parseRole(me['role'] as String?);
         state = AuthState(
