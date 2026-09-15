@@ -2480,5 +2480,6 @@
       }
     }
   },
-  "costBarDue": "You pay us so far"
+  "costBarDue": "You pay us so far",
+  "costBarLodgingPending": "Lodging is added once you pick a room level"
 }

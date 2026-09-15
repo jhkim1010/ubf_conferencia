@@ -1117,5 +1117,6 @@
   "feeUpgradePremium": "Mudar para premium",
   "feeUpgradeExtra": "+{amount}",
   "feeUpgradeTotal": "{amount}",
-  "costBarDue": "O que você paga até agora"
+  "costBarDue": "O que você paga até agora",
+  "costBarLodgingPending": "A hospedagem entra quando você escolher o nível do quarto"
 }

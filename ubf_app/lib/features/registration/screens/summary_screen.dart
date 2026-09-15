@@ -375,8 +375,20 @@ class SummaryScreen extends ConsumerWidget {
                           color: Colors.grey[600],
                         ),
                       ),
+                    // 숙박 등급을 아직 안 골랐으면 그 말을 한다(064).
+                    // 숙박비는 이제 합계 안에 들어가므로, 안 고른 채로 두면
+                    // 합계가 실제보다 적다. 말해 주지 않으면 나중에 늘어난
+                    // 금액을 보고 놀란다.
+                    if (cost.dueUnsure)
+                      Text(
+                        l10n.costBarLodgingPending,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[700],
+                        ),
+                      ),
                     // 참가비 옆에 **따로 나갈 돈**을 함께 말해 준다(061).
-                    // 호텔 숙박비와 투어에 안 들어 있는 것들이다. 합계에
+                    // 투어 값에 안 들어 있는 밥값·항공권이다. 합계에
                     // 더하지는 않는다 — 우리에게 내는 돈이 아니고 예상일
                     // 뿐이라, 더하면 확정된 청구서처럼 보인다.
                     if (extrasLine != null) ...[

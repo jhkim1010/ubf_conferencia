@@ -3755,4 +3755,8 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get costBarDue => 'O que você paga até agora';
+
+  @override
+  String get costBarLodgingPending =>
+      'A hospedagem entra quando você escolher o nível do quarto';
 }

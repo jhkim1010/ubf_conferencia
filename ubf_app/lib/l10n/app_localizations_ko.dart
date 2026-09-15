@@ -3659,4 +3659,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get costBarDue => '지금까지 내실 돈';
+
+  @override
+  String get costBarLodgingPending => '전후 숙박 등급을 고르면 숙박비가 더해집니다';
 }

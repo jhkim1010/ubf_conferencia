@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { sql } from '../db.js';
 import { hotelNights } from '../services/hotel_nights.js';
 import { hotelChoiceOk } from '../services/hotel_choice.js';
+import { registrationTotal } from '../services/registration_total.js';
 import { resolveHotelChoice } from '../services/hotel.js';
 import { requireAuth } from '../middleware/auth.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
@@ -162,10 +163,6 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     // **등급을 안 고른 사람도 기본 참가비를 낸다.** 예전에는 0 으로 두어,
     // 등급 화면을 지나치기만 한 사람의 낼 돈이 0 이 됐다 — 운영 명단 열둘 중
     // 여섯이 그랬다. 참가비를 안 내는 참가자는 없다.
-    const tierFee =
-      tier === 'premium'
-        ? Number(program.fee_premium ?? 0)
-        : Number(program.fee_basic ?? 0);
 
     // 같은 투어를 두 번 담지 않는다. 화면이 잘못 보내도 여기서 정리한다 —
     // 운영에 같은 투어가 세 번 들어간 등록이 있었다.
@@ -208,7 +205,21 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
       tours,
     });
 
-    const computedTotal = Math.max(0, tierFee + optionsCost - approvedDiscount);
+    // 낼 돈은 services/registration_total.js 한 곳에서 낸다.
+    //
+    // **전후 숙박비도 여기 들어간다(064).** 주최가 방을 잡고 받아서 호텔에
+    // 내므로 참가자가 호텔에 직접 내는 돈이 아니다. 박수는 참가자가 보낸
+    // 값이 아니라 비행 일정에서 낸 stay 를 쓴다 — DB 에 남는 것도 그것이다.
+    const { total: computedTotal } = registrationTotal({
+      tier,
+      feeBasic: program.fee_basic,
+      feePremium: program.fee_premium,
+      optionsCost,
+      hotelOptions: program.hotel_options,
+      hotelKey: hotel.key,
+      hotelNights: stay.nights,
+      approvedDiscount,
+    });
 
     const [registration] = await sql`
       INSERT INTO registrations (

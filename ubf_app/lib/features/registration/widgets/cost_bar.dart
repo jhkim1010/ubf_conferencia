@@ -93,6 +93,18 @@ class CostBar extends ConsumerWidget {
                   ),
                 ],
               ),
+              // 낼 돈에 아직 못 넣은 것(064) — 묵을 밤은 있는데 숙박 등급을
+              // 안 골랐다. 숫자만 보여주면 숙박이 공짜인 줄 알고, 나중에
+              // 늘어난 금액에 놀란다.
+              if (cost.dueUnsure) ...[
+                const SizedBox(height: 2),
+                Text(
+                  l10n.costBarLodgingPending,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
               if (extrasLine != null) ...[
                 const SizedBox(height: 2),
                 Text(

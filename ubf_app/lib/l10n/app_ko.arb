@@ -1131,5 +1131,6 @@
   "feeUpgradePremium": "프리미엄으로 올리기",
   "feeUpgradeExtra": "+{amount}",
   "feeUpgradeTotal": "{amount}",
-  "costBarDue": "지금까지 내실 돈"
+  "costBarDue": "지금까지 내실 돈",
+  "costBarLodgingPending": "전후 숙박 등급을 고르면 숙박비가 더해집니다"
 }

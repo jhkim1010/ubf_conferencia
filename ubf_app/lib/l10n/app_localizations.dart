@@ -6809,6 +6809,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You pay us so far'**
   String get costBarDue;
+
+  /// No description provided for @costBarLodgingPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Lodging is added once you pick a room level'**
+  String get costBarLodgingPending;
 }
 
 class _AppLocalizationsDelegate

@@ -149,7 +149,8 @@ void main() {
         hotelNightsBefore: 0,
         hotelNightsAfter: 0,
       );
-      // 여기가 핵심이다. 1000 에 520 을 더하지 않는다.
+      // 여기가 핵심이다. 1000 에 520 을 더하지 않는다. 투어 값에 안 든
+      // 밥값·항공권은 참가자가 현지에서 쓰는 돈이다(숙박비와 다르다).
       expect(c.due, 1000);
       expect(c.extrasKnown, 520);
       expect(c.extrasUnsure, isFalse);
@@ -203,8 +204,13 @@ void main() {
       expect(c.extrasKnown, 35);
       expect(c.extrasUnsure, isTrue);
     });
+  });
 
-    test('전후 숙박비는 따로 쓸 돈이지 우리에게 내는 돈이 아니다', () {
+  // 064: 전후 숙박비는 우리가 받아서 호텔에 낸다. 참가자가 호텔에 직접
+  // 내는 돈이 아니므로 "따로 쓸 돈" 이 아니라 "낼 돈" 이다.
+  // 서버도 같은 셈을 한다(services/registration_total.js).
+  group('전후 숙박', () {
+    test('숙박비는 우리에게 내는 돈이다', () {
       final c = RegistrationCost.of(
         program: _program(
           hotels: [
@@ -219,11 +225,13 @@ void main() {
       );
       expect(c.hotelNights, 3);
       expect(c.hotelEstimate, 120);
-      expect(c.extrasKnown, 120);
-      expect(c.due, 200);
+      expect(c.due, 320);
+      // 따로 쓸 돈에는 안 남는다 — 두 번 세면 안 된다.
+      expect(c.extrasKnown, 0);
+      expect(c.dueUnsure, isFalse);
     });
 
-    test('묵을 밤은 있는데 등급을 안 골랐으면 미정이다', () {
+    test('묵을 밤은 있는데 등급을 안 골랐으면 아직 못 더한 것이다', () {
       final c = RegistrationCost.of(
         program: _program(
           hotels: [
@@ -236,10 +244,11 @@ void main() {
         hotelNightsBefore: 2,
         hotelNightsAfter: 0,
       );
-      // 0 이라고 하면 잠자리 값이 안 드는 것으로 읽힌다.
       expect(c.hotelEstimate, isNull);
-      expect(c.extrasKnown, 0);
-      expect(c.extrasUnsure, isTrue);
+      expect(c.due, 200);
+      // 화면은 이때 "등급을 고르면 더해집니다" 라고 말해야 한다. 안 말하면
+      // 숙박이 공짜인 줄 알고, 나중에 늘어난 금액을 보고 놀란다.
+      expect(c.dueUnsure, isTrue);
     });
 
     test('묵을 밤이 없으면 등급을 안 골라도 미정이 아니다', () {
@@ -255,7 +264,34 @@ void main() {
         hotelNightsBefore: 0,
         hotelNightsAfter: 0,
       );
-      expect(c.extrasUnsure, isFalse);
+      expect(c.dueUnsure, isFalse);
+    });
+
+    test('숙박과 투어 별도 비용은 서로 다른 줄이다', () {
+      final c = RegistrationCost.of(
+        program: _program(
+          options: [
+            {
+              'id': 'a',
+              'cost': 800,
+              'includesMeals': false,
+              'estMealsCost': 120,
+            },
+          ],
+          hotels: [
+            {'key': 'std', 'pricePerNight': 40},
+          ],
+        ),
+        feeTier: 'basic',
+        selectedOptionIds: const ['a'],
+        hotelOptionKey: 'std',
+        hotelNightsBefore: 0,
+        hotelNightsAfter: 1,
+      );
+      // 200 + 800 + 40
+      expect(c.due, 1040);
+      // 투어 밥값은 참가자가 현지에서 쓴다.
+      expect(c.extrasKnown, 120);
     });
   });
 
