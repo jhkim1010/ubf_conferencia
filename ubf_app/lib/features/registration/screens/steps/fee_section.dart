@@ -293,10 +293,15 @@ class _BasicFee extends StatelessWidget {
           if (description != null && description!.isNotEmpty) ...[
             const SizedBox(height: 10),
             // 이 줄이 이번 변경의 요점이다. 예전에는 13픽셀 회색이라
-            // 아무도 안 읽었다.
+            // 아무도 안 읽었다. 값에 무엇이 들어 있는지가 여기 적히고,
+            // 그것을 읽지 않으면 나중에 "그럼 밥값은?" 이 된다.
+            // 그래서 본문 두 배로 둔다.
             Text(
               description!,
-              style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontSize: (theme.textTheme.bodyLarge?.fontSize ?? 16) * 2,
+                height: 1.35,
+              ),
             ),
           ],
         ],

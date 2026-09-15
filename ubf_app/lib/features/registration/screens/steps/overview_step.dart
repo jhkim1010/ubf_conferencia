@@ -153,10 +153,15 @@ class _Fact extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                // 날짜와 장소는 본문보다 두 배로 키운다. 이 화면에서 사람이
+                // 실제로 읽는 것이 이 둘과 아래의 참가비 설명이고, 나머지는
+                // 곁다리다. 작게 두면 읽지 않고 넘어간다.
                 Text(
                   value,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
+                    fontSize: (theme.textTheme.titleMedium?.fontSize ?? 16) * 2,
+                    height: 1.2,
                   ),
                   textAlign: TextAlign.end,
                 ),
