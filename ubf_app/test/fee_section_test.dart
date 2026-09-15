@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import 'package:mana/features/registration/providers/registration_provider.dart';
-import 'package:mana/features/registration/screens/steps/fee_step.dart';
+import 'package:mana/features/registration/screens/steps/fee_section.dart';
 import 'package:mana/core/utils/money.dart';
 
 // 참가비 등급 선택과 할인 신청은 화면과 상태가 어긋나기 쉽다.
@@ -33,20 +33,24 @@ Widget _harness(
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
-        body: FeeStep(
-          programId: _programId,
-          currency: Currency.usd,
-          feeBasic: 150,
-          feePremium: 250,
-          feeBasicDesc: '단체실',
-          feePremiumDesc: '2인실',
-          discountOptions:
-              discounts ??
-              const [
-                {'key': 'd1', 'label': '1일만 참석', 'amount': 40},
-                {'key': 'd2', 'label': '2일 참석', 'amount': 25},
-              ],
-          hostCountry: hostCountry,
+        // FeeSection 은 스스로 스크롤하지 않는다 — 실제로는 첫 화면
+        // (OverviewStep) 의 ListView 안에 들어간다. 하네스도 같게 둔다.
+        body: SingleChildScrollView(
+          child: FeeSection(
+            programId: _programId,
+            currency: Currency.usd,
+            feeBasic: 150,
+            feePremium: 250,
+            feeBasicDesc: '단체실',
+            feePremiumDesc: '2인실',
+            discountOptions:
+                discounts ??
+                const [
+                  {'key': 'd1', 'label': '1일만 참석', 'amount': 40},
+                  {'key': 'd2', 'label': '2일 참석', 'amount': 25},
+                ],
+            hostCountry: hostCountry,
+          ),
         ),
       ),
     ),
@@ -58,21 +62,54 @@ ProviderContainer _container() => ProviderContainer(
 );
 
 void main() {
-  testWidgets('등급을 고르면 폼 상태에 반영된다', (tester) async {
+  // 064: 기본은 고르는 것이 아니라 받는 값이다. 아무것도 안 누르고 지나간
+  // 사람의 등급이 null 로 남으면 합계에서 참가비가 통째로 빠진다.
+  testWidgets('첫 그림 뒤에 기본이 골라져 있다', (tester) async {
     final c = _container();
     addTearDown(c.dispose);
     await tester.pumpWidget(_harness(c));
     await tester.pumpAndSettle();
 
-    expect(c.read(registrationFormProvider(_programId)).feeTier, isNull);
+    expect(c.read(registrationFormProvider(_programId)).feeTier, 'basic');
+  });
 
-    await tester.tap(find.text('프리미엄'));
+  testWidgets('프리미엄은 켜고 끄는 선택이다', (tester) async {
+    final c = _container();
+    addTearDown(c.dispose);
+    await tester.pumpWidget(_harness(c));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('프리미엄으로 올리기'));
     await tester.pump();
     expect(c.read(registrationFormProvider(_programId)).feeTier, 'premium');
 
-    await tester.tap(find.text('기본'));
+    // 끄면 기본으로 돌아간다. null 로 두면 참가비가 사라진다.
+    await tester.tap(find.text('프리미엄으로 올리기'));
     await tester.pump();
     expect(c.read(registrationFormProvider(_programId)).feeTier, 'basic');
+  });
+
+  // 기본에 무엇이 들어 있는지는 이제 크게 펴서 보여준다. 예전에는 13픽셀
+  // 회색이라 아무도 안 읽었고, 그래서 값이 무엇을 포함하는지 물어 왔다.
+  testWidgets('기본에 든 것을 본문 크기로 보여준다', (tester) async {
+    final c = _container();
+    addTearDown(c.dispose);
+    await tester.pumpWidget(_harness(c));
+    await tester.pumpAndSettle();
+
+    final desc = tester.widget<Text>(find.text('단체실'));
+    expect(desc.style?.fontSize, greaterThanOrEqualTo(15.0));
+  });
+
+  // 프리미엄은 기본 위에 얹는 선택이므로 총액이 아니라 차액으로 말한다.
+  testWidgets('프리미엄은 차액으로 적는다', (tester) async {
+    final c = _container();
+    addTearDown(c.dispose);
+    await tester.pumpWidget(_harness(c));
+    await tester.pumpAndSettle();
+
+    expect(find.text('+U\$ 100'), findsOneWidget);
+    expect(find.text('U\$ 250'), findsNothing);
   });
 
   testWidgets('할인 항목을 고르는 것이 곧 신청이다', (tester) async {

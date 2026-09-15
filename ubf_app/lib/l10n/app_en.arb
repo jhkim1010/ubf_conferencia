@@ -2451,5 +2451,34 @@
         "type": "int"
       }
     }
-  }
+  },
+  "regStepOverview": "This conference",
+  "ovTitle": "You are joining this conference",
+  "ovSubtitle": "Check the dates and the fee before you go on.",
+  "ovNights": "{count} nights",
+  "@ovNights": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "feeUpgradePremium": "Upgrade to premium",
+  "feeUpgradeExtra": "+{amount}",
+  "@feeUpgradeExtra": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "feeUpgradeTotal": "{amount}",
+  "@feeUpgradeTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "costBarDue": "You pay us so far"
 }

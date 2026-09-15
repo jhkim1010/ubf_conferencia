@@ -3724,4 +3724,34 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get hotelDefaultNote =>
       'Elegimos la habitación más económica. Cambie si prefiere otra.';
+
+  @override
+  String get regStepOverview => 'Esta conferencia';
+
+  @override
+  String get ovTitle => 'Usted participa en esta conferencia';
+
+  @override
+  String get ovSubtitle => 'Revise las fechas y el costo antes de continuar.';
+
+  @override
+  String ovNights(int count) {
+    return '$count noches';
+  }
+
+  @override
+  String get feeUpgradePremium => 'Pasar a premium';
+
+  @override
+  String feeUpgradeExtra(String amount) {
+    return '+$amount';
+  }
+
+  @override
+  String feeUpgradeTotal(String amount) {
+    return '$amount';
+  }
+
+  @override
+  String get costBarDue => 'Lo que paga hasta ahora';
 }

@@ -3629,4 +3629,34 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get hotelDefaultNote => '가장 싼 방으로 골라 두었습니다. 다른 방을 원하시면 바꾸십시오.';
+
+  @override
+  String get regStepOverview => '이 수양회';
+
+  @override
+  String get ovTitle => '이 수양회에 참석합니다';
+
+  @override
+  String get ovSubtitle => '먼저 기간과 참가비를 확인해 주십시오.';
+
+  @override
+  String ovNights(int count) {
+    return '$count박';
+  }
+
+  @override
+  String get feeUpgradePremium => '프리미엄으로 올리기';
+
+  @override
+  String feeUpgradeExtra(String amount) {
+    return '+$amount';
+  }
+
+  @override
+  String feeUpgradeTotal(String amount) {
+    return '$amount';
+  }
+
+  @override
+  String get costBarDue => '지금까지 내실 돈';
 }

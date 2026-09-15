@@ -10,11 +10,12 @@ import '../../auth/providers/auth_provider.dart';
 import '../../program/providers/program_provider.dart';
 import '../providers/registration_provider.dart';
 import '../../sos/widgets/sos_fab.dart';
+import '../widgets/cost_bar.dart';
 import 'steps/personal_info_step.dart';
 import 'steps/flight_info_step.dart';
 import 'steps/food_step.dart';
 import 'steps/options_step.dart';
-import 'steps/fee_step.dart';
+import 'steps/overview_step.dart';
 import 'steps/buddy_step.dart';
 import 'steps/companion_step.dart';
 import 'steps/volunteer_resources_step.dart';
@@ -184,7 +185,30 @@ class _RegistrationFlowScreenState
         final skipFlightSteps = sameCountryAsHost && !_domesticWantsFlight;
 
         // 스텝 조립. 조건부 스텝은 맨 뒤에 붙인다(인덱스가 밀리지 않게).
+        //
+        // 순서에는 뜻이 있다(064).
+        //
+        //   1  이 수양회   — 기간과 값. 참석할지 말지를 가르는 것이 이 둘이다.
+        //   ~  투어        — **비행기보다 먼저.** 투어는 수양회가 끝난 뒤에
+        //                    하므로, 돌아가는 날이 여기서 정해진다.
+        //   ~  비행기      — 그 날짜를 알고 나서 적는다.
+        //   ~  숙박        — 박수를 비행기 날짜와 투어 종료일로 센다.
+        //
+        // 예전에는 비행기가 셋째, 투어가 여섯째, 참가비가 열한째였다. 값을
+        // 모르는 채 날짜를 잡고, 투어를 고르기 전에 돌아갈 비행기를 적었다.
         final steps = <_Step>[
+          // 값과 기간을 먼저 본다. 참가비를 정해 두지 않은 수양회에서도
+          // 이 화면은 **언제나** 넣는다 — 첫 스텝이 조건부가 되면 위의
+          // "조건부는 맨 뒤" 규칙이 깨진다.
+          (
+            title: l10n.regStepOverview,
+            widget: OverviewStep(
+              programId: widget.programId,
+              program: program,
+              currency: currency,
+              hostCountry: hostCountry,
+            ),
+          ),
           (
             title: l10n.regStepPersonal,
             widget: PersonalInfoStep(programId: widget.programId),
@@ -192,6 +216,16 @@ class _RegistrationFlowScreenState
           (
             title: l10n.regStepCompanion,
             widget: CompanionStep(programId: widget.programId),
+          ),
+          // 투어가 비행기 앞이다. 돌아가는 날이 여기서 정해지기 때문이다.
+          (
+            title: l10n.regStepOptions,
+            widget: OptionsStep(
+              programId: widget.programId,
+              options: options,
+              currency: currency,
+              enabled: enabledSections['special_programs'] ?? true,
+            ),
           ),
           // 개최국 참석자에게는 항공편 대신 픽업만 묻는다(035).
           // 버스로·차로 오므로 항공편은 뜻이 없지만, 어디서 태울지는 알아야
@@ -223,38 +257,11 @@ class _RegistrationFlowScreenState
               ),
             ),
           ],
-          (
-            title: l10n.regStepFood,
-            widget: FoodStep(
-              programId: widget.programId,
-              enabled: enabledSections['food_requirements'] ?? true,
-            ),
-          ),
-          (
-            title: l10n.regStepOptions,
-            widget: OptionsStep(
-              programId: widget.programId,
-              options: options,
-              currency: currency,
-              enabled: enabledSections['special_programs'] ?? true,
-            ),
-          ),
-          (
-            title: l10n.regStepBuddy,
-            widget: BuddyStep(
-              programId: widget.programId,
-              enabled: enabledSections['roommate'] ?? true,
-            ),
-          ),
-          // 말씀 공부 언어. 성경공부 팀이 이 값으로 갈리므로(025) 본인에게 묻는다.
-          // 앞의 룸메이트 단계 바로 뒤에 둔다 — 둘 다 "누구와 함께하는가"다.
-          (
-            title: l10n.regStepStudyLang,
-            widget: StudyLanguageStep(programId: widget.programId),
-          ),
           // 수양회 전후 숙박(028). **외국에서 오는 사람에게만 묻는다** —
           // 개최국 참가자는 전후에 집으로 가므로 물어볼 것이 없고,
           // 서버도 그 선택을 떨어뜨린다(services/hotel.js).
+          //
+          // 비행기와 투어 뒤에 온다. 박수를 그 둘로 세기 때문이다.
           if (!sameCountryAsHost && hostCountry != null)
             (
               title: l10n.regStepHotel,
@@ -272,30 +279,32 @@ class _RegistrationFlowScreenState
               ),
             ),
           (
+            title: l10n.regStepFood,
+            widget: FoodStep(
+              programId: widget.programId,
+              enabled: enabledSections['food_requirements'] ?? true,
+            ),
+          ),
+          (
+            title: l10n.regStepBuddy,
+            widget: BuddyStep(
+              programId: widget.programId,
+              enabled: enabledSections['roommate'] ?? true,
+            ),
+          ),
+          // 말씀 공부 언어. 성경공부 팀이 이 값으로 갈리므로(025) 본인에게 묻는다.
+          // 앞의 룸메이트 단계 바로 뒤에 둔다 — 둘 다 "누구와 함께하는가"다.
+          (
+            title: l10n.regStepStudyLang,
+            widget: StudyLanguageStep(programId: widget.programId),
+          ),
+          (
             title: l10n.regStepVolunteer,
             widget: VolunteerResourcesStep(
               programId: widget.programId,
               enabled: enabledSections['volunteer_resources'] ?? true,
             ),
           ),
-          // 참가비는 등급을 하나라도 정해 둔 수양회에서만 묻는다.
-          // 참가비가 없는 행사에 빈 화면을 하나 더 보여줄 이유는 없다.
-          if (program['fee_basic'] != null || program['fee_premium'] != null)
-            (
-              title: l10n.regStepFee,
-              widget: FeeStep(
-                programId: widget.programId,
-                feeBasic: Money.parse(program['fee_basic']),
-                feePremium: Money.parse(program['fee_premium']),
-                feeBasicDesc: program['fee_basic_desc'] as String?,
-                feePremiumDesc: program['fee_premium_desc'] as String?,
-                discountOptions: List<Map<String, dynamic>>.from(
-                  program['discount_options'] as List? ?? const [],
-                ),
-                currency: currency,
-                hostCountry: hostCountry,
-              ),
-            ),
         ];
         final total = steps.length;
 
@@ -568,9 +577,16 @@ class _RegistrationFlowScreenState
                   children: [for (final s in steps) s.widget],
                 ),
               ),
+              // 지금까지 얼마인가(064). 순서를 바꾼 것만으로는 "1번에서 봤다"
+              // 로 끝나므로, 어느 화면에서든 보이게 아래에 붙여 둔다.
+              CostBar(
+                programId: widget.programId,
+                program: program,
+                currency: currency,
+              ),
               // 이전/다음 버튼
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                 child: Row(
                   children: [
                     if (_currentPage > 0)

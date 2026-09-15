@@ -1123,5 +1123,13 @@
   "flightStaleClear": "Quitarlos",
   "flightStaleDone": "Datos de vuelo quitados",
   "hotelMustPick": "Se queda {nights} noche(s) fuera del retiro, así que debe elegir una habitación.",
-  "hotelDefaultNote": "Elegimos la habitación más económica. Cambie si prefiere otra."
+  "hotelDefaultNote": "Elegimos la habitación más económica. Cambie si prefiere otra.",
+  "regStepOverview": "Esta conferencia",
+  "ovTitle": "Usted participa en esta conferencia",
+  "ovSubtitle": "Revise las fechas y el costo antes de continuar.",
+  "ovNights": "{count} noches",
+  "feeUpgradePremium": "Pasar a premium",
+  "feeUpgradeExtra": "+{amount}",
+  "feeUpgradeTotal": "{amount}",
+  "costBarDue": "Lo que paga hasta ahora"
 }

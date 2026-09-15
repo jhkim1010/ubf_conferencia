@@ -6761,6 +6761,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The lowest-priced room is chosen for you. Pick another if you prefer.'**
   String get hotelDefaultNote;
+
+  /// No description provided for @regStepOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'This conference'**
+  String get regStepOverview;
+
+  /// No description provided for @ovTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You are joining this conference'**
+  String get ovTitle;
+
+  /// No description provided for @ovSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the dates and the fee before you go on.'**
+  String get ovSubtitle;
+
+  /// No description provided for @ovNights.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} nights'**
+  String ovNights(int count);
+
+  /// No description provided for @feeUpgradePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to premium'**
+  String get feeUpgradePremium;
+
+  /// No description provided for @feeUpgradeExtra.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount}'**
+  String feeUpgradeExtra(String amount);
+
+  /// No description provided for @feeUpgradeTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount}'**
+  String feeUpgradeTotal(String amount);
+
+  /// No description provided for @costBarDue.
+  ///
+  /// In en, this message translates to:
+  /// **'You pay us so far'**
+  String get costBarDue;
 }
 
 class _AppLocalizationsDelegate

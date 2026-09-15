@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/registration_cost.dart';
 import '../../../core/utils/tour_extras.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -116,12 +117,20 @@ class SummaryScreen extends ConsumerWidget {
                 (o) => o?['key'] == formState.hotelOptionKey,
                 orElse: () => null,
               );
-          final hotelNights =
-              formState.hotelNightsBefore + formState.hotelNightsAfter;
-          final hotelPerNight = Money.parse(hotelPicked?['pricePerNight']);
-          final hotelEstimate = hotelPerNight != null && hotelNights > 0
-              ? hotelPerNight * hotelNights
-              : null;
+          // 셈은 한 곳에서 한다(064). 등록 내내 따라다니는 비용 막대와 이
+          // 화면이 다른 숫자를 보여주면 참가자는 어느 쪽을 믿을지 알 수 없다.
+          final saved = ref.watch(registrationProvider(programId)).valueOrNull;
+          final cost = RegistrationCost.of(
+            program: program,
+            feeTier: formState.feeTier,
+            selectedOptionIds: formState.selectedOptions,
+            hotelOptionKey: formState.hotelOptionKey,
+            hotelNightsBefore: formState.hotelNightsBefore,
+            hotelNightsAfter: formState.hotelNightsAfter,
+            savedDiscountStatus: saved?['discount_status'] as String?,
+            savedDiscountAmount: saved?['discount_amount'],
+          );
+          final hotelEstimate = cost.hotelEstimate;
 
           final selectedOptionDetails = options
               .where(
@@ -129,51 +138,30 @@ class SummaryScreen extends ConsumerWidget {
               )
               .toList();
 
-          double totalCost = selectedOptionDetails.fold(
-            0.0,
-            (sum, o) => sum + (Money.parse(o['cost']) ?? 0).toDouble(),
-          );
-
-          // 참가비 등급과 확정된 할인을 합계에 반영한다. 투어 비용만 더하면
-          // 참가자가 실제로 내야 할 금액과 다른 숫자를 보게 된다.
           final tierFee = switch (formState.feeTier) {
             'basic' => Money.parse(program['fee_basic']),
             'premium' => Money.parse(program['fee_premium']),
             _ => null,
           };
-          totalCost += (tierFee ?? 0).toDouble();
-
-          // 승인된 할인만 뺀다. 신청 중인 금액을 미리 빼면 아직 결정되지도 않은
-          // 감액을 확정된 것처럼 보여주게 된다.
-          final saved = ref.watch(registrationProvider(programId)).valueOrNull;
-          final approvedDiscount = saved?['discount_status'] == 'approved'
-              ? Money.parse(saved?['discount_amount'])?.toDouble() ?? 0
-              : 0.0;
-          totalCost = (totalCost - approvedDiscount).clamp(
-            0.0,
-            double.infinity,
-          );
+          // 승인된 할인만이다. 신청 중인 금액을 미리 빼면 아직 결정되지도
+          // 않은 감액을 확정된 것처럼 보여주게 된다.
+          final approvedDiscount = cost.discount;
+          final totalCost = cost.due;
 
           // 따로 나갈 돈 한 줄(061). 호텔 숙박비 + 투어에 안 들어 있는 것.
           //
           // 금액을 모르는 것이 섞이면 그 사실을 함께 말한다 — 아는 것만
           // 더해 놓으면 그것이 전부인 줄 알고 돈을 덜 챙겨 온다.
-          final extras = TourExtras.of(selectedOptionDetails);
-          final extrasKnown = extras.known + (hotelEstimate?.toDouble() ?? 0);
-          final extrasUnsure =
-              extras.unknown.isNotEmpty ||
-              // 호텔 등급을 아직 안 골랐는데 묵을 밤은 있다.
-              (hotelNights > 0 && hotelEstimate == null);
           final extrasLine = switch (extrasLineOf(
-            known: extrasKnown,
-            unsure: extrasUnsure,
+            known: cost.extrasKnown,
+            unsure: cost.extrasUnsure,
           )) {
             ExtrasLine.none => null,
             ExtrasLine.known => l10n.summaryPlusEstimated(
-              currency.format(extrasKnown),
+              currency.format(cost.extrasKnown),
             ),
             ExtrasLine.knownAndUnsure => l10n.summaryPlusEstimatedSome(
-              currency.format(extrasKnown),
+              currency.format(cost.extrasKnown),
             ),
             ExtrasLine.unsureOnly => l10n.summaryPlusUnknownOnly,
           };

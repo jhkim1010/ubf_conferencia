@@ -1123,5 +1123,13 @@
   "flightStaleClear": "지우기",
   "flightStaleDone": "항공편을 지웠습니다",
   "hotelMustPick": "수양회 기간 밖에서 {nights}박 묵으시므로 방을 반드시 고르셔야 합니다.",
-  "hotelDefaultNote": "가장 싼 방으로 골라 두었습니다. 다른 방을 원하시면 바꾸십시오."
+  "hotelDefaultNote": "가장 싼 방으로 골라 두었습니다. 다른 방을 원하시면 바꾸십시오.",
+  "regStepOverview": "이 수양회",
+  "ovTitle": "이 수양회에 참석합니다",
+  "ovSubtitle": "먼저 기간과 참가비를 확인해 주십시오.",
+  "ovNights": "{count}박",
+  "feeUpgradePremium": "프리미엄으로 올리기",
+  "feeUpgradeExtra": "+{amount}",
+  "feeUpgradeTotal": "{amount}",
+  "costBarDue": "지금까지 내실 돈"
 }
