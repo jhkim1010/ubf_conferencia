@@ -3830,4 +3830,8 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get hotelNightsSelfNote =>
       'Como você não voa, informe as noites você mesmo.';
+
+  @override
+  String get costBarLodgingNeedsFlight =>
+      'A hospedagem entra quando você informar o voo de volta';
 }

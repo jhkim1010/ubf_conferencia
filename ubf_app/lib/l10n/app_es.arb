@@ -1151,5 +1151,6 @@
   "hotelNeedAsk": "¿Necesita hotel fuera de las fechas de la conferencia?",
   "hotelNeedNo": "No, vuelvo a casa",
   "hotelNeedYes": "Sí, necesito habitación",
-  "hotelNightsSelfNote": "Como no viaja en avión, indique usted las noches."
+  "hotelNightsSelfNote": "Como no viaja en avión, indique usted las noches.",
+  "costBarLodgingNeedsFlight": "El alojamiento se suma cuando indique su vuelo de regreso"
 }

@@ -6929,6 +6929,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You are not flying, so enter the nights yourself.'**
   String get hotelNightsSelfNote;
+
+  /// No description provided for @costBarLodgingNeedsFlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Lodging is added once you enter your return flight'**
+  String get costBarLodgingNeedsFlight;
 }
 
 class _AppLocalizationsDelegate

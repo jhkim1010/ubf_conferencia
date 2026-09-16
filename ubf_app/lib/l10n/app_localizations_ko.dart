@@ -3730,4 +3730,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get hotelNightsSelfNote => '비행기를 타지 않으시므로 박수를 직접 적어 주십시오.';
+
+  @override
+  String get costBarLodgingNeedsFlight => '돌아가는 비행기를 적으시면 그 뒤 숙박비가 더해집니다';
 }

@@ -2544,5 +2544,6 @@
   "hotelNeedAsk": "Do you need a hotel outside the conference dates?",
   "hotelNeedNo": "No, I go home",
   "hotelNeedYes": "Yes, I need a room",
-  "hotelNightsSelfNote": "You are not flying, so enter the nights yourself."
+  "hotelNightsSelfNote": "You are not flying, so enter the nights yourself.",
+  "costBarLodgingNeedsFlight": "Lodging is added once you enter your return flight"
 }

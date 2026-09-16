@@ -3829,4 +3829,8 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get hotelNightsSelfNote =>
       'Como no viaja en avión, indique usted las noches.';
+
+  @override
+  String get costBarLodgingNeedsFlight =>
+      'El alojamiento se suma cuando indique su vuelo de regreso';
 }

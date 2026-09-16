@@ -19,6 +19,7 @@
 /// DB 도 HTTP 도 쓰지 않는다. test/registration_cost_test.dart 로 그대로 확인한다.
 library;
 
+import '../constants/world_countries.dart';
 import 'hotel_price.dart';
 import 'money.dart';
 import 'tour_extras.dart';
@@ -31,6 +32,7 @@ class RegistrationCost {
     required this.due,
     required this.dueMax,
     required this.dueUnsure,
+    required this.lodgingNeedsFlight,
     required this.hotelNights,
     required this.hotelEstimate,
     required this.extrasKnown,
@@ -68,6 +70,13 @@ class RegistrationCost {
   /// 숙박이 공짜인 줄 알고, 나중에 늘어난 금액을 보고 놀란다.
   final bool dueUnsure;
 
+  /// 돌아가는 비행기를 아직 안 적어 **박수를 낼 수가 없는가**(066).
+  ///
+  /// 외국에서 오시는 분의 전후 숙박은 비행 일정으로 센다(060). 그 일정이
+  /// 없으면 0박이 나오는데, 그것은 "안 묵는다" 가 아니라 "아직 모른다" 다.
+  /// 0 으로 보여주면 합계가 다 된 줄 알고 그만큼 덜 챙겨 오신다.
+  final bool lodgingNeedsFlight;
+
   /// 수양회 전후로 묵는 밤 수.
   final int hotelNights;
 
@@ -90,7 +99,27 @@ class RegistrationCost {
 
   /// 할 말이 아무것도 없는가. 막대를 통째로 감출지 여기서 가른다.
   bool get isEmpty =>
-      due == 0 && extrasKnown == 0 && !extrasUnsure && !dueUnsure;
+      due == 0 &&
+      extrasKnown == 0 &&
+      !extrasUnsure &&
+      !dueUnsure &&
+      !lodgingNeedsFlight;
+
+  /// 이 사람의 전후 숙박비를 아직 셀 수 없는가.
+  ///
+  /// 외국에서 오시는데 돌아가는 비행기를 안 적었으면 셀 수가 없다.
+  /// 개최국에서 오시는 분은 비행기가 없는 것이 정상이므로 해당 없다.
+  static bool lodgingPendingFlight({
+    required String? hostCountry,
+    required String? country,
+    required Object? departureFlight,
+  }) {
+    final host = WorldCountries.isoForLegacy(hostCountry);
+    if (host == null) return false; // 지역 수양회 — 전후 숙박 자체가 없다
+    final mine = WorldCountries.isoForLegacy(country);
+    if (mine == null || mine == host) return false;
+    return departureFlight == null;
+  }
 
   /// [program] 은 서버가 준 수양회 표현 그대로.
   /// [savedDiscountStatus]·[savedDiscountAmount] 는 저장된 등록의 할인 결정이다.
@@ -103,6 +132,7 @@ class RegistrationCost {
     required int hotelNightsAfter,
     String? savedDiscountStatus,
     Object? savedDiscountAmount,
+    bool lodgingNeedsFlight = false,
   }) {
     final options = List<Map<String, dynamic>>.from(
       program['program_options'] as List? ?? const [],
@@ -155,6 +185,7 @@ class RegistrationCost {
       dueMax: _round(dueMax < 0 ? 0 : dueMax),
       // 묵을 밤은 있는데 등급을 안 골랐으면 숙박비를 아직 못 더한 것이다.
       dueUnsure: hotelNights > 0 && hotelEstimate == null,
+      lodgingNeedsFlight: lodgingNeedsFlight,
       hotelNights: hotelNights,
       hotelEstimate: hotelEstimate == null ? null : _round(hotelEstimate),
       // 투어 값에 안 든 것만이다. 숙박비는 위에서 due 로 갔다.

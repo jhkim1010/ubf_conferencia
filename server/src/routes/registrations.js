@@ -225,7 +225,14 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     // 버스나 차로 오시는 분들이다. 그분들에게는 항공편 화면을 아예 안
     // 보여주므로 물어볼 것도 없고, 그래서 적어 낸 박수를 그대로 쓴다.
     // 이렇게 갈라 두면 비행기를 타는 사람의 값은 예전 그대로다.
-    const stay = flightStay.nights > 0
+    //
+    // **"일정이 없다" 와 "일정을 보니 0박이다" 는 다르다.** 박수가 0 인지로
+    // 가르면, 수양회 끝나는 날 떠나는 사람(정말 0박)의 값이 예전에 적어 둔
+    // 숫자로 되살아난다. 그래서 날짜가 하나라도 있는지로 가른다.
+    const hasFlightDates = !!(
+      arrivalFlight?.scheduled_arrival || departureFlight?.scheduled_departure
+    );
+    const stay = hasFlightDates
       ? flightStay
       : {
           before: normalizeNights(hotelNightsBefore),

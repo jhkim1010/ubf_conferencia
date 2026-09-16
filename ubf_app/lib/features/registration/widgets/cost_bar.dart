@@ -44,6 +44,12 @@ class CostBar extends ConsumerWidget {
       hotelNightsAfter: form.hotelNightsAfter,
       savedDiscountStatus: saved?['discount_status'] as String?,
       savedDiscountAmount: saved?['discount_amount'],
+      // 돌아가는 비행기를 안 적었으면 전후 숙박비를 아직 셀 수 없다(066).
+      lodgingNeedsFlight: RegistrationCost.lodgingPendingFlight(
+        hostCountry: program['host_country'] as String?,
+        country: form.country,
+        departureFlight: form.departureFlight,
+      ),
     );
 
     // 아직 아무것도 안 정했으면 자리만 차지한다. 첫 화면에서 U$ 0 을 띄우면
@@ -129,7 +135,14 @@ class CostBar extends ConsumerWidget {
               // 낼 돈에 아직 못 넣은 것(064) — 묵을 밤은 있는데 숙박 등급을
               // 안 골랐다. 숫자만 보여주면 숙박이 공짜인 줄 알고, 나중에
               // 늘어난 금액에 놀란다.
-              if (cost.dueUnsure)
+              if (cost.lodgingNeedsFlight)
+                Text(
+                  l10n.costBarLodgingNeedsFlight,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                )
+              else if (cost.dueUnsure)
                 Text(
                   l10n.costBarLodgingPending,
                   style: theme.textTheme.bodySmall?.copyWith(

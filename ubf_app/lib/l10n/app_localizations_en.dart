@@ -3817,4 +3817,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get hotelNightsSelfNote =>
       'You are not flying, so enter the nights yourself.';
+
+  @override
+  String get costBarLodgingNeedsFlight =>
+      'Lodging is added once you enter your return flight';
 }

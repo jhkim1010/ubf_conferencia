@@ -131,6 +131,12 @@ class SummaryScreen extends ConsumerWidget {
             hotelNightsAfter: formState.hotelNightsAfter,
             savedDiscountStatus: saved?['discount_status'] as String?,
             savedDiscountAmount: saved?['discount_amount'],
+            // 돌아가는 비행기를 안 적었으면 전후 숙박비를 아직 셀 수 없다(066).
+            lodgingNeedsFlight: RegistrationCost.lodgingPendingFlight(
+              hostCountry: program['host_country'] as String?,
+              country: formState.country,
+              departureFlight: formState.departureFlight,
+            ),
           );
           final hotelEstimate = cost.hotelEstimate;
 
@@ -406,7 +412,15 @@ class SummaryScreen extends ConsumerWidget {
                     // 숙박비는 이제 합계 안에 들어가므로, 안 고른 채로 두면
                     // 합계가 실제보다 적다. 말해 주지 않으면 나중에 늘어난
                     // 금액을 보고 놀란다.
-                    if (cost.dueUnsure)
+                    if (cost.lodgingNeedsFlight)
+                      Text(
+                        l10n.costBarLodgingNeedsFlight,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[700],
+                        ),
+                      )
+                    else if (cost.dueUnsure)
                       Text(
                         l10n.costBarLodgingPending,
                         textAlign: TextAlign.center,
