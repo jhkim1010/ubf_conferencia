@@ -6861,8 +6861,20 @@ abstract class AppLocalizations {
   /// No description provided for @costBarExtraNote.
   ///
   /// In en, this message translates to:
-  /// **'{kinds} — you pay these yourself, not to us'**
+  /// **'Not covered by the tour price: {kinds}. You pay these yourself.'**
   String costBarExtraNote(String kinds);
+
+  /// No description provided for @summaryExtrasTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not covered by the tour price'**
+  String get summaryExtrasTitle;
+
+  /// No description provided for @summaryExtrasItem.
+  ///
+  /// In en, this message translates to:
+  /// **'{tour} · {what}'**
+  String summaryExtrasItem(String tour, String what);
 }
 
 class _AppLocalizationsDelegate

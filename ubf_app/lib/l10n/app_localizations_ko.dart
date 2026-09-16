@@ -3689,6 +3689,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String costBarExtraNote(String kinds) {
-    return '$kinds — 저희에게 내지 않고 따로 쓰실 돈입니다';
+    return '투어 값에 안 든 것: $kinds. 저희에게 내지 않습니다.';
+  }
+
+  @override
+  String get summaryExtrasTitle => '투어 값에 안 들어 있는 것';
+
+  @override
+  String summaryExtrasItem(String tour, String what) {
+    return '$tour · $what';
   }
 }

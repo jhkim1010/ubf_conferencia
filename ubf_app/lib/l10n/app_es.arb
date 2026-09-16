@@ -1140,5 +1140,7 @@
   "costBarExtraKindLodging": "alojamiento",
   "costBarExtraKindAirfare": "pasaje aéreo",
   "costBarExtraKindOther": "otros",
-  "costBarExtraNote": "{kinds} — lo paga usted, no a nosotros"
+  "costBarExtraNote": "No incluido en el precio del tour: {kinds}. Lo paga usted.",
+  "summaryExtrasTitle": "No incluido en el precio del tour",
+  "summaryExtrasItem": "{tour} · {what}"
 }

@@ -150,10 +150,17 @@ class SummaryScreen extends ConsumerWidget {
           final approvedDiscount = cost.discount;
           final totalCost = cost.due;
 
-          // 따로 나갈 돈 한 줄(061). 호텔 숙박비 + 투어에 안 들어 있는 것.
+          // 따로 나갈 돈(061). **투어 값에 안 들어 있는 것만이다** — 수양회
+          // 전후 숙박비는 064 부터 우리가 받으므로 위의 합계 안에 있다.
+          //
+          // **어느 투어의 무엇인지 한 줄씩 적는다.** 예전에는 "이 밖에 따로
+          // 내실 돈이 약 30 더 있습니다" 라고만 했는데, 그 30 이 City Tour 의
+          // 숙박비인데도 수양회 호텔로 읽혔다 — 호텔을 방금 거절한 사람이
+          // "필요 없다고 했는데 왜 나오느냐" 고 물어 왔다.
           //
           // 금액을 모르는 것이 섞이면 그 사실을 함께 말한다 — 아는 것만
           // 더해 놓으면 그것이 전부인 줄 알고 돈을 덜 챙겨 온다.
+          final extras = TourExtras.of(selectedOptionDetails);
           final extrasLine = switch (extrasLineOf(
             known: cost.extrasKnown,
             unsure: cost.extrasUnsure,
@@ -166,6 +173,14 @@ class SummaryScreen extends ConsumerWidget {
               currency.format(cost.extrasKnown),
             ),
             ExtrasLine.unsureOnly => l10n.summaryPlusUnknownOnly,
+          };
+
+          String whatOf(ExtraItem it) => switch (it.kind) {
+            ExtraKind.meals => l10n.costBarExtraKindMeals,
+            ExtraKind.lodging => l10n.costBarExtraKindLodging,
+            ExtraKind.airfare => l10n.costBarExtraKindAirfare,
+            // 담당자가 이름 붙여 더한 항목(062)은 그 이름을 그대로 쓴다.
+            null => it.label ?? l10n.costBarExtraKindOther,
           };
 
           return ListView(
@@ -400,6 +415,40 @@ class SummaryScreen extends ConsumerWidget {
                     // 뿐이라, 더하면 확정된 청구서처럼 보인다.
                     if (extrasLine != null) ...[
                       const Divider(height: 20),
+                      Text(
+                        l10n.summaryExtrasTitle,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      // 어느 투어의 무엇인지 한 줄씩.
+                      for (final it in extras.items)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 1),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  l10n.summaryExtrasItem(
+                                    it.tour ?? '',
+                                    whatOf(it),
+                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ),
+                              Text(
+                                it.amount == null
+                                    ? l10n.epTourEstimateUnknown
+                                    : currency.format(it.amount),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      const SizedBox(height: 6),
                       Text(
                         extrasLine,
                         textAlign: TextAlign.center,

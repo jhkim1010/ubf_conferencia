@@ -1140,5 +1140,7 @@
   "costBarExtraKindLodging": "숙박",
   "costBarExtraKindAirfare": "항공권",
   "costBarExtraKindOther": "기타",
-  "costBarExtraNote": "{kinds} — 저희에게 내지 않고 따로 쓰실 돈입니다"
+  "costBarExtraNote": "투어 값에 안 든 것: {kinds}. 저희에게 내지 않습니다.",
+  "summaryExtrasTitle": "투어 값에 안 들어 있는 것",
+  "summaryExtrasItem": "{tour} · {what}"
 }

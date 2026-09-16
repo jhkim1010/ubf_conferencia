@@ -3773,6 +3773,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String costBarExtraNote(String kinds) {
-    return '$kinds — you pay these yourself, not to us';
+    return 'Not covered by the tour price: $kinds. You pay these yourself.';
+  }
+
+  @override
+  String get summaryExtrasTitle => 'Not covered by the tour price';
+
+  @override
+  String summaryExtrasItem(String tour, String what) {
+    return '$tour · $what';
   }
 }

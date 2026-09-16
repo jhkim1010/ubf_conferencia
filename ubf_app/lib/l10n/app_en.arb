@@ -2496,10 +2496,22 @@
   "costBarExtraKindLodging": "lodging",
   "costBarExtraKindAirfare": "airfare",
   "costBarExtraKindOther": "other",
-  "costBarExtraNote": "{kinds} — you pay these yourself, not to us",
+  "costBarExtraNote": "Not covered by the tour price: {kinds}. You pay these yourself.",
   "@costBarExtraNote": {
     "placeholders": {
       "kinds": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryExtrasTitle": "Not covered by the tour price",
+  "summaryExtrasItem": "{tour} · {what}",
+  "@summaryExtrasItem": {
+    "placeholders": {
+      "tour": {
+        "type": "String"
+      },
+      "what": {
         "type": "String"
       }
     }

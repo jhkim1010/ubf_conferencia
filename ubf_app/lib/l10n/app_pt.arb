@@ -1126,5 +1126,7 @@
   "costBarExtraKindLodging": "hospedagem",
   "costBarExtraKindAirfare": "passagem aérea",
   "costBarExtraKindOther": "outros",
-  "costBarExtraNote": "{kinds} — você paga por conta própria, não a nós"
+  "costBarExtraNote": "Não incluído no preço do passeio: {kinds}. Você paga por conta própria.",
+  "summaryExtrasTitle": "Não incluído no preço do passeio",
+  "summaryExtrasItem": "{tour} · {what}"
 }
