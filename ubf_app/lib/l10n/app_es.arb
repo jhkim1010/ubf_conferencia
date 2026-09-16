@@ -1134,5 +1134,11 @@
   "costBarDue": "Lo que paga hasta ahora",
   "costBarLodgingPending": "El alojamiento se suma cuando elija el nivel de habitación",
   "cpVenueUrlLabel": "Sitio web del lugar",
-  "cpVenueUrlHelp": "Los participantes lo abren al tocar el lugar. La página del hotel, un mapa, lo que sirva."
+  "cpVenueUrlHelp": "Los participantes lo abren al tocar el lugar. La página del hotel, un mapa, lo que sirva.",
+  "costBarPlus": "+ aprox. {amount}",
+  "costBarExtraKindMeals": "comidas",
+  "costBarExtraKindLodging": "alojamiento",
+  "costBarExtraKindAirfare": "pasaje aéreo",
+  "costBarExtraKindOther": "otros",
+  "costBarExtraNote": "{kinds} — lo paga usted, no a nosotros"
 }

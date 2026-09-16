@@ -2483,5 +2483,25 @@
   "costBarDue": "You pay us so far",
   "costBarLodgingPending": "Lodging is added once you pick a room level",
   "cpVenueUrlLabel": "Venue website",
-  "cpVenueUrlHelp": "Participants open this when they tap the venue. A hotel page, a map, anything."
+  "cpVenueUrlHelp": "Participants open this when they tap the venue. A hotel page, a map, anything.",
+  "costBarPlus": "+ about {amount}",
+  "@costBarPlus": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "costBarExtraKindMeals": "meals",
+  "costBarExtraKindLodging": "lodging",
+  "costBarExtraKindAirfare": "airfare",
+  "costBarExtraKindOther": "other",
+  "costBarExtraNote": "{kinds} — you pay these yourself, not to us",
+  "@costBarExtraNote": {
+    "placeholders": {
+      "kinds": {
+        "type": "String"
+      }
+    }
+  }
 }

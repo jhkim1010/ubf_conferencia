@@ -3753,4 +3753,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cpVenueUrlHelp =>
       'Participants open this when they tap the venue. A hotel page, a map, anything.';
+
+  @override
+  String costBarPlus(String amount) {
+    return '+ about $amount';
+  }
+
+  @override
+  String get costBarExtraKindMeals => 'meals';
+
+  @override
+  String get costBarExtraKindLodging => 'lodging';
+
+  @override
+  String get costBarExtraKindAirfare => 'airfare';
+
+  @override
+  String get costBarExtraKindOther => 'other';
+
+  @override
+  String costBarExtraNote(String kinds) {
+    return '$kinds — you pay these yourself, not to us';
+  }
 }

@@ -6827,6 +6827,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Participants open this when they tap the venue. A hotel page, a map, anything.'**
   String get cpVenueUrlHelp;
+
+  /// No description provided for @costBarPlus.
+  ///
+  /// In en, this message translates to:
+  /// **'+ about {amount}'**
+  String costBarPlus(String amount);
+
+  /// No description provided for @costBarExtraKindMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'meals'**
+  String get costBarExtraKindMeals;
+
+  /// No description provided for @costBarExtraKindLodging.
+  ///
+  /// In en, this message translates to:
+  /// **'lodging'**
+  String get costBarExtraKindLodging;
+
+  /// No description provided for @costBarExtraKindAirfare.
+  ///
+  /// In en, this message translates to:
+  /// **'airfare'**
+  String get costBarExtraKindAirfare;
+
+  /// No description provided for @costBarExtraKindOther.
+  ///
+  /// In en, this message translates to:
+  /// **'other'**
+  String get costBarExtraKindOther;
+
+  /// No description provided for @costBarExtraNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{kinds} — you pay these yourself, not to us'**
+  String costBarExtraNote(String kinds);
 }
 
 class _AppLocalizationsDelegate

@@ -33,6 +33,7 @@ class RegistrationCost {
     required this.hotelEstimate,
     required this.extrasKnown,
     required this.extrasUnsure,
+    required this.extraKinds,
   });
 
   /// 고른 참가비 등급의 값. 등급을 아직 안 골랐으면 0.
@@ -63,6 +64,11 @@ class RegistrationCost {
 
   /// 따로 쓸 돈 중 **금액을 아는 것들**의 합.
   final double extrasKnown;
+
+  /// 따로 쓸 돈이 **무엇으로 이루어졌는가**. 화면이 "약 30 (숙박·식사)" 처럼
+  /// 짧게 적을 수 있게 종류만 준다. 금액이 미정인 것도 종류에는 들어간다 —
+  /// 무엇 때문에 더 드는지는 금액을 몰라도 말해 줄 수 있다.
+  final List<ExtraKind> extraKinds;
 
   /// 따로 쓸 돈 중 금액을 아직 모르는 것이 있는가.
   ///
@@ -143,6 +149,13 @@ class RegistrationCost {
       // 투어 값에 안 든 것만이다. 숙박비는 위에서 due 로 갔다.
       extrasKnown: _round(tour.known),
       extrasUnsure: tour.unknown.isNotEmpty,
+      // 나온 순서대로, 겹치지 않게. 담당자가 이름 붙여 더한 항목(062)은
+      // kind 가 없으므로 여기 안 들어간다 — 이름이 제각각이라 한 낱말로
+      // 묶을 수가 없다.
+      extraKinds: [
+        for (final k in ExtraKind.values)
+          if (tour.items.any((it) => it.kind == k)) k,
+      ],
     );
   }
 

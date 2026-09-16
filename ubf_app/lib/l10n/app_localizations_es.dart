@@ -3765,4 +3765,26 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get cpVenueUrlHelp =>
       'Los participantes lo abren al tocar el lugar. La página del hotel, un mapa, lo que sirva.';
+
+  @override
+  String costBarPlus(String amount) {
+    return '+ aprox. $amount';
+  }
+
+  @override
+  String get costBarExtraKindMeals => 'comidas';
+
+  @override
+  String get costBarExtraKindLodging => 'alojamiento';
+
+  @override
+  String get costBarExtraKindAirfare => 'pasaje aéreo';
+
+  @override
+  String get costBarExtraKindOther => 'otros';
+
+  @override
+  String costBarExtraNote(String kinds) {
+    return '$kinds — lo paga usted, no a nosotros';
+  }
 }

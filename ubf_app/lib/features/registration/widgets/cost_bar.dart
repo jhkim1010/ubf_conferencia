@@ -50,70 +50,95 @@ class CostBar extends ConsumerWidget {
     // 참가비가 없는 수양회처럼 보인다.
     if (cost.isEmpty) return const SizedBox.shrink();
 
-    // 따로 쓸 돈 한 줄. 아는 것과 모르는 것이 섞이므로 네 갈래다(061).
-    final extrasLine = switch (extrasLineOf(
-      known: cost.extrasKnown,
-      unsure: cost.extrasUnsure,
-    )) {
-      ExtrasLine.none => null,
-      ExtrasLine.known => l10n.summaryPlusEstimated(
-        currency.format(cost.extrasKnown),
-      ),
-      ExtrasLine.knownAndUnsure => l10n.summaryPlusEstimatedSome(
-        currency.format(cost.extrasKnown),
-      ),
-      ExtrasLine.unsureOnly => l10n.summaryPlusUnknownOnly,
-    };
+    // 따로 쓸 돈. 예전에는 아래에 문장으로 적었는데, 금액 하나만 크게
+    // 떠 있고 그 밑에 긴 문장이 붙으니 "그래서 결국 얼마인가" 가 한눈에
+    // 안 들어왔다. 이제 **금액 옆에 붙여 적는다** — "U$ 295 ＋ 약 U$ 30".
+    //
+    // 그래도 **합치지는 않는다.** 두 숫자가 따로 보여야 하나는 우리에게
+    // 내는 돈이고 하나는 예상이라는 것이 읽힌다.
+    final hasExtra = cost.extrasKnown > 0 || cost.extrasUnsure;
+    final plusText = cost.extrasKnown > 0
+        ? l10n.costBarPlus(currency.format(cost.extrasKnown))
+        : null;
+
+    // 그 돈이 무엇인지 한 낱말씩. 금액이 미정인 것도 종류에는 들어간다.
+    final kindWords = [
+      for (final k in cost.extraKinds)
+        switch (k) {
+          ExtraKind.meals => l10n.costBarExtraKindMeals,
+          ExtraKind.lodging => l10n.costBarExtraKindLodging,
+          ExtraKind.airfare => l10n.costBarExtraKindAirfare,
+        },
+    ];
+    final extraNote = hasExtra
+        ? (kindWords.isEmpty
+              ? l10n.costBarExtraNote(l10n.costBarExtraKindOther)
+              : l10n.costBarExtraNote(kindWords.join(' · ')))
+        : null;
 
     return Material(
       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.30),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 9, 16, 9),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    l10n.costBarDue,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      l10n.costBarDue,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 10),
+                  // 이 줄을 보러 오는 것이므로 크게 적는다.
                   Text(
                     currency.format(cost.due),
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
                     ),
                   ),
+                  if (plusText != null) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      plusText,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ],
               ),
               // 낼 돈에 아직 못 넣은 것(064) — 묵을 밤은 있는데 숙박 등급을
               // 안 골랐다. 숫자만 보여주면 숙박이 공짜인 줄 알고, 나중에
               // 늘어난 금액에 놀란다.
-              if (cost.dueUnsure) ...[
-                const SizedBox(height: 2),
+              if (cost.dueUnsure)
                 Text(
                   l10n.costBarLodgingPending,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-              ],
-              if (extrasLine != null) ...[
-                const SizedBox(height: 2),
+              if (extraNote != null)
                 Text(
-                  extrasLine,
+                  // 금액을 하나도 모르면 "＋ 약 얼마" 를 못 적으므로,
+                  // 이 줄이 더 든다는 사실 자체를 맡는다.
+                  plusText == null
+                      ? '${l10n.summaryPlusUnknownOnly} · $extraNote'
+                      : extraNote,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-              ],
             ],
           ),
         ),

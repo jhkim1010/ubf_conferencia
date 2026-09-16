@@ -3669,4 +3669,26 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get cpVenueUrlHelp =>
       '참가자가 장소를 누르면 여기로 갑니다. 호텔 홈페이지, 지도, 안내 문서 무엇이든 됩니다.';
+
+  @override
+  String costBarPlus(String amount) {
+    return '＋ 약 $amount';
+  }
+
+  @override
+  String get costBarExtraKindMeals => '식사';
+
+  @override
+  String get costBarExtraKindLodging => '숙박';
+
+  @override
+  String get costBarExtraKindAirfare => '항공권';
+
+  @override
+  String get costBarExtraKindOther => '기타';
+
+  @override
+  String costBarExtraNote(String kinds) {
+    return '$kinds — 저희에게 내지 않고 따로 쓰실 돈입니다';
+  }
 }
