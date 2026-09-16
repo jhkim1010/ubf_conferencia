@@ -6935,6 +6935,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lodging is added once you enter your return flight'**
   String get costBarLodgingNeedsFlight;
+
+  /// No description provided for @cpThemeTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Conference message'**
+  String get cpThemeTitleLabel;
+
+  /// No description provided for @cpThemeTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You are the light of the world'**
+  String get cpThemeTitleHint;
+
+  /// No description provided for @cpThemeVerseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bible passage'**
+  String get cpThemeVerseLabel;
+
+  /// No description provided for @cpThemeVerseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Matthew 5:14-16'**
+  String get cpThemeVerseHint;
 }
 
 class _AppLocalizationsDelegate

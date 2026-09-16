@@ -3821,4 +3821,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get costBarLodgingNeedsFlight =>
       'Lodging is added once you enter your return flight';
+
+  @override
+  String get cpThemeTitleLabel => 'Conference message';
+
+  @override
+  String get cpThemeTitleHint => 'You are the light of the world';
+
+  @override
+  String get cpThemeVerseLabel => 'Bible passage';
+
+  @override
+  String get cpThemeVerseHint => 'Matthew 5:14-16';
 }

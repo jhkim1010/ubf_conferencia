@@ -1152,5 +1152,9 @@
   "hotelNeedNo": "No, vuelvo a casa",
   "hotelNeedYes": "Sí, necesito habitación",
   "hotelNightsSelfNote": "Como no viaja en avión, indique usted las noches.",
-  "costBarLodgingNeedsFlight": "El alojamiento se suma cuando indique su vuelo de regreso"
+  "costBarLodgingNeedsFlight": "El alojamiento se suma cuando indique su vuelo de regreso",
+  "cpThemeTitleLabel": "Mensaje de la conferencia",
+  "cpThemeTitleHint": "Ustedes son la luz del mundo",
+  "cpThemeVerseLabel": "Pasaje bíblico",
+  "cpThemeVerseHint": "Mateo 5:14-16"
 }

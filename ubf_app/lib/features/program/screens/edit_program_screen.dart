@@ -27,6 +27,9 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
   final _locationController = TextEditingController();
   // 장소 홈페이지(065). 비워 두면 참가자 화면에 링크가 안 생긴다.
   final _venueUrlController = TextEditingController();
+  // 수양회 말씀 제목과 성경 본문(067). 둘 다 한 줄이다.
+  final _themeTitleController = TextEditingController();
+  final _themeVerseController = TextEditingController();
   final _airportController = TextEditingController();
 
   /// 현장 대표 연락처(040). 두 명 고정이었는데, 공항·숙소·차량을 나눠 맡는
@@ -119,6 +122,8 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _nameController.dispose();
     _locationController.dispose();
     _venueUrlController.dispose();
+    _themeTitleController.dispose();
+    _themeVerseController.dispose();
     _airportController.dispose();
     for (final c in _contacts) {
       c.name.dispose();
@@ -136,6 +141,8 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _nameController.text = program['name'] ?? '';
     _locationController.text = program['location'] ?? '';
     _venueUrlController.text = program['venue_url'] ?? '';
+    _themeTitleController.text = program['theme_title'] ?? '';
+    _themeVerseController.text = program['theme_verse'] ?? '';
     _airportController.text = program['nearest_airport'] ?? '';
     // 서버는 늘 목록으로 준다 — 040 이전 수양회는 옛 두 칸에서 만들어 준다.
     for (final c in _contacts) {
@@ -299,6 +306,8 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
         'name': _nameController.text.trim(),
         'location': _locationController.text.trim(),
         'venueUrl': _venueUrlController.text.trim(),
+        'themeTitle': _themeTitleController.text.trim(),
+        'themeVerse': _themeVerseController.text.trim(),
         'programType': _programType,
         'startDate': _startDate?.toIso8601String().split('T').first,
         'endDate': _endDate?.toIso8601String().split('T').first,
@@ -491,6 +500,26 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                     helperText: l10n.cpVenueUrlHelp,
                     helperMaxLines: 2,
                     prefixIcon: const Icon(Icons.link, size: 18),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // 말씀 제목과 성경 본문(067). 수양회 이름은 행정용이고,
+                // 이쪽이 그 모임이 무엇을 위한 것인지 말한다.
+                TextFormField(
+                  controller: _themeTitleController,
+                  decoration: InputDecoration(
+                    labelText: l10n.cpThemeTitleLabel,
+                    hintText: l10n.cpThemeTitleHint,
+                    prefixIcon: const Icon(Icons.format_quote, size: 18),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _themeVerseController,
+                  decoration: InputDecoration(
+                    labelText: l10n.cpThemeVerseLabel,
+                    hintText: l10n.cpThemeVerseHint,
+                    prefixIcon: const Icon(Icons.menu_book_outlined, size: 18),
                   ),
                 ),
                 const SizedBox(height: 12),

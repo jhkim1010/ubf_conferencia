@@ -3833,4 +3833,16 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get costBarLodgingNeedsFlight =>
       'El alojamiento se suma cuando indique su vuelo de regreso';
+
+  @override
+  String get cpThemeTitleLabel => 'Mensaje de la conferencia';
+
+  @override
+  String get cpThemeTitleHint => 'Ustedes son la luz del mundo';
+
+  @override
+  String get cpThemeVerseLabel => 'Pasaje bíblico';
+
+  @override
+  String get cpThemeVerseHint => 'Mateo 5:14-16';
 }

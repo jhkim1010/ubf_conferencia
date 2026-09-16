@@ -2545,5 +2545,9 @@
   "hotelNeedNo": "No, I go home",
   "hotelNeedYes": "Yes, I need a room",
   "hotelNightsSelfNote": "You are not flying, so enter the nights yourself.",
-  "costBarLodgingNeedsFlight": "Lodging is added once you enter your return flight"
+  "costBarLodgingNeedsFlight": "Lodging is added once you enter your return flight",
+  "cpThemeTitleLabel": "Conference message",
+  "cpThemeTitleHint": "You are the light of the world",
+  "cpThemeVerseLabel": "Bible passage",
+  "cpThemeVerseHint": "Matthew 5:14-16"
 }

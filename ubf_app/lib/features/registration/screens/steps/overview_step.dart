@@ -64,9 +64,48 @@ class OverviewStep extends ConsumerWidget {
     final feePremium = Money.parse(program['fee_premium']);
     final hasFee = feeBasic != null || feePremium != null;
 
+    final themeTitle = '${program['theme_title'] ?? ''}'.trim();
+    final themeVerse = '${program['theme_verse'] ?? ''}'.trim();
+
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        // 말씀 제목(067). 수양회 이름은 위 막대에 이미 있고 그것은 행정용
+        // 이름이다. 여기 오는 것은 **그 모임이 무엇을 위한 것인가** 이므로
+        // 날짜와 값보다 먼저 온다. 안 적어 두었으면 아무것도 안 나온다.
+        if (themeTitle.isNotEmpty) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  themeTitle,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                if (themeVerse.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    themeVerse,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
         Text(l10n.ovTitle, style: theme.textTheme.titleLarge),
         const SizedBox(height: 4),
         Text(

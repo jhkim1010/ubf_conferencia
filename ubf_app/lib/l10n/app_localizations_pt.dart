@@ -3834,4 +3834,16 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get costBarLodgingNeedsFlight =>
       'A hospedagem entra quando você informar o voo de volta';
+
+  @override
+  String get cpThemeTitleLabel => 'Mensagem da conferência';
+
+  @override
+  String get cpThemeTitleHint => 'Vós sois a luz do mundo';
+
+  @override
+  String get cpThemeVerseLabel => 'Passagem bíblica';
+
+  @override
+  String get cpThemeVerseHint => 'Mateus 5:14-16';
 }

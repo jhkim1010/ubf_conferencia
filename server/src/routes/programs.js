@@ -365,7 +365,8 @@ router.get('/', requireAuth, requireLeader, async (req, res) => {
 router.post('/', requireAuth, requireLeader, async (req, res) => {
   const {
     name, location, startDate, endDate, enabledSections, options,
-    venueUrl, nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
+    venueUrl, themeTitle, themeVerse,
+    nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
     programType, hostCountry,
     feeBasic, feePremium, feeBasicDesc, feePremiumDesc, discountOptions,
     currency, smallCohortPolicy, minTeamSize, hotelOptions,
@@ -446,7 +447,8 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
     // 프로그램 생성 (UUID는 DB에서 자동 생성)
     const [program] = await sql`
       INSERT INTO programs (
-        name, location, venue_url, leader_id, start_date, end_date, enabled_sections,
+        name, location, venue_url, theme_title, theme_verse,
+        leader_id, start_date, end_date, enabled_sections,
         nearest_airport, contact1_name, contact1_phone, contact2_name, contact2_phone,
         contacts, arrival_routes, fee_payment, tour_payment,
         program_type, host_country,
@@ -458,6 +460,8 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         ${name},
         ${location},
         ${venueUrl ?? null},
+        ${themeTitle ?? null},
+        ${themeVerse ?? null},
         ${req.user.leaderId},
         ${startDate ?? null},
         ${endDate ?? null},
@@ -540,7 +544,8 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
 router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
   const {
     name, location, startDate, endDate, enabledSections,
-    venueUrl, nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
+    venueUrl, themeTitle, themeVerse,
+    nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
     programType, options, hostCountry,
     feeBasic, feePremium, feeBasicDesc, feePremiumDesc, discountOptions,
     currency, hotelOptions, telegramBotToken, telegramChatId,
@@ -617,6 +622,10 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
         -- 장소 홈페이지(065). location 과 달리 COALESCE 를 쓰지 않는다 —
         -- 지우는 것도 뜻이 있고, 지울 길이 없으면 잘못 적은 주소가 영영 남는다.
         venue_url        = ${venueUrl ?? null},
+        -- 말씀 제목과 본문(067). venue_url 과 같이 COALESCE 를 안 쓴다 —
+        -- 지우는 것도 뜻이 있다.
+        theme_title      = ${themeTitle ?? null},
+        theme_verse      = ${themeVerse ?? null},
         start_date       = ${startDate ?? null},
         end_date         = ${endDate ?? null},
         enabled_sections = COALESCE(${enabledSections ? JSON.stringify(enabledSections) : null}::jsonb, enabled_sections),

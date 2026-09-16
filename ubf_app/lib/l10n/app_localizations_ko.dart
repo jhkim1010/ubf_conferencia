@@ -3733,4 +3733,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get costBarLodgingNeedsFlight => '돌아가는 비행기를 적으시면 그 뒤 숙박비가 더해집니다';
+
+  @override
+  String get cpThemeTitleLabel => '말씀 제목';
+
+  @override
+  String get cpThemeTitleHint => '너희는 세상의 빛이라';
+
+  @override
+  String get cpThemeVerseLabel => '성경 본문';
+
+  @override
+  String get cpThemeVerseHint => '마태복음 5:14-16';
 }
