@@ -383,7 +383,12 @@ class SummaryScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      currency.format(totalCost),
+                      cost.dueIsRange
+                          ? l10n.costBarRange(
+                              currency.format(cost.due),
+                              currency.format(cost.dueMax),
+                            )
+                          : currency.format(totalCost),
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             fontWeight: FontWeight.bold,

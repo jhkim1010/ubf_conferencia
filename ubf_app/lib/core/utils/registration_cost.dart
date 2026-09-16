@@ -19,6 +19,7 @@
 /// DB 도 HTTP 도 쓰지 않는다. test/registration_cost_test.dart 로 그대로 확인한다.
 library;
 
+import 'hotel_price.dart';
 import 'money.dart';
 import 'tour_extras.dart';
 
@@ -28,6 +29,7 @@ class RegistrationCost {
     required this.optionsTotal,
     required this.discount,
     required this.due,
+    required this.dueMax,
     required this.dueUnsure,
     required this.hotelNights,
     required this.hotelEstimate,
@@ -48,6 +50,16 @@ class RegistrationCost {
 
   /// 우리에게 내는 돈. 0 아래로는 안 내려간다.
   final double due;
+
+  /// 숙박 단가를 범위로 적어 둔 경우(066) 높은 쪽으로 센 낼 돈.
+  ///
+  /// 범위가 아니면 [due] 와 같다. **[due] 는 언제나 낮은 쪽**이고 명단에
+  /// 남는 것도 그쪽이다 — 잘못 잡았을 때 덜 받는 쪽이 더 받는 쪽보다 낫다.
+  /// 이 값은 화면이 "U\$ 295 ~ 315" 라고 적는 데만 쓴다.
+  final double dueMax;
+
+  /// 낼 돈이 범위인가.
+  bool get dueIsRange => dueMax > due;
 
   /// [due] 에 아직 못 넣은 것이 있는가.
   ///
@@ -124,16 +136,14 @@ class RegistrationCost {
       orElse: () => null,
     );
     final hotelNights = hotelNightsBefore + hotelNightsAfter;
-    final perNight = Money.parse(hotelPicked?['pricePerNight']);
-    final hotelEstimate = perNight != null && hotelNights > 0
-        ? (perNight * hotelNights).toDouble()
-        : null;
+    final price = HotelPrice.of(hotelPicked);
+    final hotelEstimate = price.lowFor(hotelNights)?.toDouble();
+    // 범위로 적어 둔 곳이면 높은 쪽으로도 한 번 센다.
+    final hotelEstimateMax = price.highFor(hotelNights)?.toDouble();
 
-    final due =
-        (tierFee ?? 0).toDouble() +
-        optionsTotal +
-        (hotelEstimate ?? 0) -
-        discount;
+    final base = (tierFee ?? 0).toDouble() + optionsTotal - discount;
+    final due = base + (hotelEstimate ?? 0);
+    final dueMax = base + (hotelEstimateMax ?? hotelEstimate ?? 0);
 
     final tour = TourExtras.of(picked);
 
@@ -142,6 +152,7 @@ class RegistrationCost {
       optionsTotal: _round(optionsTotal),
       discount: _round(discount),
       due: _round(due < 0 ? 0 : due),
+      dueMax: _round(dueMax < 0 ? 0 : dueMax),
       // 묵을 밤은 있는데 등급을 안 골랐으면 숙박비를 아직 못 더한 것이다.
       dueUnsure: hotelNights > 0 && hotelEstimate == null,
       hotelNights: hotelNights,

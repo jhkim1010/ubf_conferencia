@@ -6875,6 +6875,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{tour} · {what}'**
   String summaryExtrasItem(String tour, String what);
+
+  /// No description provided for @hotelPriceMinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Per night, lowest'**
+  String get hotelPriceMinLabel;
+
+  /// No description provided for @hotelPriceMaxLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest (optional)'**
+  String get hotelPriceMaxLabel;
+
+  /// No description provided for @hotelPriceRangeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the second box empty if the rate is fixed.'**
+  String get hotelPriceRangeHelp;
+
+  /// No description provided for @hotelPerNightRange.
+  ///
+  /// In en, this message translates to:
+  /// **'per night {low} – {high}'**
+  String hotelPerNightRange(String low, String high);
+
+  /// No description provided for @costBarRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{low} – {high}'**
+  String costBarRange(String low, String high);
+
+  /// No description provided for @hotelNeedAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you need a hotel outside the conference dates?'**
+  String get hotelNeedAsk;
+
+  /// No description provided for @hotelNeedNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No, I go home'**
+  String get hotelNeedNo;
+
+  /// No description provided for @hotelNeedYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, I need a room'**
+  String get hotelNeedYes;
+
+  /// No description provided for @hotelNightsSelfNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not flying, so enter the nights yourself.'**
+  String get hotelNightsSelfNote;
 }
 
 class _AppLocalizationsDelegate

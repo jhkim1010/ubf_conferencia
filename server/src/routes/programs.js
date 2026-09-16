@@ -139,12 +139,28 @@ function normalizeHotelOptions(raw) {
 
     // 단가를 못 적을 수도 있다(아직 협상 중). 그때는 null 로 두고 화면이
     // "금액 미정"이라고 말한다. 0 으로 적어 두면 공짜인 줄 안다.
+    //
+    // 단가는 **범위로 적을 수 있다(066)** — 방값이 날짜와 인원에 따라 갈리는
+    // 곳이 많아서, 한 숫자로 적으면 둘 중 하나는 틀린다.
+    //
+    // `pricePerNight` 가 **낮은 쪽**이다. 예전 자료에는 이 칸 하나뿐이므로
+    // 그대로 읽히고, 높은 쪽이 없으면 한 값으로 본다.
+    //
+    // **받는 돈은 언제나 낮은 쪽으로 센다.** 060·061 과 같은 이유다 —
+    // 잘못 잡았을 때 덜 받는 쪽이 더 받는 쪽보다 낫다.
     const price = parseFee(o?.pricePerNight);
+    const priceMax = parseFee(o?.pricePerNightMax);
+    const lo = Number.isNaN(price) ? null : price;
+    let hi = Number.isNaN(priceMax) ? null : priceMax;
+    // 높은 쪽이 낮은 쪽보다 작거나 같으면 범위가 아니다. 뒤집힌 채로 두면
+    // 화면이 "U$ 80 ~ 40" 을 적는다.
+    if (hi === null || lo === null || hi <= lo) hi = null;
     out.push({
       key,
       label,
       labels,
-      pricePerNight: Number.isNaN(price) ? null : price,
+      pricePerNight: lo,
+      pricePerNightMax: hi,
     });
   });
   return out;

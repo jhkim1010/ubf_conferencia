@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/hotel_nights.dart';
+import '../../../../core/utils/hotel_price.dart';
 import '../../providers/registration_provider.dart';
 
 // 수양회 전후 숙박(028)
@@ -10,8 +11,10 @@ import '../../providers/registration_provider.dart';
 // 멀리서 오는 사람은 수양회 며칠 전에 도착하고, 투어가 끝난 뒤에도 며칠 더
 // 머문다. 그 기간의 숙소는 수양회 숙소가 아니라 호텔이다.
 //
-// **이 단계는 외국에서 오는 사람에게만 보인다**(등록 흐름에서 판단).
-// 개최국 참가자는 전후에 집으로 가므로 물어볼 것이 없다.
+// **국제 수양회면 개최국 참가자에게도 보인다(066).** 예전에는 외국에서 오는
+// 사람에게만 보였는데, 먼 지방에서 오시는 분도 수양회 기간 밖에 잘 곳이
+// 필요하다. 다만 대부분은 집으로 가시므로 **먼저 필요한지부터 묻고**,
+// 필요 없다고 하면 아무것도 더 묻지 않는다.
 //
 // 박수는 백지로 묻지 않는다. 이미 적어 낸 항공편과 수양회·투어 일정에 답이
 // 들어 있으므로 계산해서 먼저 알려 주고, 다르면 고치게 한다. 백지로 물으면
@@ -27,6 +30,10 @@ class HotelStep extends ConsumerStatefulWidget {
   /// 그 뒤부터 호텔이 필요하다.
   final List<Map<String, dynamic>> tours;
 
+  /// 개최국에서 오는가(066). 그렇다면 비행기가 없어 박수를 계산할 수 없으므로
+  /// 필요한지부터 묻고, 필요하다면 본인이 박수를 적는다.
+  final bool sameCountryAsHost;
+
   const HotelStep({
     super.key,
     required this.programId,
@@ -35,6 +42,7 @@ class HotelStep extends ConsumerStatefulWidget {
     required this.programStart,
     required this.programEnd,
     required this.tours,
+    this.sameCountryAsHost = false,
   });
 
   @override
@@ -42,6 +50,9 @@ class HotelStep extends ConsumerStatefulWidget {
 }
 
 class _HotelStepState extends ConsumerState<HotelStep> {
+  /// 개최국 참가자에게만 쓰는 스위치. 처음 열 때는 이미 적어 둔 것이 있으면
+  /// 켜 둔다 — 껐다 켜는 사이에 적어 둔 값이 사라지면 안 된다.
+  bool? _wantsHotel;
   // 자동 계산을 화면당 한 번만 적용한다. 매 build 마다 밀어 넣으면
   // 참가자가 고친 값을 되돌려 버려 숫자를 바꿀 수 없게 된다.
 
@@ -112,6 +123,15 @@ class _HotelStepState extends ConsumerState<HotelStep> {
       orElse: () => null,
     );
     final nights = form.hotelNightsBefore + form.hotelNightsAfter;
+
+    // 개최국에서 오시는 분만 "필요 없음" 으로 둘 수 있다(066). 외국에서
+    // 오시는 분은 이 화면이 보이는 것 자체가 묵을 밤이 있다는 뜻이다.
+    //
+    // 처음 열 때는 이미 적어 둔 것이 있으면 켜 둔다 — 되돌아왔을 때 꺼져
+    // 있으면 본인이 적은 것이 사라진 것처럼 보인다.
+    final wantsHotel = !widget.sameCountryAsHost
+        ? true
+        : (_wantsHotel ?? (nights > 0 || form.hotelOptionKey != null));
     final perNight = Money.parse(picked?['pricePerNight']);
     final estimate = perNight != null && nights > 0 ? perNight * nights : null;
 
@@ -140,116 +160,164 @@ class _HotelStepState extends ConsumerState<HotelStep> {
         ),
         const SizedBox(height: 18),
 
+        // 개최국에서 오시는 분에게는 **필요한지부터 묻는다**(066).
+        // 대부분은 집으로 가시므로, 바로 박수와 등급을 들이밀면 안 그래도
+        // 되는 것을 고르게 만든다.
+        if (widget.sameCountryAsHost) ...[
+          Text(
+            l10n.hotelNeedAsk,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          SegmentedButton<bool>(
+            segments: [
+              ButtonSegment(value: false, label: Text(l10n.hotelNeedNo)),
+              ButtonSegment(value: true, label: Text(l10n.hotelNeedYes)),
+            ],
+            selected: {wantsHotel},
+            onSelectionChanged: (v) {
+              final on = v.first;
+              setState(() => _wantsHotel = on);
+              // 필요 없다고 하면 적어 둔 것을 지운다. 남겨 두면 값이
+              // 계속 매겨지는데 화면에는 아무것도 안 보인다.
+              if (!on) {
+                notifier.setHotelNights(before: 0, after: 0);
+                notifier.clearHotelChoice();
+              }
+            },
+          ),
+          const SizedBox(height: 18),
+        ],
+
         // 계산 결과를 먼저 말한다. 이것이 이 화면의 요지다.
-        _ComputedCard(computed: computed),
-        const SizedBox(height: 14),
-
-        _NightsRow(
-          label: l10n.hotelNightsBefore,
-          value: form.hotelNightsBefore,
-          onChanged: (v) => notifier.setHotelNights(before: v),
-        ),
-        const SizedBox(height: 4),
-        _NightsRow(
-          label: l10n.hotelNightsAfter,
-          value: form.hotelNightsAfter,
-          onChanged: (v) => notifier.setHotelNights(after: v),
-        ),
-        if (differs)
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () => _apply(computed),
-              icon: const Icon(Icons.refresh, size: 18),
-              label: Text(l10n.hotelRecalc),
-            ),
-          ),
-
-        const SizedBox(height: 18),
-        Text(
-          l10n.hotelPickPrompt,
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-        if (needsRoom) ...[
-          const SizedBox(height: 4),
+        // 비행기가 없는 분에게는 계산할 것이 없으므로 안 보여준다.
+        if (!widget.sameCountryAsHost) ...[
+          _ComputedCard(computed: computed),
+          const SizedBox(height: 14),
+        ] else if (wantsHotel) ...[
           Text(
-            l10n.hotelMustPick(form.hotelNightsBefore + form.hotelNightsAfter),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          Text(
-            l10n.hotelDefaultNote,
+            l10n.hotelNightsSelfNote,
             style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           ),
+          const SizedBox(height: 10),
         ],
-        const SizedBox(height: 10),
 
-        // 주최 측이 아직 등급을 안 정했을 수 있다. 빈 화면 대신 그렇게 말한다.
-        if (widget.options.isEmpty)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                l10n.hotelNoOptions,
-                style: TextStyle(color: Colors.grey[700]),
+        if (wantsHotel) ...[
+          _NightsRow(
+            label: l10n.hotelNightsBefore,
+            value: form.hotelNightsBefore,
+            onChanged: (v) => notifier.setHotelNights(before: v),
+          ),
+          const SizedBox(height: 4),
+          _NightsRow(
+            label: l10n.hotelNightsAfter,
+            value: form.hotelNightsAfter,
+            onChanged: (v) => notifier.setHotelNights(after: v),
+          ),
+          if (differs)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () => _apply(computed),
+                icon: const Icon(Icons.refresh, size: 18),
+                label: Text(l10n.hotelRecalc),
               ),
-            ),
-          )
-        else ...[
-          for (final o in widget.options)
-            _TierCard(
-              label: optionLabelFor(o, lang),
-              // 단가를 아직 못 정한 등급이 있다. 0 으로 보여주면 공짜인 줄 안다.
-              price: Money.parse(o['pricePerNight']) == null
-                  ? l10n.hotelPriceTbd
-                  : l10n.hotelPerNight(
-                      widget.currency.format(Money.parse(o['pricePerNight'])!),
-                    ),
-              selected: form.hotelOptionKey == o['key'],
-              onTap: () => notifier.selectHotelOption(o['key'] as String),
-            ),
-          // 묵을 밤이 있으면 "필요 없음" 을 내밀지 않는다. 내밀어 두면
-          // 그것을 고르고 넘어가는데, 그러면 담당자는 그 사람이 스스로
-          // 잡았다는 것인지 아직 안 정했다는 것인지 알 수 없다.
-          if (!needsRoom)
-            _TierCard(
-              label: l10n.hotelNone,
-              price: '',
-              selected: form.hotelOptionKey == null,
-              onTap: notifier.clearHotelChoice,
             ),
 
-          if (form.hotelOptionKey != null) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Expanded(child: Text(l10n.hotelEstimate)),
-                  Text(
-                    estimate != null
-                        ? widget.currency.format(estimate)
-                        : l10n.hotelPriceTbd,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            // 참가비와 섞이지 않는다는 사실을 분명히 적는다. 총액에 포함된
-            // 줄 알고 입금하면 호텔 값을 두 번 내거나 아예 안 내게 된다.
+          const SizedBox(height: 18),
+          Text(
+            l10n.hotelPickPrompt,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          if (needsRoom) ...[
+            const SizedBox(height: 4),
             Text(
-              l10n.hotelNotInFee,
+              l10n.hotelMustPick(
+                form.hotelNightsBefore + form.hotelNightsAfter,
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              l10n.hotelDefaultNote,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: Colors.grey[600],
               ),
             ),
+          ],
+          const SizedBox(height: 10),
+
+          // 주최 측이 아직 등급을 안 정했을 수 있다. 빈 화면 대신 그렇게 말한다.
+          if (widget.options.isEmpty)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  l10n.hotelNoOptions,
+                  style: TextStyle(color: Colors.grey[700]),
+                ),
+              ),
+            )
+          else ...[
+            for (final o in widget.options)
+              _TierCard(
+                label: optionLabelFor(o, lang),
+                // 단가를 아직 못 정한 등급이 있다. 0 으로 보여주면 공짜인 줄 안다.
+                // 범위로 적어 둔 곳이면 범위로 보여준다(066).
+                price: switch (HotelPrice.of(o)) {
+                  final p when p.isUnknown => l10n.hotelPriceTbd,
+                  final p when p.isRange => l10n.hotelPerNightRange(
+                    widget.currency.format(p.low),
+                    widget.currency.format(p.high),
+                  ),
+                  final p => l10n.hotelPerNight(widget.currency.format(p.low)),
+                },
+                selected: form.hotelOptionKey == o['key'],
+                onTap: () => notifier.selectHotelOption(o['key'] as String),
+              ),
+            // 묵을 밤이 있으면 "필요 없음" 을 내밀지 않는다. 내밀어 두면
+            // 그것을 고르고 넘어가는데, 그러면 담당자는 그 사람이 스스로
+            // 잡았다는 것인지 아직 안 정했다는 것인지 알 수 없다.
+            if (!needsRoom)
+              _TierCard(
+                label: l10n.hotelNone,
+                price: '',
+                selected: form.hotelOptionKey == null,
+                onTap: notifier.clearHotelChoice,
+              ),
+
+            if (form.hotelOptionKey != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(l10n.hotelEstimate)),
+                    Text(
+                      estimate != null
+                          ? widget.currency.format(estimate)
+                          : l10n.hotelPriceTbd,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              // 참가비와 섞이지 않는다는 사실을 분명히 적는다. 총액에 포함된
+              // 줄 알고 입금하면 호텔 값을 두 번 내거나 아예 안 내게 된다.
+              Text(
+                l10n.hotelNotInFee,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
           ],
         ],
       ],

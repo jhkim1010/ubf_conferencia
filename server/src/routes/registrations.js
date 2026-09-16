@@ -3,7 +3,7 @@ import { sql } from '../db.js';
 import { hotelNights } from '../services/hotel_nights.js';
 import { hotelChoiceOk } from '../services/hotel_choice.js';
 import { registrationTotal } from '../services/registration_total.js';
-import { resolveHotelChoice } from '../services/hotel.js';
+import { resolveHotelChoice, normalizeNights } from '../services/hotel.js';
 import { requireAuth } from '../middleware/auth.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
 
@@ -210,13 +210,30 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
                AND id = ANY(${picked_ids}) AND end_date IS NOT NULL`
         )
       : [];
-    const stay = hotelNights({
+    const flightStay = hotelNights({
       start: program.start_date,
       end: program.end_date,
       arrival: arrivalFlight?.scheduled_arrival,
       departure: departureFlight?.scheduled_departure,
       tours,
     });
+
+    // 박수는 비행 일정에서 낸다(060) — 물어보면 둘이 어긋나고, 어긋나면
+    // 어느 쪽이 맞는지 아무도 모른다.
+    //
+    // **비행 일정이 없는 사람은 그렇게 낼 수가 없다(066).** 개최국에서
+    // 버스나 차로 오시는 분들이다. 그분들에게는 항공편 화면을 아예 안
+    // 보여주므로 물어볼 것도 없고, 그래서 적어 낸 박수를 그대로 쓴다.
+    // 이렇게 갈라 두면 비행기를 타는 사람의 값은 예전 그대로다.
+    const stay = flightStay.nights > 0
+      ? flightStay
+      : {
+          before: normalizeNights(hotelNightsBefore),
+          after: normalizeNights(hotelNightsAfter),
+          nights:
+            normalizeNights(hotelNightsBefore) +
+            normalizeNights(hotelNightsAfter),
+        };
 
     // 낼 돈은 services/registration_total.js 한 곳에서 낸다.
     //

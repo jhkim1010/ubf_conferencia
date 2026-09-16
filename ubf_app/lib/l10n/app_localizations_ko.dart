@@ -3699,4 +3699,35 @@ class AppLocalizationsKo extends AppLocalizations {
   String summaryExtrasItem(String tour, String what) {
     return '$tour · $what';
   }
+
+  @override
+  String get hotelPriceMinLabel => '1박 최저';
+
+  @override
+  String get hotelPriceMaxLabel => '1박 최고 (선택)';
+
+  @override
+  String get hotelPriceRangeHelp => '값이 하나로 정해져 있으면 오른쪽 칸은 비워 두십시오.';
+
+  @override
+  String hotelPerNightRange(String low, String high) {
+    return '1박 $low ~ $high';
+  }
+
+  @override
+  String costBarRange(String low, String high) {
+    return '$low ~ $high';
+  }
+
+  @override
+  String get hotelNeedAsk => '수양회 기간 외에 호텔이 필요하십니까?';
+
+  @override
+  String get hotelNeedNo => '아니요, 집으로 갑니다';
+
+  @override
+  String get hotelNeedYes => '예, 방이 필요합니다';
+
+  @override
+  String get hotelNightsSelfNote => '비행기를 타지 않으시므로 박수를 직접 적어 주십시오.';
 }

@@ -20,12 +20,16 @@ describe('isHotelEligible', () => {
     assert.equal(isHotelEligible({ hostCountry: 'AR', country: 'KR' }), true);
   });
 
-  test('개최국 사람은 못 고른다 — 전후에 집으로 간다', () => {
-    assert.equal(isHotelEligible({ hostCountry: 'AR', country: 'AR' }), false);
+  // 066: 예전에는 개최국 사람을 막았다. 먼 지방에서 오시는 분도 수양회
+  // 기간 밖에 잘 곳이 필요하다 — 필요 없으면 화면에서 "필요 없음" 으로
+  // 두면 되고, 그때는 박수가 0 이라 값도 안 매겨진다.
+  test('개최국 사람도 고를 수 있다', () => {
+    assert.equal(isHotelEligible({ hostCountry: 'AR', country: 'AR' }), true);
   });
 
-  test('개최국이 없으면 아무도 못 고른다', () => {
-    // 누가 외국인인지 판정할 근거가 없다. 나중에 개최국을 적는 순간
+  test('개최국이 없으면(지역 수양회) 아무도 못 고른다', () => {
+    // 전후 숙박은 멀리서 오는 것을 전제한 기능이고, 지역 수양회는 그
+    // 전제가 없다. 나중에 개최국을 적는 순간
     // 이미 신청해 둔 사람의 자격이 통째로 흔들린다.
     assert.equal(isHotelEligible({ hostCountry: null, country: 'KR' }), false);
     assert.equal(isHotelEligible({ hostCountry: '', country: 'KR' }), false);
@@ -78,13 +82,27 @@ describe('resolveHotelChoice', () => {
     });
   });
 
-  test('개최국 참가자의 선택은 떨어뜨린다', () => {
+  // 066: 개최국 참가자의 선택도 그대로 받는다.
+  test('개최국 참가자의 선택도 살린다', () => {
     const r = resolveHotelChoice({
       ...base,
       country: 'AR',
       optionKey: 'h2',
       nightsBefore: 2,
       nightsAfter: 3,
+    });
+    assert.equal(r.key, 'h2');
+    assert.equal(r.nightsBefore, 2);
+    assert.equal(r.nightsAfter, 3);
+  });
+
+  // 지역 수양회(개최국 없음)는 여전히 떨어뜨린다.
+  test('개최국이 없으면 선택을 떨어뜨린다', () => {
+    const r = resolveHotelChoice({
+      ...base,
+      hostCountry: null,
+      optionKey: 'h2',
+      nightsBefore: 2,
     });
     assert.equal(r.key, null);
     assert.equal(r.nightsBefore, 0);

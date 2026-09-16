@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import '../../../core/utils/hotel_price.dart';
 import '../../../core/utils/money.dart';
 
 // 수양회 전후 숙박 수준 편집기(028).
@@ -41,15 +42,26 @@ Map<String, dynamic> buildHotelLevel({
   required Map<String, String> labels,
   required num? price,
   required String key,
-}) => {
-  'key': key,
-  // 화면 언어가 없을 때 쓰는 대표 이름. 한 칸만 채워도 만들 수 있으므로
-  // 있는 것 중에서 고른다.
-  'label': labels['en'] ?? labels['ko'] ?? labels.values.first,
-  'labels': labels,
+  num? priceMax,
+}) {
   // 단가를 아직 못 정했으면 비워 둔다. 0 으로 넣으면 참가자가 공짜인 줄 안다.
-  'pricePerNight': price != null && price >= 0 ? price : null,
-};
+  final lo = price != null && price >= 0 ? price : null;
+  // 범위로 적을 수 있다(066). `pricePerNight` 가 **낮은 쪽**이고, 높은 쪽이
+  // 없거나 낮은 쪽보다 크지 않으면 한 값으로 본다 — 뒤집힌 채로 두면
+  // 화면이 "U\$ 80 ~ 40" 을 적는다.
+  final hi = (lo != null && priceMax != null && priceMax > lo)
+      ? priceMax
+      : null;
+  return {
+    'key': key,
+    // 화면 언어가 없을 때 쓰는 대표 이름. 한 칸만 채워도 만들 수 있으므로
+    // 있는 것 중에서 고른다.
+    'label': labels['en'] ?? labels['ko'] ?? labels.values.first,
+    'labels': labels,
+    'pricePerNight': lo,
+    'pricePerNightMax': hi,
+  };
+}
 
 /// 아직 쓴 적 없는 key.
 ///
@@ -71,6 +83,7 @@ class _HotelSectionState extends State<HotelSection> {
   final _es = TextEditingController();
   final _pt = TextEditingController();
   final _price = TextEditingController();
+  final _priceMax = TextEditingController();
 
   /// 지금 고치고 있는 수준의 key. null 이면 새로 만드는 중이다.
   String? _editingKey;
@@ -82,6 +95,7 @@ class _HotelSectionState extends State<HotelSection> {
     _es.dispose();
     _pt.dispose();
     _price.dispose();
+    _priceMax.dispose();
     super.dispose();
   }
 
@@ -94,6 +108,7 @@ class _HotelSectionState extends State<HotelSection> {
     // 지부가 항목을 아예 못 만든다.
     if (labels.isEmpty) return;
     final price = num.tryParse(_price.text.trim());
+    final priceMax = num.tryParse(_priceMax.text.trim());
 
     final editing = _editingKey;
     if (editing == null) {
@@ -101,6 +116,7 @@ class _HotelSectionState extends State<HotelSection> {
         buildHotelLevel(
           labels: labels,
           price: price,
+          priceMax: priceMax,
           key: nextHotelKey(widget.hotelOptions),
         ),
       );
@@ -112,6 +128,7 @@ class _HotelSectionState extends State<HotelSection> {
       widget.hotelOptions[at] = buildHotelLevel(
         labels: labels,
         price: price,
+        priceMax: priceMax,
         key: editing,
       );
     }
@@ -135,8 +152,10 @@ class _HotelSectionState extends State<HotelSection> {
         _pt.text.isEmpty) {
       _en.text = '${o['label'] ?? ''}';
     }
-    final p = Money.parse(o['pricePerNight']);
-    _price.text = p == null ? '' : '${p == p.roundToDouble() ? p.toInt() : p}';
+    String plain(num? v) =>
+        v == null ? '' : '${v == v.roundToDouble() ? v.toInt() : v}';
+    _price.text = plain(Money.parse(o['pricePerNight']));
+    _priceMax.text = plain(Money.parse(o['pricePerNightMax']));
     setState(() => _editingKey = o['key'] as String?);
   }
 
@@ -146,6 +165,7 @@ class _HotelSectionState extends State<HotelSection> {
     _es.clear();
     _pt.clear();
     _price.clear();
+    _priceMax.clear();
     _editingKey = null;
   }
 
@@ -194,14 +214,21 @@ class _HotelSectionState extends State<HotelSection> {
                 dense: true,
                 onTap: () => _edit(o),
                 title: Text(optionLabelFor(o, lang)),
-                subtitle: Text(
-                  Money.parse(o['pricePerNight']) == null
-                      ? l10n.hotelPriceTbd
-                      : l10n.hotelPerNight(
-                          widget.currency.format(
-                            Money.parse(o['pricePerNight'])!,
-                          ),
-                        ),
+                subtitle: Builder(
+                  builder: (_) {
+                    final price = HotelPrice.of(o);
+                    if (price.isUnknown) return Text(l10n.hotelPriceTbd);
+                    return Text(
+                      price.isRange
+                          ? l10n.hotelPerNightRange(
+                              widget.currency.format(price.low),
+                              widget.currency.format(price.high),
+                            )
+                          : l10n.hotelPerNight(
+                              widget.currency.format(price.low),
+                            ),
+                    );
+                  },
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -245,10 +272,27 @@ class _HotelSectionState extends State<HotelSection> {
           ],
         ),
         const SizedBox(height: 8),
-        _field(
-          _price,
-          '${l10n.hotelPricePerNightLabel} (${widget.currency.code})',
-          numeric: true,
+        Row(
+          children: [
+            Expanded(
+              child: _field(
+                _price,
+                '${l10n.hotelPriceMinLabel} (${widget.currency.code})',
+                numeric: true,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _field(_priceMax, l10n.hotelPriceMaxLabel, numeric: true),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4, left: 2),
+          child: Text(
+            l10n.hotelPriceRangeHelp,
+            style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+          ),
         ),
         const SizedBox(height: 8),
         Row(

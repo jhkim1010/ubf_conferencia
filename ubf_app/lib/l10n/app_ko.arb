@@ -1142,5 +1142,14 @@
   "costBarExtraKindOther": "기타",
   "costBarExtraNote": "투어 값에 안 든 것: {kinds}. 저희에게 내지 않습니다.",
   "summaryExtrasTitle": "투어 값에 안 들어 있는 것",
-  "summaryExtrasItem": "{tour} · {what}"
+  "summaryExtrasItem": "{tour} · {what}",
+  "hotelPriceMinLabel": "1박 최저",
+  "hotelPriceMaxLabel": "1박 최고 (선택)",
+  "hotelPriceRangeHelp": "값이 하나로 정해져 있으면 오른쪽 칸은 비워 두십시오.",
+  "hotelPerNightRange": "1박 {low} ~ {high}",
+  "costBarRange": "{low} ~ {high}",
+  "hotelNeedAsk": "수양회 기간 외에 호텔이 필요하십니까?",
+  "hotelNeedNo": "아니요, 집으로 갑니다",
+  "hotelNeedYes": "예, 방이 필요합니다",
+  "hotelNightsSelfNote": "비행기를 타지 않으시므로 박수를 직접 적어 주십시오."
 }

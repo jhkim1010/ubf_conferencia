@@ -257,16 +257,22 @@ class _RegistrationFlowScreenState
               ),
             ),
           ],
-          // 수양회 전후 숙박(028). **외국에서 오는 사람에게만 묻는다** —
-          // 개최국 참가자는 전후에 집으로 가므로 물어볼 것이 없고,
-          // 서버도 그 선택을 떨어뜨린다(services/hotel.js).
+          // 수양회 전후 숙박(028). **국제 수양회면 누구에게나 묻는다(066)** —
+          // 개최국 참가자도 먼 지방에서 오시면 기간 밖에 잘 곳이 필요하다.
+          // 다만 그분들에게는 화면이 "필요하십니까?" 부터 묻고, 필요 없다고
+          // 하면 아무것도 더 묻지 않는다.
+          //
+          // 지역 수양회(개최국 없음)에는 안 보인다. 전후 숙박은 멀리서 오는
+          // 것을 전제한 기능이고, 지역 수양회는 그 전제가 없다.
           //
           // 비행기와 투어 뒤에 온다. 박수를 그 둘로 세기 때문이다.
-          if (!sameCountryAsHost && hostCountry != null)
+          if (hostCountry != null)
             (
               title: l10n.regStepHotel,
               widget: HotelStep(
                 programId: widget.programId,
+                // 비행기가 없으면 박수를 계산할 수 없다. 본인이 적는다.
+                sameCountryAsHost: sameCountryAsHost,
                 options: List<Map<String, dynamic>>.from(
                   program['hotel_options'] as List? ?? const [],
                 ),

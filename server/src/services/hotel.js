@@ -7,16 +7,17 @@ export const MAX_NIGHTS = 60;
 
 // 이 사람이 숙박 등급을 고를 수 있는가.
 //
-// **외국에서 오는 사람만 고른다.** 개최국 사람은 수양회 전후에 집으로 간다.
-// 판정 기준은 registrations.country 와 programs.host_country 다 — 할인 자격·
-// 봉사 자격·픽업 제외가 이미 쓰는 기준이라 여기서만 다르게 볼 이유가 없다.
+// **국제 수양회의 참가자면 누구나 고른다(066).**
 //
-// 개최국이 정해지지 않았으면 아무도 고를 수 없다. "누가 외국인인지"를 판정할
-// 근거가 없는 상태에서 고르게 두면, 개최국을 나중에 적는 순간 이미 신청해 둔
-// 사람의 자격이 통째로 흔들린다.
+// 예전에는 외국에서 오는 사람만이었다. 개최국 사람은 전후에 집으로 간다고
+// 보았는데, 실제로는 먼 지방에서 오시는 분이 있고 그분들도 수양회 기간 밖에
+// 잘 곳이 필요하다. 필요 없으면 화면에서 "필요 없음" 으로 두면 되고, 그때는
+// 박수가 0 이라 값도 안 매겨진다 — 물어보는 것 자체는 해가 없다.
+//
+// 개최국이 정해지지 않았으면(지역 수양회) 아무도 고를 수 없다. 전후 숙박은
+// 멀리서 오는 것을 전제한 기능이고, 지역 수양회는 그 전제가 없다.
 export function isHotelEligible({ hostCountry, country }) {
-  if (!hostCountry || !country) return false;
-  return country !== hostCountry;
+  return !!hostCountry && !!country;
 }
 
 export function normalizeNights(v) {

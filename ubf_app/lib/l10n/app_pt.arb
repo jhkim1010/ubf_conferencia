@@ -1128,5 +1128,14 @@
   "costBarExtraKindOther": "outros",
   "costBarExtraNote": "Não incluído no preço do passeio: {kinds}. Você paga por conta própria.",
   "summaryExtrasTitle": "Não incluído no preço do passeio",
-  "summaryExtrasItem": "{tour} · {what}"
+  "summaryExtrasItem": "{tour} · {what}",
+  "hotelPriceMinLabel": "Por noite, mínimo",
+  "hotelPriceMaxLabel": "Máximo (opcional)",
+  "hotelPriceRangeHelp": "Deixe a segunda caixa vazia se a diária for fixa.",
+  "hotelPerNightRange": "por noite {low} – {high}",
+  "costBarRange": "{low} – {high}",
+  "hotelNeedAsk": "Você precisa de hotel fora das datas da conferência?",
+  "hotelNeedNo": "Não, volto para casa",
+  "hotelNeedYes": "Sim, preciso de quarto",
+  "hotelNightsSelfNote": "Como você não voa, informe as noites você mesmo."
 }

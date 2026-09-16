@@ -100,7 +100,15 @@ class CostBar extends ConsumerWidget {
                   const SizedBox(width: 10),
                   // 이 줄을 보러 오는 것이므로 크게 적는다.
                   Text(
-                    currency.format(cost.due),
+                    // 숙박 단가를 범위로 적어 둔 곳이면 범위로 적는다(066).
+                    // 명단에 남는 것은 낮은 쪽이지만, 참가자에게는 얼마까지
+                    // 들 수 있는지를 말해 주어야 한다.
+                    cost.dueIsRange
+                        ? l10n.costBarRange(
+                            currency.format(cost.due),
+                            currency.format(cost.dueMax),
+                          )
+                        : currency.format(cost.due),
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,

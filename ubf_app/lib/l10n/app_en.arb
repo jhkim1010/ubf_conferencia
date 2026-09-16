@@ -2515,5 +2515,34 @@
         "type": "String"
       }
     }
-  }
+  },
+  "hotelPriceMinLabel": "Per night, lowest",
+  "hotelPriceMaxLabel": "Highest (optional)",
+  "hotelPriceRangeHelp": "Leave the second box empty if the rate is fixed.",
+  "hotelPerNightRange": "per night {low} – {high}",
+  "@hotelPerNightRange": {
+    "placeholders": {
+      "low": {
+        "type": "String"
+      },
+      "high": {
+        "type": "String"
+      }
+    }
+  },
+  "costBarRange": "{low} – {high}",
+  "@costBarRange": {
+    "placeholders": {
+      "low": {
+        "type": "String"
+      },
+      "high": {
+        "type": "String"
+      }
+    }
+  },
+  "hotelNeedAsk": "Do you need a hotel outside the conference dates?",
+  "hotelNeedNo": "No, I go home",
+  "hotelNeedYes": "Yes, I need a room",
+  "hotelNightsSelfNote": "You are not flying, so enter the nights yourself."
 }

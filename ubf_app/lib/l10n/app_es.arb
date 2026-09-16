@@ -1142,5 +1142,14 @@
   "costBarExtraKindOther": "otros",
   "costBarExtraNote": "No incluido en el precio del tour: {kinds}. Lo paga usted.",
   "summaryExtrasTitle": "No incluido en el precio del tour",
-  "summaryExtrasItem": "{tour} · {what}"
+  "summaryExtrasItem": "{tour} · {what}",
+  "hotelPriceMinLabel": "Por noche, mínimo",
+  "hotelPriceMaxLabel": "Máximo (opcional)",
+  "hotelPriceRangeHelp": "Deje vacía la segunda casilla si la tarifa es fija.",
+  "hotelPerNightRange": "por noche {low} – {high}",
+  "costBarRange": "{low} – {high}",
+  "hotelNeedAsk": "¿Necesita hotel fuera de las fechas de la conferencia?",
+  "hotelNeedNo": "No, vuelvo a casa",
+  "hotelNeedYes": "Sí, necesito habitación",
+  "hotelNightsSelfNote": "Como no viaja en avión, indique usted las noches."
 }

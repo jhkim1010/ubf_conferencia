@@ -3796,4 +3796,38 @@ class AppLocalizationsPt extends AppLocalizations {
   String summaryExtrasItem(String tour, String what) {
     return '$tour · $what';
   }
+
+  @override
+  String get hotelPriceMinLabel => 'Por noite, mínimo';
+
+  @override
+  String get hotelPriceMaxLabel => 'Máximo (opcional)';
+
+  @override
+  String get hotelPriceRangeHelp =>
+      'Deixe a segunda caixa vazia se a diária for fixa.';
+
+  @override
+  String hotelPerNightRange(String low, String high) {
+    return 'por noite $low – $high';
+  }
+
+  @override
+  String costBarRange(String low, String high) {
+    return '$low – $high';
+  }
+
+  @override
+  String get hotelNeedAsk =>
+      'Você precisa de hotel fora das datas da conferência?';
+
+  @override
+  String get hotelNeedNo => 'Não, volto para casa';
+
+  @override
+  String get hotelNeedYes => 'Sim, preciso de quarto';
+
+  @override
+  String get hotelNightsSelfNote =>
+      'Como você não voa, informe as noites você mesmo.';
 }
