@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/utils/registration_cost.dart';
+import '../../../core/utils/venue_link.dart';
 import '../../../core/utils/tour_extras.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -175,7 +177,12 @@ class SummaryScreen extends ConsumerWidget {
                 icon: Icons.event,
                 children: [
                   _InfoRow(l10n.summaryName, program['name'] ?? ''),
-                  _InfoRow(l10n.summaryLocation, program['location'] ?? ''),
+                  _InfoRow(
+                    l10n.summaryLocation,
+                    program['location'] ?? '',
+                    // 장소 홈페이지(065). 1번 화면과 같은 자리에서 열린다.
+                    link: VenueLink.parse(program['venue_url']),
+                  ),
                   if (program['start_date'] != null)
                     _InfoRow(
                       l10n.summaryPeriod,
@@ -602,11 +609,14 @@ class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _InfoRow(this.label, this.value);
+  /// 있으면 이 줄이 눌린다(065). 못 여는 주소면 null 이라 그냥 글자로 남는다.
+  final VenueLink? link;
+
+  const _InfoRow(this.label, this.value, {this.link});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -622,13 +632,27 @@ class _InfoRow extends StatelessWidget {
             const SizedBox(width: 8),
           ],
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w500),
+            child: Text.rich(
+              TextSpan(
+                text: value,
+                children: link == null ? null : const [TextSpan(text: '  ↗')],
+              ),
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: link == null
+                    ? null
+                    : Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
         ],
       ),
+    );
+
+    if (link == null) return row;
+    return InkWell(
+      onTap: () => launchUrl(link!.uri, mode: LaunchMode.externalApplication),
+      child: row,
     );
   }
 }

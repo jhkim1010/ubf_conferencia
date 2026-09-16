@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../../core/utils/money.dart';
+import '../../../../core/utils/venue_link.dart';
 import 'fee_section.dart';
 
 /// 등록의 첫 화면 (064)
@@ -93,6 +95,10 @@ class OverviewStep extends ConsumerWidget {
                 _Fact(
                   label: l10n.summaryLocation,
                   value: '${program['location']}',
+                  // 장소 홈페이지(065). 못 여는 주소면 null 이고, 그때는
+                  // 그냥 글자로 남는다 — 누를 것이 없는데 누를 수 있어
+                  // 보이면 안 된다.
+                  link: VenueLink.parse(program['venue_url']),
                 ),
             ],
           ),
@@ -130,12 +136,15 @@ class _Fact extends StatelessWidget {
   final String value;
   final String? sub;
 
-  const _Fact({required this.label, required this.value, this.sub});
+  /// 있으면 이 줄 전체가 눌린다(065).
+  final VenueLink? link;
+
+  const _Fact({required this.label, required this.value, this.sub, this.link});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,15 +165,32 @@ class _Fact extends StatelessWidget {
                 // 날짜와 장소는 본문보다 두 배로 키운다. 이 화면에서 사람이
                 // 실제로 읽는 것이 이 둘과 아래의 참가비 설명이고, 나머지는
                 // 곁다리다. 작게 두면 읽지 않고 넘어간다.
-                Text(
-                  value,
+                Text.rich(
+                  TextSpan(
+                    text: value,
+                    children: link == null
+                        ? null
+                        // 누를 수 있다는 것을 화살표로 알린다. 밑줄은 글씨가
+                        // 커서 오히려 읽기를 방해한다.
+                        : const [TextSpan(text: '  ↗')],
+                  ),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     fontSize: (theme.textTheme.titleMedium?.fontSize ?? 16) * 2,
                     height: 1.2,
+                    color: link == null ? null : theme.colorScheme.primary,
                   ),
                   textAlign: TextAlign.end,
                 ),
+                // 누르기 전에 어디로 가는지 알 수 있어야 한다. 주소 전체를
+                // 적으면 장소 이름을 가리므로 도메인만 적는다.
+                if (link != null)
+                  Text(
+                    link!.host,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                  ),
                 if (sub != null)
                   Text(
                     sub!,
@@ -176,6 +202,17 @@ class _Fact extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+
+    if (link == null) return row;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        // 기기의 브라우저로 연다. 투어 브로슈어와 같은 방식이라
+        // 등록하던 자리를 잃지 않는다.
+        onTap: () => launchUrl(link!.uri, mode: LaunchMode.externalApplication),
+        child: row,
       ),
     );
   }

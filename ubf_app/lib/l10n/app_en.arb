@@ -2481,5 +2481,7 @@
     }
   },
   "costBarDue": "You pay us so far",
-  "costBarLodgingPending": "Lodging is added once you pick a room level"
+  "costBarLodgingPending": "Lodging is added once you pick a room level",
+  "cpVenueUrlLabel": "Venue website",
+  "cpVenueUrlHelp": "Participants open this when they tap the venue. A hotel page, a map, anything."
 }

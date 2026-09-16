@@ -3746,4 +3746,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get costBarLodgingPending =>
       'Lodging is added once you pick a room level';
+
+  @override
+  String get cpVenueUrlLabel => 'Venue website';
+
+  @override
+  String get cpVenueUrlHelp =>
+      'Participants open this when they tap the venue. A hotel page, a map, anything.';
 }

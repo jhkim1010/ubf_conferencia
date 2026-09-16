@@ -6815,6 +6815,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lodging is added once you pick a room level'**
   String get costBarLodgingPending;
+
+  /// No description provided for @cpVenueUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Venue website'**
+  String get cpVenueUrlLabel;
+
+  /// No description provided for @cpVenueUrlHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants open this when they tap the venue. A hotel page, a map, anything.'**
+  String get cpVenueUrlHelp;
 }
 
 class _AppLocalizationsDelegate

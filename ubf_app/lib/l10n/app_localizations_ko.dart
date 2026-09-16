@@ -3662,4 +3662,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get costBarLodgingPending => '전후 숙박 등급을 고르면 숙박비가 더해집니다';
+
+  @override
+  String get cpVenueUrlLabel => '장소 홈페이지';
+
+  @override
+  String get cpVenueUrlHelp =>
+      '참가자가 장소를 누르면 여기로 갑니다. 호텔 홈페이지, 지도, 안내 문서 무엇이든 됩니다.';
 }

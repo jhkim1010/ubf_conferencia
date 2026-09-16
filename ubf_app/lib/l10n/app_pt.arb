@@ -1118,5 +1118,7 @@
   "feeUpgradeExtra": "+{amount}",
   "feeUpgradeTotal": "{amount}",
   "costBarDue": "O que você paga até agora",
-  "costBarLodgingPending": "A hospedagem entra quando você escolher o nível do quarto"
+  "costBarLodgingPending": "A hospedagem entra quando você escolher o nível do quarto",
+  "cpVenueUrlLabel": "Site do local",
+  "cpVenueUrlHelp": "Os participantes abrem ao tocar no local. A página do hotel, um mapa, o que ajudar."
 }

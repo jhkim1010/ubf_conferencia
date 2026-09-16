@@ -25,6 +25,8 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
+  // 장소 홈페이지(065). 비워 두면 참가자 화면에 링크가 안 생긴다.
+  final _venueUrlController = TextEditingController();
   final _airportController = TextEditingController();
 
   /// 현장 대표 연락처(040). 두 명 고정이었는데, 공항·숙소·차량을 나눠 맡는
@@ -116,6 +118,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _feePremiumDescController.dispose();
     _nameController.dispose();
     _locationController.dispose();
+    _venueUrlController.dispose();
     _airportController.dispose();
     for (final c in _contacts) {
       c.name.dispose();
@@ -132,6 +135,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
 
     _nameController.text = program['name'] ?? '';
     _locationController.text = program['location'] ?? '';
+    _venueUrlController.text = program['venue_url'] ?? '';
     _airportController.text = program['nearest_airport'] ?? '';
     // 서버는 늘 목록으로 준다 — 040 이전 수양회는 옛 두 칸에서 만들어 준다.
     for (final c in _contacts) {
@@ -294,6 +298,7 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
       await ApiClient.updateProgram(widget.programId, {
         'name': _nameController.text.trim(),
         'location': _locationController.text.trim(),
+        'venueUrl': _venueUrlController.text.trim(),
         'programType': _programType,
         'startDate': _startDate?.toIso8601String().split('T').first,
         'endDate': _endDate?.toIso8601String().split('T').first,
@@ -473,6 +478,20 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   decoration: InputDecoration(labelText: l10n.cpLocationLabel),
                   validator: (v) =>
                       v?.isEmpty == true ? l10n.cpLocationRequired : null,
+                ),
+                const SizedBox(height: 12),
+                // 장소 홈페이지(065). 장소 바로 아래에 둔다 — 같은 것을 말하는
+                // 두 칸이고, 떨어뜨려 놓으면 둘이 같은 곳을 가리키는지 알 수 없다.
+                TextFormField(
+                  controller: _venueUrlController,
+                  keyboardType: TextInputType.url,
+                  decoration: InputDecoration(
+                    labelText: l10n.cpVenueUrlLabel,
+                    hintText: 'https://',
+                    helperText: l10n.cpVenueUrlHelp,
+                    helperMaxLines: 2,
+                    prefixIcon: const Icon(Icons.link, size: 18),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(

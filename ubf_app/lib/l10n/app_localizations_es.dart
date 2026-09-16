@@ -3758,4 +3758,11 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get costBarLodgingPending =>
       'El alojamiento se suma cuando elija el nivel de habitación';
+
+  @override
+  String get cpVenueUrlLabel => 'Sitio web del lugar';
+
+  @override
+  String get cpVenueUrlHelp =>
+      'Los participantes lo abren al tocar el lugar. La página del hotel, un mapa, lo que sirva.';
 }
