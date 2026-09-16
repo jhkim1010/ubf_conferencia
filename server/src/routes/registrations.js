@@ -169,12 +169,25 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     const picked_ids = Array.isArray(selectedOptions)
       ? [...new Set(selectedOptions.filter((v) => typeof v === 'string'))]
       : [];
+    // **그만둔 투어에는 값을 매기지 않는다(is_active).**
+    //
+    // 담당자가 투어를 목록에서 빼면 그 옵션은 is_active = false 가 되고
+    // 참가자 화면에서 사라진다. 그런데 이미 신청한 사람의 selected_options
+    // 에는 그 id 가 남고, 여기서 걸러내지 않으면 **보이지도 않는 투어에 값이
+    // 계속 매겨진다.** 운영에서 한 분이 이과수 투어에 두 번 값을 물고
+    // 있었다 — 담당자가 이름을 고치면서(Carata → Catarata) 새 옵션이 생겼고
+    // 옛 것이 선택에 남았는데, 본인은 그것이 붙어 있는 줄도 몰랐다.
+    //
+    // 화면에 안 보이는 것은 값도 안 매긴다. 남은 id 자체를 지우는 것은
+    // 따로 한다(scripts/prune-dead-tour-choices.js) — 여기서 지우면 담당자가
+    // 실수로 껐다 켜는 사이에 저장한 사람의 신청이 영영 사라진다.
     const optionRows = picked_ids.length
       ? await sql`
           SELECT COALESCE(SUM(cost), 0)::numeric AS sum
             FROM program_options
            WHERE program_id = ${req.params.programId}
-             AND id = ANY(${picked_ids})`
+             AND id = ANY(${picked_ids})
+             AND is_active = true`
       : [{ sum: 0 }];
     const optionsCost = Number(optionRows[0]?.sum ?? 0);
 

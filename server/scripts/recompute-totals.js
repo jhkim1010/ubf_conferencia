@@ -43,18 +43,17 @@ const changes = [];
 for (const r of rows) {
   // 고른 투어 값의 합.
   //
-  // **is_active 를 보지 않는다.** 저장 경로(routes/registrations.js)가 안 보기
-  // 때문이다. 여기서만 죽은 옵션을 빼면 이 스크립트가 낸 숫자를 앱은 결코
-  // 다시 내지 못하고, 그 사람이 한 번만 저장해도 도로 튄다. 이 스크립트가
-  // 할 일은 **오늘의 서버가 낼 값을 그대로 채우는 것**이지, 데이터를
-  // 고치는 것이 아니다. 죽은 옵션을 가리키는 선택은 따로 다룬다
-  // (scripts/repair-orphan-tour-choices.js).
+  // **저장 경로(routes/registrations.js)와 같은 규칙이어야 한다.** 이 스크립트가
+  // 할 일은 오늘의 서버가 낼 값을 그대로 채우는 것이다. 규칙이 갈리면 여기서
+  // 채운 숫자를 앱이 다시 내지 못하고, 그 사람이 한 번만 저장해도 도로 튄다.
+  //
+  // 그쪽이 그만둔 투어(is_active = false)를 안 세므로 여기서도 안 센다.
   const ids = Array.isArray(r.selected_options) ? r.selected_options : [];
   const [{ sum } = { sum: 0 }] = ids.length
     ? await sql`
         SELECT COALESCE(SUM(cost), 0)::numeric AS sum
           FROM program_options
-         WHERE id = ANY(${ids})`
+         WHERE id = ANY(${ids}) AND is_active = true`
     : [{ sum: 0 }];
 
   const { total, hotelCost } = registrationTotal({
