@@ -76,27 +76,32 @@ class OverviewStep extends ConsumerWidget {
         if (themeTitle.isNotEmpty) ...[
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
             decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // 가운데로 모아 크게 적는다. 이 줄은 읽히려고 있는 것이지
+                // 채워 넣은 값이 아니다 — 왼쪽에 작게 붙여 두면 아래의
+                // 안내 문구와 구별되지 않는다.
                 Text(
                   themeTitle,
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    height: 1.3,
+                    height: 1.25,
                     color: theme.colorScheme.primary,
                   ),
                 ),
                 if (themeVerse.isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Text(
                     themeVerse,
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
