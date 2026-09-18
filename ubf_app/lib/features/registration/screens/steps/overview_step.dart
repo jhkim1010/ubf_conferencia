@@ -92,7 +92,11 @@ class OverviewStep extends ConsumerWidget {
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    height: 1.25,
+                    // 이 화면에서 가장 큰 글씨다. 값도 날짜도 아닌 이것이
+                    // 무슨 모임인지 말하므로, 먼저 눈에 들어와야 한다.
+                    fontSize:
+                        (theme.textTheme.headlineMedium?.fontSize ?? 28) * 2,
+                    height: 1.15,
                     color: theme.colorScheme.primary,
                   ),
                 ),
