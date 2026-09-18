@@ -3848,4 +3848,35 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get regPhoneFromBefore =>
       'Veio do que você informou antes — mude se não for mais esse';
+
+  @override
+  String get companionRegistersQ => 'Esta pessoa se inscreve separadamente?';
+
+  @override
+  String get companionRegistersYes => 'Sim, separadamente';
+
+  @override
+  String get companionRegistersNo => 'Não — não pode se inscrever';
+
+  @override
+  String get companionRegistersHint =>
+      'Escolha \"Não\" para um bebê ou criança sem conta. Este registro passa a ser o dela e conta para quarto e refeições.';
+
+  @override
+  String get companionBedQ => 'Precisa de cama?';
+
+  @override
+  String get companionBedYes => 'Sim';
+
+  @override
+  String get companionBedNo => 'Não — dorme comigo';
+
+  @override
+  String get companionBedHint =>
+      'Se ocupa um lugar no quarto. Vem marcado pela idade; pode mudar.';
+
+  @override
+  String companionNoFee(int age) {
+    return 'Crianças de $age anos ou menos não pagam inscrição.';
+  }
 }

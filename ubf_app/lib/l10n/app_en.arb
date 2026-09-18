@@ -2543,5 +2543,21 @@
   "cpThemeVerseHint": "Matthew 5:14-16",
   "regPhone": "Phone (optional)",
   "regPhoneHint": "+54 9 11 1234 5678",
-  "regPhoneFromBefore": "From what you entered before — change it if it moved"
+  "regPhoneFromBefore": "From what you entered before — change it if it moved",
+  "companionRegistersQ": "Will this person register separately?",
+  "companionRegistersYes": "Yes, separately",
+  "companionRegistersNo": "No — cannot register",
+  "companionRegistersHint": "Choose \"No\" for a baby or child with no account. This entry then becomes their record — they are counted for rooms and meals.",
+  "companionBedQ": "Does this person need a bed?",
+  "companionBedYes": "Yes",
+  "companionBedNo": "No — shares with me",
+  "companionBedHint": "Whether they take a place in the room. Preset from age; change it if you like.",
+  "companionNoFee": "No conference fee for children aged {age} and under.",
+  "@companionNoFee": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  }
 }

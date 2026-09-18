@@ -3835,4 +3835,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get regPhoneFromBefore =>
       'From what you entered before — change it if it moved';
+
+  @override
+  String get companionRegistersQ => 'Will this person register separately?';
+
+  @override
+  String get companionRegistersYes => 'Yes, separately';
+
+  @override
+  String get companionRegistersNo => 'No — cannot register';
+
+  @override
+  String get companionRegistersHint =>
+      'Choose \"No\" for a baby or child with no account. This entry then becomes their record — they are counted for rooms and meals.';
+
+  @override
+  String get companionBedQ => 'Does this person need a bed?';
+
+  @override
+  String get companionBedYes => 'Yes';
+
+  @override
+  String get companionBedNo => 'No — shares with me';
+
+  @override
+  String get companionBedHint =>
+      'Whether they take a place in the room. Preset from age; change it if you like.';
+
+  @override
+  String companionNoFee(int age) {
+    return 'No conference fee for children aged $age and under.';
+  }
 }

@@ -6965,6 +6965,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'From what you entered before — change it if it moved'**
   String get regPhoneFromBefore;
+
+  /// No description provided for @companionRegistersQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Will this person register separately?'**
+  String get companionRegistersQ;
+
+  /// No description provided for @companionRegistersYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, separately'**
+  String get companionRegistersYes;
+
+  /// No description provided for @companionRegistersNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No — cannot register'**
+  String get companionRegistersNo;
+
+  /// No description provided for @companionRegistersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose \"No\" for a baby or child with no account. This entry then becomes their record — they are counted for rooms and meals.'**
+  String get companionRegistersHint;
+
+  /// No description provided for @companionBedQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Does this person need a bed?'**
+  String get companionBedQ;
+
+  /// No description provided for @companionBedYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get companionBedYes;
+
+  /// No description provided for @companionBedNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No — shares with me'**
+  String get companionBedNo;
+
+  /// No description provided for @companionBedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Whether they take a place in the room. Preset from age; change it if you like.'**
+  String get companionBedHint;
+
+  /// No description provided for @companionNoFee.
+  ///
+  /// In en, this message translates to:
+  /// **'No conference fee for children aged {age} and under.'**
+  String companionNoFee(int age);
 }
 
 class _AppLocalizationsDelegate

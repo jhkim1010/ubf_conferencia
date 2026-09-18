@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { defaultOccupiesBed } from '../services/companion_role.js';
 import { sql } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -19,6 +20,8 @@ router.get('/:programId/me', requireAuth, async (req, res) => {
     if (!regId) return res.json([]);
     const rows = await sql`
       SELECT c.id, c.real_name, c.bible_name, c.gender, c.age, c.language,
+             -- 069: 이 사람이 따로 등록하는가, 침대를 쓰는가.
+             c.registers_separately, c.occupies_bed,
              -- 적어 둔 값. 편집 화면이 이것을 쓴다 — 체크를 풀면 예전에
              -- 적은 값이 다시 보여야 한다.
              c.branch,
@@ -67,11 +70,13 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
           `INSERT INTO companions
              (registration_id, real_name, bible_name, gender, age, language, branch,
               same_branch_as_primary,
-              same_flight_as_primary, arrival_flight, departure_flight, needs_pickup)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+              same_flight_as_primary, arrival_flight, departure_flight, needs_pickup,
+              registers_separately, occupies_bed)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
            RETURNING id, real_name, bible_name, gender, age, language, branch,
                      same_branch_as_primary,
-                     same_flight_as_primary, arrival_flight, departure_flight, needs_pickup`,
+                     same_flight_as_primary, arrival_flight, departure_flight, needs_pickup,
+                     registers_separately, occupies_bed`,
           [
             regId,
             String(c.realName).trim(),
@@ -85,6 +90,13 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
             c.arrivalFlight ? JSON.stringify(c.arrivalFlight) : null,
             c.departureFlight ? JSON.stringify(c.departureFlight) : null,
             c.needsPickup ?? true,
+            // 069. 안 보내면 예전 뜻 그대로 — 따로 등록하는 동반자다.
+            c.registersSeparately !== false,
+            // 침대는 **적어 낸 값이 먼저**다. 안 보냈을 때만 나이로 정한다
+            // (만 5세 이하는 안 쓰는 것으로).
+            typeof c.occupiesBed === 'boolean'
+              ? c.occupiesBed
+              : defaultOccupiesBed(c.age),
           ],
         );
         rows.push(row);

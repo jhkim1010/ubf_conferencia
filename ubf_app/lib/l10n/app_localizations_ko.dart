@@ -3746,4 +3746,34 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get regPhoneFromBefore => '전에 적으신 것을 가져왔습니다 — 바뀌었으면 고치십시오';
+
+  @override
+  String get companionRegistersQ => '이분도 따로 등록하십니까?';
+
+  @override
+  String get companionRegistersYes => '예, 따로 등록합니다';
+
+  @override
+  String get companionRegistersNo => '아니오 — 등록할 수 없습니다';
+
+  @override
+  String get companionRegistersHint =>
+      '아기처럼 계정을 만들 수 없는 분은 \"아니오\" 입니다. 그러면 이 칸이 그분의 기록이 되어 방과 식사 인원에 들어갑니다.';
+
+  @override
+  String get companionBedQ => '침대를 쓰십니까?';
+
+  @override
+  String get companionBedYes => '예';
+
+  @override
+  String get companionBedNo => '아니오 — 같이 잡니다';
+
+  @override
+  String get companionBedHint => '방 정원을 한 자리 쓰는지입니다. 나이로 미리 골라 두었고, 고치셔도 됩니다.';
+
+  @override
+  String companionNoFee(int age) {
+    return '만 $age세 이하는 참가비를 받지 않습니다.';
+  }
 }

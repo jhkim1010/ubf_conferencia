@@ -52,6 +52,9 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     'arrivalFlightNo': (r['arrival_flight'] as Map?)?['flight_no'] ?? '',
     'departureFlightNo': (r['departure_flight'] as Map?)?['flight_no'] ?? '',
     'needsPickup': r['needs_pickup'] ?? true,
+    // 069. 옛 줄에는 칸이 없다 — 그때의 뜻대로 "따로 등록" 으로 본다.
+    'registersSeparately': r['registers_separately'] ?? true,
+    'occupiesBed': r['occupies_bed'] ?? true,
   };
 
   // 로컬 → 서버 payload
@@ -75,6 +78,8 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
           ? {'flight_no': c['departureFlightNo']}
           : null,
       'needsPickup': c['needsPickup'] ?? true,
+      'registersSeparately': c['registersSeparately'] ?? true,
+      'occupiesBed': c['occupiesBed'] ?? true,
     };
   }).toList();
 
@@ -282,6 +287,9 @@ class _CompanionSheetState extends State<_CompanionSheet> {
   bool _sameBranch = true;
   bool _sameFlight = true;
   bool _needsPickup = true;
+  // 069: 이분이 따로 등록하는가 / 침대를 쓰는가.
+  bool _registersSeparately = true;
+  bool? _occupiesBed;
 
   @override
   void initState() {
@@ -300,6 +308,9 @@ class _CompanionSheetState extends State<_CompanionSheet> {
     _sameBranch = e?['sameBranchAsPrimary'] ?? true;
     _sameFlight = e?['sameFlightAsPrimary'] ?? true;
     _needsPickup = e?['needsPickup'] ?? true;
+    _registersSeparately = e?['registersSeparately'] ?? true;
+    // 고쳐 둔 값이 있으면 그것, 없으면 아래에서 나이로 정한다.
+    _occupiesBed = e?['occupiesBed'] as bool?;
   }
 
   @override
@@ -328,8 +339,20 @@ class _CompanionSheetState extends State<_CompanionSheet> {
       'arrivalFlightNo': _arrFlight.text.trim(),
       'departureFlightNo': _depFlight.text.trim(),
       'needsPickup': _needsPickup,
+      'registersSeparately': _registersSeparately,
+      // 안 고쳤으면 나이로 정한다 — 만 5세 이하는 같이 자는 것으로.
+      'occupiesBed': _registersSeparately
+          ? true
+          : (_occupiesBed ?? _bedByAge(int.tryParse(_age.text.trim()))),
     });
   }
+
+  /// 침대 기본값. 서버의 companion_role.js defaultOccupiesBed 와 같은 규칙이다.
+  /// 나이를 모르면 쓰는 쪽으로 둔다 — 자리를 덜 잡으면 당일에 손쓸 수가 없다.
+  static bool _bedByAge(int? age) => age == null || age > _freeAgeMax;
+
+  /// 만 5세 이하는 참가비가 없고 침대도 기본으로 안 쓴다.
+  static const _freeAgeMax = 5;
 
   @override
   Widget build(BuildContext context) {
@@ -349,6 +372,34 @@ class _CompanionSheetState extends State<_CompanionSheet> {
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
+            // 069: 이분이 따로 등록하는지부터 묻는다. 아기는 계정을 만들 수
+            // 없어 등록이 없고, 그때는 이 칸이 그분의 기록이 된다.
+            Text(
+              l10n.companionRegistersQ,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+            SegmentedButton<bool>(
+              segments: [
+                ButtonSegment(
+                  value: true,
+                  label: Text(l10n.companionRegistersYes),
+                ),
+                ButtonSegment(
+                  value: false,
+                  label: Text(l10n.companionRegistersNo),
+                ),
+              ],
+              selected: {_registersSeparately},
+              onSelectionChanged: (v) =>
+                  setState(() => _registersSeparately = v.first),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.companionRegistersHint,
+              style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 14),
             TextField(
               controller: _name,
               decoration: InputDecoration(labelText: l10n.profileNameLabel),
@@ -374,6 +425,37 @@ class _CompanionSheetState extends State<_CompanionSheet> {
                 ),
               ],
             ),
+            // 069: 등록 못 하는 분에게만 침대를 묻는다. 따로 등록하는 분의
+            // 자리는 그분 등록으로 잡히므로 물어볼 것이 없다.
+            if (!_registersSeparately) ...[
+              const SizedBox(height: 14),
+              Text(
+                l10n.companionBedQ,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              SegmentedButton<bool>(
+                segments: [
+                  ButtonSegment(value: true, label: Text(l10n.companionBedYes)),
+                  ButtonSegment(value: false, label: Text(l10n.companionBedNo)),
+                ],
+                selected: {
+                  _occupiesBed ?? _bedByAge(int.tryParse(_age.text.trim())),
+                },
+                onSelectionChanged: (v) =>
+                    setState(() => _occupiesBed = v.first),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.companionBedHint,
+                style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.companionNoFee(_freeAgeMax),
+                style: TextStyle(fontSize: 11.5, color: Colors.grey[700]),
+              ),
+            ],
             const SizedBox(height: 12),
             Text(
               l10n.regGender,

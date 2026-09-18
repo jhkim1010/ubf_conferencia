@@ -1143,5 +1143,14 @@
   "cpThemeVerseHint": "Mateus 5:14-16",
   "regPhone": "Telefone (opcional)",
   "regPhoneHint": "+54 9 11 1234 5678",
-  "regPhoneFromBefore": "Veio do que você informou antes — mude se não for mais esse"
+  "regPhoneFromBefore": "Veio do que você informou antes — mude se não for mais esse",
+  "companionRegistersQ": "Esta pessoa se inscreve separadamente?",
+  "companionRegistersYes": "Sim, separadamente",
+  "companionRegistersNo": "Não — não pode se inscrever",
+  "companionRegistersHint": "Escolha \"Não\" para um bebê ou criança sem conta. Este registro passa a ser o dela e conta para quarto e refeições.",
+  "companionBedQ": "Precisa de cama?",
+  "companionBedYes": "Sim",
+  "companionBedNo": "Não — dorme comigo",
+  "companionBedHint": "Se ocupa um lugar no quarto. Vem marcado pela idade; pode mudar.",
+  "companionNoFee": "Crianças de {age} anos ou menos não pagam inscrição."
 }
