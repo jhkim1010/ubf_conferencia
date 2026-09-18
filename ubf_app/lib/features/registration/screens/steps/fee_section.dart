@@ -299,7 +299,7 @@ class _BasicFee extends StatelessWidget {
             Text(
               description!,
               style: theme.textTheme.bodyLarge?.copyWith(
-                fontSize: (theme.textTheme.bodyLarge?.fontSize ?? 16) * 2,
+                fontSize: (theme.textTheme.bodyLarge?.fontSize ?? 16) * 1.8,
                 height: 1.35,
               ),
             ),

@@ -78,9 +78,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authSignInGoogle => 'Sign in with Google';
 
   @override
-  String get authSignInKakao => 'Sign in with Kakao';
-
-  @override
   String get authSignInDev => 'Test login (dev@test.com)';
 
   @override
@@ -90,11 +87,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String authGoogleFailed(String error) {
     return 'Google sign-in failed: $error';
-  }
-
-  @override
-  String authKakaoFailed(String error) {
-    return 'Kakao sign-in failed: $error';
   }
 
   @override

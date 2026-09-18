@@ -157,65 +157,6 @@ export async function googleLogin(req, res) {
   }
 }
 
-// 카카오 액세스 토큰 → 사용자 정보 조회 → 자체 JWT 발급
-export async function kakaoLogin(req, res) {
-  const { accessToken } = req.body;
-  if (!accessToken) {
-    return res.status(400).json({ error: 'accessToken이 필요합니다' });
-  }
-
-  try {
-    // 카카오 사용자 정보 API 호출
-    const kakaoRes = await fetch('https://kapi.kakao.com/v2/user/me', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!kakaoRes.ok) throw new Error(`카카오 API 오류: ${kakaoRes.status}`);
-
-    const kakaoUser = await kakaoRes.json();
-    const kakaoId   = String(kakaoUser.id);
-    const email     = kakaoUser.kakao_account?.email ?? null;
-    const name      = kakaoUser.kakao_account?.profile?.nickname
-                   ?? kakaoUser.properties?.nickname
-                   ?? '카카오 사용자';
-
-    // google_id 컬럼에 kakao:{id} 형태로 저장 (기존 스키마 재활용)
-    const syntheticId = `kakao:${kakaoId}`;
-
-    const kakaoLang = pickLanguage(req.headers['accept-language']);
-    const [user] = await sql`
-      INSERT INTO users (google_id, email, name, ui_language)
-      VALUES (${syntheticId}, ${email}, ${name}, ${kakaoLang})
-      ON CONFLICT (google_id)
-      DO UPDATE SET name = EXCLUDED.name,
-                    ui_language = EXCLUDED.ui_language, updated_at = NOW()
-      RETURNING id, email, name, role
-    `;
-
-    const [leader] = await sql`
-      SELECT id FROM leaders WHERE user_id = ${user.id}
-    `;
-
-    const role     = effectiveRole(user.role, !!leader);
-    const isLeader = role === 'director' || role === 'admin';
-
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, name: user.name, role, isLeader, leaderId: leader?.id ?? null },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    console.log(`[LOGIN] Kakao | userId=${user.id} kakaoId=${kakaoId} role=${role} isLeader=${isLeader}`);
-    return res.json({
-      token,
-      user: { id: user.id, email: user.email, name: user.name, role },
-      isLeader,
-    });
-  } catch (err) {
-    console.error('카카오 로그인 오류:', err);
-    return res.status(401).json({ error: '카카오 인증에 실패했습니다' });
-  }
-}
-
 // JWT 인증 미들웨어
 export function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;

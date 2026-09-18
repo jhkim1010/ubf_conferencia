@@ -151,18 +151,6 @@ class ApiClient {
     return data;
   }
 
-  static Future<Map<String, dynamic>> loginWithKakao(String accessToken) async {
-    final response = await http.post(
-      _uri('/auth/kakao'),
-      headers: _publicHeaders,
-      body: jsonEncode({'accessToken': accessToken}),
-    );
-    final data = _decode(response);
-    await saveToken(data['token'] as String);
-    return data;
-  }
-
-  // 내 정보 조회
   static Future<Map<String, dynamic>?> getMe() async {
     final response = await http.get(
       _uri('/auth/me'),

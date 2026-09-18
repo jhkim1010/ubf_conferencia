@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/api_client.dart';
 
@@ -192,38 +191,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _init();
   }
 
-  // 카카오 로그인
-  Future<void> signInWithKakao() async {
-    // 카카오톡 앱이 설치된 경우 앱으로, 없으면 웹으로 로그인
-    final token = await isKakaoTalkInstalled()
-        ? await UserApi.instance.loginWithKakaoTalk()
-        : await UserApi.instance.loginWithKakaoAccount();
-
-    final data = await ApiClient.loginWithKakao(token.accessToken);
-    final userMap = data['user'] as Map<String, dynamic>;
-    final role = _parseRole(userMap['role'] as String?);
-
-    state = AuthState(
-      userId: userMap['id'] as String?,
-      email: userMap['email'] as String?,
-      name: userMap['name'] as String?,
-      role: role,
-      isLeader: data['isLeader'] as bool? ?? (role != UserRole.participant),
-      leaderId: null,
-      isLoading: false,
-    );
-  }
-
   // 로그아웃 — disconnect()로 계정 캐시까지 삭제해서 다른 계정으로 전환 가능
   Future<void> signOut() async {
     try {
       await _googleSignIn.disconnect();
     } catch (_) {}
-    if (AppConstants.kakaoAppKey.isNotEmpty) {
-      try {
-        await UserApi.instance.logout();
-      } catch (_) {}
-    }
     await ApiClient.clearToken();
     state = AuthState.guest;
   }

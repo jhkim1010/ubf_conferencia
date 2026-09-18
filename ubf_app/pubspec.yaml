@@ -85,7 +85,6 @@ dependencies:
   flutter_timezone: ^3.0.0
 
   # 카카오 로그인
-  kakao_flutter_sdk_user: ^1.9.1
 
   # 경로 유틸
   path_provider: ^2.1.5

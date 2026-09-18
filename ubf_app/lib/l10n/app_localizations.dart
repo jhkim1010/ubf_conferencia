@@ -240,12 +240,6 @@ abstract class AppLocalizations {
   /// **'Sign in with Google'**
   String get authSignInGoogle;
 
-  /// No description provided for @authSignInKakao.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in with Kakao'**
-  String get authSignInKakao;
-
   /// No description provided for @authSignInDev.
   ///
   /// In en, this message translates to:
@@ -263,12 +257,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Google sign-in failed: {error}'**
   String authGoogleFailed(String error);
-
-  /// No description provided for @authKakaoFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Kakao sign-in failed: {error}'**
-  String authKakaoFailed(String error);
 
   /// No description provided for @authDevFailed.
   ///

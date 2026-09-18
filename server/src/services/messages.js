@@ -51,11 +51,6 @@ const T = {
     en: 'Sign-in failed',
     pt: 'Falha ao entrar',
   },
-  '카카오 인증에 실패했습니다': {
-    es: 'No se pudo iniciar sesión con Kakao',
-    en: 'Kakao sign-in failed',
-    pt: 'Falha ao entrar com Kakao',
-  },
   '사용자 없음': {
     es: 'Usuario no encontrado',
     en: 'User not found',

@@ -7,7 +7,7 @@ import rateLimit from 'express-rate-limit';
 import cron from 'node-cron';
 import { sql } from './db.js';
 import jwt from 'jsonwebtoken';
-import { googleLogin, kakaoLogin, requireAuth, effectiveRole } from './middleware/auth.js';
+import { googleLogin, requireAuth, effectiveRole } from './middleware/auth.js';
 import { sendDailySummary } from './services/telegram.js';
 import { notifyProgramParticipants, sendPushNotification } from './services/fcm.js';
 import { rolesOf, tallyRole } from './services/service_roles.js';
@@ -120,7 +120,6 @@ app.use(apiLimiter);
 
 // 인증
 app.post('/auth/google', authLimiter, googleLogin);
-app.post('/auth/kakao', authLimiter, kakaoLogin);
 // /auth/dev-login — 개발 전용 테스트 로그인 (OAuth 생략)
 //
 // 이 엔드포인트는 **아무 이메일로나 유효한 JWT 를 발급한다.** 열려 있으면

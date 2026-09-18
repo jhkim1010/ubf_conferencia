@@ -94,8 +94,11 @@ class OverviewStep extends ConsumerWidget {
                     fontWeight: FontWeight.w700,
                     // 이 화면에서 가장 큰 글씨다. 값도 날짜도 아닌 이것이
                     // 무슨 모임인지 말하므로, 먼저 눈에 들어와야 한다.
+                    //
+                    // 배수는 폰 화면에서 정했다. 2 배로 두었더니 넘쳐서
+                    // 한 단계 물렀다.
                     fontSize:
-                        (theme.textTheme.headlineMedium?.fontSize ?? 28) * 2,
+                        (theme.textTheme.headlineMedium?.fontSize ?? 28) * 1.8,
                     height: 1.15,
                     color: theme.colorScheme.primary,
                   ),
@@ -227,7 +230,8 @@ class _Fact extends StatelessWidget {
                   ),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    fontSize: (theme.textTheme.titleMedium?.fontSize ?? 16) * 2,
+                    fontSize:
+                        (theme.textTheme.titleMedium?.fontSize ?? 16) * 1.8,
                     height: 1.2,
                     color: link == null ? null : theme.colorScheme.primary,
                   ),

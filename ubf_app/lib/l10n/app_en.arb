@@ -86,19 +86,10 @@
   },
   "appTagline": "Conference registration system",
   "authSignInGoogle": "Sign in with Google",
-  "authSignInKakao": "Sign in with Kakao",
   "authSignInDev": "Test login (dev@test.com)",
   "authTermsNotice": "By signing in, you agree to the Terms of Service.",
   "authGoogleFailed": "Google sign-in failed: {error}",
   "@authGoogleFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "authKakaoFailed": "Kakao sign-in failed: {error}",
-  "@authKakaoFailed": {
     "placeholders": {
       "error": {
         "type": "String"

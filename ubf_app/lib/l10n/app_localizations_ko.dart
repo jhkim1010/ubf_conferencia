@@ -78,9 +78,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authSignInGoogle => '구글 어카운트로 로그인하기';
 
   @override
-  String get authSignInKakao => '카카오로 로그인하기';
-
-  @override
   String get authSignInDev => '테스트 로그인 (dev@test.com)';
 
   @override
@@ -89,11 +86,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String authGoogleFailed(String error) {
     return '구글 로그인 실패: $error';
-  }
-
-  @override
-  String authKakaoFailed(String error) {
-    return '카카오 로그인 실패: $error';
   }
 
   @override

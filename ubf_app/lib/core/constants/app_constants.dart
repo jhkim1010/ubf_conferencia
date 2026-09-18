@@ -36,9 +36,6 @@ class AppConstants {
   static const String googleServerClientId =
       '920846151950-b7isfu2ob60hv4nggr59vgu2ps1fop51.apps.googleusercontent.com';
 
-  // 카카오 네이티브 앱 키 (https://developers.kakao.com → 내 애플리케이션)
-  static const String kakaoAppKey = ''; // TODO: 카카오 개발자 콘솔에서 발급
-
   // 앱 정보
   static const String appName = 'Mana';
   static const String appVersion = '1.0.0';
