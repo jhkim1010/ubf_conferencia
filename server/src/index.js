@@ -184,6 +184,24 @@ app.get('/auth/me', requireAuth, async (req, res) => {
     `;
     if (!user) return res.status(401).json({ error: '사용자 없음' });
 
+    // 이미 아는 전화번호(068). 등록 화면이 이것으로 칸을 미리 채운다.
+    //
+    // **지난 등록이 명함보다 앞선다.** 등록에 적은 것이 그 사람이 수양회
+    // 연락용으로 고른 번호이고, 명함은 나눔용이라 다를 수 있다.
+    // 구글은 전화번호를 주지 않으므로 출처는 이 둘뿐이다.
+    const [known] = await sql`
+      SELECT COALESCE(
+               (SELECT NULLIF(btrim(r.phone), '')
+                  FROM registrations r
+                 WHERE r.user_id = ${req.user.userId}
+                   AND NULLIF(btrim(r.phone), '') IS NOT NULL
+                 ORDER BY r.updated_at DESC NULLS LAST
+                 LIMIT 1),
+               (SELECT NULLIF(btrim(c.phone), '')
+                  FROM profile_cards c
+                 WHERE c.user_id = ${req.user.userId})
+             ) AS phone`;
+
     const [leader] = await sql`SELECT id FROM leaders WHERE user_id = ${req.user.userId}`;
     // 화면은 role 로 분기한다(홈이 리더용인지 참가자용인지). isLeader 만
     // 맞춰 두고 role 을 그대로 돌려주면 리더가 참가자 홈을 보게 된다.
@@ -193,6 +211,7 @@ app.get('/auth/me', requireAuth, async (req, res) => {
       role,
       isLeader: role === 'director' || role === 'admin',
       leaderId: leader?.id ?? null,
+      knownPhone: known?.phone ?? null,
     });
   } catch (err) {
     console.error('/auth/me 오류:', err);

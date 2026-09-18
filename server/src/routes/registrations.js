@@ -43,7 +43,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     fcmToken,
     feeTier, discountRequested, discountOptionKey, discountReason,
     studyLanguage, studyLanguages,
-    hotelOptionKey, hotelNightsBefore, hotelNightsAfter,
+    phone, hotelOptionKey, hotelNightsBefore, hotelNightsAfter,
     needsPickup, pickupFrom,
   } = req.body;
 
@@ -261,7 +261,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     const [registration] = await sql`
       INSERT INTO registrations (
         program_id, user_id, country, branch, real_name, bible_name,
-        gender, age, arrival_flight, departure_flight,
+        gender, age, phone, arrival_flight, departure_flight,
         food_requirements, medical_conditions, skips_breakfast,
         selected_options, roommate_preference,
         volunteer_resources, volunteer_note,
@@ -277,6 +277,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         ${country ?? null}, ${branch ?? null},
         ${realName ?? null}, ${bibleName ?? null},
         ${gender ?? null}, ${age ?? null},
+        ${phone ?? null},
         ${arrivalFlight ? JSON.stringify(arrivalFlight) : null},
         ${departureFlight ? JSON.stringify(departureFlight) : null},
         ${foodRequirements ?? null},
@@ -313,6 +314,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         bible_name = EXCLUDED.bible_name,
         gender = EXCLUDED.gender,
         age = EXCLUDED.age,
+        phone = EXCLUDED.phone,
         arrival_flight = EXCLUDED.arrival_flight,
         departure_flight = EXCLUDED.departure_flight,
         food_requirements = EXCLUDED.food_requirements,

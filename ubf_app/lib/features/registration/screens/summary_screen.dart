@@ -226,6 +226,10 @@ class SummaryScreen extends ConsumerWidget {
                   _InfoRow(l10n.summaryBranch, formState.branch ?? '-'),
                   _InfoRow(l10n.summaryRealName, formState.realName ?? '-'),
                   _InfoRow(l10n.summaryBibleName, formState.bibleName ?? '-'),
+                  // 적으신 분에게만 보여준다(068). 선택이라 빈 줄이 남으면
+                  // 안 적은 것이 빠뜨린 것처럼 보인다.
+                  if ((formState.phone ?? '').trim().isNotEmpty)
+                    _InfoRow(l10n.regPhone, formState.phone!.trim()),
                   _InfoRow(
                     l10n.regGender,
                     formState.gender == 'M'

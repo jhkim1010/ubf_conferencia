@@ -3838,4 +3838,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get cpThemeVerseHint => 'Mateus 5:14-16';
+
+  @override
+  String get regPhone => 'Telefone (opcional)';
+
+  @override
+  String get regPhoneHint => '+54 9 11 1234 5678';
+
+  @override
+  String get regPhoneFromBefore =>
+      'Veio do que você informou antes — mude se não for mais esse';
 }

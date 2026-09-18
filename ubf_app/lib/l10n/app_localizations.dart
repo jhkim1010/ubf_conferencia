@@ -6947,6 +6947,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Matthew 5:14-16'**
   String get cpThemeVerseHint;
+
+  /// No description provided for @regPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone (optional)'**
+  String get regPhone;
+
+  /// No description provided for @regPhoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'+54 9 11 1234 5678'**
+  String get regPhoneHint;
+
+  /// No description provided for @regPhoneFromBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'From what you entered before — change it if it moved'**
+  String get regPhoneFromBefore;
 }
 
 class _AppLocalizationsDelegate

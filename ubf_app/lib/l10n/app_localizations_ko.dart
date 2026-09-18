@@ -3737,4 +3737,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get cpThemeVerseHint => '마태복음 5:14-16';
+
+  @override
+  String get regPhone => '전화번호 (선택)';
+
+  @override
+  String get regPhoneHint => '+54 9 11 1234 5678';
+
+  @override
+  String get regPhoneFromBefore => '전에 적으신 것을 가져왔습니다 — 바뀌었으면 고치십시오';
 }

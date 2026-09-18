@@ -24,6 +24,9 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
   late final TextEditingController _branchController;
   late final TextEditingController _realNameController;
   late final TextEditingController _bibleNameController;
+  late final TextEditingController _phoneController;
+  // 우리가 채워 넣은 번호인가. 손대면 더 이상 아니다.
+  bool _phoneFromBefore = false;
   late final TextEditingController _ageController;
   String? _gender;
 
@@ -60,6 +63,19 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
     );
     _nameFromAccount = saved.isEmpty && fromAccount.isNotEmpty;
     _bibleNameController = TextEditingController(text: state.bibleName ?? '');
+
+    // 전화번호도 짐작해서 채운다(068). 이름과 같은 뜻이다 — 백지보다 고칠
+    // 것이 있는 편이 낫다.
+    //
+    // 출처는 지난 등록이나 명함이다. 구글은 전화번호를 주지 않는다.
+    // **저장된 값이 있으면 덮어쓰지 않는다** — 짐작이 사람이 적은 것을
+    // 이기면 안 된다.
+    final savedPhone = (state.phone ?? '').trim();
+    final knownPhone = (ref.read(currentUserProvider).knownPhone ?? '').trim();
+    _phoneController = TextEditingController(
+      text: savedPhone.isNotEmpty ? savedPhone : knownPhone,
+    );
+    _phoneFromBefore = savedPhone.isEmpty && knownPhone.isNotEmpty;
     _ageController = TextEditingController(text: state.age?.toString() ?? '');
     _gender = state.gender;
 
@@ -128,6 +144,7 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
     _branchController.dispose();
     _realNameController.dispose();
     _bibleNameController.dispose();
+    _phoneController.dispose();
     _ageController.dispose();
     super.dispose();
   }
@@ -142,6 +159,7 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
           branch: _branchController.text.trim(),
           realName: _realNameController.text.trim(),
           bibleName: _bibleNameController.text.trim(),
+          phone: _phoneController.text.trim(),
           gender: _gender,
           age: int.tryParse(_ageController.text.trim()),
         );
@@ -304,6 +322,26 @@ class _PersonalInfoStepState extends ConsumerState<PersonalInfoStep> {
             hintText: l10n.regBibleNameHint,
           ),
           onChanged: (_) => _save(),
+        ),
+        const SizedBox(height: 12),
+
+        // ── 전화번호 (선택) ────────────────────────────
+        // 픽업·배차에서 사람을 찾아야 할 때 쓴다. 선택이다 —
+        // 텔레그램(047)으로 닿는 사람이 이미 많다.
+        TextField(
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+          decoration: InputDecoration(
+            labelText: l10n.regPhone,
+            hintText: l10n.regPhoneHint,
+            helperText: _phoneFromBefore ? l10n.regPhoneFromBefore : null,
+            helperMaxLines: 2,
+          ),
+          onChanged: (_) {
+            // 한 글자라도 손대면 더 이상 짐작이 아니다.
+            if (_phoneFromBefore) setState(() => _phoneFromBefore = false);
+            _save();
+          },
         ),
         const SizedBox(height: 16),
 

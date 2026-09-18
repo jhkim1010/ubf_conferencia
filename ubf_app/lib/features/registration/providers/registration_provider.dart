@@ -18,6 +18,9 @@ class RegistrationFormState {
   final String? realName;
   final String? bibleName;
   final String? gender;
+
+  /// 전화번호(068). 선택이며, 지난 등록이나 명함에서 채워 준다.
+  final String? phone;
   final int? age;
   final Map<String, dynamic>? arrivalFlight;
   final Map<String, dynamic>? departureFlight;
@@ -59,6 +62,7 @@ class RegistrationFormState {
     this.realName,
     this.bibleName,
     this.gender,
+    this.phone,
     this.age,
     this.arrivalFlight,
     this.departureFlight,
@@ -88,6 +92,7 @@ class RegistrationFormState {
     String? realName,
     String? bibleName,
     String? gender,
+    String? phone,
     int? age,
     Map<String, dynamic>? arrivalFlight,
     Map<String, dynamic>? departureFlight,
@@ -125,6 +130,7 @@ class RegistrationFormState {
       realName: realName ?? this.realName,
       bibleName: bibleName ?? this.bibleName,
       gender: gender ?? this.gender,
+      phone: phone ?? this.phone,
       age: age ?? this.age,
       arrivalFlight: clearFlights
           ? null
@@ -174,6 +180,7 @@ class RegistrationFormState {
     'realName': realName,
     'bibleName': bibleName,
     'gender': gender,
+    'phone': phone,
     'age': age,
     'arrivalFlight': arrivalFlight,
     'departureFlight': departureFlight,
@@ -205,6 +212,7 @@ class RegistrationFormState {
         realName: json['realName'] as String?,
         bibleName: json['bibleName'] as String?,
         gender: json['gender'] as String?,
+        phone: json['phone'] as String?,
         age: json['age'] as int?,
         arrivalFlight: json['arrivalFlight'] as Map<String, dynamic>?,
         departureFlight: json['departureFlight'] as Map<String, dynamic>?,
@@ -279,6 +287,7 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
     String? realName,
     String? bibleName,
     String? gender,
+    String? phone,
     int? age,
   }) {
     _update(
@@ -288,6 +297,7 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
         realName: realName,
         bibleName: bibleName,
         gender: gender,
+        phone: phone,
         age: age,
       ),
     );
@@ -408,6 +418,7 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       'realName': state.realName,
       'bibleName': state.bibleName,
       'gender': state.gender,
+      'phone': state.phone,
       'age': state.age,
       'arrivalFlight': state.arrivalFlight,
       'departureFlight': state.departureFlight,

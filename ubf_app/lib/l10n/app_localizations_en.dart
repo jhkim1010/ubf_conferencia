@@ -3825,4 +3825,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cpThemeVerseHint => 'Matthew 5:14-16';
+
+  @override
+  String get regPhone => 'Phone (optional)';
+
+  @override
+  String get regPhoneHint => '+54 9 11 1234 5678';
+
+  @override
+  String get regPhoneFromBefore =>
+      'From what you entered before — change it if it moved';
 }

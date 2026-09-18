@@ -1154,5 +1154,8 @@
   "cpThemeTitleLabel": "말씀 제목",
   "cpThemeTitleHint": "너희는 세상의 빛이라",
   "cpThemeVerseLabel": "성경 본문",
-  "cpThemeVerseHint": "마태복음 5:14-16"
+  "cpThemeVerseHint": "마태복음 5:14-16",
+  "regPhone": "전화번호 (선택)",
+  "regPhoneHint": "+54 9 11 1234 5678",
+  "regPhoneFromBefore": "전에 적으신 것을 가져왔습니다 — 바뀌었으면 고치십시오"
 }

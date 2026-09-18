@@ -1154,5 +1154,8 @@
   "cpThemeTitleLabel": "Mensaje de la conferencia",
   "cpThemeTitleHint": "Ustedes son la luz del mundo",
   "cpThemeVerseLabel": "Pasaje bíblico",
-  "cpThemeVerseHint": "Mateo 5:14-16"
+  "cpThemeVerseHint": "Mateo 5:14-16",
+  "regPhone": "Teléfono (opcional)",
+  "regPhoneHint": "+54 9 11 1234 5678",
+  "regPhoneFromBefore": "Tomado de lo que indicó antes — cámbielo si ya no es ese"
 }

@@ -3837,4 +3837,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cpThemeVerseHint => 'Mateo 5:14-16';
+
+  @override
+  String get regPhone => 'Teléfono (opcional)';
+
+  @override
+  String get regPhoneHint => '+54 9 11 1234 5678';
+
+  @override
+  String get regPhoneFromBefore =>
+      'Tomado de lo que indicó antes — cámbielo si ya no es ese';
 }

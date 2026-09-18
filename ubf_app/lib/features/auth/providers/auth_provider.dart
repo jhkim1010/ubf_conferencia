@@ -23,6 +23,10 @@ class AuthState {
   final String? userId;
   final String? email;
   final String? name;
+
+  /// 이 사람에 대해 이미 아는 전화번호(068). 지난 등록이나 명함에서 온다.
+  /// 등록 화면이 칸을 미리 채우는 데만 쓴다 — 본인이 고칠 수 있다.
+  final String? knownPhone;
   final UserRole role;
   final bool isLeader;
   final String? leaderId;
@@ -34,6 +38,7 @@ class AuthState {
     this.userId,
     this.email,
     this.name,
+    this.knownPhone,
     this.role = UserRole.participant,
     this.isLeader = false,
     this.leaderId,
@@ -50,6 +55,7 @@ class AuthState {
     String? userId,
     String? email,
     String? name,
+    String? knownPhone,
     UserRole? role,
     bool? isLeader,
     String? leaderId,
@@ -61,6 +67,7 @@ class AuthState {
       userId: userId ?? this.userId,
       email: email ?? this.email,
       name: name ?? this.name,
+      knownPhone: knownPhone ?? this.knownPhone,
       role: role ?? this.role,
       isLeader: isLeader ?? this.isLeader,
       leaderId: leaderId ?? this.leaderId,
@@ -134,6 +141,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           userId: me['userId'] as String?,
           email: me['email'] as String?,
           name: me['name'] as String?,
+          knownPhone: me['knownPhone'] as String?,
           role: role,
           isLeader: me['isLeader'] as bool? ?? (role != UserRole.participant),
           leaderId: me['leaderId'] as String?,
