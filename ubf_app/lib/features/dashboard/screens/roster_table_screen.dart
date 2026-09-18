@@ -195,6 +195,9 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     l10n.summaryCountry,
     l10n.summaryBranch,
     l10n.colGenderAge,
+    // 전화번호(068). 픽업·배차에서 사람을 찾을 때 쓴다. 전체 명단에만 둔다 —
+    // 다른 보기는 각자 볼 것이 따로 있고, 칸을 늘리면 그것이 좁아진다.
+    if (widget.view == RosterView.all) l10n.regPhone,
     switch (widget.view) {
       RosterView.meals => l10n.mealsRestriction,
       RosterView.arrival => l10n.colFlight,
@@ -211,7 +214,7 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
 
   List<double> get _flex => switch (widget.view) {
     RosterView.meals => [0.5, 2.0, 1.3, 1.3, 0.9, 3.6],
-    RosterView.all => [0.5, 2.2, 1.4, 1.5, 1.0, 1.2, 2.0],
+    RosterView.all => [0.5, 2.0, 1.2, 1.3, 0.9, 1.6, 1.1, 1.8],
     RosterView.payments => [0.5, 2.0, 1.2, 1.3, 0.9, 1.9, 1.4],
     _ => [0.5, 2.2, 1.4, 1.5, 1.0, 2.0],
   };
@@ -307,6 +310,7 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                 : '',
             '${data[i]['age'] ?? ''}',
           ].where((s) => s.isNotEmpty).join(' / '),
+          if (widget.view == RosterView.all) '${data[i]['phone'] ?? ''}',
           last(data[i]),
           if (widget.view == RosterView.all) _payCell(l10n, data[i], currency),
           if (widget.view == RosterView.payments)

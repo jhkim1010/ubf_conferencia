@@ -36,6 +36,9 @@ class ExportService {
     l10n.summaryBranch,
     l10n.regGender,
     l10n.summaryAge,
+    // 전화번호(068). 픽업·배차에서 사람을 찾을 때 쓴다. 선택이라 빈 칸이
+    // 많지만, 칸 자체가 없으면 적어 둔 번호도 못 쓴다.
+    l10n.regPhone,
     l10n.expArrFlight,
     l10n.expArrTime,
     l10n.summaryArrAirport,
@@ -88,6 +91,7 @@ class ExportService {
       r['branch'] ?? '',
       gender,
       r['age'] ?? '',
+      r['phone'] ?? '',
       _flightNo(l10n, r['arrival_confirmed'], arrival),
       arrival?['scheduled_arrival'] ?? '',
       arrival?['arrival_airport'] ?? '',

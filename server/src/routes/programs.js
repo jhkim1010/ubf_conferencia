@@ -1013,7 +1013,7 @@ router.get('/:id/registrations', requireAuth, requireProgramAdmin,
     const registrations = await sql`
       SELECT
         r.id, r.program_id, r.user_id, r.country, r.branch,
-        r.real_name, r.bible_name, r.gender, r.age,
+        r.real_name, r.bible_name, r.gender, r.age, r.phone,
         -- 이름을 안 적고 제출한 사람이 빈 줄로 보이면 담당자가 누구인지
         -- 알 수 없다(055). 로그인한 계정 이름을 대신 준다 — 본인이 적은
         -- 것은 아니므로 앱이 "계정 이름" 이라고 밝혀 보여 준다.
