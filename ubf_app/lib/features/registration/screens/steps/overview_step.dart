@@ -111,14 +111,6 @@ class OverviewStep extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
         ],
-        Text(l10n.ovTitle, style: theme.textTheme.titleLarge),
-        const SizedBox(height: 4),
-        Text(
-          l10n.ovSubtitle,
-          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-        ),
-        const SizedBox(height: 18),
-
         // ── 기간 · 장소 ───────────────────────────────
         Container(
           decoration: BoxDecoration(
@@ -148,6 +140,17 @@ class OverviewStep extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 24),
+
+        // 참석 여부를 묻는 말은 **기간과 장소 뒤에** 온다. 언제 어디서
+        // 하는지를 보고 나서야 갈 수 있는지 판단할 수 있고, 그 판단을
+        // 하라고 부르는 말이 그 앞에 오면 순서가 뒤집힌다.
+        Text(l10n.ovTitle, style: theme.textTheme.titleLarge),
+        const SizedBox(height: 4),
+        Text(
+          l10n.ovSubtitle,
+          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+        ),
+        const SizedBox(height: 18),
 
         // ── 참가비 · 할인 ─────────────────────────────
         if (hasFee)
