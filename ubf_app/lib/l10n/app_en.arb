@@ -2568,5 +2568,13 @@
       }
     }
   },
-  "expCompanionsCol": "Companions"
+  "expCompanionsCol": "Companions",
+  "mealsPlusCompanions": "plus {count} children travelling with them",
+  "@mealsPlusCompanions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -1168,5 +1168,6 @@
   "companionBedHint": "Si ocupa un lugar en la habitación. Se preselecciona por la edad; puede cambiarlo.",
   "companionNoFee": "Los menores de {age} años o menos no pagan inscripción.",
   "rosterWithCompanion": "＋ {names}",
-  "expCompanionsCol": "Acompañantes"
+  "expCompanionsCol": "Acompañantes",
+  "mealsPlusCompanions": "además {count} niños que los acompañan"
 }

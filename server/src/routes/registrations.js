@@ -247,6 +247,17 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     // **전후 숙박비도 여기 들어간다(064).** 주최가 방을 잡고 받아서 호텔에
     // 내므로 참가자가 호텔에 직접 내는 돈이 아니다. 박수는 참가자가 보낸
     // 값이 아니라 비행 일정에서 낸 stay 를 쓴다 — DB 에 남는 것도 그것이다.
+    // 전후 숙박을 함께 쓰는 사람 수(069). 본인 한 사람에, 등록할 수 없는
+    // 동반자 중 **침대를 쓰는** 사람을 더한다. 보호자와 같이 자는 아기는
+    // 방값이 안 붙는다 — 침대를 안 쓰기 때문이다.
+    const [beds] = existing
+      ? await sql`
+          SELECT COUNT(*)::int AS n FROM companions c
+           WHERE c.registration_id = ${existing.id}
+             AND c.registers_separately = false
+             AND c.occupies_bed = true`
+      : [{ n: 0 }];
+
     const { total: computedTotal } = registrationTotal({
       tier,
       feeBasic: program.fee_basic,
@@ -255,6 +266,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
       hotelOptions: program.hotel_options,
       hotelKey: hotel.key,
       hotelNights: stay.nights,
+      hotelPeople: 1 + Number(beds?.n ?? 0),
       approvedDiscount,
     });
 

@@ -1575,10 +1575,21 @@ router.get('/:id/meals', requireAuth, requireProgramAdmin,
       ORDER BY r.country NULLS LAST, r.real_name
     `;
 
+    // 먹는 입의 수다. **등록할 수 없는 동반자도 먹는다(069).**
+    //
+    // 아기까지 셀지는 주방에서 정할 일이지만, 우리가 안 세어 주면 담당자는
+    // 그 사람들이 있다는 것조차 모른다. 그래서 등록 인원과 동반 인원을
+    // 따로 준다 — 합쳐 버리면 "스물둘" 이 몇 인분인지 알 수 없다.
     const [counts] = await sql`
       SELECT
         COUNT(*)::int AS total,
-        COUNT(*) FILTER (WHERE r.skips_breakfast)::int AS skips_breakfast
+        COUNT(*) FILTER (WHERE r.skips_breakfast)::int AS skips_breakfast,
+        COALESCE((
+          SELECT COUNT(*) FROM companions c
+            JOIN registrations r2 ON r2.id = c.registration_id
+           WHERE r2.program_id = ${programId}
+             AND c.registers_separately = false
+        ), 0)::int AS companions
       FROM registrations r
       WHERE r.program_id = ${programId}
     `;
@@ -1592,6 +1603,7 @@ router.get('/:id/meals', requireAuth, requireProgramAdmin,
         end_date: program.end_date,
       },
       total: counts.total,
+      companions: counts.companions,
       skips_breakfast: counts.skips_breakfast,
       people: people.map((p) => ({
         real_name: p.real_name,

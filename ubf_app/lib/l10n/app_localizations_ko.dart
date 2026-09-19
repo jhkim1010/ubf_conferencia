@@ -3784,4 +3784,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get expCompanionsCol => '동반';
+
+  @override
+  String mealsPlusCompanions(int count) {
+    return '그 밖에 동반 $count명 (따로 등록하지 않는 아이들)';
+  }
 }

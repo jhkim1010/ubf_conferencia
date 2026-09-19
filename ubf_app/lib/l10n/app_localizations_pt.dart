@@ -3887,4 +3887,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get expCompanionsCol => 'Acompanhantes';
+
+  @override
+  String mealsPlusCompanions(int count) {
+    return 'além de $count crianças que os acompanham';
+  }
 }

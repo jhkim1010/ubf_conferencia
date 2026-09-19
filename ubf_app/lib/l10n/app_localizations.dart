@@ -7031,6 +7031,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Companions'**
   String get expCompanionsCol;
+
+  /// No description provided for @mealsPlusCompanions.
+  ///
+  /// In en, this message translates to:
+  /// **'plus {count} children travelling with them'**
+  String mealsPlusCompanions(int count);
 }
 
 class _AppLocalizationsDelegate

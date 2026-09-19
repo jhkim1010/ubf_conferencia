@@ -25,11 +25,15 @@ function money(v) {
 /// 등급을 안 골랐거나 없는 등급을 가리키면 0 이다 — 단가를 알 수 없으니
 /// 셀 수가 없다. 이때 화면은 "등급을 고르면 더해집니다" 라고 말해야 한다.
 /// 0 이라고만 해 두면 숙박이 공짜라는 뜻이 된다.
-export function hotelCostOf({ options, key, nights }) {
+export function hotelCostOf({ options, key, nights, people = 1 }) {
   if (!key || !Array.isArray(options)) return 0;
   const picked = options.find((o) => o && o.key === key);
+  // 단가는 한 사람 한 밤 값이다. **침대를 쓰는 동반자만큼 인원이 는다**(069) —
+  // 보호자와 같이 자는 아기는 안 센다. 못 읽으면 한 사람으로 둔다.
+  const n = Number(people);
+  const heads = Number.isFinite(n) && n >= 1 ? Math.trunc(n) : 1;
   // 셈 자체는 060 의 hotelCost 가 한다. 두 벌로 두면 반올림이 갈린다.
-  return hotelCost(nights, picked?.pricePerNight);
+  return hotelCost(nights, picked?.pricePerNight) * heads;
 }
 
 /// **등급을 안 고른 사람도 기본 참가비를 낸다.** 예전에는 0 으로 두어,
@@ -51,6 +55,7 @@ export function registrationTotal({
   hotelOptions,
   hotelKey,
   hotelNights = 0,
+  hotelPeople = 1,
   approvedDiscount = 0,
 }) {
   const tierFee = tierFeeOf({ tier, feeBasic, feePremium });
@@ -58,6 +63,7 @@ export function registrationTotal({
     options: hotelOptions,
     key: hotelKey,
     nights: hotelNights,
+    people: hotelPeople,
   });
   const total = Math.max(
     0,

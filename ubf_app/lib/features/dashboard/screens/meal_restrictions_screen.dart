@@ -82,7 +82,16 @@ class _MealRestrictionsScreenState
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            l10n.mealsSummary(people.length, total),
+                            [
+                              l10n.mealsSummary(people.length, total),
+                              // 등록할 수 없는 동반자도 먹는다(069). 합치지
+                              // 않고 따로 적는다 — 몇 인분인지 주방에서
+                              // 정할 수 있어야 한다.
+                              if (((data['companions'] as int?) ?? 0) > 0)
+                                l10n.mealsPlusCompanions(
+                                  data['companions'] as int,
+                                ),
+                            ].join(' · '),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),

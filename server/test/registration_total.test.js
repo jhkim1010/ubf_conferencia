@@ -116,3 +116,56 @@ test('할인은 숙박까지 더한 뒤에 뺀다', () => {
   // 300 + 95 + 40 - 35
   assert.equal(total, 400);
 });
+
+// ── 동반자가 함께 자는 경우 (069) ─────────────────────────────
+
+test('침대를 쓰는 동반자만큼 숙박비가 는다', () => {
+  const { hotelCost } = registrationTotal({
+    tier: 'basic',
+    ...FEES,
+    hotelOptions: LEVELS,
+    hotelKey: 'std',
+    hotelNights: 2,
+    hotelPeople: 2, // 본인 + 침대 쓰는 아이 하나
+  });
+  assert.equal(hotelCost, 160); // 40 × 2박 × 2명
+});
+
+test('같이 자는 아기는 방값이 안 붙는다', () => {
+  // hotelPeople 이 1 이면 아기를 데려와도 그대로다.
+  const { hotelCost } = registrationTotal({
+    tier: 'basic',
+    ...FEES,
+    hotelOptions: LEVELS,
+    hotelKey: 'std',
+    hotelNights: 2,
+    hotelPeople: 1,
+  });
+  assert.equal(hotelCost, 80);
+});
+
+test('인원을 안 주면 한 사람으로 센다', () => {
+  // 069 이전의 호출자가 그대로 동작해야 한다.
+  const { hotelCost } = registrationTotal({
+    tier: 'basic',
+    ...FEES,
+    hotelOptions: LEVELS,
+    hotelKey: 'std',
+    hotelNights: 3,
+  });
+  assert.equal(hotelCost, 120);
+});
+
+test('못 읽는 인원은 한 사람으로 본다', () => {
+  for (const bad of [0, -2, null, 'two']) {
+    const { hotelCost } = registrationTotal({
+      tier: 'basic',
+      ...FEES,
+      hotelOptions: LEVELS,
+      hotelKey: 'std',
+      hotelNights: 1,
+      hotelPeople: bad,
+    });
+    assert.equal(hotelCost, 40, `인원 ${bad}`);
+  }
+});
