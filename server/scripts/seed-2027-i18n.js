@@ -19,11 +19,16 @@ import { sql } from '../src/db.js';
 const host = (process.env.DATABASE_URL ?? '').replace(/.*@([^.]+).*/s, '$1');
 const apply = process.argv.includes('--yes');
 
+// 베드로전서 5:2. **각 언어의 성경 표현을 그대로 쓴다.**
+//
+// 스페인어 원문이 RVR1960("Apacentad la grey de Dios")이므로 결이 같은 판을
+// 고른다 — 영어는 KJV, 포르투갈어는 ARA, 한국어는 개역개정이다. 뜻만 맞는
+// 말을 새로 지으면 성경에서 온 제목이 아니라 우리가 지은 표어가 된다.
 const THEME_TITLE = {
   ko: '하나님의 양 무리를 치라',
-  en: 'Shepherd the flock of God',
+  en: 'Feed the flock of God',
   es: 'Apacentad la grey de Dios',
-  pt: 'Pastoreai o rebanho de Deus',
+  pt: 'Apascentai o rebanho de Deus',
 };
 
 const THEME_VERSE = {
