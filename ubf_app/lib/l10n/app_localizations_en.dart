@@ -3709,10 +3709,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get regStepOverview => 'This conference';
 
   @override
-  String get ovTitle => 'You are joining this conference';
+  String get ovTitle => 'Before you register';
 
   @override
-  String get ovSubtitle => 'Check the dates and the fee before you go on.';
+  String get ovSubtitle => 'Check the dates and the fee before you continue.';
 
   @override
   String ovNights(int count) {
@@ -3733,7 +3733,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get costBarDue => 'You pay us so far';
+  String get costBarDue => 'Payable to us so far';
 
   @override
   String get costBarLodgingPending =>
@@ -3834,7 +3834,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get regPhoneFromBefore =>
-      'From what you entered before — change it if it moved';
+      'From what you entered before — change it if it has changed';
 
   @override
   String get companionRegistersQ => 'Will this person register separately?';

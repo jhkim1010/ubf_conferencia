@@ -2444,8 +2444,8 @@
     }
   },
   "regStepOverview": "This conference",
-  "ovTitle": "You are joining this conference",
-  "ovSubtitle": "Check the dates and the fee before you go on.",
+  "ovTitle": "Before you register",
+  "ovSubtitle": "Check the dates and the fee before you continue.",
   "ovNights": "{count} nights",
   "@ovNights": {
     "placeholders": {
@@ -2471,7 +2471,7 @@
       }
     }
   },
-  "costBarDue": "You pay us so far",
+  "costBarDue": "Payable to us so far",
   "costBarLodgingPending": "Lodging is added once you pick a room level",
   "cpVenueUrlLabel": "Venue website",
   "cpVenueUrlHelp": "Participants open this when they tap the venue. A hotel page, a map, anything.",
@@ -2543,7 +2543,7 @@
   "cpThemeVerseHint": "Matthew 5:14-16",
   "regPhone": "Phone (optional)",
   "regPhoneHint": "+54 9 11 1234 5678",
-  "regPhoneFromBefore": "From what you entered before — change it if it moved",
+  "regPhoneFromBefore": "From what you entered before — change it if it has changed",
   "companionRegistersQ": "Will this person register separately?",
   "companionRegistersYes": "Yes, separately",
   "companionRegistersNo": "No — cannot register",

@@ -6759,13 +6759,13 @@ abstract class AppLocalizations {
   /// No description provided for @ovTitle.
   ///
   /// In en, this message translates to:
-  /// **'You are joining this conference'**
+  /// **'Before you register'**
   String get ovTitle;
 
   /// No description provided for @ovSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Check the dates and the fee before you go on.'**
+  /// **'Check the dates and the fee before you continue.'**
   String get ovSubtitle;
 
   /// No description provided for @ovNights.
@@ -6795,7 +6795,7 @@ abstract class AppLocalizations {
   /// No description provided for @costBarDue.
   ///
   /// In en, this message translates to:
-  /// **'You pay us so far'**
+  /// **'Payable to us so far'**
   String get costBarDue;
 
   /// No description provided for @costBarLodgingPending.
@@ -6963,7 +6963,7 @@ abstract class AppLocalizations {
   /// No description provided for @regPhoneFromBefore.
   ///
   /// In en, this message translates to:
-  /// **'From what you entered before — change it if it moved'**
+  /// **'From what you entered before — change it if it has changed'**
   String get regPhoneFromBefore;
 
   /// No description provided for @companionRegistersQ.
