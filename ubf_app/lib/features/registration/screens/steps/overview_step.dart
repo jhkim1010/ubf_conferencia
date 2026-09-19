@@ -87,30 +87,47 @@ class OverviewStep extends ConsumerWidget {
                 // 가운데로 모아 크게 적는다. 이 줄은 읽히려고 있는 것이지
                 // 채워 넣은 값이 아니다 — 왼쪽에 작게 붙여 두면 아래의
                 // 안내 문구와 구별되지 않는다.
-                // 한 줄에 들어가는 만큼만 크게.
+                // 낱말이 쪼개지지 않을 만큼만 줄인다.
                 //
-                // 크기를 숫자로 못 박으면 제목 길이에 따라 어떤 것은 두 줄,
-                // 어떤 것은 세 줄이 된다 — "Apacentad la grey de Dios" 는
-                // 폰에서 두 줄이었다. FittedBox 가 폭에 맞춰 줄여 주므로
-                // 짧은 제목은 크게, 긴 제목은 작게 한 줄로 나온다.
+                // 줄바꿈은 괜찮다 — 긴 제목이 두 줄이 되는 것은 자연스럽다.
+                // 안 되는 것은 **한 낱말이 두 줄로 잘리는 것**이다
+                // ("Apacen-tad"). 그래서 가장 긴 낱말을 재서, 그것이 폭을
+                // 넘을 때만 넘은 만큼 줄인다.
                 //
-                // 기준 크기는 폰에서 정했다. 2 배 → 1.8 → 1.5 로 두 번
-                // 물렀다.
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    themeTitle,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    style: theme.textTheme.headlineMedium?.copyWith(
+                // 한 줄에 맞추려고 통째로 줄이면(FittedBox) 제목이 길수록
+                // 글씨가 작아져, 정작 읽으라고 키운 뜻이 사라진다.
+                LayoutBuilder(
+                  builder: (context, c) {
+                    final base =
+                        (theme.textTheme.headlineMedium?.fontSize ?? 28) * 1.8;
+                    final style = theme.textTheme.headlineMedium!.copyWith(
                       fontWeight: FontWeight.w700,
-                      fontSize:
-                          (theme.textTheme.headlineMedium?.fontSize ?? 28) *
-                          1.5,
+                      fontSize: base,
                       height: 1.15,
                       color: theme.colorScheme.primary,
-                    ),
-                  ),
+                    );
+                    var size = base;
+                    final longest = themeTitle
+                        .split(RegExp(r'\s+'))
+                        .fold<String>(
+                          '',
+                          (a, b) => b.length > a.length ? b : a,
+                        );
+                    if (longest.isNotEmpty && c.maxWidth > 0) {
+                      final tp = TextPainter(
+                        text: TextSpan(text: longest, style: style),
+                        textDirection: TextDirection.ltr,
+                      )..layout();
+                      if (tp.width > c.maxWidth) {
+                        size = base * (c.maxWidth / tp.width);
+                      }
+                    }
+                    return Text(
+                      themeTitle,
+                      textAlign: TextAlign.center,
+                      style: style.copyWith(fontSize: size),
+                    );
+                  },
                 ),
                 if (themeVerse.isNotEmpty) ...[
                   const SizedBox(height: 8),
