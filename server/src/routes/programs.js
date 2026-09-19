@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { translateField } from '../services/translate_api.js';
+import { pickLanguage } from '../services/messages.js';
 import { sql } from '../db.js';
 import { normalizeOptions } from '../services/option_media.js';
 import { rolesOf, tallyRole, sortRoles } from '../services/service_roles.js';
@@ -274,7 +276,9 @@ router.get('/:id', requireAuth, async (req, res) => {
           json_build_object(
             'id', po.id,
             'name', po.name,
+            'nameI18n', po.name_i18n,
             'description', po.description,
+            'descriptionI18n', po.description_i18n,
             'cost', po.cost,
             'startDate', po.start_date,
             'endDate', po.end_date,
@@ -365,7 +369,7 @@ router.get('/', requireAuth, requireLeader, async (req, res) => {
 router.post('/', requireAuth, requireLeader, async (req, res) => {
   const {
     name, location, startDate, endDate, enabledSections, options,
-    venueUrl, themeTitle, themeVerse,
+    venueUrl, themeTitle, themeVerse, themeVerseI18n,
     nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
     programType, hostCountry,
     feeBasic, feePremium, feeBasicDesc, feePremiumDesc, discountOptions,
@@ -597,7 +601,9 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
       SELECT id, program_type, start_date, currency,
              small_cohort_policy, min_team_size,
              fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options,
-             hotel_options
+             hotel_options,
+             theme_title, theme_title_i18n,
+             fee_basic_desc_i18n, fee_premium_desc_i18n
       FROM programs
       WHERE id = ${req.params.id} AND leader_id = ${req.user.leaderId} AND is_active = true
     `;
@@ -615,6 +621,32 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
 
     const type = programType === 'local' ? 'local' : 'international';
 
+    // 말씀 제목을 네 언어로(071). 글이 그대로면 번역기를 안 부른다 —
+    // 수양회 설정은 다른 것을 고치려고도 저장하는데, 그때마다 같은 글을
+    // 다시 옮기면 호출만 쌓인다.
+    const lang = pickLanguage(req.headers['accept-language']);
+    const themeTitleI18n = await translateField({
+      text: themeTitle,
+      previousText: program.theme_title,
+      previousI18n: program.theme_title_i18n,
+      sourceLang: lang,
+    });
+
+    // 등급 설명도 옮긴다(072). 값에 무엇이 들어 있는지가 여기 적히고,
+    // 못 읽으면 나중에 "그럼 밥값은?" 이 된다.
+    const feeBasicDescI18n = await translateField({
+      text: feeBasicDesc,
+      previousText: program.fee_basic_desc,
+      previousI18n: program.fee_basic_desc_i18n,
+      sourceLang: lang,
+    });
+    const feePremiumDescI18n = await translateField({
+      text: feePremiumDesc,
+      previousText: program.fee_premium_desc,
+      previousI18n: program.fee_premium_desc_i18n,
+      sourceLang: lang,
+    });
+
     await sql`
       UPDATE programs SET
         name             = COALESCE(${name ?? null}, name),
@@ -626,6 +658,13 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
         -- 지우는 것도 뜻이 있다.
         theme_title      = ${themeTitle ?? null},
         theme_verse      = ${themeVerse ?? null},
+        -- 말씀 제목은 기계가 옮긴다(071). 글이 그대로면 옮겨 둔 것을 쓴다.
+        theme_title_i18n = ${themeTitleI18n ? JSON.stringify(themeTitleI18n) : null}::jsonb,
+        -- 성경 본문은 담당자가 언어별로 직접 적는다. 기계에 맡기면
+        -- "1Pedro 5:2a" 가 엉뚱해진다.
+        theme_verse_i18n = ${themeVerseI18n ? JSON.stringify(themeVerseI18n) : null}::jsonb,
+        fee_basic_desc_i18n = ${feeBasicDescI18n ? JSON.stringify(feeBasicDescI18n) : null}::jsonb,
+        fee_premium_desc_i18n = ${feePremiumDescI18n ? JSON.stringify(feePremiumDescI18n) : null}::jsonb,
         start_date       = ${startDate ?? null},
         end_date         = ${endDate ?? null},
         enabled_sections = COALESCE(${enabledSections ? JSON.stringify(enabledSections) : null}::jsonb, enabled_sections),
@@ -690,6 +729,31 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
     // 내린다.
     const options2 = normalizeOptions(options);
     if (Array.isArray(options2)) {
+      // 투어 이름과 설명을 네 언어로(071).
+      //
+      // 옛 값을 먼저 읽어 비교한다 — 안 바뀐 글을 저장할 때마다 다시
+      // 옮기면 호출만 쌓인다. 담당자는 정원 하나 고치려고도 저장한다.
+      const prevRows = await sql`
+        SELECT id, name, description, name_i18n, description_i18n
+          FROM program_options WHERE program_id = ${req.params.id}
+      `;
+      const prev = new Map(prevRows.map((r) => [r.id, r]));
+      for (const o of options2) {
+        const was = prev.get(o.id) ?? {};
+        o.nameI18n = await translateField({
+          text: o.name,
+          previousText: was.name,
+          previousI18n: was.name_i18n,
+          sourceLang: lang,
+        });
+        o.descriptionI18n = await translateField({
+          text: o.description,
+          previousText: was.description,
+          previousI18n: was.description_i18n,
+          sourceLang: lang,
+        });
+      }
+
       const keep = options2
         .map((o) => o?.id)
         .filter((v) => typeof v === 'string' && UUID_RE.test(v));
@@ -728,6 +792,8 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
             num(o.estAirfareCost),
             JSON.stringify(extraItems(o.extraItems)),
             minSignups(o.minSignups),
+            o.nameI18n ? JSON.stringify(o.nameI18n) : null,
+            o.descriptionI18n ? JSON.stringify(o.descriptionI18n) : null,
           ];
           const hasId = typeof o.id === 'string' && UUID_RE.test(o.id);
           if (hasId) {
@@ -741,8 +807,9 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
                  includes_airfare = $16, est_meals_cost = $17,
                  est_lodging_cost = $18, est_airfare_cost = $19,
                  extra_items = $20::jsonb, min_signups = $21,
+                 name_i18n = $22::jsonb, description_i18n = $23::jsonb,
                  is_active = true
-               WHERE id = $22 AND program_id = $1`,
+               WHERE id = $24 AND program_id = $1`,
               [...vals, o.id],
             );
             if (r.rowCount > 0) continue;
@@ -755,9 +822,9 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
                 brochure_url, video_url, plan_docs, includes_lodging,
                 includes_meals, includes_airfare,
                 est_meals_cost, est_lodging_cost, est_airfare_cost,
-                extra_items, min_signups)
+                extra_items, min_signups, name_i18n, description_i18n)
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14,
-                     $15,$16,$17,$18,$19,$20::jsonb,$21)`,
+                     $15,$16,$17,$18,$19,$20::jsonb,$21,$22::jsonb,$23::jsonb)`,
             vals,
           );
         }

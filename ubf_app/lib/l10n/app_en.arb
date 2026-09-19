@@ -2585,5 +2585,6 @@
       }
     }
   },
-  "annNotTranslated": "sent as written"
+  "annNotTranslated": "sent as written",
+  "cpThemeVerseWhy": "Type this one yourself in each language — a machine turns \"1Pedro 5:2a\" into nonsense."
 }

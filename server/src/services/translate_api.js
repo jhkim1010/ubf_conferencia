@@ -99,3 +99,42 @@ export async function translateAnnouncement({ title, body, sourceLang }) {
     body: mergeTranslations(src, body, bodyOut),
   };
 }
+
+/// 담당자가 적은 한 칸을 네 언어로 (071).
+///
+/// **글이 안 바뀌었으면 번역기를 부르지 않는다.** 수양회 설정은 다른 것을
+/// 고치려고도 저장하는데, 그때마다 같은 글을 다시 옮기면 호출만 쌓이고
+/// 결과는 그대로다. 이미 옮겨 둔 것을 그대로 쓴다.
+///
+/// 옛 번역이 원문과 어긋나 있으면(담당자가 글을 고쳤다) 다시 옮긴다.
+export async function translateField({
+  text,
+  previousText,
+  previousI18n,
+  sourceLang,
+}) {
+  const now = (text ?? '').trim();
+  if (now === '') return null; // 비웠으면 번역도 없앤다
+
+  const src = LANGS.includes(sourceLang) ? sourceLang : 'ko';
+  const before = (previousText ?? '').trim();
+
+  // 글이 그대로고 옮겨 둔 것이 있으면 그것을 쓴다.
+  if (now === before && previousI18n && typeof previousI18n === 'object') {
+    const kept = { ...previousI18n, [src]: now };
+    return kept;
+  }
+
+  if (!translationEnabled()) return mergeTranslations(src, now, {});
+
+  const out = {};
+  for (const target of pickTargets(src)) {
+    try {
+      const [t] = await translateOnce([now], target);
+      out[target] = t;
+    } catch (err) {
+      console.error(`번역 실패(${target}):`, err.message);
+    }
+  }
+  return mergeTranslations(src, now, out);
+}

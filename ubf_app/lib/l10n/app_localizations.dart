@@ -7049,6 +7049,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'sent as written'**
   String get annNotTranslated;
+
+  /// No description provided for @cpThemeVerseWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Type this one yourself in each language — a machine turns \"1Pedro 5:2a\" into nonsense.'**
+  String get cpThemeVerseWhy;
 }
 
 class _AppLocalizationsDelegate

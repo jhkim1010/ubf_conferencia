@@ -3900,4 +3900,8 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get annNotTranslated => 'enviado como foi escrito';
+
+  @override
+  String get cpThemeVerseWhy =>
+      'Preencha esta caixa em cada idioma — uma máquina transforma \"1Pedro 5:2a\" em algo sem sentido.';
 }

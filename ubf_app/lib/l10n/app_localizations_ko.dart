@@ -3797,4 +3797,8 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get annNotTranslated => '적으신 그대로 나감';
+
+  @override
+  String get cpThemeVerseWhy =>
+      '이 칸만은 언어별로 직접 적어 주십시오 — \"1Pedro 5:2a\" 는 기계가 옮기면 엉뚱해집니다.';
 }

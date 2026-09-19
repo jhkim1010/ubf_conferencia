@@ -30,6 +30,12 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
   // 수양회 말씀 제목과 성경 본문(067). 둘 다 한 줄이다.
   final _themeTitleController = TextEditingController();
   final _themeVerseController = TextEditingController();
+  // 성경 본문은 언어별로 직접 적는다(071). 기계가 옮기면 책 이름이
+  // 엉뚱해진다 — 베드로전서 / 1 Peter / 1Pedro 는 번역이 아니라 약속이다.
+  final _verseKo = TextEditingController();
+  final _verseEn = TextEditingController();
+  final _verseEs = TextEditingController();
+  final _versePt = TextEditingController();
   final _airportController = TextEditingController();
 
   /// 현장 대표 연락처(040). 두 명 고정이었는데, 공항·숙소·차량을 나눠 맡는
@@ -113,6 +119,16 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     return t.isEmpty ? null : t;
   }
 
+  Widget _verseField(TextEditingController c, String lang) => TextFormField(
+    controller: c,
+    decoration: InputDecoration(
+      labelText: lang,
+      isDense: true,
+      border: const OutlineInputBorder(),
+    ),
+    style: const TextStyle(fontSize: 14),
+  );
+
   @override
   void dispose() {
     _feeBasicController.dispose();
@@ -124,6 +140,10 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _venueUrlController.dispose();
     _themeTitleController.dispose();
     _themeVerseController.dispose();
+    _verseKo.dispose();
+    _verseEn.dispose();
+    _verseEs.dispose();
+    _versePt.dispose();
     _airportController.dispose();
     for (final c in _contacts) {
       c.name.dispose();
@@ -143,6 +163,11 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _venueUrlController.text = program['venue_url'] ?? '';
     _themeTitleController.text = program['theme_title'] ?? '';
     _themeVerseController.text = program['theme_verse'] ?? '';
+    final vi = (program['theme_verse_i18n'] as Map?) ?? const {};
+    _verseKo.text = '${vi['ko'] ?? ''}';
+    _verseEn.text = '${vi['en'] ?? ''}';
+    _verseEs.text = '${vi['es'] ?? ''}';
+    _versePt.text = '${vi['pt'] ?? ''}';
     _airportController.text = program['nearest_airport'] ?? '';
     // 서버는 늘 목록으로 준다 — 040 이전 수양회는 옛 두 칸에서 만들어 준다.
     for (final c in _contacts) {
@@ -308,6 +333,15 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
         'venueUrl': _venueUrlController.text.trim(),
         'themeTitle': _themeTitleController.text.trim(),
         'themeVerse': _themeVerseController.text.trim(),
+        'themeVerseI18n': {
+          for (final e in {
+            'ko': _verseKo,
+            'en': _verseEn,
+            'es': _verseEs,
+            'pt': _versePt,
+          }.entries)
+            if (e.value.text.trim().isNotEmpty) e.key: e.value.text.trim(),
+        },
         'programType': _programType,
         'startDate': _startDate?.toIso8601String().split('T').first,
         'endDate': _endDate?.toIso8601String().split('T').first,
@@ -521,6 +555,30 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                     hintText: l10n.cpThemeVerseHint,
                     prefixIcon: const Icon(Icons.menu_book_outlined, size: 18),
                   ),
+                ),
+                // 언어별 표기(071). 비워 두면 위 칸을 그대로 쓴다.
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 2),
+                  child: Text(
+                    l10n.cpThemeVerseWhy,
+                    style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(child: _verseField(_verseKo, '한국어')),
+                    const SizedBox(width: 8),
+                    Expanded(child: _verseField(_verseEn, 'English')),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(child: _verseField(_verseEs, 'Español')),
+                    const SizedBox(width: 8),
+                    Expanded(child: _verseField(_versePt, 'Português')),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(

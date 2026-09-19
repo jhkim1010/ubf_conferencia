@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/utils/i18n_text.dart';
 import '../../../core/utils/registration_cost.dart';
 import '../../../core/utils/venue_link.dart';
 import '../../../core/utils/tour_extras.dart';
@@ -297,7 +298,12 @@ class SummaryScreen extends ConsumerWidget {
                   children: selectedOptionDetails
                       .map(
                         (o) => _InfoRow(
-                          o['name'] ?? '',
+                          pickI18n(
+                                o['nameI18n'],
+                                Localizations.localeOf(context).languageCode,
+                                o['name'],
+                              ) ??
+                              '',
                           currency.format(Money.parse(o['cost'])),
                         ),
                       )

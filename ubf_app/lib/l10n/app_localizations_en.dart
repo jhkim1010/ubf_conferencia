@@ -3887,4 +3887,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get annNotTranslated => 'sent as written';
+
+  @override
+  String get cpThemeVerseWhy =>
+      'Type this one yourself in each language — a machine turns \"1Pedro 5:2a\" into nonsense.';
 }

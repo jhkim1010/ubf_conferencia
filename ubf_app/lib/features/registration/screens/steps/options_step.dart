@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/registration_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/utils/i18n_text.dart';
 import '../../../../core/utils/media_url.dart';
 import '../../../../core/utils/money.dart';
 
@@ -119,7 +120,13 @@ class _TourCard extends ConsumerWidget {
     final cost = (Money.parse(option['cost']) ?? 0).toDouble();
     final photoUrls =
         (option['photoUrls'] as List?)?.cast<String>() ?? const <String>[];
-    final description = option['description'] as String?;
+    // 담당자가 적은 글은 보는 사람의 언어로(071).
+    final lang = Localizations.localeOf(context).languageCode;
+    final description = pickI18n(
+      option['descriptionI18n'],
+      lang,
+      option['description'],
+    );
     final contactName = option['contactName'] as String?;
     final brochureUrl = option['brochureUrl'] as String?;
     final planDocs = (option['planDocs'] as List?) ?? const [];
@@ -188,7 +195,7 @@ class _TourCard extends ConsumerWidget {
             CheckboxListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 12),
               title: Text(
-                option['name'] as String? ?? '',
+                pickI18n(option['nameI18n'], lang, option['name']) ?? '',
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: (contactName != null && contactName.isNotEmpty)

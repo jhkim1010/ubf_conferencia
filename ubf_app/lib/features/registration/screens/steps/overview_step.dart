@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import '../../../../core/utils/i18n_text.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/venue_link.dart';
 import 'fee_section.dart';
@@ -64,8 +65,16 @@ class OverviewStep extends ConsumerWidget {
     final feePremium = Money.parse(program['fee_premium']);
     final hasFee = feeBasic != null || feePremium != null;
 
-    final themeTitle = '${program['theme_title'] ?? ''}'.trim();
-    final themeVerse = '${program['theme_verse'] ?? ''}'.trim();
+    // 담당자가 적은 글은 보는 사람의 언어로(071). 그 언어가 없으면 원문이다.
+    final lang = Localizations.localeOf(context).languageCode;
+    final themeTitle =
+        (pickI18n(program['theme_title_i18n'], lang, program['theme_title']) ??
+                '')
+            .trim();
+    final themeVerse =
+        (pickI18n(program['theme_verse_i18n'], lang, program['theme_verse']) ??
+                '')
+            .trim();
 
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -191,8 +200,16 @@ class OverviewStep extends ConsumerWidget {
             programId: programId,
             feeBasic: feeBasic,
             feePremium: feePremium,
-            feeBasicDesc: program['fee_basic_desc'] as String?,
-            feePremiumDesc: program['fee_premium_desc'] as String?,
+            feeBasicDesc: pickI18n(
+              program['fee_basic_desc_i18n'],
+              lang,
+              program['fee_basic_desc'],
+            ),
+            feePremiumDesc: pickI18n(
+              program['fee_premium_desc_i18n'],
+              lang,
+              program['fee_premium_desc'],
+            ),
             discountOptions: List<Map<String, dynamic>>.from(
               program['discount_options'] as List? ?? const [],
             ),
