@@ -270,6 +270,21 @@ class _AnnounceScreenState extends ConsumerState<AnnounceScreen> {
                             '${a['sent_at'] ?? ''}'
                                 .replaceAll('T', ' ')
                                 .split('.')[0],
+                            // 어느 언어로 나갔는지(070). 번역기를 안 붙였거나
+                            // 실패하면 원문 하나뿐이고, 그것도 밝힌다 —
+                            // 나갔다고만 적어 두면 담당자는 네 언어로 갔다고
+                            // 믿는다.
+                            () {
+                              final m = a['body_i18n'] as Map?;
+                              final langs =
+                                  m == null
+                                        ? const <String>[]
+                                        : m.keys.map((k) => '$k').toList()
+                                    ..sort();
+                              return langs.length > 1
+                                  ? l10n.annTranslated(langs.join(' '))
+                                  : l10n.annNotTranslated;
+                            }(),
                           ].join(' · '),
                           style: const TextStyle(fontSize: 11.5),
                         ),

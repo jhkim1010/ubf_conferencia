@@ -1169,5 +1169,7 @@
   "companionNoFee": "Los menores de {age} años o menos no pagan inscripción.",
   "rosterWithCompanion": "＋ {names}",
   "expCompanionsCol": "Acompañantes",
-  "mealsPlusCompanions": "además {count} niños que los acompañan"
+  "mealsPlusCompanions": "además {count} niños que los acompañan",
+  "annTranslated": "traducción automática · {langs}",
+  "annNotTranslated": "enviado tal como se escribió"
 }

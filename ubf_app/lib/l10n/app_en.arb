@@ -2576,5 +2576,14 @@
         "type": "int"
       }
     }
-  }
+  },
+  "annTranslated": "auto-translated · {langs}",
+  "@annTranslated": {
+    "placeholders": {
+      "langs": {
+        "type": "String"
+      }
+    }
+  },
+  "annNotTranslated": "sent as written"
 }

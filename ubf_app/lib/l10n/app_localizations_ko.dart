@@ -3789,4 +3789,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String mealsPlusCompanions(int count) {
     return '그 밖에 동반 $count명 (따로 등록하지 않는 아이들)';
   }
+
+  @override
+  String annTranslated(String langs) {
+    return '자동 번역 · $langs';
+  }
+
+  @override
+  String get annNotTranslated => '적으신 그대로 나감';
 }

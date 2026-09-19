@@ -1169,5 +1169,7 @@
   "companionNoFee": "만 {age}세 이하는 참가비를 받지 않습니다.",
   "rosterWithCompanion": "＋ {names}",
   "expCompanionsCol": "동반",
-  "mealsPlusCompanions": "그 밖에 동반 {count}명 (따로 등록하지 않는 아이들)"
+  "mealsPlusCompanions": "그 밖에 동반 {count}명 (따로 등록하지 않는 아이들)",
+  "annTranslated": "자동 번역 · {langs}",
+  "annNotTranslated": "적으신 그대로 나감"
 }

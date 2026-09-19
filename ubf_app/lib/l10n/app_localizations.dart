@@ -7037,6 +7037,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'plus {count} children travelling with them'**
   String mealsPlusCompanions(int count);
+
+  /// No description provided for @annTranslated.
+  ///
+  /// In en, this message translates to:
+  /// **'auto-translated · {langs}'**
+  String annTranslated(String langs);
+
+  /// No description provided for @annNotTranslated.
+  ///
+  /// In en, this message translates to:
+  /// **'sent as written'**
+  String get annNotTranslated;
 }
 
 class _AppLocalizationsDelegate

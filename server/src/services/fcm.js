@@ -1,4 +1,5 @@
 import { say } from './notify_text.js';
+import { pickText } from './translate_api.js';
 
 // Firebase Cloud Messaging (FCM) 서비스
 // 환경변수: FIREBASE_SERVICE_ACCOUNT (서비스 계정 JSON 문자열)
@@ -83,10 +84,19 @@ export async function sendPushNotification(tokens, title, body, data = {}) {
 // 아무에게도 보내지 않는다 — 전체로 떨어뜨리지 않는다.
 
 /// 알림 문구를 그 사람의 언어로 짓는다(056).
-/// 문자열은 그대로 둔다 — 담당자가 손으로 적은 말이다.
+///
+/// 세 가지가 들어온다.
+///
+///   문자열          담당자가 손으로 적은 말. 그대로 둔다.
+///   {key, params}   우리가 지어 둔 문구. 표에서 그 언어를 꺼낸다.
+///   {i18n, fallback} 담당자가 적고 기계가 옮긴 말(070). 그 언어가 없으면
+///                   원문으로 돌아간다 — 번역이 실패한 언어가 여기로 온다.
 export function renderPush(v, lang) {
   if (typeof v === 'string') return v;
   if (!v || typeof v !== 'object') return '';
+  if (v.i18n || v.fallback !== undefined) {
+    return pickText(v.i18n, lang || 'ko', v.fallback ?? '');
+  }
   return say(v.key, v.params, lang || 'ko');
 }
 

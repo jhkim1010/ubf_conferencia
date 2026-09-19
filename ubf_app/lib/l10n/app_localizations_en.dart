@@ -3879,4 +3879,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String mealsPlusCompanions(int count) {
     return 'plus $count children travelling with them';
   }
+
+  @override
+  String annTranslated(String langs) {
+    return 'auto-translated · $langs';
+  }
+
+  @override
+  String get annNotTranslated => 'sent as written';
 }

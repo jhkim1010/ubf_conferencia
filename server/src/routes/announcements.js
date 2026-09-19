@@ -10,6 +10,8 @@ import { requireAuth, requireProgramAdmin, requireScope } from '../middleware/au
 import { notifyAudience } from '../services/fcm.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
 import { audienceFromBody } from '../services/audience.js';
+import { translateAnnouncement } from '../services/translate_api.js';
+import { pickLanguage } from '../services/messages.js';
 
 const router = Router();
 
@@ -26,7 +28,8 @@ router.get('/:programId', requireAuth, requireProgramAdmin,
   requireScope('comms'), async (req, res) => {
   try {
     const rows = await sql`
-      SELECT id, title, body, audience_kind, audience_id, recipients, sent_at
+      SELECT id, title, body, audience_kind, audience_id, recipients, sent_at,
+             title_i18n, body_i18n, source_lang
       FROM announcements
       WHERE program_id = ${req.params.programId}
       ORDER BY sent_at DESC
@@ -83,23 +86,38 @@ router.post('/:programId', requireAuth, requireProgramAdmin,
       if (!group) return res.status(404).json({ error: '조를 찾을 수 없습니다' });
     }
 
-    // 보낸 뒤에 기록하지 않는다 — 알림이 늦거나 실패해도 보낸 사실은 남아야
-    // 하고, 담당자가 같은 공지를 두 번 보내지 않으려면 기록이 먼저다.
+    // 네 언어로 옮긴다(070). 담당자가 적은 언어는 원문 그대로 남는다.
+    //
+    // 번역기를 안 붙였거나 실패하면 빈손으로 돌아오고, 그때는 예전처럼
+    // 원문이 그대로 나간다 — **공지 자체는 반드시 나가야 한다.**
+    const tr = await translateAnnouncement({
+      title: title || null,
+      body,
+      sourceLang: pickLanguage(req.headers['accept-language']),
+    });
+
+    // 알림도 사람마다 제 언어로 간다. fcm 이 ui_language 로 나눠 보내므로
+    // (056) 여기서는 언어별 덩이를 넘기기만 하면 된다.
     const sent = await notifyAudience(
       sql,
       programId,
       audience,
-      title || program.name,
-      body,
+      title ? { i18n: tr.title, fallback: title } : program.name,
+      { i18n: tr.body, fallback: body },
       { type: 'announcement', programId },
     );
 
     const [row] = await sql`
       INSERT INTO announcements (program_id, title, body, audience_kind,
-                                 audience_id, recipients, sent_by)
+                                 audience_id, recipients, sent_by,
+                                 title_i18n, body_i18n, source_lang)
       VALUES (${programId}, ${title || null}, ${body}, ${audience.kind},
-              ${audience.id ?? null}, ${sent}, ${req.user.leaderId ?? null})
-      RETURNING id, title, body, audience_kind, audience_id, recipients, sent_at
+              ${audience.id ?? null}, ${sent}, ${req.user.leaderId ?? null},
+              ${JSON.stringify(tr.title)}::jsonb,
+              ${JSON.stringify(tr.body)}::jsonb,
+              ${tr.sourceLang})
+      RETURNING id, title, body, audience_kind, audience_id, recipients, sent_at,
+                title_i18n, body_i18n, source_lang
     `;
 
     notifyProgramAdmins(programId, { key: 'admAnnouncement', params: { body } }).catch((e) =>

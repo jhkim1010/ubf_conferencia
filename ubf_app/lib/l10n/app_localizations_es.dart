@@ -3891,4 +3891,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String mealsPlusCompanions(int count) {
     return 'además $count niños que los acompañan';
   }
+
+  @override
+  String annTranslated(String langs) {
+    return 'traducción automática · $langs';
+  }
+
+  @override
+  String get annNotTranslated => 'enviado tal como se escribió';
 }
