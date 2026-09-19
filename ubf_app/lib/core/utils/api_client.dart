@@ -82,25 +82,16 @@ class ApiClient {
   ///
   /// ARB 를 쓰지 않는 이유: 여기는 static 이라 BuildContext 가 없다.
   /// 셋뿐이므로 표를 곁에 둔다.
-  static const _fallbacks = <String, Map<String, String>>{
-    '서버 오류': {
-      'es': 'Error del servidor',
-      'en': 'Server error',
-      'pt': 'Erro do servidor',
-    },
-    '수정이 잠겨 있습니다': {
-      'es': 'La edición está bloqueada',
-      'en': 'Editing is locked',
-      'pt': 'A edição está bloqueada',
-    },
-    '확인이 필요합니다': {
-      'es': 'Hace falta confirmar',
-      'en': 'Confirmation needed',
-      'pt': 'É preciso confirmar',
-    },
+  /// **영어와 스페인어를 함께 적는다**(070). 서버가 내보내는 오류와 같은
+  /// 꼴이어야 한다 — 서버에서 온 말과 여기서 지은 말이 화면에서 섞이는데,
+  /// 하나는 두 언어이고 하나는 한 언어면 그것부터 이상해 보인다.
+  static const _fallbacks = <String, String>{
+    '서버 오류': 'Server error · Error del servidor',
+    '수정이 잠겨 있습니다': 'Editing is locked · La edición está bloqueada',
+    '확인이 필요합니다': 'Confirmation needed · Hace falta confirmar',
   };
 
-  static String _say(String ko) => _fallbacks[ko]?[uiLanguage] ?? ko;
+  static String _say(String ko) => _fallbacks[ko] ?? ko;
 
   static Uri _uri(String path) => Uri.parse('${AppConstants.apiBaseUrl}$path');
 

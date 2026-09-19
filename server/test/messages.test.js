@@ -7,6 +7,7 @@ import {
   PATTERNS,
   pickLanguage,
   translate,
+  errorText,
 } from '../src/services/messages.js';
 
 // 스페인어를 쓰는 공동 관리자에게 한국어 오류가 뜨면, 무엇이 잘못됐는지
@@ -136,4 +137,33 @@ test('세 언어가 모두 채워져 있다', () => {
     }
   }
   assert.deepEqual(holes, [], `빠진 번역:\n  ${holes.join('\n  ')}`);
+});
+
+// ── 오류는 영어와 스페인어를 함께 (070) ───────────────────────
+//
+// 기기 언어로 하나만 고르면, 옆 사람에게 화면을 보여 주며 묻는 순간
+// 읽을 수 없는 말이 된다. 현장에서 오류 화면은 혼자 읽고 끝나지 않는다.
+
+test('두 언어를 한 줄로 붙인다', () => {
+  assert.equal(
+    errorText('인증 토큰이 없습니다'),
+    'No session token · Falta el token de sesión',
+  );
+  assert.equal(errorText('서버 오류'), 'Server error · Error del servidor');
+});
+
+test('빈칸 있는 말도 두 언어로 채운다', () => {
+  assert.equal(
+    errorText('"Calafate" 투어는 정원이 마감되었습니다'),
+    'The "Calafate" tour is full · La excursión "Calafate" ya no tiene lugares',
+  );
+});
+
+test('표에 없는 말은 원문 하나만 — 같은 말을 두 번 적지 않는다', () => {
+  assert.equal(errorText('처음 보는 오류'), '처음 보는 오류');
+});
+
+test('기기 언어를 보지 않는다', () => {
+  // 인자가 하나뿐이다. 언어를 받지 않는 것이 이 함수의 요지다.
+  assert.equal(errorText.length, 1);
 });

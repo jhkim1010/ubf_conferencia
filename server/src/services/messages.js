@@ -676,6 +676,22 @@ export function translate(text, lang) {
   return fillIn(text, lang) ?? text;
 }
 
+/// 오류 화면에 내보낼 한 줄 (070).
+///
+/// **언제나 영어와 스페인어를 함께 적는다.** 기기 언어로 하나만 고르면,
+/// 옆 사람에게 화면을 보여 주며 묻는 순간 읽을 수 없는 말이 된다 —
+/// 아르헨티나 현장에서는 한국어권과 스페인어권이 섞여 있고, 담당자가
+/// 참가자 화면을 대신 봐 주는 일이 많다.
+///
+/// 번역표에 없는 말은 원문 하나만 내보낸다. 같은 한국어를 두 번 적어 봐야
+/// 길어지기만 한다.
+export function errorText(text) {
+  const en = translate(text, 'en');
+  const es = translate(text, 'es');
+  if (en === es) return en;
+  return `${en} · ${es}`;
+}
+
 /// 번역표에 있는 말의 수. 검사에서 쓴다.
 export const MESSAGE_COUNT = Object.keys(T).length + Object.keys(P).length;
 
