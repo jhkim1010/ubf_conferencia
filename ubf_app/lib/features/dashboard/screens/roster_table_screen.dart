@@ -299,6 +299,25 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
               if (legal.isEmpty) return bible;
               return '$bible ($legal)';
             }(),
+            // 동반자 이름을 이름 칸에 붙인다(069). 누가 혼자 오고 누가
+            // 가족과 오는지가 표를 훑으면서 보여야 한다.
+            //
+            // 등록 못 하는 동반자에게는 나이를 적는다 — 아기인지 아이인지에
+            // 따라 방과 식사에서 할 일이 달라진다.
+            () {
+              final cs = data[i]['companions'] as List? ?? const [];
+              if (cs.isEmpty) return '';
+              final names = cs
+                  .map((c) {
+                    final m = c as Map;
+                    final age = m['age'];
+                    return m['registersSeparately'] == false && age != null
+                        ? '${m['name']} ($age)'
+                        : '${m['name']}';
+                  })
+                  .join(', ');
+              return '\n${l10n.rosterWithCompanion(names)}';
+            }(),
           ].join(' '),
           WorldCountries.display(data[i]['country'] as String?) ?? '',
           '${data[i]['branch'] ?? ''}',

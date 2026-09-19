@@ -3776,4 +3776,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String companionNoFee(int age) {
     return '만 $age세 이하는 참가비를 받지 않습니다.';
   }
+
+  @override
+  String rosterWithCompanion(String names) {
+    return '＋ $names';
+  }
+
+  @override
+  String get expCompanionsCol => '동반';
 }

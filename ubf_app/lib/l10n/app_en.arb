@@ -2559,5 +2559,14 @@
         "type": "int"
       }
     }
-  }
+  },
+  "rosterWithCompanion": "with {names}",
+  "@rosterWithCompanion": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "expCompanionsCol": "Companions"
 }

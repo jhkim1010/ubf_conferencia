@@ -16,10 +16,20 @@ const router = Router();
 // ── 데이터 로더 ───────────────────────────────────────────────
 async function loadPeople(programId) {
   return sql`
-    SELECT id, gender, age, study_language AS "studyLanguage",
-           country, branch
-      FROM registrations
-     WHERE program_id = ${programId} AND counts_as_participant(real_name, submitted)
+    SELECT r.id, r.gender, r.age, r.study_language AS "studyLanguage",
+           r.country, r.branch,
+           -- 이 사람이 방에서 차지하는 자리 수(069). 본인 한 자리에, 등록할
+           -- 수 없는 동반자 중 **침대를 쓰는** 사람을 더한다.
+           --
+           -- 아기처럼 보호자와 같이 자는 동반자는 안 센다. 세어 버리면
+           -- 4인실에 부부와 아기가 못 들어간다.
+           1 + (SELECT COUNT(*) FROM companions c
+                 WHERE c.registration_id = r.id
+                   AND c.registers_separately = false
+                   AND c.occupies_bed = true) AS beds
+      FROM registrations r
+     WHERE r.program_id = ${programId}
+       AND counts_as_participant(r.real_name, r.submitted)
   `;
 }
 async function loadAcceptedEdges(programId, kind) {
@@ -77,7 +87,21 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, requireScope('
         COALESCE(json_agg(
           json_build_object('registrationId', reg.id,
                             'name', display_name(reg.bible_name, reg.real_name),
-                            'gender', reg.gender)
+                            'gender', reg.gender,
+                            -- 이 사람과 같은 방에 있는, 등록할 수 없는
+                            -- 동반자들(069). 보호자를 따라가므로 따로
+                            -- 배정하지 않는다.
+                            'companions', COALESCE((
+                              SELECT json_agg(json_build_object(
+                                       'name', c.real_name,
+                                       'age', c.age,
+                                       'gender', c.gender,
+                                       'occupiesBed', c.occupies_bed)
+                                     ORDER BY c.age NULLS LAST)
+                                FROM companions c
+                               WHERE c.registration_id = reg.id
+                                 AND c.registers_separately = false
+                            ), '[]'::json))
           ORDER BY reg.real_name
         ) FILTER (WHERE reg.id IS NOT NULL), '[]') AS members
       FROM rooms r
@@ -258,7 +282,22 @@ router.post('/:programId/rooms/assign', requireAuth, requireProgramAdmin, requir
   try {
     const [room] = await sql`
       SELECT r.capacity, r.extra_capacity, r.gender, r.room_type,
-             (SELECT COUNT(*) FROM room_assignments WHERE room_id = r.id) AS occupied
+             -- 이 방이 쓰는 침대 수(069). 배정된 등록자 + 그 사람에게 딸린
+             -- **등록 못 하는 동반자 중 침대를 쓰는 사람**이다.
+             --
+             -- 아기는 방에 있지만 자리를 안 먹는 경우가 많고, 그때 정원을 한
+             -- 칸 깎으면 4인실에 부부와 아기가 못 들어간다.
+             --
+             -- 동반자에게는 room_assignments 줄을 따로 만들지 않는다.
+             -- **보호자를 따라간다** — 줄을 따로 두면 부모와 다른 방에
+             -- 배정될 수 있고, 그것은 어떤 경우에도 옳지 않다.
+             (SELECT COUNT(*) FROM room_assignments WHERE room_id = r.id)
+             + (SELECT COUNT(*)
+                  FROM room_assignments ra3
+                  JOIN companions c3 ON c3.registration_id = ra3.registration_id
+                 WHERE ra3.room_id = r.id
+                   AND c3.registers_separately = false
+                   AND c3.occupies_bed = true) AS occupied
       FROM rooms r WHERE r.id = ${roomId} AND r.program_id = ${programId}
     `;
     if (!room) return res.status(404).json({ error: '방을 찾을 수 없습니다' });

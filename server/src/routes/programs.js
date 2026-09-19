@@ -1014,6 +1014,22 @@ router.get('/:id/registrations', requireAuth, requireProgramAdmin,
       SELECT
         r.id, r.program_id, r.user_id, r.country, r.branch,
         r.real_name, r.bible_name, r.gender, r.age, r.phone,
+        -- 동반자(069). 명단에서 참가자 이름 옆에 붙인다 — 누가 혼자 오고
+        -- 누가 가족과 오는지가 표를 훑으면서 보여야 한다.
+        --
+        -- 따로 등록하는 동반자와 못 하는 동반자를 함께 준다. 화면이 둘을
+        -- 갈라 보여 준다 — 앞쪽은 자기 줄이 명단에 따로 있고, 뒤쪽은
+        -- 이 줄이 곧 그 사람이다.
+        COALESCE((
+          SELECT json_agg(json_build_object(
+                   'name', c.real_name,
+                   'age', c.age,
+                   'gender', c.gender,
+                   'registersSeparately', c.registers_separately,
+                   'occupiesBed', c.occupies_bed)
+                 ORDER BY c.registers_separately DESC, c.age NULLS LAST)
+            FROM companions c WHERE c.registration_id = r.id
+        ), '[]'::json) AS companions,
         -- 이름을 안 적고 제출한 사람이 빈 줄로 보이면 담당자가 누구인지
         -- 알 수 없다(055). 로그인한 계정 이름을 대신 준다 — 본인이 적은
         -- 것은 아니므로 앱이 "계정 이름" 이라고 밝혀 보여 준다.

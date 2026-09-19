@@ -3866,4 +3866,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String companionNoFee(int age) {
     return 'No conference fee for children aged $age and under.';
   }
+
+  @override
+  String rosterWithCompanion(String names) {
+    return 'with $names';
+  }
+
+  @override
+  String get expCompanionsCol => 'Companions';
 }

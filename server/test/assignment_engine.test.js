@@ -708,3 +708,106 @@ test('같이 앉겠다고 한 짝은 정원 때문에 갈라지지 않는다', (
   assert.equal(ids.size, 1, '한 조에 모인다');
   assert.equal([...ids][0], 'b', '자리가 있는 쪽으로');
 });
+
+// ── 침대 수로 세는 정원 (069) ─────────────────────────────────
+//
+// 등록할 수 없는 동반자(아기·어린이)는 보호자를 따라 방에 들어간다. 그중
+// 침대를 쓰는 사람만 자리를 먹는다. 사람 머릿수로 세면 방이 넘친다.
+describe('assignRooms — 동반자가 차지하는 자리', () => {
+  const room4 = [{ id: 'r1', capacity: 4, gender: 'F', roomType: 'dorm' }];
+
+  test('침대를 쓰는 동반자만큼 자리를 더 먹는다', () => {
+    // 네 명이 각자 아이를 하나씩 데려오면 여덟 자리가 필요하다.
+    const people = [
+      { id: 'a', gender: 'F', beds: 2 },
+      { id: 'b', gender: 'F', beds: 2 },
+      { id: 'c', gender: 'F', beds: 2 },
+      { id: 'd', gender: 'F', beds: 2 },
+    ];
+    const { assignments, unplaced } = assignRooms({
+      rooms: room4,
+      people,
+      roommateEdges: [],
+    });
+    assert.equal(assignments.length, 2, '4인실에는 둘까지만 들어간다');
+    assert.equal(unplaced.length, 2);
+  });
+
+  test('같이 자는 아기는 자리를 안 먹는다', () => {
+    // beds 가 1 이면 아기를 데려와도 정원 셈은 그대로다.
+    const people = [
+      { id: 'a', gender: 'F', beds: 1 },
+      { id: 'b', gender: 'F', beds: 1 },
+      { id: 'c', gender: 'F', beds: 1 },
+      { id: 'd', gender: 'F', beds: 1 },
+    ];
+    const { assignments, unplaced } = assignRooms({
+      rooms: room4,
+      people,
+      roommateEdges: [],
+    });
+    assert.equal(assignments.length, 4, '부부와 아기가 4인실에 들어간다');
+    assert.equal(unplaced.length, 0);
+  });
+
+  test('beds 가 없으면 예전처럼 한 자리로 센다', () => {
+    // 069 이전의 호출자와 옛 자료가 그대로 동작해야 한다.
+    const people = [
+      { id: 'a', gender: 'F' },
+      { id: 'b', gender: 'F' },
+      { id: 'c', gender: 'F' },
+      { id: 'd', gender: 'F' },
+    ];
+    const { assignments } = assignRooms({
+      rooms: room4,
+      people,
+      roommateEdges: [],
+    });
+    assert.equal(assignments.length, 4);
+  });
+
+  test('못 읽는 값은 한 자리로 본다 — 덜 잡는 것보다 낫다', () => {
+    const people = [
+      { id: 'a', gender: 'F', beds: 0 },
+      { id: 'b', gender: 'F', beds: null },
+      { id: 'c', gender: 'F', beds: '둘' },
+      { id: 'd', gender: 'F', beds: 1 },
+    ];
+    const { assignments } = assignRooms({
+      rooms: room4,
+      people,
+      roommateEdges: [],
+    });
+    assert.equal(assignments.length, 4);
+  });
+
+  test('묶인 사람들의 자리를 모두 더해서 본다', () => {
+    // 부부가 아이 둘을 데려오면 넷이다. 3인실에는 안 들어간다.
+    const { unplaced } = assignRooms({
+      rooms: [{ id: 'r1', capacity: 3, gender: 'mixed', roomType: 'family' }],
+      people: [
+        { id: 'a', gender: 'M', beds: 2 },
+        { id: 'b', gender: 'F', beds: 2 },
+      ],
+      roommateEdges: [['a', 'b']],
+      familyEdges: [['a', 'b']],
+    });
+    assert.equal(unplaced.length, 2, '쪼개지 않고 통째로 남긴다');
+  });
+
+  test('여유 자리를 열면 들어간다', () => {
+    const { assignments, unplaced } = assignRooms({
+      rooms: [
+        { id: 'r1', capacity: 3, extraCapacity: 1, gender: 'mixed', roomType: 'family' },
+      ],
+      people: [
+        { id: 'a', gender: 'M', beds: 2 },
+        { id: 'b', gender: 'F', beds: 2 },
+      ],
+      roommateEdges: [['a', 'b']],
+      familyEdges: [['a', 'b']],
+    });
+    assert.equal(unplaced.length, 0);
+    assert.equal(assignments.length, 2);
+  });
+});

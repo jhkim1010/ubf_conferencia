@@ -1166,5 +1166,7 @@
   "companionBedYes": "예",
   "companionBedNo": "아니오 — 같이 잡니다",
   "companionBedHint": "방 정원을 한 자리 쓰는지입니다. 나이로 미리 골라 두었고, 고치셔도 됩니다.",
-  "companionNoFee": "만 {age}세 이하는 참가비를 받지 않습니다."
+  "companionNoFee": "만 {age}세 이하는 참가비를 받지 않습니다.",
+  "rosterWithCompanion": "＋ {names}",
+  "expCompanionsCol": "동반"
 }

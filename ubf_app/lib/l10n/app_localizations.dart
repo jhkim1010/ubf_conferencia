@@ -7019,6 +7019,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No conference fee for children aged {age} and under.'**
   String companionNoFee(int age);
+
+  /// No description provided for @rosterWithCompanion.
+  ///
+  /// In en, this message translates to:
+  /// **'with {names}'**
+  String rosterWithCompanion(String names);
+
+  /// No description provided for @expCompanionsCol.
+  ///
+  /// In en, this message translates to:
+  /// **'Companions'**
+  String get expCompanionsCol;
 }
 
 class _AppLocalizationsDelegate

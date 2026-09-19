@@ -1152,5 +1152,7 @@
   "companionBedYes": "Sim",
   "companionBedNo": "Não — dorme comigo",
   "companionBedHint": "Se ocupa um lugar no quarto. Vem marcado pela idade; pode mudar.",
-  "companionNoFee": "Crianças de {age} anos ou menos não pagam inscrição."
+  "companionNoFee": "Crianças de {age} anos ou menos não pagam inscrição.",
+  "rosterWithCompanion": "＋ {names}",
+  "expCompanionsCol": "Acompanhantes"
 }

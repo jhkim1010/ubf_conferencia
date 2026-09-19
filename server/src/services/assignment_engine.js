@@ -81,7 +81,11 @@ function dominantBand(bands) {
 // 그때 여유를 연다.
 //
 // rooms: [{id, capacity, extraCapacity?, gender('M'|'F'|'mixed'), roomType(...)}]
-// people: [{id, gender('M'|'F'|null)}]
+// people: [{id, gender('M'|'F'|null), beds?}]
+//
+// beds 는 이 사람이 방에서 차지하는 자리 수다. 기본 1 이고, **등록할 수 없는
+// 동반자 중 침대를 쓰는 사람**이 있으면 그만큼 커진다(069). 아기처럼 보호자와
+// 같이 자는 동반자는 안 센다 — 그때까지 세면 4인실에 부부와 아기가 못 들어간다.
 // roommateEdges: [fromId, toId][] (수락된 것만)
 // familyEdges:   [fromId, toId][] (수락 + 동행 관계. roommateEdges 의 부분집합)
 // 반환: { assignments: [{roomId, registrationId}], unplaced: [{registrationId, reason}] }
@@ -127,6 +131,14 @@ export function assignRooms({ rooms, people, roommateEdges, familyEdges = [] }) 
   }));
 
   const infoOf = new Map(people.map((p) => [p.id, p]));
+
+  /// 이 사람이 방에서 차지하는 자리 수. 본인 한 자리에 침대를 쓰는 동반자를
+  /// 더한 값이다(069). 못 읽으면 1 로 둔다 — 덜 잡는 것보다 낫다.
+  const bedsOf = (id) => {
+    const n = Number(infoOf.get(id)?.beds);
+    return Number.isFinite(n) && n >= 1 ? Math.trunc(n) : 1;
+  };
+  const bedsOfUnit = (unit) => unit.reduce((sum, id) => sum + bedsOf(id), 0);
   const bandOf = new Map(
     people.map((p) => [p.id, roomAgeBand(p.age)]),
   );
@@ -195,7 +207,7 @@ export function assignRooms({ rooms, people, roommateEdges, familyEdges = [] }) 
 
   const fits = (d, unit, mixed, genders, useExtra) => {
     const room = d.remaining + (useExtra ? d.extra : 0);
-    if (room < unit.length) return false;
+    if (room < bedsOfUnit(unit)) return false;
     if (mixed) return d.gender === 'mixed';
     // 단일 성별 묶음은 그 성별의 단체실에 넣는다. mixed 방은 동행용으로
     // 남겨 둔다 — 부부용 2인실을 혼자 온 사람으로 채우면 정작 필요한 짝이
@@ -220,7 +232,7 @@ export function assignRooms({ rooms, people, roommateEdges, familyEdges = [] }) 
       leftover.push({ unit, mixed, genders });
       continue;
     }
-    take(room, unit.length);
+    take(room, bedsOfUnit(unit));
     remember(room, unit);
     for (const id of unit) assignments.push({ roomId: room.id, registrationId: id });
   }
@@ -241,7 +253,7 @@ export function assignRooms({ rooms, people, roommateEdges, familyEdges = [] }) 
       }
       continue;
     }
-    take(room, unit.length);
+    take(room, bedsOfUnit(unit));
     remember(room, unit);
     for (const id of unit) assignments.push({ roomId: room.id, registrationId: id });
   }
