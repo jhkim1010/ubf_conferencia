@@ -87,20 +87,29 @@ class OverviewStep extends ConsumerWidget {
                 // 가운데로 모아 크게 적는다. 이 줄은 읽히려고 있는 것이지
                 // 채워 넣은 값이 아니다 — 왼쪽에 작게 붙여 두면 아래의
                 // 안내 문구와 구별되지 않는다.
-                Text(
-                  themeTitle,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    // 이 화면에서 가장 큰 글씨다. 값도 날짜도 아닌 이것이
-                    // 무슨 모임인지 말하므로, 먼저 눈에 들어와야 한다.
-                    //
-                    // 배수는 폰 화면에서 정했다. 2 배로 두었더니 넘쳐서
-                    // 한 단계 물렀다.
-                    fontSize:
-                        (theme.textTheme.headlineMedium?.fontSize ?? 28) * 1.8,
-                    height: 1.15,
-                    color: theme.colorScheme.primary,
+                // 한 줄에 들어가는 만큼만 크게.
+                //
+                // 크기를 숫자로 못 박으면 제목 길이에 따라 어떤 것은 두 줄,
+                // 어떤 것은 세 줄이 된다 — "Apacentad la grey de Dios" 는
+                // 폰에서 두 줄이었다. FittedBox 가 폭에 맞춰 줄여 주므로
+                // 짧은 제목은 크게, 긴 제목은 작게 한 줄로 나온다.
+                //
+                // 기준 크기는 폰에서 정했다. 2 배 → 1.8 → 1.5 로 두 번
+                // 물렀다.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    themeTitle,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize:
+                          (theme.textTheme.headlineMedium?.fontSize ?? 28) *
+                          1.5,
+                      height: 1.15,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                 ),
                 if (themeVerse.isNotEmpty) ...[
