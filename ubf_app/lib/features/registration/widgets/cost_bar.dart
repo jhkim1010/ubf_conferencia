@@ -35,8 +35,15 @@ class CostBar extends ConsumerWidget {
     final form = ref.watch(registrationFormProvider(programId));
     final saved = ref.watch(registrationProvider(programId)).valueOrNull;
 
+    // 어린이 참가비(073)가 붙으므로 동반자 목록이 있어야 한다. 아직 안
+    // 불러왔으면 빈 목록이고, 그때는 어린이 몫이 0 으로 빠진다 — 낡은
+    // 목록으로 틀린 금액을 보여주는 것보다 낫다.
+    final companions =
+        ref.watch(myCompanionsProvider(programId)).valueOrNull ?? const [];
+
     final cost = RegistrationCost.of(
       program: program,
+      companions: companions,
       feeTier: form.feeTier,
       selectedOptionIds: form.selectedOptions,
       hotelOptionKey: form.hotelOptionKey,
@@ -132,6 +139,18 @@ class CostBar extends ConsumerWidget {
                   ],
                 ],
               ),
+              // 어린이 참가비(073)가 합계에 들어 있다는 것. 보호자 한
+              // 사람 몫으로 알고 있던 금액이 커져 보이면 이유가 있어야 한다.
+              if (cost.childFee > 0)
+                Text(
+                  l10n.costBarChildFee(
+                    cost.childCount,
+                    currency.format(cost.childFee),
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               // 낼 돈에 아직 못 넣은 것(064) — 묵을 밤은 있는데 숙박 등급을
               // 안 골랐다. 숫자만 보여주면 숙박이 공짜인 줄 알고, 나중에
               // 늘어난 금액에 놀란다.

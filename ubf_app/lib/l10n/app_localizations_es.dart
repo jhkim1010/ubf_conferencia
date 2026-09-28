@@ -3875,11 +3875,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Si ocupa un lugar en la habitación. Se preselecciona por la edad; puede cambiarlo.';
 
   @override
-  String companionNoFee(int age) {
-    return 'Los menores de $age años o menos no pagan inscripción.';
-  }
-
-  @override
   String rosterWithCompanion(String names) {
     return '＋ $names';
   }
@@ -3903,4 +3898,84 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get cpThemeVerseWhy =>
       'Escriba esta casilla en cada idioma — una máquina convierte \"1Pedro 5:2a\" en algo sin sentido.';
+
+  @override
+  String companionFeeBand(int min, int max, int pct) {
+    return 'De $min a $max años pagan el $pct% de la inscripción.';
+  }
+
+  @override
+  String get companionFeeNone => 'A esta edad no se cobra inscripción.';
+
+  @override
+  String companionFeeShare(int pct, String amount) {
+    return '$pct% de la inscripción — $amount';
+  }
+
+  @override
+  String companionFeeSharePending(int pct) {
+    return '$pct% de la inscripción. Elija un nivel para ver el monto.';
+  }
+
+  @override
+  String companionFeeFull(String amount) {
+    return 'Inscripción completa — $amount';
+  }
+
+  @override
+  String get companionFeeFullPending =>
+      'Inscripción completa. Elija un nivel para ver el monto.';
+
+  @override
+  String get cpChildFeeTitle => 'Inscripción de niños';
+
+  @override
+  String get cpChildFeeHint =>
+      'Los niños de estas edades pagan una parte del nivel que elige su responsable. Los más pequeños no pagan; los mayores pagan completo.';
+
+  @override
+  String get cpChildFeeFrom => 'Desde (edad)';
+
+  @override
+  String get cpChildFeeTo => 'Hasta (edad)';
+
+  @override
+  String get cpChildFeePct => 'Paga';
+
+  @override
+  String get cpChildFeeBandInvalid =>
+      'Debe ser igual o mayor que la edad inicial';
+
+  @override
+  String get cpChildFeePctInvalid => '100 o menos';
+
+  @override
+  String cpChildFeeBand(int min, int max, int pct) {
+    return 'De $min a $max años pagan el $pct% de la inscripción.';
+  }
+
+  @override
+  String cpChildFeeNone(int min, int max) {
+    return 'De $min a $max años no pagan inscripción.';
+  }
+
+  @override
+  String cpChildFeePreview(int min, int max, int pct, String amount) {
+    return 'De $min a $max años pagan el $pct% — $amount en el nivel básico.';
+  }
+
+  @override
+  String cpChildFeeFullFrom(int age) {
+    return 'Desde los $age años, la inscripción completa de adulto.';
+  }
+
+  @override
+  String summaryChildFee(int count) {
+    return 'Inscripción de niños ($count)';
+  }
+
+  @override
+  String costBarChildFee(int count, String amount) {
+    return 'Incluye $amount por $count niños acompañantes';
+  }
 }

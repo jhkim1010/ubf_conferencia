@@ -9,6 +9,22 @@ final registrationProvider =
       (_, programId) => ApiClient.getMyRegistration(programId),
     );
 
+// 내 동반자 목록 (073)
+//
+// 동반자 화면이 자기 상태로만 들고 있었는데, **비용 막대와 확인 화면도
+// 이 목록이 있어야 한다** — 어린이 참가비가 붙기 때문이다. 화면마다 따로
+// 불러오면 한쪽이 낡은 목록으로 다른 금액을 보여준다.
+//
+// 동반자를 저장한 뒤에는 이 provider 를 invalidate 해야 금액이 따라온다.
+final myCompanionsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((
+      _,
+      programId,
+    ) async {
+      final rows = await ApiClient.getMyCompanions(programId);
+      return rows.cast<Map<String, dynamic>>();
+    });
+
 // ─── 등록 폼 상태 ────────────────────────────────────────────
 
 class RegistrationFormState {

@@ -14,6 +14,14 @@ class FeeSection extends StatefulWidget {
   final TextEditingController basicDescController;
   final TextEditingController premiumDescController;
 
+  // 어린이 참가비 구간 (073). 나이 둘과 퍼센트 하나가 함께 뜻을 이룬다.
+  //
+  // **퍼센트로 묻는다.** "0.5 를 적으십시오" 는 아무도 그렇게 읽지 않는다.
+  // 서버로는 비율로 보낸다 — 부모가 나눈다.
+  final TextEditingController childMinController;
+  final TextEditingController childMaxController;
+  final TextEditingController childPctController;
+
   /// 원소: { 'key': String, 'label': String, 'amount': num? }
   final List<Map<String, dynamic>> discountOptions;
 
@@ -38,6 +46,9 @@ class FeeSection extends StatefulWidget {
     required this.premiumController,
     required this.basicDescController,
     required this.premiumDescController,
+    required this.childMinController,
+    required this.childMaxController,
+    required this.childPctController,
     required this.discountOptions,
     required this.onDiscountsChanged,
     required this.currency,
@@ -70,6 +81,52 @@ class _FeeSectionState extends State<FeeSection> {
   }
 
   void _refresh() => setState(() {});
+
+  // ── 어린이 참가비 구간 (073) ────────────────────────────────
+
+  int? get _childMin => int.tryParse(widget.childMinController.text.trim());
+  int? get _childMax => int.tryParse(widget.childMaxController.text.trim());
+  int? get _childPct => int.tryParse(widget.childPctController.text.trim());
+
+  /// 시작이 끝보다 크면 막는다. 서버도 400 으로 막지만, 여기서 걸러야
+  /// 담당자가 저장을 누르기 전에 안다.
+  String? _validateBand(String? _) {
+    final lo = _childMin, hi = _childMax;
+    if (lo == null || hi == null) return null;
+    return lo > hi ? AppLocalizations.of(context)!.cpChildFeeBandInvalid : null;
+  }
+
+  String? _validatePct(String? _) {
+    final p = _childPct;
+    if (p == null) return null;
+    return p > 100 ? AppLocalizations.of(context)!.cpChildFeePctInvalid : null;
+  }
+
+  /// "4~8살은 U$ 40 (기본 U$ 80 의 50%)" 처럼 실제 금액을 미리 보여준다.
+  ///
+  /// 참가비를 아직 안 적었으면 금액 없이 구간만 말한다 — 0 이라고 적으면
+  /// 공짜로 읽힌다.
+  String? _childFeePreview(AppLocalizations l10n) {
+    final lo = _childMin, hi = _childMax, pct = _childPct;
+    if (lo == null || hi == null || pct == null) return null;
+    if (lo > hi || pct > 100) return null;
+    // 100% 면 어른과 같아 따로 말할 것이 없고, 0% 면 무료다.
+    if (pct == 100) return null;
+
+    // 몇 살부터 전액인지도 함께 적는다. 칸은 "끝 나이" 라서, 담당자가
+    // 1 을 더해 셈해 봐야 "9살부터 전액" 이 나온다.
+    final fullFrom = l10n.cpChildFeeFullFrom(hi + 1);
+    if (pct == 0) return '${l10n.cpChildFeeNone(lo, hi)} $fullFrom';
+
+    final basic = num.tryParse(widget.basicController.text.trim());
+    if (basic == null || basic <= 0) {
+      return '${l10n.cpChildFeeBand(lo, hi, pct)} $fullFrom';
+    }
+    final amount = widget.currency.format(
+      (basic * pct / 100 * 100).round() / 100,
+    );
+    return '${l10n.cpChildFeePreview(lo, hi, pct, amount)} $fullFrom';
+  }
 
   /// 금액 칸이 비어 있고 설명 칸이 숫자뿐인 상태. 칸을 바꿔 적은 것이다.
   bool get _amountsInDesc {
@@ -237,6 +294,75 @@ class _FeeSectionState extends State<FeeSection> {
           validator: validateFee,
           symbol: widget.currency.symbol,
         ),
+
+        // ── 어린이 참가비 (073) ──────────────────────────────
+        const SizedBox(height: 20),
+        Text(l10n.cpChildFeeTitle, style: theme.textTheme.titleSmall),
+        const SizedBox(height: 4),
+        Text(
+          l10n.cpChildFeeHint,
+          style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: widget.childMinController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(
+                  labelText: l10n.cpChildFeeFrom,
+                  isDense: true,
+                ),
+                onChanged: (_) => _refresh(),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextFormField(
+                controller: widget.childMaxController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(
+                  labelText: l10n.cpChildFeeTo,
+                  isDense: true,
+                ),
+                validator: _validateBand,
+                onChanged: (_) => _refresh(),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextFormField(
+                controller: widget.childPctController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(
+                  labelText: l10n.cpChildFeePct,
+                  suffixText: '%',
+                  isDense: true,
+                ),
+                validator: _validatePct,
+                onChanged: (_) => _refresh(),
+              ),
+            ),
+          ],
+        ),
+        // 정해 둔 것이 실제로 얼마가 되는지 바로 보여준다 — 퍼센트만
+        // 적어 두면 담당자도 얼마를 받게 되는지 계산해 봐야 한다.
+        if (_childFeePreview(l10n) case final preview?) ...[
+          const SizedBox(height: 8),
+          Text(
+            preview,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF7A6BB5),
+            ),
+          ),
+        ],
 
         // 숫자가 설명 칸에 들어간 채로 저장된 수양회가 있다. 그 상태를
         // 알아보고 한 번에 옮겨 준다 — 어느 칸이 어느 칸인지 설명하는

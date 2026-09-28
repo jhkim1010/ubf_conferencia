@@ -215,7 +215,13 @@ class _RegistrationFlowScreenState
           ),
           (
             title: l10n.regStepCompanion,
-            widget: CompanionStep(programId: widget.programId),
+            // 어린이 참가비를 나이 옆에서 바로 보여주려면 수양회의 구간과
+            // 통화가 필요하다(073).
+            widget: CompanionStep(
+              programId: widget.programId,
+              program: program,
+              currency: currency,
+            ),
           ),
           // 투어가 비행기 앞이다. 돌아가는 날이 여기서 정해지기 때문이다.
           (

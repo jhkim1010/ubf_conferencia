@@ -3773,11 +3773,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get companionBedHint => '방 정원을 한 자리 쓰는지입니다. 나이로 미리 골라 두었고, 고치셔도 됩니다.';
 
   @override
-  String companionNoFee(int age) {
-    return '만 $age세 이하는 참가비를 받지 않습니다.';
-  }
-
-  @override
   String rosterWithCompanion(String names) {
     return '＋ $names';
   }
@@ -3801,4 +3796,82 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get cpThemeVerseWhy =>
       '이 칸만은 언어별로 직접 적어 주십시오 — \"1Pedro 5:2a\" 는 기계가 옮기면 엉뚱해집니다.';
+
+  @override
+  String companionFeeBand(int min, int max, int pct) {
+    return '만 $min~$max세는 참가비의 $pct%를 냅니다.';
+  }
+
+  @override
+  String get companionFeeNone => '이 나이는 참가비를 받지 않습니다.';
+
+  @override
+  String companionFeeShare(int pct, String amount) {
+    return '참가비의 $pct% — $amount';
+  }
+
+  @override
+  String companionFeeSharePending(int pct) {
+    return '참가비의 $pct% 입니다. 등급을 고르면 금액이 나옵니다.';
+  }
+
+  @override
+  String companionFeeFull(String amount) {
+    return '어른과 같은 참가비 — $amount';
+  }
+
+  @override
+  String get companionFeeFullPending => '어른과 같은 참가비입니다. 등급을 고르면 금액이 나옵니다.';
+
+  @override
+  String get cpChildFeeTitle => '어린이 참가비';
+
+  @override
+  String get cpChildFeeHint =>
+      '이 나이의 어린이는 보호자가 고른 등급의 일부만 냅니다. 더 어리면 받지 않고, 더 많으면 어른과 같습니다.';
+
+  @override
+  String get cpChildFeeFrom => '시작 나이';
+
+  @override
+  String get cpChildFeeTo => '끝 나이';
+
+  @override
+  String get cpChildFeePct => '내는 몫';
+
+  @override
+  String get cpChildFeeBandInvalid => '시작 나이보다 커야 합니다';
+
+  @override
+  String get cpChildFeePctInvalid => '100 이하';
+
+  @override
+  String cpChildFeeBand(int min, int max, int pct) {
+    return '만 $min~$max세는 참가비의 $pct%를 냅니다.';
+  }
+
+  @override
+  String cpChildFeeNone(int min, int max) {
+    return '만 $min~$max세는 참가비를 받지 않습니다.';
+  }
+
+  @override
+  String cpChildFeePreview(int min, int max, int pct, String amount) {
+    return '만 $min~$max세는 $pct% — 기본 등급 기준 $amount 입니다.';
+  }
+
+  @override
+  String cpChildFeeFullFrom(int age) {
+    return '만 $age세부터는 어른과 같은 전액입니다.';
+  }
+
+  @override
+  String summaryChildFee(int count) {
+    return '동반 어린이 참가비 ($count명)';
+  }
+
+  @override
+  String costBarChildFee(int count, String amount) {
+    return '동반 어린이 $count명 참가비 $amount 포함';
+  }
 }

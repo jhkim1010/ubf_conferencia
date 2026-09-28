@@ -22,6 +22,7 @@
 //     node scripts/recompute-totals.js
 import { sql } from '../src/db.js';
 import { registrationTotal } from '../src/services/registration_total.js';
+import { bedsNeeded } from '../src/services/companion_role.js';
 
 const host = (process.env.DATABASE_URL ?? '').replace(/.*@([^.]+).*/s, '$1');
 const apply = process.argv.includes('--yes');
@@ -31,7 +32,8 @@ const rows = await sql`
          r.selected_options, r.hotel_option_key,
          r.hotel_nights_before, r.hotel_nights_after,
          r.discount_status, r.discount_amount,
-         p.name AS program_name, p.fee_basic, p.fee_premium, p.hotel_options
+         p.name AS program_name, p.fee_basic, p.fee_premium, p.hotel_options,
+         p.fee_child_age_min, p.fee_child_age_max, p.fee_child_rate
     FROM registrations r
     JOIN programs p ON p.id = r.program_id
    ORDER BY p.name, r.real_name`;
@@ -56,6 +58,12 @@ for (const r of rows) {
          WHERE id = ANY(${ids}) AND is_active = true`
     : [{ sum: 0 }];
 
+  // 따로 등록하지 않는 동반자(069·073). 침대를 쓰면 숙박비가, 어린이
+  // 구간이면 참가비가 붙는다 — 저장 경로와 같이 센다.
+  const companions = await sql`
+    SELECT age, registers_separately, occupies_bed, fee_share
+      FROM companions WHERE registration_id = ${r.id}`;
+
   const { total, hotelCost } = registrationTotal({
     tier: r.fee_tier,
     feeBasic: r.fee_basic,
@@ -64,8 +72,11 @@ for (const r of rows) {
     hotelOptions: r.hotel_options,
     hotelKey: r.hotel_option_key,
     hotelNights: Number(r.hotel_nights_before ?? 0) + Number(r.hotel_nights_after ?? 0),
+    hotelPeople: 1 + bedsNeeded(companions),
     approvedDiscount:
       r.discount_status === 'approved' ? Number(r.discount_amount ?? 0) : 0,
+    companions,
+    program: r,
   });
 
   const before = Number(r.total_cost ?? 0);

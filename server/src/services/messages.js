@@ -365,6 +365,22 @@ const T = {
     en: 'The fee must be a number of 0 or more',
     pt: 'A inscrição deve ser um número de 0 ou mais',
   },
+  // 어린이 참가비 구간 (073)
+  '어린이 나이는 0 이상 150 미만의 숫자여야 합니다': {
+    es: 'La edad del niño debe ser un número entre 0 y 149',
+    en: "The child's age must be a number between 0 and 149",
+    pt: 'A idade da criança deve ser um número entre 0 e 149',
+  },
+  '어린이 참가비 비율은 0 과 1 사이여야 합니다 (0.5 = 절반)': {
+    es: 'La proporción de la inscripción del niño debe estar entre 0 y 1 (0,5 = la mitad)',
+    en: "The child's share of the fee must be between 0 and 1 (0.5 = half)",
+    pt: 'A proporção da inscrição da criança deve estar entre 0 e 1 (0,5 = metade)',
+  },
+  '어린이 나이의 시작이 끝보다 클 수 없습니다': {
+    es: 'La edad inicial del niño no puede ser mayor que la final',
+    en: "The child's starting age cannot be greater than the ending age",
+    pt: 'A idade inicial da criança não pode ser maior que a final',
+  },
   '할인 금액은 0 이상의 숫자여야 합니다': {
     es: 'El descuento debe ser un número de 0 o más',
     en: 'The discount must be a number of 0 or more',

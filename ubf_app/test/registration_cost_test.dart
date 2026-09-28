@@ -306,4 +306,60 @@ void main() {
     );
     expect(c.isEmpty, isTrue);
   });
+
+  // 어린이 참가비(073). 요약 화면과 비용 막대가 같은 값을 줄로 보여준다 —
+  // 합계에만 넣으면 항목을 더한 값이 합계와 어긋난다.
+  group('어린이 참가비', () {
+    Map<String, dynamic> kid(int age) => {
+      'registersSeparately': false,
+      'age': age,
+    };
+
+    test('보호자가 고른 등급을 따라 합계에 들어간다', () {
+      final c = RegistrationCost.of(
+        program: _program(),
+        feeTier: 'premium',
+        selectedOptionIds: const [],
+        hotelOptionKey: null,
+        hotelNightsBefore: 0,
+        hotelNightsAfter: 0,
+        // 3살 0 · 6살 절반 · 12살 전액 (기본 구간 4~8살)
+        companions: [kid(3), kid(6), kid(12)],
+      );
+      expect(c.childFee, 450);
+      expect(c.due, 750);
+    });
+
+    test('돈이 붙은 아이만 센다', () {
+      final c = RegistrationCost.of(
+        program: _program(),
+        feeTier: 'basic',
+        selectedOptionIds: const [],
+        hotelOptionKey: null,
+        hotelNightsBefore: 0,
+        hotelNightsAfter: 0,
+        companions: [kid(2), kid(5)],
+      );
+      expect(c.childCount, 1);
+      expect(c.childFee, 100);
+    });
+
+    test('수양회가 정한 구간을 쓴다 — 끝 나이 다음부터 전액', () {
+      final c = RegistrationCost.of(
+        program: {
+          ..._program(),
+          'fee_child_age_min': 4,
+          'fee_child_age_max': 12,
+          'fee_child_rate': '0.500',
+        },
+        feeTier: 'basic',
+        selectedOptionIds: const [],
+        hotelOptionKey: null,
+        hotelNightsBefore: 0,
+        hotelNightsAfter: 0,
+        companions: [kid(12), kid(13)],
+      );
+      expect(c.childFee, 100 + 200);
+    });
+  });
 }

@@ -169,3 +169,70 @@ test('못 읽는 인원은 한 사람으로 본다', () => {
     assert.equal(hotelCost, 40, `인원 ${bad}`);
   }
 });
+
+// ── 동반자 참가비 (073) ──────────────────────────────────────
+//
+// 따로 등록할 수 없는 어린이는 자기 등록이 없어, 보호자의 낼 돈에 붙는다.
+
+const kid = (age) => ({ registers_separately: false, age });
+
+test('어린이 참가비가 낼 돈에 더해진다', () => {
+  const { tierFee, companionFee, total } = registrationTotal({
+    tier: 'basic',
+    ...FEES,
+    companions: [kid(6)],
+  });
+  // 기본 200 + 여섯 살 절반 100 = 300
+  assert.equal(tierFee, 200);
+  assert.equal(companionFee, 100);
+  assert.equal(total, 300);
+});
+
+test('어린이는 보호자가 고른 등급을 따라간다', () => {
+  const { companionFee, total } = registrationTotal({
+    tier: 'premium',
+    ...FEES,
+    companions: [kid(6)],
+  });
+  // 프리미엄 300 + 절반 150 = 450
+  assert.equal(companionFee, 150);
+  assert.equal(total, 450);
+});
+
+test('아기는 안 붙고 아홉 살은 전액이다', () => {
+  const { companionFee, total } = registrationTotal({
+    tier: 'basic',
+    ...FEES,
+    companions: [kid(1), kid(9)],
+  });
+  assert.equal(companionFee, 200);
+  assert.equal(total, 400);
+});
+
+test('수양회가 구간을 달리 정하면 그대로 따른다', () => {
+  const { companionFee } = registrationTotal({
+    tier: 'basic',
+    ...FEES,
+    companions: [kid(10)],
+    program: { fee_child_age_min: 6, fee_child_age_max: 12, fee_child_rate: 0.25 },
+  });
+  assert.equal(companionFee, 50);
+});
+
+test('할인은 어린이 몫까지 더한 뒤에 뺀다', () => {
+  // 먼저 빼면 할인이 어른 몫에만 걸려, 같은 할인인데 집집이 달라진다.
+  const { total } = registrationTotal({
+    tier: 'basic',
+    ...FEES,
+    companions: [kid(6)],
+    approvedDiscount: 50,
+  });
+  assert.equal(total, 250); // 200 + 100 − 50
+});
+
+test('동반자를 안 보내면 예전과 같다', () => {
+  // 073 이전 호출자가 그대로 돌아야 한다.
+  const { companionFee, total } = registrationTotal({ tier: 'basic', ...FEES });
+  assert.equal(companionFee, 0);
+  assert.equal(total, 200);
+});

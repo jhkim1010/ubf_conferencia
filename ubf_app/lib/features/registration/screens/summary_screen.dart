@@ -125,6 +125,10 @@ class SummaryScreen extends ConsumerWidget {
           final saved = ref.watch(registrationProvider(programId)).valueOrNull;
           final cost = RegistrationCost.of(
             program: program,
+            // 어린이 참가비(073). 비용 막대와 같은 목록을 본다.
+            companions:
+                ref.watch(myCompanionsProvider(programId)).valueOrNull ??
+                const [],
             feeTier: formState.feeTier,
             selectedOptionIds: formState.selectedOptions,
             hotelOptionKey: formState.hotelOptionKey,
@@ -367,6 +371,13 @@ class SummaryScreen extends ConsumerWidget {
                             ? l10n.feeTierPremium
                             : l10n.feeTierBasic,
                         currency.format(tierFee),
+                      ),
+                    // 어린이 참가비(073). 합계에만 넣고 줄을 안 두면 항목을
+                    // 더한 값과 합계가 어긋나 "왜 이 금액인가" 를 묻게 된다.
+                    if (cost.childFee > 0)
+                      _InfoRow(
+                        l10n.summaryChildFee(cost.childCount),
+                        currency.format(cost.childFee),
                       ),
                     if (formState.discountRequested)
                       _InfoRow(

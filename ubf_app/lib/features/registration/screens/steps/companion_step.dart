@@ -2,12 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/api_client.dart';
+import '../../../../core/utils/child_fee.dart';
+import '../../../../core/utils/money.dart';
+import '../../providers/registration_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
 
 // PRD F3 — 동반 가족/참석자 (부부·가족). 인원수·픽업에 각각 반영.
 class CompanionStep extends ConsumerStatefulWidget {
   final String programId;
-  const CompanionStep({super.key, required this.programId});
+
+  /// 서버가 준 수양회 표현. 어린이 참가비 구간(073)과 참가비 등급을 읽는다.
+  final Map<String, dynamic> program;
+
+  /// 이 수양회의 통화. 금액을 적을 때 쓴다.
+  final Currency currency;
+
+  const CompanionStep({
+    super.key,
+    required this.programId,
+    required this.program,
+    required this.currency,
+  });
 
   @override
   ConsumerState<CompanionStep> createState() => _CompanionStepState();
@@ -55,6 +70,8 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     // 069. 옛 줄에는 칸이 없다 — 그때의 뜻대로 "따로 등록" 으로 본다.
     'registersSeparately': r['registers_separately'] ?? true,
     'occupiesBed': r['occupies_bed'] ?? true,
+    // 073. 따로 정해 둔 참가비 몫. 없으면 수양회 구간을 따른다.
+    'feeShare': r['fee_share'],
   };
 
   // 로컬 → 서버 payload
@@ -80,12 +97,42 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
       'needsPickup': c['needsPickup'] ?? true,
       'registersSeparately': c['registersSeparately'] ?? true,
       'occupiesBed': c['occupiesBed'] ?? true,
+      // 073. 따로 정하지 않았으면 안 보낸다 — 서버가 수양회 구간을 쓴다.
+      'feeShare': c['feeShare'],
     };
   }).toList();
+
+  /// 이 수양회의 어린이 참가비 구간 (073).
+  ChildFeePolicy get _policy => ChildFeePolicy.of(widget.program);
+
+  /// 보호자가 고른 등급의 값. 아직 안 골랐으면 null 이다 — 그때는 금액을
+  /// 말할 수 없고 "등급을 고르면" 이라고만 적는다.
+  double? get _tierFee {
+    final tier = ref.read(registrationFormProvider(widget.programId)).feeTier;
+    final v = switch (tier) {
+      'basic' => Money.parse(widget.program['fee_basic']),
+      'premium' => Money.parse(widget.program['fee_premium']),
+      _ => null,
+    };
+    return v?.toDouble();
+  }
+
+  /// 이 사람에게 붙는 참가비. 몫이 0 이면 null 이다(붙지 않는다).
+  double? _feeFor(Map<String, dynamic> c) {
+    final fee = _tierFee;
+    if (fee == null || fee <= 0) return null;
+    final share = _policy.shareForCompanion(c);
+    if (share <= 0) return null;
+    return (fee * share * 100).roundToDouble() / 100;
+  }
 
   Future<void> _persist() async {
     try {
       await ApiClient.saveMyCompanions(widget.programId, _toPayload());
+      // 어린이가 늘거나 줄면 낼 돈이 달라진다(073). 서버가 다시 셈해
+      // 저장하므로, 비용 막대와 확인 화면이 그것을 다시 읽게 한다.
+      ref.invalidate(myCompanionsProvider(widget.programId));
+      ref.invalidate(registrationProvider(widget.programId));
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -99,8 +146,13 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
-      builder: (_) =>
-          _CompanionSheet(existing: index != null ? _companions[index] : null),
+      builder: (_) => _CompanionSheet(
+        existing: index != null ? _companions[index] : null,
+        // 나이를 치는 그 자리에서 참가비를 보여주기 위한 것들(073).
+        policy: _policy,
+        tierFee: _tierFee,
+        currency: widget.currency,
+      ),
     );
     if (result == null) return;
     setState(() {
@@ -217,6 +269,9 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
                       '${c['branch']}'.isNotEmpty)
                     c['branch'],
                 ].where((x) => x != null && '$x'.isNotEmpty).join(' · ');
+                // 이 사람에게 붙는 참가비(073). 나이를 적은 그 자리에서
+                // 바로 보여야 한다 — 나중에 합계에서 처음 보면 놀란다.
+                final fee = _feeFor(c);
                 return Card(
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
@@ -228,7 +283,25 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
                       c['realName'] as String? ?? '',
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    subtitle: Text(sub),
+                    subtitle: Row(
+                      children: [
+                        Flexible(child: Text(sub)),
+                        if (fee != null) ...[
+                          if (sub.isNotEmpty)
+                            Text(
+                              '  ·  ',
+                              style: TextStyle(color: Colors.grey[500]),
+                            ),
+                          Text(
+                            widget.currency.format(fee),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF7A6BB5),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -270,7 +343,21 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
 // ── 동반자 입력 바텀시트 ──────────────────────────────────────
 class _CompanionSheet extends StatefulWidget {
   final Map<String, dynamic>? existing;
-  const _CompanionSheet({this.existing});
+
+  /// 이 수양회의 어린이 참가비 구간 (073).
+  final ChildFeePolicy policy;
+
+  /// 보호자가 고른 등급의 값. 아직 안 골랐으면 null 이다.
+  final double? tierFee;
+
+  final Currency currency;
+
+  const _CompanionSheet({
+    this.existing,
+    required this.policy,
+    required this.tierFee,
+    required this.currency,
+  });
   @override
   State<_CompanionSheet> createState() => _CompanionSheetState();
 }
@@ -351,6 +438,60 @@ class _CompanionSheetState extends State<_CompanionSheet> {
   /// 나이를 모르면 쓰는 쪽으로 둔다 — 자리를 덜 잡으면 당일에 손쓸 수가 없다.
   static bool _bedByAge(int? age) => age == null || age > _freeAgeMax;
 
+  /// 이분에게 붙는 참가비를 나이 바로 아래에 적는다 (073).
+  ///
+  /// **여기서 보여주지 않으면 합계에서 처음 보게 된다.** 그때는 무엇 때문에
+  /// 늘었는지 되물을 자리가 없다. 나이를 고치면 금액도 따라 바뀐다.
+  Widget _feeLine(AppLocalizations l10n) {
+    final age = int.tryParse(_age.text.trim());
+    final p = widget.policy;
+
+    // 무엇을 말할지는 세 가지로 갈린다.
+    final (String text, bool strong) = switch (age) {
+      // 나이를 아직 안 적었다. 구간만 알려 준다 — 얼마가 될지 미리 알고
+      // 적을 수 있어야 한다.
+      null =>
+        p.inUse
+            ? (l10n.companionFeeBand(p.minAge, p.maxAge, _pct(p.rate)), false)
+            : ('', false),
+      _ => switch (p.shareForAge(age)) {
+        0 => (l10n.companionFeeNone, false),
+        _ => (_feeText(l10n, age), true),
+      },
+    };
+    if (text.isEmpty) return const SizedBox.shrink();
+
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 11.5,
+        color: strong ? const Color(0xFF7A6BB5) : Colors.grey[700],
+        fontWeight: strong ? FontWeight.w700 : FontWeight.w400,
+      ),
+    );
+  }
+
+  /// 금액까지 말할 수 있으면 금액을, 등급을 아직 안 골랐으면 몫만 말한다.
+  ///
+  /// 등급을 안 골랐을 때 0 이라고 적으면 공짜로 읽힌다 — 숙박에서 이미
+  /// 겪은 함정이다(064 의 dueUnsure).
+  String _feeText(AppLocalizations l10n, int age) {
+    final share = widget.policy.shareForAge(age);
+    final fee = widget.tierFee;
+    if (fee == null || fee <= 0) {
+      return share >= 1
+          ? l10n.companionFeeFullPending
+          : l10n.companionFeeSharePending(_pct(share));
+    }
+    final amount = widget.currency.format((fee * share * 100).round() / 100);
+    return share >= 1
+        ? l10n.companionFeeFull(amount)
+        : l10n.companionFeeShare(_pct(share), amount);
+  }
+
+  /// 0.5 → 50. 화면에는 퍼센트로 적는다 — "0.5 를 냅니다" 는 아무도 안 읽는다.
+  static int _pct(double rate) => (rate * 100).round();
+
   /// 만 5세 이하는 참가비가 없고 침대도 기본으로 안 쓴다.
   static const _freeAgeMax = 5;
 
@@ -421,6 +562,8 @@ class _CompanionSheetState extends State<_CompanionSheet> {
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: InputDecoration(labelText: l10n.summaryAge),
+                    // 참가비가 나이로 갈리므로(073) 고칠 때마다 다시 그린다.
+                    onChanged: (_) => setState(() {}),
                   ),
                 ),
               ],
@@ -450,11 +593,8 @@ class _CompanionSheetState extends State<_CompanionSheet> {
                 l10n.companionBedHint,
                 style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
               ),
-              const SizedBox(height: 6),
-              Text(
-                l10n.companionNoFee(_freeAgeMax),
-                style: TextStyle(fontSize: 11.5, color: Colors.grey[700]),
-              ),
+              const SizedBox(height: 10),
+              _feeLine(l10n),
             ],
             const SizedBox(height: 12),
             Text(

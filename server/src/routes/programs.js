@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { translateField } from '../services/translate_api.js';
 import { pickLanguage } from '../services/messages.js';
 import { sql } from '../db.js';
+import { recountRegistrationTotal } from '../services/registration_recount.js';
 import { normalizeOptions } from '../services/option_media.js';
 import { rolesOf, tallyRole, sortRoles } from '../services/service_roles.js';
 import {
@@ -66,6 +67,57 @@ function parseFee(v) {
   const n = Number(v);
   if (!Number.isFinite(n) || n < 0) return NaN; // 호출부에서 400 처리
   return n;
+}
+
+// 어린이 참가비 구간 (073).
+//
+// 세 값이 함께 뜻을 이룬다 — 나이 구간과 그 구간이 내는 몫이다. 안 보내면
+// null 을 돌려주고 호출부가 예전 값을 그대로 둔다.
+//
+// **거꾸로 적힌 구간은 400 이다.** DB 의 CHECK 가 막기는 하지만, 거기서
+// 막히면 담당자는 "저장이 안 된다" 만 보게 된다. 여기서 걸러야 무엇이
+// 잘못됐는지 말해 줄 수 있다.
+function parseChildFee(body) {
+  const ageOf = (v) => {
+    if (v === null || v === undefined || v === '') return null;
+    const n = Number(v);
+    if (!Number.isFinite(n) || n < 0 || n >= 150) return NaN;
+    return Math.trunc(n);
+  };
+  const minAge = ageOf(body?.feeChildAgeMin);
+  const maxAge = ageOf(body?.feeChildAgeMax);
+
+  let rate = null;
+  const r = body?.feeChildRate;
+  if (r !== null && r !== undefined && r !== '') {
+    const n = Number(r);
+    // 화면은 퍼센트로 묻고 비율로 보낸다. 1 을 넘으면 퍼센트를 그대로
+    // 보낸 것이므로 받지 않는다 — 50 을 저장하면 어린이가 어른의 쉰 배를
+    // 내게 된다.
+    rate = Number.isFinite(n) && n >= 0 && n <= 1 ? n : NaN;
+  }
+
+  return { minAge, maxAge, rate };
+}
+
+/// 못 쓸 구간이면 까닭을 돌려준다. 쓸 만하면 null 이다.
+///
+/// [current] 는 고치기 전의 값이다. 한쪽만 보내 고칠 때 나머지 한쪽과
+/// 견주어야 하기 때문이다 — 최소만 12 로 올렸는데 최대가 8 이면 막아야 한다.
+function childFeeError(cf, current = {}) {
+  if (Number.isNaN(cf.minAge) || Number.isNaN(cf.maxAge)) {
+    return '어린이 나이는 0 이상 150 미만의 숫자여야 합니다';
+  }
+  if (Number.isNaN(cf.rate)) {
+    return '어린이 참가비 비율은 0 과 1 사이여야 합니다 (0.5 = 절반)';
+  }
+  const lo = cf.minAge ?? current.fee_child_age_min;
+  const hi = cf.maxAge ?? current.fee_child_age_max;
+  if (lo !== null && lo !== undefined && hi !== null && hi !== undefined
+      && Number(lo) > Number(hi)) {
+    return '어린이 나이의 시작이 끝보다 클 수 없습니다';
+  }
+  return null;
 }
 
 // 통화 코드 정리. ISO 4217 대문자 세 글자만 받는다.
@@ -386,6 +438,11 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
   if (Number.isNaN(basic) || Number.isNaN(premium)) {
     return res.status(400).json({ error: '참가비는 0 이상의 숫자여야 합니다' });
   }
+  // 어린이 참가비 구간(073). 안 보내면 DB 기본값(4~8살 절반)이 쓰인다.
+  const childFee = parseChildFee(req.body);
+  const childFeeMsg = childFeeError(childFee);
+  if (childFeeMsg) return res.status(400).json({ error: childFeeMsg });
+
   const discounts = normalizeDiscountOptions(discountOptions) ?? [];
   const hotels = normalizeHotelOptions(hotelOptions) ?? [];
 
@@ -457,6 +514,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         contacts, arrival_routes, fee_payment, tour_payment,
         program_type, host_country,
         fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options,
+        fee_child_age_min, fee_child_age_max, fee_child_rate,
         currency, small_cohort_policy, min_team_size, hotel_options,
         telegram_bot_token, telegram_chat_id
       )
@@ -486,6 +544,10 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
         ${feeBasicDesc ?? null},
         ${feePremiumDesc ?? null},
         ${JSON.stringify(discounts)},
+        -- 073. 안 보내면 DB 기본값(4~8살 절반)으로 둔다.
+        ${childFee.minAge ?? 4},
+        ${childFee.maxAge ?? 8},
+        ${childFee.rate ?? 0.5},
         ${currencyFor(type, cur, null)},
         ${cohortPolicy ?? 'keep'},
         ${teamMin ?? 5},
@@ -571,6 +633,16 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
   if (Number.isNaN(basic) || Number.isNaN(premium)) {
     return res.status(400).json({ error: '참가비는 0 이상의 숫자여야 합니다' });
   }
+  // 어린이 참가비 구간(073). 값 하나하나가 쓸 만한지는 여기서 보고,
+  // 시작이 끝보다 큰지는 기존 값을 읽은 뒤에 본다 — 한쪽만 고치는 호출이
+  // 있기 때문이다.
+  const patchChildFee = parseChildFee(req.body);
+  const childFeeMsg = childFeeError({ ...patchChildFee, minAge: null, maxAge: null });
+  if (childFeeMsg) return res.status(400).json({ error: childFeeMsg });
+  if (Number.isNaN(patchChildFee.minAge) || Number.isNaN(patchChildFee.maxAge)) {
+    return res.status(400).json({ error: '어린이 나이는 0 이상 150 미만의 숫자여야 합니다' });
+  }
+
   const discounts = normalizeDiscountOptions(discountOptions);
   // 안 보냈으면 null 이 되고 아래에서 기존 값을 그대로 쓴다. 숙박 등급만
   // 고치려는 호출이 참가비를 지우지 않는 것과 같은 규칙이다.
@@ -601,6 +673,7 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
       SELECT id, program_type, start_date, currency,
              small_cohort_policy, min_team_size,
              fee_basic, fee_premium, fee_basic_desc, fee_premium_desc, discount_options,
+             fee_child_age_min, fee_child_age_max, fee_child_rate,
              hotel_options,
              theme_title, theme_title_i18n,
              fee_basic_desc_i18n, fee_premium_desc_i18n
@@ -608,6 +681,11 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
       WHERE id = ${req.params.id} AND leader_id = ${req.user.leaderId} AND is_active = true
     `;
     if (!program) return res.status(403).json({ error: '권한 없음' });
+
+    // 한쪽만 고치는 호출이 구간을 거꾸로 만들 수 있다(073) — 최소만 12 로
+    // 올렸는데 기존 최대가 8 인 경우다. 기존 값과 견주어 막는다.
+    const crossMsg = childFeeError(patchChildFee, program);
+    if (crossMsg) return res.status(400).json({ error: crossMsg });
 
     // 국제 수양회는 시작일 이후 투어 옵션 수정 불가
     if (
@@ -700,6 +778,10 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
         fee_basic_desc   = ${has('feeBasicDesc') ? (feeBasicDesc ?? null) : program.fee_basic_desc},
         fee_premium_desc = ${has('feePremiumDesc') ? (feePremiumDesc ?? null) : program.fee_premium_desc},
         discount_options = ${JSON.stringify(discounts ?? program.discount_options ?? [])}::jsonb,
+        -- 073. 안 보낸 칸은 그대로 둔다.
+        fee_child_age_min = ${patchChildFee.minAge ?? program.fee_child_age_min},
+        fee_child_age_max = ${patchChildFee.maxAge ?? program.fee_child_age_max},
+        fee_child_rate    = ${patchChildFee.rate ?? program.fee_child_rate},
         currency         = ${currencyFor(type, patchCurrency, program.currency)},
         small_cohort_policy = ${patchPolicy ?? program.small_cohort_policy ?? 'keep'},
         min_team_size       = ${patchTeamMin ?? program.min_team_size ?? 5},
@@ -829,6 +911,35 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
           );
         }
       });
+    }
+
+    // 어린이 참가비 구간을 고쳤으면 이미 등록한 집의 낼 돈도 따라 고친다(073).
+    // 등록 라우트는 저장할 때만 세므로, 여기를 안 거치면 "9살부터 전액" 으로
+    // 바꿔도 먼저 등록한 집은 예전 금액 그대로 명단에 남는다.
+    //
+    // 따로 등록하지 않는 동반자가 있는 등록만 센다 — 나머지는 바뀔 것이 없다.
+    const childFeeChanged =
+      (patchChildFee.minAge ?? null) !== null &&
+        patchChildFee.minAge !== Number(program.fee_child_age_min) ||
+      (patchChildFee.maxAge ?? null) !== null &&
+        patchChildFee.maxAge !== Number(program.fee_child_age_max) ||
+      (patchChildFee.rate ?? null) !== null &&
+        patchChildFee.rate !== Number(program.fee_child_rate);
+    if (childFeeChanged) {
+      const regs = await sql`
+        SELECT DISTINCT r.id FROM registrations r
+          JOIN companions c ON c.registration_id = r.id
+         WHERE r.program_id = ${req.params.id}
+           AND c.registers_separately = false
+      `;
+      for (const r of regs) {
+        try {
+          await recountRegistrationTotal(r.id);
+        } catch (err) {
+          // 한 집이 실패해도 수양회 저장은 이미 끝났다. 나머지는 계속 센다.
+          console.error(`어린이 참가비 재계산 실패 | registrationId=${r.id}`, err);
+        }
+      }
     }
 
     console.log(`[PROGRAM] 수정 | programId=${req.params.id} leaderId=${req.user.leaderId} email=${req.user.email}`);
@@ -1590,13 +1701,6 @@ router.post('/:id/fee-tier-backfill', requireAuth, requireProgramAdmin,
     const rows = await sql`
       UPDATE registrations r SET
         fee_tier = ${tier},
-        total_cost = GREATEST(0, ${Number(fee)}
-          + COALESCE((
-              SELECT SUM(po.cost) FROM program_options po
-              WHERE po.program_id = r.program_id AND po.id = ANY(r.selected_options)
-            ), 0)
-          - CASE WHEN r.discount_status = 'approved'
-                 THEN COALESCE(r.discount_amount, 0) ELSE 0 END),
         updated_at = NOW()
       WHERE r.program_id = ${req.params.id}
         -- 이미 고른 사람은 건드리지 않는다. 고급을 고른 사람을 기본으로
@@ -1604,6 +1708,12 @@ router.post('/:id/fee-tier-backfill', requireAuth, requireProgramAdmin,
         AND r.fee_tier IS NULL
       RETURNING r.id
     `;
+    // 총액은 저장 경로와 같은 함수로 다시 센다. 예전에는 여기에 SQL 로
+    // 식을 따로 적었는데, 숙박비(064)와 어린이 참가비(073)가 거기서 빠졌다 —
+    // 식이 두 벌이면 한쪽만 고쳐진다.
+    for (const r of rows) {
+      await recountRegistrationTotal(r.id);
+    }
     console.log(
       `[FEE] 등급 일괄 지정 | programId=${req.params.id} tier=${tier} count=${rows.length}`,
     );

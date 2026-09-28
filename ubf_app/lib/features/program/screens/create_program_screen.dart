@@ -80,6 +80,10 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
   final _feePremiumController = TextEditingController();
   final _feeBasicDescController = TextEditingController();
   final _feePremiumDescController = TextEditingController();
+  // 어린이 참가비 구간 (073). 기본은 4~8살 절반이다.
+  final _childMinController = TextEditingController(text: '4');
+  final _childMaxController = TextEditingController(text: '8');
+  final _childPctController = TextEditingController(text: '50');
   final List<Map<String, dynamic>> _discountOptions = [];
   final List<Map<String, dynamic>> _hotelOptions = [];
   final _tgTokenController = TextEditingController();
@@ -122,6 +126,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
     _feePremiumController.dispose();
     _feeBasicDescController.dispose();
     _feePremiumDescController.dispose();
+    _childMinController.dispose();
+    _childMaxController.dispose();
+    _childPctController.dispose();
     super.dispose();
   }
 
@@ -181,6 +188,13 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
         contact1Phone: _contact1PhoneController.text.trim(),
         contact2Name: _contact2NameController.text.trim(),
         contact2Phone: _contact2PhoneController.text.trim(),
+        // 화면은 퍼센트로 묻고 서버로는 비율로 보낸다(073).
+        feeChildAgeMin: int.tryParse(_childMinController.text.trim()),
+        feeChildAgeMax: int.tryParse(_childMaxController.text.trim()),
+        feeChildRate: switch (int.tryParse(_childPctController.text.trim())) {
+          final p? => p / 100,
+          _ => null,
+        },
         feeBasic: _fee(_feeBasicController),
         feePremium: _fee(_feePremiumController),
         feeBasicDesc: _text(_feeBasicDescController),
@@ -463,6 +477,9 @@ class _CreateProgramScreenState extends ConsumerState<CreateProgramScreen> {
               premiumController: _feePremiumController,
               basicDescController: _feeBasicDescController,
               premiumDescController: _feePremiumDescController,
+              childMinController: _childMinController,
+              childMaxController: _childMaxController,
+              childPctController: _childPctController,
               discountOptions: _discountOptions,
               onDiscountsChanged: () => setState(() {}),
               currency: _currency,

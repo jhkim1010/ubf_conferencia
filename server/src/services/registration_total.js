@@ -7,6 +7,9 @@
 // 참가자가 호텔에 직접 내는 돈이 아니다. 투어 값에 안 들어 있는 밥값·항공권
 // (061·062)은 **안 들어간다** — 그쪽은 참가자가 따로 쓰는 돈이고 예상이다.
 //
+// **따로 등록할 수 없는 동반자의 참가비도 여기 들어간다(073).** 어린이는
+// 구글 계정이 없어 자기 등록이 없으므로, 보호자의 낼 돈에 붙는 수밖에 없다.
+//
 // 합계는 **서버가 계산한다.** 클라이언트가 보낸 값은 쓰지 않는다. 예전에 앱이
 // 보내던 값은 투어 옵션만 더하고 참가비 등급을 빼먹어서, 요약 화면은 U$320
 // 인데 DB 에는 0 이 저장됐다.
@@ -14,6 +17,7 @@
 // DB 도 HTTP 도 쓰지 않는다. test/registration_total.test.js 로 그대로 확인한다.
 
 import { hotelCost } from './hotel_nights.js';
+import { companionFeeOf } from './companion_role.js';
 
 function money(v) {
   const n = Number(v);
@@ -57,6 +61,8 @@ export function registrationTotal({
   hotelNights = 0,
   hotelPeople = 1,
   approvedDiscount = 0,
+  companions = [],
+  program = null,
 }) {
   const tierFee = tierFeeOf({ tier, feeBasic, feePremium });
   const hotelCost = hotelCostOf({
@@ -65,12 +71,20 @@ export function registrationTotal({
     nights: hotelNights,
     people: hotelPeople,
   });
+  // 따로 등록할 수 없는 동반자의 참가비(073). 어린이는 자기 등급을 고를 수
+  // 없으므로 보호자가 고른 등급을 따라간다.
+  const companionFee = companionFeeOf({ companions, program, tierFee });
   const total = Math.max(
     0,
-    tierFee + money(optionsCost) + hotelCost - money(approvedDiscount),
+    tierFee +
+      companionFee +
+      money(optionsCost) +
+      hotelCost -
+      money(approvedDiscount),
   );
   return {
     tierFee,
+    companionFee,
     hotelCost,
     total: Math.round(total * 100) / 100,
   };

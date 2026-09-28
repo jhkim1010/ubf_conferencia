@@ -20,6 +20,7 @@
 library;
 
 import '../constants/world_countries.dart';
+import 'child_fee.dart';
 import 'hotel_price.dart';
 import 'money.dart';
 import 'tour_extras.dart';
@@ -27,6 +28,8 @@ import 'tour_extras.dart';
 class RegistrationCost {
   const RegistrationCost({
     required this.tierFee,
+    required this.childFee,
+    required this.childCount,
     required this.optionsTotal,
     required this.discount,
     required this.due,
@@ -42,6 +45,16 @@ class RegistrationCost {
 
   /// 고른 참가비 등급의 값. 등급을 아직 안 골랐으면 0.
   final double tierFee;
+
+  /// 따로 등록할 수 없는 동반자들의 참가비 합 (073).
+  ///
+  /// **[tierFee] 와 합치지 않는다.** 한 집이 왜 이 금액인지 확인할 수 있어야
+  /// 하는데, 섞어 두면 "나 혼자인데 왜 120 인가" 를 되물을 방법이 없다.
+  final double childFee;
+
+  /// 그중 **돈이 붙은** 사람 수. 아기처럼 0 인 사람은 안 센다 — 화면이
+  /// "어린이 2명" 이라고 적는데 그중 하나가 무료면 숫자가 설명이 안 된다.
+  final int childCount;
 
   /// 고른 투어 값의 합.
   final double optionsTotal;
@@ -133,6 +146,10 @@ class RegistrationCost {
     String? savedDiscountStatus,
     Object? savedDiscountAmount,
     bool lodgingNeedsFlight = false,
+    // 따로 등록할 수 없는 동반자들(073). 안 주면 없는 것으로 본다 — 이
+    // 목록을 아직 안 불러온 화면이 0 을 보는 편이, 낡은 목록으로 틀린
+    // 금액을 보여주는 것보다 낫다.
+    List<Map<String, dynamic>> companions = const [],
   }) {
     final options = List<Map<String, dynamic>>.from(
       program['program_options'] as List? ?? const [],
@@ -171,7 +188,16 @@ class RegistrationCost {
     // 범위로 적어 둔 곳이면 높은 쪽으로도 한 번 센다.
     final hotelEstimateMax = price.highFor(hotelNights)?.toDouble();
 
-    final base = (tierFee ?? 0).toDouble() + optionsTotal - discount;
+    // 어린이 참가비(073). 보호자가 고른 등급을 따라가므로 tierFee 가
+    // 정해진 뒤에 센다. 등급을 아직 안 골랐으면 0 이고, 그때는 화면이
+    // "등급을 고르면 더해집니다" 라고 말한다.
+    final policy = ChildFeePolicy.of(program);
+    final childFee = policy.totalFor(companions, (tierFee ?? 0).toDouble());
+    final childCount = companions
+        .where((c) => policy.shareForCompanion(c) > 0)
+        .length;
+
+    final base = (tierFee ?? 0).toDouble() + childFee + optionsTotal - discount;
     final due = base + (hotelEstimate ?? 0);
     final dueMax = base + (hotelEstimateMax ?? hotelEstimate ?? 0);
 
@@ -179,6 +205,8 @@ class RegistrationCost {
 
     return RegistrationCost(
       tierFee: (tierFee ?? 0).toDouble(),
+      childFee: _round(childFee),
+      childCount: childCount,
       optionsTotal: _round(optionsTotal),
       discount: _round(discount),
       due: _round(due < 0 ? 0 : due),

@@ -7014,12 +7014,6 @@ abstract class AppLocalizations {
   /// **'Whether they take a place in the room. Preset from age; change it if you like.'**
   String get companionBedHint;
 
-  /// No description provided for @companionNoFee.
-  ///
-  /// In en, this message translates to:
-  /// **'No conference fee for children aged {age} and under.'**
-  String companionNoFee(int age);
-
   /// No description provided for @rosterWithCompanion.
   ///
   /// In en, this message translates to:
@@ -7055,6 +7049,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Type this one yourself in each language — a machine turns \"1Pedro 5:2a\" into nonsense.'**
   String get cpThemeVerseWhy;
+
+  /// No description provided for @companionFeeBand.
+  ///
+  /// In en, this message translates to:
+  /// **'Ages {min}–{max} pay {pct}% of the conference fee.'**
+  String companionFeeBand(int min, int max, int pct);
+
+  /// No description provided for @companionFeeNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No conference fee at this age.'**
+  String get companionFeeNone;
+
+  /// No description provided for @companionFeeShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% of the conference fee — {amount}'**
+  String companionFeeShare(int pct, String amount);
+
+  /// No description provided for @companionFeeSharePending.
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% of the conference fee. Pick a fee level to see the amount.'**
+  String companionFeeSharePending(int pct);
+
+  /// No description provided for @companionFeeFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Full conference fee — {amount}'**
+  String companionFeeFull(String amount);
+
+  /// No description provided for @companionFeeFullPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Full conference fee. Pick a fee level to see the amount.'**
+  String get companionFeeFullPending;
+
+  /// No description provided for @cpChildFeeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Children\'s fee'**
+  String get cpChildFeeTitle;
+
+  /// No description provided for @cpChildFeeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Children in this age range pay a share of the fee level their guardian picks. Younger pay nothing; older pay in full.'**
+  String get cpChildFeeHint;
+
+  /// No description provided for @cpChildFeeFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From (age)'**
+  String get cpChildFeeFrom;
+
+  /// No description provided for @cpChildFeeTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To (age)'**
+  String get cpChildFeeTo;
+
+  /// No description provided for @cpChildFeePct.
+  ///
+  /// In en, this message translates to:
+  /// **'Pays'**
+  String get cpChildFeePct;
+
+  /// No description provided for @cpChildFeeBandInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be at least the starting age'**
+  String get cpChildFeeBandInvalid;
+
+  /// No description provided for @cpChildFeePctInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'100 or less'**
+  String get cpChildFeePctInvalid;
+
+  /// No description provided for @cpChildFeeBand.
+  ///
+  /// In en, this message translates to:
+  /// **'Ages {min}–{max} pay {pct}% of the fee.'**
+  String cpChildFeeBand(int min, int max, int pct);
+
+  /// No description provided for @cpChildFeeNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Ages {min}–{max} pay nothing.'**
+  String cpChildFeeNone(int min, int max);
+
+  /// No description provided for @cpChildFeePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Ages {min}–{max} pay {pct}% — {amount} at the basic level.'**
+  String cpChildFeePreview(int min, int max, int pct, String amount);
+
+  /// No description provided for @cpChildFeeFullFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From age {age}, the full adult fee.'**
+  String cpChildFeeFullFrom(int age);
+
+  /// No description provided for @summaryChildFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Children\'s fee ({count})'**
+  String summaryChildFee(int count);
+
+  /// No description provided for @costBarChildFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes {amount} for {count} accompanying children'**
+  String costBarChildFee(int count, String amount);
 }
 
 class _AppLocalizationsDelegate

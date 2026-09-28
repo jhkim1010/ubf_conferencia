@@ -2552,14 +2552,6 @@
   "companionBedYes": "Yes",
   "companionBedNo": "No — shares with me",
   "companionBedHint": "Whether they take a place in the room. Preset from age; change it if you like.",
-  "companionNoFee": "No conference fee for children aged {age} and under.",
-  "@companionNoFee": {
-    "placeholders": {
-      "age": {
-        "type": "int"
-      }
-    }
-  },
   "rosterWithCompanion": "with {names}",
   "@rosterWithCompanion": {
     "placeholders": {
@@ -2586,5 +2578,124 @@
     }
   },
   "annNotTranslated": "sent as written",
-  "cpThemeVerseWhy": "Type this one yourself in each language — a machine turns \"1Pedro 5:2a\" into nonsense."
+  "cpThemeVerseWhy": "Type this one yourself in each language — a machine turns \"1Pedro 5:2a\" into nonsense.",
+  "companionFeeBand": "Ages {min}–{max} pay {pct}% of the conference fee.",
+  "@companionFeeBand": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "companionFeeNone": "No conference fee at this age.",
+  "companionFeeShare": "{pct}% of the conference fee — {amount}",
+  "@companionFeeShare": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "companionFeeSharePending": "{pct}% of the conference fee. Pick a fee level to see the amount.",
+  "@companionFeeSharePending": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "companionFeeFull": "Full conference fee — {amount}",
+  "@companionFeeFull": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "companionFeeFullPending": "Full conference fee. Pick a fee level to see the amount.",
+  "cpChildFeeTitle": "Children's fee",
+  "cpChildFeeHint": "Children in this age range pay a share of the fee level their guardian picks. Younger pay nothing; older pay in full.",
+  "cpChildFeeFrom": "From (age)",
+  "cpChildFeeTo": "To (age)",
+  "cpChildFeePct": "Pays",
+  "cpChildFeeBandInvalid": "Must be at least the starting age",
+  "cpChildFeePctInvalid": "100 or less",
+  "cpChildFeeBand": "Ages {min}–{max} pay {pct}% of the fee.",
+  "@cpChildFeeBand": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "cpChildFeeNone": "Ages {min}–{max} pay nothing.",
+  "@cpChildFeeNone": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "cpChildFeePreview": "Ages {min}–{max} pay {pct}% — {amount} at the basic level.",
+  "@cpChildFeePreview": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      },
+      "pct": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "cpChildFeeFullFrom": "From age {age}, the full adult fee.",
+  "@cpChildFeeFullFrom": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "summaryChildFee": "Children's fee ({count})",
+  "@summaryChildFee": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "costBarChildFee": "Includes {amount} for {count} accompanying children",
+  "@costBarChildFee": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

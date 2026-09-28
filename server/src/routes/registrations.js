@@ -3,6 +3,7 @@ import { sql } from '../db.js';
 import { hotelNights } from '../services/hotel_nights.js';
 import { hotelChoiceOk } from '../services/hotel_choice.js';
 import { registrationTotal } from '../services/registration_total.js';
+import { bedsNeeded } from '../services/companion_role.js';
 import { resolveHotelChoice, normalizeNights } from '../services/hotel.js';
 import { requireAuth } from '../middleware/auth.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
@@ -68,7 +69,9 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
   try {
     const [program] = await sql`
       SELECT id, name, fee_basic, fee_premium, discount_options, host_country,
-             hotel_options, start_date, end_date
+             hotel_options, start_date, end_date,
+             -- 어린이 참가비 구간(073). registrationTotal 이 그대로 읽는다.
+             fee_child_age_min, fee_child_age_max, fee_child_rate
       FROM programs WHERE id = ${req.params.programId} AND is_active = true
     `;
     if (!program) return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
@@ -250,13 +253,13 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     // 전후 숙박을 함께 쓰는 사람 수(069). 본인 한 사람에, 등록할 수 없는
     // 동반자 중 **침대를 쓰는** 사람을 더한다. 보호자와 같이 자는 아기는
     // 방값이 안 붙는다 — 침대를 안 쓰기 때문이다.
-    const [beds] = existing
+    // 줄을 그대로 가져온다. 침대 수와 어린이 참가비(073)를 둘 다 여기서
+    // 내는데, 세는 규칙은 services/companion_role.js 한 곳에 있다.
+    const companions = existing
       ? await sql`
-          SELECT COUNT(*)::int AS n FROM companions c
-           WHERE c.registration_id = ${existing.id}
-             AND c.registers_separately = false
-             AND c.occupies_bed = true`
-      : [{ n: 0 }];
+          SELECT age, registers_separately, occupies_bed, fee_share
+            FROM companions WHERE registration_id = ${existing.id}`
+      : [];
 
     const { total: computedTotal } = registrationTotal({
       tier,
@@ -266,8 +269,10 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
       hotelOptions: program.hotel_options,
       hotelKey: hotel.key,
       hotelNights: stay.nights,
-      hotelPeople: 1 + Number(beds?.n ?? 0),
+      hotelPeople: 1 + bedsNeeded(companions),
       approvedDiscount,
+      companions,
+      program,
     });
 
     const [registration] = await sql`

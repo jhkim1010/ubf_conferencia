@@ -89,6 +89,10 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
   final _feePremiumController = TextEditingController();
   final _feeBasicDescController = TextEditingController();
   final _feePremiumDescController = TextEditingController();
+  // 어린이 참가비 구간 (073).
+  final _childMinController = TextEditingController();
+  final _childMaxController = TextEditingController();
+  final _childPctController = TextEditingController();
   List<Map<String, dynamic>> _discountOptions = [];
   List<Map<String, dynamic>> _hotelOptions = [];
   final _tgTokenController = TextEditingController();
@@ -135,6 +139,9 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _feePremiumController.dispose();
     _feeBasicDescController.dispose();
     _feePremiumDescController.dispose();
+    _childMinController.dispose();
+    _childMaxController.dispose();
+    _childPctController.dispose();
     _nameController.dispose();
     _locationController.dispose();
     _venueUrlController.dispose();
@@ -237,6 +244,11 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
     _feePremiumController.text = program['fee_premium']?.toString() ?? '';
     _feeBasicDescController.text = program['fee_basic_desc'] ?? '';
     _feePremiumDescController.text = program['fee_premium_desc'] ?? '';
+    // 073. 서버는 비율로 주고 화면은 퍼센트로 보여준다.
+    _childMinController.text = '${program['fee_child_age_min'] ?? 4}';
+    _childMaxController.text = '${program['fee_child_age_max'] ?? 8}';
+    _childPctController.text =
+        '${(((num.tryParse('${program['fee_child_rate'] ?? 0.5}') ?? 0.5)) * 100).round()}';
 
     // 국제 수양회는 저장된 값이 무엇이든 USD 다. 규칙이 생기기 전에 만들어진
     // 수양회에는 다른 통화가 남아 있는데, 그 값을 그대로 보여주면 잠금 안내가
@@ -366,6 +378,13 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
         'feePremium': _fee(_feePremiumController),
         'feeBasicDesc': _text(_feeBasicDescController),
         'feePremiumDesc': _text(_feePremiumDescController),
+        // 073. 퍼센트 → 비율.
+        'feeChildAgeMin': int.tryParse(_childMinController.text.trim()),
+        'feeChildAgeMax': int.tryParse(_childMaxController.text.trim()),
+        'feeChildRate': switch (int.tryParse(_childPctController.text.trim())) {
+          final p? => p / 100,
+          _ => null,
+        },
         'discountOptions': _discountOptions,
         'currency': _currency.code,
         'smallCohortPolicy': _cohortPolicy,
@@ -836,6 +855,9 @@ class _EditProgramScreenState extends ConsumerState<EditProgramScreen> {
                   premiumController: _feePremiumController,
                   basicDescController: _feeBasicDescController,
                   premiumDescController: _feePremiumDescController,
+                  childMinController: _childMinController,
+                  childMaxController: _childMaxController,
+                  childPctController: _childPctController,
                   discountOptions: _discountOptions,
                   onDiscountsChanged: () => setState(() {}),
                   currency: _currency,

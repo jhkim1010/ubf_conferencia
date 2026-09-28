@@ -3863,11 +3863,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Whether they take a place in the room. Preset from age; change it if you like.';
 
   @override
-  String companionNoFee(int age) {
-    return 'No conference fee for children aged $age and under.';
-  }
-
-  @override
   String rosterWithCompanion(String names) {
     return 'with $names';
   }
@@ -3891,4 +3886,83 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cpThemeVerseWhy =>
       'Type this one yourself in each language — a machine turns \"1Pedro 5:2a\" into nonsense.';
+
+  @override
+  String companionFeeBand(int min, int max, int pct) {
+    return 'Ages $min–$max pay $pct% of the conference fee.';
+  }
+
+  @override
+  String get companionFeeNone => 'No conference fee at this age.';
+
+  @override
+  String companionFeeShare(int pct, String amount) {
+    return '$pct% of the conference fee — $amount';
+  }
+
+  @override
+  String companionFeeSharePending(int pct) {
+    return '$pct% of the conference fee. Pick a fee level to see the amount.';
+  }
+
+  @override
+  String companionFeeFull(String amount) {
+    return 'Full conference fee — $amount';
+  }
+
+  @override
+  String get companionFeeFullPending =>
+      'Full conference fee. Pick a fee level to see the amount.';
+
+  @override
+  String get cpChildFeeTitle => 'Children\'s fee';
+
+  @override
+  String get cpChildFeeHint =>
+      'Children in this age range pay a share of the fee level their guardian picks. Younger pay nothing; older pay in full.';
+
+  @override
+  String get cpChildFeeFrom => 'From (age)';
+
+  @override
+  String get cpChildFeeTo => 'To (age)';
+
+  @override
+  String get cpChildFeePct => 'Pays';
+
+  @override
+  String get cpChildFeeBandInvalid => 'Must be at least the starting age';
+
+  @override
+  String get cpChildFeePctInvalid => '100 or less';
+
+  @override
+  String cpChildFeeBand(int min, int max, int pct) {
+    return 'Ages $min–$max pay $pct% of the fee.';
+  }
+
+  @override
+  String cpChildFeeNone(int min, int max) {
+    return 'Ages $min–$max pay nothing.';
+  }
+
+  @override
+  String cpChildFeePreview(int min, int max, int pct, String amount) {
+    return 'Ages $min–$max pay $pct% — $amount at the basic level.';
+  }
+
+  @override
+  String cpChildFeeFullFrom(int age) {
+    return 'From age $age, the full adult fee.';
+  }
+
+  @override
+  String summaryChildFee(int count) {
+    return 'Children\'s fee ($count)';
+  }
+
+  @override
+  String costBarChildFee(int count, String amount) {
+    return 'Includes $amount for $count accompanying children';
+  }
 }
