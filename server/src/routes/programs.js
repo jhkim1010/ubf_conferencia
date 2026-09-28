@@ -548,7 +548,7 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
 router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
   const {
     name, location, startDate, endDate, enabledSections,
-    venueUrl, themeTitle, themeVerse,
+    venueUrl, themeTitle, themeVerse, themeVerseI18n,
     nearestAirport, contact1Name, contact1Phone, contact2Name, contact2Phone,
     programType, options, hostCountry,
     feeBasic, feePremium, feeBasicDesc, feePremiumDesc, discountOptions,
