@@ -134,6 +134,7 @@ class SummaryScreen extends ConsumerWidget {
             hotelOptionKey: formState.hotelOptionKey,
             hotelNightsBefore: formState.hotelNightsBefore,
             hotelNightsAfter: formState.hotelNightsAfter,
+            hotelAfterSelf: formState.hotelAfterSelf,
             savedDiscountStatus: saved?['discount_status'] as String?,
             savedDiscountAmount: saved?['discount_amount'],
             // 돌아가는 비행기를 안 적었으면 전후 숙박비를 아직 셀 수 없다(066).
@@ -144,6 +145,9 @@ class SummaryScreen extends ConsumerWidget {
             ),
           );
           final hotelEstimate = cost.hotelEstimate;
+          // 뒤 숙소를 스스로 해결한다고 한 밤이 실제로 있는가(074).
+          final selfAfter =
+              formState.hotelAfterSelf && formState.hotelNightsAfter > 0;
 
           final selectedOptionDetails = options
               .where(
@@ -329,22 +333,27 @@ class SummaryScreen extends ConsumerWidget {
               // 참가비 총액과 **분리해서** 보여준다. 아래 총액에 섞어 놓으면
               // 그 금액을 입금해야 하는 줄 알고, 호텔 값을 두 번 내거나
               // 아예 안 내게 된다.
-              if (hotelPicked != null) ...[
+              //
+              // 뒤 숙소를 스스로 해결하는 사람(074)에게도 보인다. 등급을 안
+              // 골랐어도 "뒤 N박은 직접 해결 · 숙박비 없음" 을 확인시켜야 한다 —
+              // 안 보이면 그 선택이 저장됐는지 알 수 없다.
+              if (hotelPicked != null || selfAfter) ...[
                 const SizedBox(height: 12),
                 _SectionCard(
                   title: l10n.summarySectionHotel,
                   icon: Icons.hotel_outlined,
                   onEdit: () => context.go('/registration/$programId'),
                   children: [
-                    _InfoRow(
-                      optionLabelFor(
-                        hotelPicked,
-                        Localizations.localeOf(context).languageCode,
+                    if (hotelPicked != null)
+                      _InfoRow(
+                        optionLabelFor(
+                          hotelPicked,
+                          Localizations.localeOf(context).languageCode,
+                        ),
+                        hotelEstimate != null
+                            ? currency.format(hotelEstimate)
+                            : l10n.hotelPriceTbd,
                       ),
-                      hotelEstimate != null
-                          ? currency.format(hotelEstimate)
-                          : l10n.hotelPriceTbd,
-                    ),
                     _InfoRow(
                       '',
                       l10n.summaryHotelNights(
@@ -352,7 +361,12 @@ class SummaryScreen extends ConsumerWidget {
                         formState.hotelNightsAfter,
                       ),
                     ),
-                    _InfoRow('', l10n.hotelNotInFee),
+                    if (selfAfter)
+                      _InfoRow(
+                        '',
+                        l10n.hotelAfterSelfSummary(formState.hotelNightsAfter),
+                      ),
+                    if (hotelPicked != null) _InfoRow('', l10n.hotelNotInFee),
                   ],
                 ),
               ],

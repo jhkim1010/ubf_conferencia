@@ -2140,6 +2140,24 @@ class AppLocalizationsEs extends AppLocalizations {
       'No está incluido en la cuota del retiro. Se paga aparte.';
 
   @override
+  String get hotelAfterSelf => 'Después del retiro me alojo por mi cuenta';
+
+  @override
+  String hotelAfterSelfNote(int nights) {
+    return 'No se cobra alojamiento por esas $nights noche(s) posteriores.';
+  }
+
+  @override
+  String hotelAfterSelfSummary(int nights) {
+    return '$nights noche(s) después por su cuenta · sin cargo de alojamiento';
+  }
+
+  @override
+  String rosterHotelAfterSelf(int n) {
+    return '$n después: por su cuenta';
+  }
+
+  @override
   String get hotelSectionTitle => 'Niveles de hotel (antes / después)';
 
   @override

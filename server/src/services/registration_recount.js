@@ -10,6 +10,7 @@
 //
 //   fee_tier · selected_options · discount_status · discount_amount
 //   hotel_option_key · hotel_nights_before · hotel_nights_after
+//   hotel_after_self(074)
 //
 // 박수는 **다시 유도하지 않는다.** 라우트가 비행 일정에서 낸 결과가 이미
 // before/after 로 저장돼 있다. 여기서 또 유도하면 두 벌이 되고, 두 벌은
@@ -20,6 +21,7 @@
 
 import { sql } from '../db.js';
 import { registrationTotal } from './registration_total.js';
+import { chargeableNights } from './hotel_nights.js';
 import { bedsNeeded } from './companion_role.js';
 
 /// 등록 [registrationId] 의 total_cost 를 다시 세어 저장한다.
@@ -32,6 +34,7 @@ export async function recountRegistrationTotal(registrationId) {
     SELECT r.id, r.program_id, r.fee_tier, r.selected_options,
            r.discount_status, r.discount_amount,
            r.hotel_option_key, r.hotel_nights_before, r.hotel_nights_after,
+           r.hotel_after_self,
            r.total_cost,
            p.fee_basic, p.fee_premium, p.hotel_options,
            p.fee_child_age_min, p.fee_child_age_max, p.fee_child_rate
@@ -57,8 +60,13 @@ export async function recountRegistrationTotal(registrationId) {
       FROM companions WHERE registration_id = ${reg.id}
   `;
 
-  const nights =
-    Number(reg.hotel_nights_before ?? 0) + Number(reg.hotel_nights_after ?? 0);
+  // 뒤 숙소를 스스로 해결하는 사람은 뒤 박수를 빼고 센다(074).
+  // 등록 라우트와 같은 함수를 쓴다 — 두 벌이면 언젠가 갈라진다.
+  const nights = chargeableNights({
+    before: reg.hotel_nights_before,
+    after: reg.hotel_nights_after,
+    afterSelf: reg.hotel_after_self,
+  });
 
   const { total } = registrationTotal({
     tier: reg.fee_tier,

@@ -105,8 +105,16 @@ class _HotelStepState extends ConsumerState<HotelStep> {
     // 묵을 밤이 있으면 방을 반드시 골라야 한다(064). 그런데 백지로 두면
     // 대부분 "숙소 필요 없음" 인 채로 넘어간다 — 아무것도 안 누르는 것이
     // 가장 쉬운 길이기 때문이다. 그래서 **가장 싼 방을 먼저 골라 둔다.**
+    //
+    // 뒤 숙소를 스스로 해결하는 밤은 빼고 센다(074) — 그 밤에는 우리가
+    // 잡을 방이 없다. 앞 박수도 없으면 방을 고를 것도 없다.
+    final chargeable = chargeableHotelNights(
+      before: form.hotelNightsBefore,
+      after: form.hotelNightsAfter,
+      afterSelf: form.hotelAfterSelf,
+    );
     final needsRoom = mustPickHotel(
-      nights: form.hotelNightsBefore + form.hotelNightsAfter,
+      nights: chargeable,
       options: widget.options,
     );
     if (needsRoom && form.hotelOptionKey == null) {
@@ -133,7 +141,9 @@ class _HotelStepState extends ConsumerState<HotelStep> {
         ? true
         : (_wantsHotel ?? (nights > 0 || form.hotelOptionKey != null));
     final perNight = Money.parse(picked?['pricePerNight']);
-    final estimate = perNight != null && nights > 0 ? perNight * nights : null;
+    final estimate = perNight != null && chargeable > 0
+        ? perNight * chargeable
+        : null;
 
     final differs =
         computed.hasAny &&
@@ -214,6 +224,23 @@ class _HotelStepState extends ConsumerState<HotelStep> {
             value: form.hotelNightsAfter,
             onChanged: (v) => notifier.setHotelNights(after: v),
           ),
+          // 수양회 뒤에 더 머물되 숙소는 본인이 직접 구하는 분(074).
+          // 그 밤들에는 우리 돈이 들지 않으므로 숙박비를 받지 않는다.
+          // 뒤 박수가 있을 때만 묻는다 — 없으면 해결할 것도 없다.
+          if (form.hotelNightsAfter > 0)
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: form.hotelAfterSelf,
+              onChanged: (v) => notifier.setHotelAfterSelf(v ?? false),
+              title: Text(l10n.hotelAfterSelf),
+              subtitle: Text(
+                l10n.hotelAfterSelfNote(form.hotelNightsAfter),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
           if (differs)
             Align(
               alignment: Alignment.centerRight,
@@ -232,9 +259,7 @@ class _HotelStepState extends ConsumerState<HotelStep> {
           if (needsRoom) ...[
             const SizedBox(height: 4),
             Text(
-              l10n.hotelMustPick(
-                form.hotelNightsBefore + form.hotelNightsAfter,
-              ),
+              l10n.hotelMustPick(chargeable),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,

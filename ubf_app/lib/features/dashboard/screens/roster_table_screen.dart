@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
+import '../../../core/utils/hotel_nights.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/payment_state.dart';
 import '../../../core/utils/roster_sort.dart';
@@ -347,13 +348,20 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     Map<String, dynamic> r,
     Currency currency,
   ) {
-    final nights =
-        ((r['hotel_nights_before'] as num?)?.toInt() ?? 0) +
-        ((r['hotel_nights_after'] as num?)?.toInt() ?? 0);
-    if (nights <= 0) return '';
+    final after = (r['hotel_nights_after'] as num?)?.toInt() ?? 0;
+    // 뒤 숙소를 스스로 해결하는 밤(074)은 방을 잡을 밤에서 빼고, 따로
+    // 적는다. 빼기만 하면 그 사람이 더 머문다는 사실이 표에서 사라진다.
+    final selfAfter = r['hotel_after_self'] == true && after > 0;
+    final nights = chargeableHotelNights(
+      before: (r['hotel_nights_before'] as num?)?.toInt() ?? 0,
+      after: after,
+      afterSelf: selfAfter,
+    );
+    if (nights <= 0 && !selfAfter) return '';
     final cost = Money.parse(r['hotel_cost']) ?? 0;
     return [
-      l10n.rosterHotelNights(nights),
+      if (nights > 0) l10n.rosterHotelNights(nights),
+      if (selfAfter) l10n.rosterHotelAfterSelf(after),
       // 호텔 등급을 아직 안 고른 사람은 박수만 나온다. 값을 모르는 것을
       // 0 원으로 적으면 낼 것이 없다는 뜻이 되어 버린다.
       if (cost > 0) currency.format(cost),

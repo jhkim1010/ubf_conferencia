@@ -49,6 +49,7 @@ class CostBar extends ConsumerWidget {
       hotelOptionKey: form.hotelOptionKey,
       hotelNightsBefore: form.hotelNightsBefore,
       hotelNightsAfter: form.hotelNightsAfter,
+      hotelAfterSelf: form.hotelAfterSelf,
       savedDiscountStatus: saved?['discount_status'] as String?,
       savedDiscountAmount: saved?['discount_amount'],
       // 돌아가는 비행기를 안 적었으면 전후 숙박비를 아직 셀 수 없다(066).

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   hotelNights,
   hotelCost,
+  chargeableNights,
   nightsBetween,
   dayOf,
 } from '../src/services/hotel_nights.js';
@@ -205,4 +206,30 @@ test('예상 금액 0 도 적어 둔 것이다', () => {
     hotelNights({ ...R, arrival: '2027-01-21', departure: '2027-01-27', tours: [free] }).after,
     0,
   );
+});
+
+// 수양회 뒤 숙소를 스스로 해결하는 사람 (074)
+
+test('뒤 숙소를 스스로 해결하면 뒤 박수에는 값을 안 매긴다', () => {
+  assert.equal(chargeableNights({ before: 1, after: 3, afterSelf: true }), 1);
+  assert.equal(chargeableNights({ before: 0, after: 3, afterSelf: true }), 0);
+});
+
+test('스스로 해결이 아니면 앞뒤를 다 센다', () => {
+  assert.equal(chargeableNights({ before: 1, after: 3 }), 4);
+  assert.equal(chargeableNights({ before: 1, after: 3, afterSelf: false }), 4);
+});
+
+test('앞 박수는 스스로 해결과 상관없이 센다', () => {
+  assert.equal(chargeableNights({ before: 2, after: 0, afterSelf: true }), 2);
+});
+
+test('true 가 아닌 값은 스스로 해결로 보지 않는다 — 덜 받는 쪽으로 새지 않게', () => {
+  assert.equal(chargeableNights({ before: 1, after: 3, afterSelf: 'true' }), 4);
+  assert.equal(chargeableNights({ before: 1, after: 3, afterSelf: null }), 4);
+});
+
+test('못 읽는 박수는 0 으로 본다', () => {
+  assert.equal(chargeableNights({ before: null, after: undefined }), 0);
+  assert.equal(chargeableNights({ before: -2, after: 'x' }), 0);
 });

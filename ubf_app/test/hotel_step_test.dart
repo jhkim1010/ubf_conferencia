@@ -112,7 +112,12 @@ void main() {
     await tester.tap(find.text('4성급'));
     await tester.pumpAndSettle();
 
-    // 80 × 5박 = 400
+    // 80 × 5박 = 400. 예상 금액 칸은 아래쪽이라 스크롤해서 본다.
+    await tester.scrollUntilVisible(
+      find.textContaining('400'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.textContaining('400'), findsWidgets);
 
     // 참가비와 섞이지 않는다는 안내가 반드시 함께 나와야 한다.
@@ -126,6 +131,83 @@ void main() {
   });
 
   _mustPickTests();
+  _afterSelfTests();
+}
+
+// ── 074: 수양회 뒤 숙소를 스스로 해결한다 ────────────────────────────
+
+void _afterSelfTests() {
+  testWidgets('뒤 박수가 있으면 "직접 구하겠다" 를 고를 수 있다', (tester) async {
+    final c = _container();
+    final n = c.read(registrationFormProvider(_programId).notifier);
+    n.updateArrivalFlight({'scheduled_arrival': '2027-07-03'});
+    n.updateDepartureFlight({'scheduled_departure': '2027-07-12'});
+
+    await tester.pumpWidget(_harness(c));
+    await tester.pumpAndSettle();
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('ko'));
+    await tester.tap(find.text(l10n.hotelAfterSelf));
+    await tester.pumpAndSettle();
+
+    final form = c.read(registrationFormProvider(_programId));
+    expect(form.hotelAfterSelf, isTrue);
+    // 박수는 그대로다 — 더 머문다는 사실은 공항 배웅에 필요하다.
+    expect(form.hotelNightsAfter, 3);
+    // 앞 2박은 여전히 우리 방이 필요하므로 등급이 남는다.
+    expect(form.hotelOptionKey, 'h1');
+    // 50 × 앞 2박 = 100. 뒤 3박을 넣은 250 이 아니다.
+    await tester.scrollUntilVisible(
+      find.text(l10n.hotelEstimate),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.textContaining('250'), findsNothing);
+    expect(find.textContaining('100'), findsWidgets);
+  });
+
+  testWidgets('앞 박수 없이 뒤를 직접 해결하면 방을 고를 것이 없다', (tester) async {
+    // 수양회 첫날 와서 끝나고 사흘 더 머무는데, 그 사흘은 본인이 잡는다.
+    final c = _container();
+    final n = c.read(registrationFormProvider(_programId).notifier);
+    n.updateArrivalFlight({'scheduled_arrival': '2027-07-05'});
+    n.updateDepartureFlight({'scheduled_departure': '2027-07-12'});
+
+    await tester.pumpWidget(_harness(c));
+    await tester.pumpAndSettle();
+    // 처음에는 뒤 3박 때문에 가장 싼 방이 골라져 있다(064).
+    expect(c.read(registrationFormProvider(_programId)).hotelOptionKey, 'h1');
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('ko'));
+    await tester.tap(find.text(l10n.hotelAfterSelf));
+    await tester.pumpAndSettle();
+
+    final form = c.read(registrationFormProvider(_programId));
+    // 등급이 남으면 명단에 찍혀 담당자가 방을 잡는다.
+    expect(form.hotelOptionKey, isNull);
+    expect(form.hotelNightsAfter, 3);
+    // 고를 것이 없으니 "필요 없음" 이 다시 보이고, 가장 싼 방을 되살리지 않는다.
+    await tester.scrollUntilVisible(
+      find.text(l10n.hotelNone),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text(l10n.hotelNone), findsOneWidget);
+    expect(c.read(registrationFormProvider(_programId)).hotelOptionKey, isNull);
+  });
+
+  testWidgets('뒤 박수가 없으면 묻지 않는다', (tester) async {
+    final c = _container();
+    final n = c.read(registrationFormProvider(_programId).notifier);
+    n.updateArrivalFlight({'scheduled_arrival': '2027-07-03'});
+    n.updateDepartureFlight({'scheduled_departure': '2027-07-09'});
+
+    await tester.pumpWidget(_harness(c));
+    await tester.pumpAndSettle();
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('ko'));
+    expect(find.text(l10n.hotelAfterSelf), findsNothing);
+  });
 }
 
 // ── 064: 묵을 밤이 있으면 방을 반드시 고른다 ────────────────────────

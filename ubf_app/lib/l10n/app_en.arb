@@ -1341,6 +1341,31 @@
   },
   "hotelEstimate": "Estimated hotel cost",
   "hotelNotInFee": "Not included in your conference fee. You settle this separately.",
+  "hotelAfterSelf": "I'll find my own place to stay after the conference",
+  "hotelAfterSelfNote": "No lodging fee is charged for those {nights} night(s) after.",
+  "@hotelAfterSelfNote": {
+    "placeholders": {
+      "nights": {
+        "type": "int"
+      }
+    }
+  },
+  "hotelAfterSelfSummary": "{nights} night(s) after on your own · no lodging fee",
+  "@hotelAfterSelfSummary": {
+    "placeholders": {
+      "nights": {
+        "type": "int"
+      }
+    }
+  },
+  "rosterHotelAfterSelf": "{n} after: own lodging",
+  "@rosterHotelAfterSelf": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "hotelSectionTitle": "Hotel levels (before / after)",
   "hotelSectionHelp": "Only attendees coming from abroad see these. They pick a level and the number of nights.",
   "hotelLevelKo": "Level (Korean)",

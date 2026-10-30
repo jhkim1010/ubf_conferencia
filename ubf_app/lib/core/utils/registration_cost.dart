@@ -21,6 +21,7 @@ library;
 
 import '../constants/world_countries.dart';
 import 'child_fee.dart';
+import 'hotel_nights.dart';
 import 'hotel_price.dart';
 import 'money.dart';
 import 'tour_extras.dart';
@@ -90,7 +91,8 @@ class RegistrationCost {
   /// 0 으로 보여주면 합계가 다 된 줄 알고 그만큼 덜 챙겨 오신다.
   final bool lodgingNeedsFlight;
 
-  /// 수양회 전후로 묵는 밤 수.
+  /// 수양회 전후로 묵는 밤 중 **숙박비를 매기는** 밤 수. 뒤 숙소를 스스로
+  /// 해결하는 사람은 뒤 박수가 빠진다(074).
   final int hotelNights;
 
   /// 그 밤들에 들 돈. 등급을 아직 안 골랐으면 null — 0 과 다르다.
@@ -143,6 +145,8 @@ class RegistrationCost {
     required String? hotelOptionKey,
     required int hotelNightsBefore,
     required int hotelNightsAfter,
+    // 수양회 뒤 숙소를 스스로 해결하는가(074). 그러면 뒤 박수는 안 센다.
+    bool hotelAfterSelf = false,
     String? savedDiscountStatus,
     Object? savedDiscountAmount,
     bool lodgingNeedsFlight = false,
@@ -182,7 +186,11 @@ class RegistrationCost {
       (o) => o?['key'] == hotelOptionKey,
       orElse: () => null,
     );
-    final hotelNights = hotelNightsBefore + hotelNightsAfter;
+    final hotelNights = chargeableHotelNights(
+      before: hotelNightsBefore,
+      after: hotelNightsAfter,
+      afterSelf: hotelAfterSelf,
+    );
     final price = HotelPrice.of(hotelPicked);
     final hotelEstimate = price.lowFor(hotelNights)?.toDouble();
     // 범위로 적어 둔 곳이면 높은 쪽으로도 한 번 센다.

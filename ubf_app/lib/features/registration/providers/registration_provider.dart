@@ -71,6 +71,10 @@ class RegistrationFormState {
   final int hotelNightsBefore;
   final int hotelNightsAfter;
 
+  /// 수양회 뒤 숙소를 스스로 해결한다(074). 그러면 뒤 박수에는 숙박비를
+  /// 안 매긴다. 박수는 그대로 둔다 — 공항 배웅을 잡을 때 필요하다.
+  final bool hotelAfterSelf;
+
   const RegistrationFormState({
     required this.programId,
     this.country,
@@ -100,6 +104,7 @@ class RegistrationFormState {
     this.hotelOptionKey,
     this.hotelNightsBefore = 0,
     this.hotelNightsAfter = 0,
+    this.hotelAfterSelf = false,
   });
 
   RegistrationFormState copyWith({
@@ -134,7 +139,10 @@ class RegistrationFormState {
     String? hotelOptionKey,
     int? hotelNightsBefore,
     int? hotelNightsAfter,
+    bool? hotelAfterSelf,
     bool clearHotel = false,
+    // 등급만 비운다(074). clearHotel 은 박수까지 지우므로 쓸 수 없다.
+    bool clearHotelKey = false,
     // copyWith 는 `??` 로 병합하므로 null 을 넘겨 값을 지울 수 없다.
     // 할인 신청 철회는 "지우는" 동작이라 별도 플래그가 필요하다.
     bool clearDiscount = false,
@@ -177,7 +185,7 @@ class RegistrationFormState {
       pickupFrom: pickupFrom ?? this.pickupFrom,
       // 등급을 비우면 박수도 함께 비운다. "3박" 만 남으면 어느 등급으로
       // 방을 잡을지 알 수 없고 화면에도 아무것도 안 보인다.
-      hotelOptionKey: clearHotel
+      hotelOptionKey: clearHotel || clearHotelKey
           ? null
           : (hotelOptionKey ?? this.hotelOptionKey),
       hotelNightsBefore: clearHotel
@@ -186,6 +194,9 @@ class RegistrationFormState {
       hotelNightsAfter: clearHotel
           ? 0
           : (hotelNightsAfter ?? this.hotelNightsAfter),
+      hotelAfterSelf: clearHotel
+          ? false
+          : (hotelAfterSelf ?? this.hotelAfterSelf),
     );
   }
 
@@ -218,6 +229,7 @@ class RegistrationFormState {
     'hotelOptionKey': hotelOptionKey,
     'hotelNightsBefore': hotelNightsBefore,
     'hotelNightsAfter': hotelNightsAfter,
+    'hotelAfterSelf': hotelAfterSelf,
   };
 
   factory RegistrationFormState.fromJson(Map<String, dynamic> json) =>
@@ -250,6 +262,7 @@ class RegistrationFormState {
         hotelOptionKey: json['hotelOptionKey'] as String?,
         hotelNightsBefore: json['hotelNightsBefore'] as int? ?? 0,
         hotelNightsAfter: json['hotelNightsAfter'] as int? ?? 0,
+        hotelAfterSelf: json['hotelAfterSelf'] as bool? ?? false,
       );
 }
 
@@ -418,6 +431,18 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
     state.copyWith(hotelNightsBefore: before, hotelNightsAfter: after),
   );
 
+  /// 수양회 뒤 숙소를 스스로 해결하는지(074).
+  ///
+  /// 앞 박수가 남아 있으면 등급은 그대로 둔다 — 그 방은 여전히 필요하다.
+  /// 앞 박수가 없으면 등급을 비운다. 남겨 두면 값은 0 인데 명단에는 등급이
+  /// 찍혀, 담당자가 그 사람 방을 잡는다.
+  void setHotelAfterSelf(bool v) => _update(
+    state.copyWith(
+      hotelAfterSelf: v,
+      clearHotelKey: v && state.hotelNightsBefore == 0,
+    ),
+  );
+
   // ─── 서버 저장 (임시저장 버튼) ─────────────────────────────
 
   Future<void> saveProgress(List<Map<String, dynamic>> allOptions) async {
@@ -457,6 +482,7 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       'hotelOptionKey': state.hotelOptionKey,
       'hotelNightsBefore': state.hotelNightsBefore,
       'hotelNightsAfter': state.hotelNightsAfter,
+      'hotelAfterSelf': state.hotelAfterSelf,
     });
   }
 
@@ -504,6 +530,7 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       hotelOptionKey: data['hotel_option_key'],
       hotelNightsBefore: data['hotel_nights_before'] as int? ?? 0,
       hotelNightsAfter: data['hotel_nights_after'] as int? ?? 0,
+      hotelAfterSelf: data['hotel_after_self'] as bool? ?? false,
     );
     state = loaded;
     // DB에서 불러온 내용도 바로 draft로 저장
