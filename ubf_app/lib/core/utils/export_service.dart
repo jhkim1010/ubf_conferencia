@@ -114,10 +114,11 @@ class ExportService {
       // 박수가 0 이면 낼 것이 없다는 뜻이므로 빈 칸으로 둔다. 0 을 적으면
       // 표에서 합계를 낼 때 아직 안 센 사람과 구별되지 않는다.
       //
-      // 뒤 숙소를 스스로 해결하는 밤(074)은 값을 안 매기므로 빼고 센다.
+      // 스스로 해결하는 밤(074·075)은 값을 안 매기므로 빼고 센다.
       chargeableHotelNights(
                 before: (r['hotel_nights_before'] as num?)?.toInt() ?? 0,
                 after: (r['hotel_nights_after'] as num?)?.toInt() ?? 0,
+                beforeSelf: r['hotel_before_self'] == true,
                 afterSelf: r['hotel_after_self'] == true,
               ) >
               0

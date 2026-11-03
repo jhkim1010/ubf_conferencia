@@ -145,7 +145,8 @@ class RegistrationCost {
     required String? hotelOptionKey,
     required int hotelNightsBefore,
     required int hotelNightsAfter,
-    // 수양회 뒤 숙소를 스스로 해결하는가(074). 그러면 뒤 박수는 안 센다.
+    // 수양회 앞·뒤 숙소를 스스로 해결하는가(074·075). 그쪽 박수는 안 센다.
+    bool hotelBeforeSelf = false,
     bool hotelAfterSelf = false,
     String? savedDiscountStatus,
     Object? savedDiscountAmount,
@@ -189,6 +190,7 @@ class RegistrationCost {
     final hotelNights = chargeableHotelNights(
       before: hotelNightsBefore,
       after: hotelNightsAfter,
+      beforeSelf: hotelBeforeSelf,
       afterSelf: hotelAfterSelf,
     );
     final price = HotelPrice.of(hotelPicked);

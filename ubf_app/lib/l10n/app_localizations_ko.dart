@@ -2083,12 +2083,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get hotelNotInFee => '참가비에는 포함되지 않습니다. 숙박비는 따로 정산합니다.';
 
   @override
-  String get hotelAfterSelf => '수양회 이후 숙소는 제가 직접 구하겠습니다';
+  String get hotelBeforeSelf => '수양회 이전 숙소는 에어비앤비 등으로 제가 직접 구하겠습니다';
 
   @override
-  String hotelAfterSelfNote(int nights) {
+  String hotelSelfNote(int nights) {
     return '그 $nights박은 숙박비를 받지 않습니다.';
   }
+
+  @override
+  String hotelBeforeSelfSummary(int nights) {
+    return '전 $nights박은 직접 해결 · 숙박비 없음';
+  }
+
+  @override
+  String rosterHotelBeforeSelf(int n) {
+    return '전 $n박 직접';
+  }
+
+  @override
+  String get hotelAfterSelf => '수양회 이후 숙소는 에어비앤비 등으로 제가 직접 구하겠습니다';
 
   @override
   String hotelAfterSelfSummary(int nights) {

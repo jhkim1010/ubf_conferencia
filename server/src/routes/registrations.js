@@ -45,7 +45,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     feeTier, discountRequested, discountOptionKey, discountReason,
     studyLanguage, studyLanguages,
     phone, hotelOptionKey, hotelNightsBefore, hotelNightsAfter,
-    hotelAfterSelf,
+    hotelBeforeSelf, hotelAfterSelf,
     needsPickup, pickupFrom,
   } = req.body;
 
@@ -134,7 +134,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     // 기존 등록 여부 확인 (수정인지 신규인지 구분)
     const [existing] = await sql`
       SELECT id, discount_option_key, discount_status, discount_amount, discount_note,
-             hotel_after_self
+             hotel_before_self, hotel_after_self
       FROM registrations
       WHERE program_id = ${req.params.programId} AND user_id = ${req.user.userId}
     `;
@@ -263,19 +263,23 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
             FROM companions WHERE registration_id = ${existing.id}`
       : [];
 
-    // 수양회 뒤 숙소를 스스로 해결하는가(074). 그 밤들에는 값을 안 매긴다.
-    // 안 보낸 저장(예전 앱·임시저장)은 저장된 값을 따른다 — 거기서 false 로
-    // 보면 스스로 해결한다고 한 사람에게 조용히 숙박비가 다시 붙는다.
-    const sentAfterSelf = Object.prototype.hasOwnProperty.call(
-      req.body, 'hotelAfterSelf',
-    );
-    const afterSelf = sentAfterSelf
+    // 수양회 앞·뒤 숙소를 스스로 해결하는가(074·075). 그 밤들에는 값을
+    // 안 매긴다. 안 보낸 저장(예전 앱·임시저장)은 저장된 값을 따른다 —
+    // 거기서 false 로 보면 스스로 해결한다고 한 사람에게 조용히 숙박비가
+    // 다시 붙는다.
+    const sent = (k) => Object.prototype.hasOwnProperty.call(req.body, k);
+    const beforeSelf = sent('hotelBeforeSelf')
+      ? hotelBeforeSelf === true
+      : existing?.hotel_before_self === true;
+    const afterSelf = sent('hotelAfterSelf')
       ? hotelAfterSelf === true
       : existing?.hotel_after_self === true;
-    // 앞 박수도 없이 뒤를 전부 스스로 해결하면 우리가 잡을 방이 없다.
-    // 등급이 남아 있으면 값은 0 인데 명단에는 등급이 찍혀, 담당자가 그
-    // 사람 방을 잡는다. 화면도 비우지만 화면만 믿을 수는 없다.
-    const hotelKey = afterSelf && stay.before === 0 ? null : hotel.key;
+    const billedNights = chargeableNights({ ...stay, beforeSelf, afterSelf });
+    // 남은 밤을 전부 스스로 해결하면 우리가 잡을 방이 없다. 등급이 남아
+    // 있으면 값은 0 인데 명단에는 등급이 찍혀, 담당자가 그 사람 방을
+    // 잡는다. 화면도 비우지만 화면만 믿을 수는 없다.
+    const hotelKey =
+      (beforeSelf || afterSelf) && billedNights === 0 ? null : hotel.key;
 
     const { total: computedTotal } = registrationTotal({
       tier,
@@ -284,7 +288,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
       optionsCost,
       hotelOptions: program.hotel_options,
       hotelKey,
-      hotelNights: chargeableNights({ ...stay, afterSelf }),
+      hotelNights: billedNights,
       hotelPeople: 1 + bedsNeeded(companions),
       approvedDiscount,
       companions,
@@ -303,7 +307,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         discount_option_label, discount_option_labels, discount_reason, discount_status,
         discount_amount, discount_note, study_language, study_languages,
         hotel_option_key, hotel_nights_before, hotel_nights_after,
-        hotel_after_self,
+        hotel_before_self, hotel_after_self,
         needs_pickup, pickup_from
       )
       VALUES (
@@ -337,6 +341,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         ${hotelKey},
         ${stay.before},
         ${stay.after},
+        ${beforeSelf},
         ${afterSelf},
         ${needsPickup !== false},
         ${pickupFrom?.toString().trim() || null}
@@ -384,7 +389,8 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         -- 박수가 옛것으로 남으면 숙박비가 조용히 틀린다.
         hotel_nights_before = EXCLUDED.hotel_nights_before,
         hotel_nights_after = EXCLUDED.hotel_nights_after,
-        -- afterSelf 가 이미 "안 보냈으면 저장된 값" 으로 정해져 있다(074).
+        -- 둘 다 이미 "안 보냈으면 저장된 값" 으로 정해져 있다(074·075).
+        hotel_before_self = EXCLUDED.hotel_before_self,
         hotel_after_self = EXCLUDED.hotel_after_self,
         -- 픽업은 이 화면 말고 "내 이동 정보" 에서도 끄고 켠다. 안 보낸
         -- 저장이 그 설정을 덮으면 안 된다.
@@ -427,7 +433,7 @@ router.post('/:programId/me/submit', requireAuth, async (req, res) => {
     const [me] = await sql`
       SELECT id, selected_options, real_name, country,
              hotel_option_key, hotel_nights_before, hotel_nights_after,
-             hotel_after_self
+             hotel_before_self, hotel_after_self
         FROM registrations
        WHERE program_id = ${req.params.programId} AND user_id = ${req.user.userId}
     `;
@@ -445,11 +451,12 @@ router.post('/:programId/me/submit', requireAuth, async (req, res) => {
     // 것인지 아직 안 정했다는 것인지 알 수 없고, 호텔에 몇 방을 잡아야
     // 하는지도 셀 수 없다. 화면에서도 막지만 화면만 믿을 수는 없다.
     //
-    // 뒤 숙소를 스스로 해결한다고 한 밤은 셈에서 뺀다(074) — 그 밤에는
-    // 우리가 잡을 방이 없다. 앞 박수가 남아 있으면 그만큼은 골라야 한다.
+    // 스스로 해결한다고 한 밤은 셈에서 뺀다(074·075) — 그 밤에는 우리가
+    // 잡을 방이 없다. 남은 쪽 박수가 있으면 그만큼은 골라야 한다.
     const nights = chargeableNights({
       before: me.hotel_nights_before,
       after: me.hotel_nights_after,
+      beforeSelf: me.hotel_before_self,
       afterSelf: me.hotel_after_self,
     });
     if (nights > 0) {

@@ -1226,14 +1226,15 @@ router.get('/:id/registrations', requireAuth, requireProgramAdmin,
         -- 수양회 전후 숙박(028). 담당자가 호텔에 방을 잡으려면 등급과 박수를
         -- 함께 봐야 한다.
         r.hotel_option_key, r.hotel_nights_before, r.hotel_nights_after,
-        -- 뒤 숙소를 스스로 해결하는가(074). 담당자는 그 사람 방을 안 잡는다.
-        r.hotel_after_self,
+        -- 앞·뒤 숙소를 스스로 해결하는가(074·075). 그쪽은 담당자가 방을 안 잡는다.
+        r.hotel_before_self, r.hotel_after_self,
         -- 숙박비는 **참가비와 따로** 본다(060). 합치면 "참가비가 왜 이렇게
         -- 비싸냐" 는 물음에 담당자가 답할 수 없다.
         (
           SELECT COALESCE(
-            -- 스스로 해결하는 뒤 박수는 값에서 뺀다(074). chargeableNights 와 같은 규칙.
-            (COALESCE(r.hotel_nights_before,0)
+            -- 스스로 해결하는 쪽 박수는 값에서 뺀다(074·075). chargeableNights 와 같은 규칙.
+            (CASE WHEN r.hotel_before_self THEN 0
+                  ELSE COALESCE(r.hotel_nights_before,0) END
               + CASE WHEN r.hotel_after_self THEN 0
                      ELSE COALESCE(r.hotel_nights_after,0) END)
             * NULLIF((o->>'pricePerNight')::numeric, 0), 0)

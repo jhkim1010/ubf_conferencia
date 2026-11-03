@@ -98,15 +98,21 @@ export function hotelNights({
   };
 }
 
-/// 숙박비를 매길 밤 수(074).
+/// 숙박비를 매길 밤 수(074·075).
 ///
-/// 수양회 뒤 숙소를 스스로 해결하는 사람(afterSelf)은 **뒤 박수를 빼고**
-/// 센다. 그 밤들에는 우리 돈이 들지 않는다. 박수 자체는 지우지 않는다 —
-/// 그만큼 더 머문다는 사실은 공항 배웅을 잡을 때 필요하다.
-export function chargeableNights({ before, after, afterSelf = false }) {
+/// 수양회 앞·뒤 숙소를 에어비앤비 등으로 스스로 해결하는 사람은 **그쪽
+/// 박수를 빼고** 센다(beforeSelf·afterSelf). 그 밤들에는 우리 돈이 들지
+/// 않는다. 박수 자체는 지우지 않는다 — 그만큼 더 머문다는 사실은 공항
+/// 마중·배웅을 잡을 때 필요하다.
+export function chargeableNights({
+  before,
+  after,
+  beforeSelf = false,
+  afterSelf = false,
+}) {
   const b = Math.max(0, Math.trunc(Number(before) || 0));
   const a = Math.max(0, Math.trunc(Number(after) || 0));
-  return b + (afterSelf === true ? 0 : a);
+  return (beforeSelf === true ? 0 : b) + (afterSelf === true ? 0 : a);
 }
 
 /// 숙박비. **참가비와 더하지 않는다** — 따로 보여 준다.

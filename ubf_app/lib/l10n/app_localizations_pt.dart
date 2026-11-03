@@ -2141,12 +2141,27 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não está incluído na taxa do retiro. O pagamento é feito à parte.';
 
   @override
-  String get hotelAfterSelf => 'Depois do retiro, eu mesmo cuido da hospedagem';
+  String get hotelBeforeSelf =>
+      'Antes do retiro, eu mesmo cuido da hospedagem (Airbnb etc.)';
 
   @override
-  String hotelAfterSelfNote(int nights) {
-    return 'Não cobramos hospedagem por essas $nights noite(s) depois.';
+  String hotelSelfNote(int nights) {
+    return 'Não cobramos hospedagem por essas $nights noite(s).';
   }
+
+  @override
+  String hotelBeforeSelfSummary(int nights) {
+    return '$nights noite(s) antes por conta própria · sem cobrança de hospedagem';
+  }
+
+  @override
+  String rosterHotelBeforeSelf(int n) {
+    return '$n antes: por conta própria';
+  }
+
+  @override
+  String get hotelAfterSelf =>
+      'Depois do retiro, eu mesmo cuido da hospedagem (Airbnb etc.)';
 
   @override
   String hotelAfterSelfSummary(int nights) {

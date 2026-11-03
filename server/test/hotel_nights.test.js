@@ -220,8 +220,25 @@ test('스스로 해결이 아니면 앞뒤를 다 센다', () => {
   assert.equal(chargeableNights({ before: 1, after: 3, afterSelf: false }), 4);
 });
 
-test('앞 박수는 스스로 해결과 상관없이 센다', () => {
+test('뒤만 스스로 해결하면 앞 박수는 그대로 센다', () => {
   assert.equal(chargeableNights({ before: 2, after: 0, afterSelf: true }), 2);
+});
+
+// 수양회 앞 숙소도 스스로 해결할 수 있다 (075)
+
+test('앞 숙소를 스스로 해결하면 앞 박수에는 값을 안 매긴다', () => {
+  assert.equal(chargeableNights({ before: 2, after: 3, beforeSelf: true }), 3);
+});
+
+test('앞뒤를 다 스스로 해결하면 매길 밤이 없다', () => {
+  assert.equal(
+    chargeableNights({ before: 2, after: 3, beforeSelf: true, afterSelf: true }),
+    0,
+  );
+});
+
+test('beforeSelf 도 true 가 아니면 스스로 해결로 보지 않는다', () => {
+  assert.equal(chargeableNights({ before: 2, after: 0, beforeSelf: 1 }), 2);
 });
 
 test('true 가 아닌 값은 스스로 해결로 보지 않는다 — 덜 받는 쪽으로 새지 않게', () => {

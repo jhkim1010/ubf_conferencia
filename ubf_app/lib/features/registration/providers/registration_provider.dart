@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/utils/api_client.dart';
+import '../../../core/utils/hotel_nights.dart';
 
 // 내 등록 정보 조회
 final registrationProvider =
@@ -71,8 +72,10 @@ class RegistrationFormState {
   final int hotelNightsBefore;
   final int hotelNightsAfter;
 
-  /// 수양회 뒤 숙소를 스스로 해결한다(074). 그러면 뒤 박수에는 숙박비를
-  /// 안 매긴다. 박수는 그대로 둔다 — 공항 배웅을 잡을 때 필요하다.
+  /// 수양회 앞·뒤 숙소를 에어비앤비 등으로 스스로 해결한다(074·075).
+  /// 그러면 그쪽 박수에는 숙박비를 안 매긴다. 박수는 그대로 둔다 — 공항
+  /// 마중·배웅을 잡을 때 필요하다.
+  final bool hotelBeforeSelf;
   final bool hotelAfterSelf;
 
   const RegistrationFormState({
@@ -104,6 +107,7 @@ class RegistrationFormState {
     this.hotelOptionKey,
     this.hotelNightsBefore = 0,
     this.hotelNightsAfter = 0,
+    this.hotelBeforeSelf = false,
     this.hotelAfterSelf = false,
   });
 
@@ -139,6 +143,7 @@ class RegistrationFormState {
     String? hotelOptionKey,
     int? hotelNightsBefore,
     int? hotelNightsAfter,
+    bool? hotelBeforeSelf,
     bool? hotelAfterSelf,
     bool clearHotel = false,
     // 등급만 비운다(074). clearHotel 은 박수까지 지우므로 쓸 수 없다.
@@ -194,6 +199,9 @@ class RegistrationFormState {
       hotelNightsAfter: clearHotel
           ? 0
           : (hotelNightsAfter ?? this.hotelNightsAfter),
+      hotelBeforeSelf: clearHotel
+          ? false
+          : (hotelBeforeSelf ?? this.hotelBeforeSelf),
       hotelAfterSelf: clearHotel
           ? false
           : (hotelAfterSelf ?? this.hotelAfterSelf),
@@ -229,6 +237,7 @@ class RegistrationFormState {
     'hotelOptionKey': hotelOptionKey,
     'hotelNightsBefore': hotelNightsBefore,
     'hotelNightsAfter': hotelNightsAfter,
+    'hotelBeforeSelf': hotelBeforeSelf,
     'hotelAfterSelf': hotelAfterSelf,
   };
 
@@ -262,6 +271,7 @@ class RegistrationFormState {
         hotelOptionKey: json['hotelOptionKey'] as String?,
         hotelNightsBefore: json['hotelNightsBefore'] as int? ?? 0,
         hotelNightsAfter: json['hotelNightsAfter'] as int? ?? 0,
+        hotelBeforeSelf: json['hotelBeforeSelf'] as bool? ?? false,
         hotelAfterSelf: json['hotelAfterSelf'] as bool? ?? false,
       );
 }
@@ -431,17 +441,30 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
     state.copyWith(hotelNightsBefore: before, hotelNightsAfter: after),
   );
 
-  /// 수양회 뒤 숙소를 스스로 해결하는지(074).
-  ///
-  /// 앞 박수가 남아 있으면 등급은 그대로 둔다 — 그 방은 여전히 필요하다.
-  /// 앞 박수가 없으면 등급을 비운다. 남겨 두면 값은 0 인데 명단에는 등급이
+  /// 수양회 앞·뒤 숙소를 스스로 해결하는지(074·075).
+  void setHotelBeforeSelf(bool v) => _setSelf(before: v);
+  void setHotelAfterSelf(bool v) => _setSelf(after: v);
+
+  /// 남은 쪽 박수가 있으면 등급은 그대로 둔다 — 그 방은 여전히 필요하다.
+  /// 남은 밤이 없으면 등급을 비운다. 남겨 두면 값은 0 인데 명단에는 등급이
   /// 찍혀, 담당자가 그 사람 방을 잡는다.
-  void setHotelAfterSelf(bool v) => _update(
-    state.copyWith(
-      hotelAfterSelf: v,
-      clearHotelKey: v && state.hotelNightsBefore == 0,
-    ),
-  );
+  void _setSelf({bool? before, bool? after}) {
+    final b = before ?? state.hotelBeforeSelf;
+    final a = after ?? state.hotelAfterSelf;
+    final left = chargeableHotelNights(
+      before: state.hotelNightsBefore,
+      after: state.hotelNightsAfter,
+      beforeSelf: b,
+      afterSelf: a,
+    );
+    _update(
+      state.copyWith(
+        hotelBeforeSelf: b,
+        hotelAfterSelf: a,
+        clearHotelKey: (b || a) && left == 0,
+      ),
+    );
+  }
 
   // ─── 서버 저장 (임시저장 버튼) ─────────────────────────────
 
@@ -482,6 +505,7 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       'hotelOptionKey': state.hotelOptionKey,
       'hotelNightsBefore': state.hotelNightsBefore,
       'hotelNightsAfter': state.hotelNightsAfter,
+      'hotelBeforeSelf': state.hotelBeforeSelf,
       'hotelAfterSelf': state.hotelAfterSelf,
     });
   }
@@ -530,6 +554,7 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       hotelOptionKey: data['hotel_option_key'],
       hotelNightsBefore: data['hotel_nights_before'] as int? ?? 0,
       hotelNightsAfter: data['hotel_nights_after'] as int? ?? 0,
+      hotelBeforeSelf: data['hotel_before_self'] as bool? ?? false,
       hotelAfterSelf: data['hotel_after_self'] as bool? ?? false,
     );
     state = loaded;

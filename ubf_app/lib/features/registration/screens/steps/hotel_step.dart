@@ -106,11 +106,12 @@ class _HotelStepState extends ConsumerState<HotelStep> {
     // 대부분 "숙소 필요 없음" 인 채로 넘어간다 — 아무것도 안 누르는 것이
     // 가장 쉬운 길이기 때문이다. 그래서 **가장 싼 방을 먼저 골라 둔다.**
     //
-    // 뒤 숙소를 스스로 해결하는 밤은 빼고 센다(074) — 그 밤에는 우리가
-    // 잡을 방이 없다. 앞 박수도 없으면 방을 고를 것도 없다.
+    // 스스로 해결하는 쪽 밤은 빼고 센다(074·075) — 그 밤에는 우리가
+    // 잡을 방이 없다. 남은 밤이 없으면 방을 고를 것도 없다.
     final chargeable = chargeableHotelNights(
       before: form.hotelNightsBefore,
       after: form.hotelNightsAfter,
+      beforeSelf: form.hotelBeforeSelf,
       afterSelf: form.hotelAfterSelf,
     );
     final needsRoom = mustPickHotel(
@@ -218,6 +219,14 @@ class _HotelStepState extends ConsumerState<HotelStep> {
             value: form.hotelNightsBefore,
             onChanged: (v) => notifier.setHotelNights(before: v),
           ),
+          // 수양회 전에 일찍 와서 숙소를 에어비앤비 등으로 직접 잡는 분(075).
+          if (form.hotelNightsBefore > 0)
+            _SelfArrangeTile(
+              label: l10n.hotelBeforeSelf,
+              note: l10n.hotelSelfNote(form.hotelNightsBefore),
+              value: form.hotelBeforeSelf,
+              onChanged: notifier.setHotelBeforeSelf,
+            ),
           const SizedBox(height: 4),
           _NightsRow(
             label: l10n.hotelNightsAfter,
@@ -225,21 +234,12 @@ class _HotelStepState extends ConsumerState<HotelStep> {
             onChanged: (v) => notifier.setHotelNights(after: v),
           ),
           // 수양회 뒤에 더 머물되 숙소는 본인이 직접 구하는 분(074).
-          // 그 밤들에는 우리 돈이 들지 않으므로 숙박비를 받지 않는다.
-          // 뒤 박수가 있을 때만 묻는다 — 없으면 해결할 것도 없다.
           if (form.hotelNightsAfter > 0)
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
+            _SelfArrangeTile(
+              label: l10n.hotelAfterSelf,
+              note: l10n.hotelSelfNote(form.hotelNightsAfter),
               value: form.hotelAfterSelf,
-              onChanged: (v) => notifier.setHotelAfterSelf(v ?? false),
-              title: Text(l10n.hotelAfterSelf),
-              subtitle: Text(
-                l10n.hotelAfterSelfNote(form.hotelNightsAfter),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
-              ),
+              onChanged: notifier.setHotelAfterSelf,
             ),
           if (differs)
             Align(
@@ -414,6 +414,41 @@ class _ComputedCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+// 그쪽 숙소를 본인이 직접 해결한다는 체크(074·075).
+//
+// 그 밤들에는 우리 돈이 들지 않으므로 숙박비를 받지 않는다. 박수가 있을
+// 때만 보인다 — 묵을 밤이 없으면 해결할 것도 없다.
+class _SelfArrangeTile extends StatelessWidget {
+  final String label;
+  final String note;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _SelfArrangeTile({
+    required this.label,
+    required this.note,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CheckboxListTile(
+      contentPadding: EdgeInsets.zero,
+      controlAffinity: ListTileControlAffinity.leading,
+      value: value,
+      onChanged: (v) => onChanged(v ?? false),
+      title: Text(label),
+      subtitle: Text(
+        note,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
       ),
     );
   }

@@ -1341,15 +1341,32 @@
   },
   "hotelEstimate": "Estimated hotel cost",
   "hotelNotInFee": "Not included in your conference fee. You settle this separately.",
-  "hotelAfterSelf": "I'll find my own place to stay after the conference",
-  "hotelAfterSelfNote": "No lodging fee is charged for those {nights} night(s) after.",
-  "@hotelAfterSelfNote": {
+  "hotelBeforeSelf": "I'll arrange my own stay before the conference (Airbnb, etc.)",
+  "hotelSelfNote": "No lodging fee is charged for those {nights} night(s).",
+  "@hotelSelfNote": {
     "placeholders": {
       "nights": {
         "type": "int"
       }
     }
   },
+  "hotelBeforeSelfSummary": "{nights} night(s) before on your own · no lodging fee",
+  "@hotelBeforeSelfSummary": {
+    "placeholders": {
+      "nights": {
+        "type": "int"
+      }
+    }
+  },
+  "rosterHotelBeforeSelf": "{n} before: own lodging",
+  "@rosterHotelBeforeSelf": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "hotelAfterSelf": "I'll arrange my own stay after the conference (Airbnb, etc.)",
   "hotelAfterSelfSummary": "{nights} night(s) after on your own · no lodging fee",
   "@hotelAfterSelfSummary": {
     "placeholders": {

@@ -49,6 +49,7 @@ class CostBar extends ConsumerWidget {
       hotelOptionKey: form.hotelOptionKey,
       hotelNightsBefore: form.hotelNightsBefore,
       hotelNightsAfter: form.hotelNightsAfter,
+      hotelBeforeSelf: form.hotelBeforeSelf,
       hotelAfterSelf: form.hotelAfterSelf,
       savedDiscountStatus: saved?['discount_status'] as String?,
       savedDiscountAmount: saved?['discount_amount'],

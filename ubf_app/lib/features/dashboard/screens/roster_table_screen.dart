@@ -348,19 +348,23 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     Map<String, dynamic> r,
     Currency currency,
   ) {
+    final before = (r['hotel_nights_before'] as num?)?.toInt() ?? 0;
     final after = (r['hotel_nights_after'] as num?)?.toInt() ?? 0;
-    // 뒤 숙소를 스스로 해결하는 밤(074)은 방을 잡을 밤에서 빼고, 따로
-    // 적는다. 빼기만 하면 그 사람이 더 머문다는 사실이 표에서 사라진다.
+    // 스스로 해결하는 밤(074·075)은 방을 잡을 밤에서 빼고, 따로 적는다.
+    // 빼기만 하면 그 사람이 더 머문다는 사실이 표에서 사라진다.
+    final selfBefore = r['hotel_before_self'] == true && before > 0;
     final selfAfter = r['hotel_after_self'] == true && after > 0;
     final nights = chargeableHotelNights(
-      before: (r['hotel_nights_before'] as num?)?.toInt() ?? 0,
+      before: before,
       after: after,
+      beforeSelf: selfBefore,
       afterSelf: selfAfter,
     );
-    if (nights <= 0 && !selfAfter) return '';
+    if (nights <= 0 && !selfBefore && !selfAfter) return '';
     final cost = Money.parse(r['hotel_cost']) ?? 0;
     return [
       if (nights > 0) l10n.rosterHotelNights(nights),
+      if (selfBefore) l10n.rosterHotelBeforeSelf(before),
       if (selfAfter) l10n.rosterHotelAfterSelf(after),
       // 호텔 등급을 아직 안 고른 사람은 박수만 나온다. 값을 모르는 것을
       // 0 원으로 적으면 낼 것이 없다는 뜻이 되어 버린다.

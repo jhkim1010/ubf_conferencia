@@ -134,6 +134,7 @@ class SummaryScreen extends ConsumerWidget {
             hotelOptionKey: formState.hotelOptionKey,
             hotelNightsBefore: formState.hotelNightsBefore,
             hotelNightsAfter: formState.hotelNightsAfter,
+            hotelBeforeSelf: formState.hotelBeforeSelf,
             hotelAfterSelf: formState.hotelAfterSelf,
             savedDiscountStatus: saved?['discount_status'] as String?,
             savedDiscountAmount: saved?['discount_amount'],
@@ -145,7 +146,9 @@ class SummaryScreen extends ConsumerWidget {
             ),
           );
           final hotelEstimate = cost.hotelEstimate;
-          // 뒤 숙소를 스스로 해결한다고 한 밤이 실제로 있는가(074).
+          // 스스로 해결한다고 한 밤이 실제로 있는가(074·075).
+          final selfBefore =
+              formState.hotelBeforeSelf && formState.hotelNightsBefore > 0;
           final selfAfter =
               formState.hotelAfterSelf && formState.hotelNightsAfter > 0;
 
@@ -334,10 +337,10 @@ class SummaryScreen extends ConsumerWidget {
               // 그 금액을 입금해야 하는 줄 알고, 호텔 값을 두 번 내거나
               // 아예 안 내게 된다.
               //
-              // 뒤 숙소를 스스로 해결하는 사람(074)에게도 보인다. 등급을 안
-              // 골랐어도 "뒤 N박은 직접 해결 · 숙박비 없음" 을 확인시켜야 한다 —
+              // 숙소를 스스로 해결하는 사람(074·075)에게도 보인다. 등급을 안
+              // 골랐어도 "N박은 직접 해결 · 숙박비 없음" 을 확인시켜야 한다 —
               // 안 보이면 그 선택이 저장됐는지 알 수 없다.
-              if (hotelPicked != null || selfAfter) ...[
+              if (hotelPicked != null || selfBefore || selfAfter) ...[
                 const SizedBox(height: 12),
                 _SectionCard(
                   title: l10n.summarySectionHotel,
@@ -361,6 +364,13 @@ class SummaryScreen extends ConsumerWidget {
                         formState.hotelNightsAfter,
                       ),
                     ),
+                    if (selfBefore)
+                      _InfoRow(
+                        '',
+                        l10n.hotelBeforeSelfSummary(
+                          formState.hotelNightsBefore,
+                        ),
+                      ),
                     if (selfAfter)
                       _InfoRow(
                         '',

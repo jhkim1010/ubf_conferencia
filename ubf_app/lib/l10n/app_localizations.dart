@@ -3948,17 +3948,35 @@ abstract class AppLocalizations {
   /// **'Not included in your conference fee. You settle this separately.'**
   String get hotelNotInFee;
 
+  /// No description provided for @hotelBeforeSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ll arrange my own stay before the conference (Airbnb, etc.)'**
+  String get hotelBeforeSelf;
+
+  /// No description provided for @hotelSelfNote.
+  ///
+  /// In en, this message translates to:
+  /// **'No lodging fee is charged for those {nights} night(s).'**
+  String hotelSelfNote(int nights);
+
+  /// No description provided for @hotelBeforeSelfSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{nights} night(s) before on your own · no lodging fee'**
+  String hotelBeforeSelfSummary(int nights);
+
+  /// No description provided for @rosterHotelBeforeSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} before: own lodging'**
+  String rosterHotelBeforeSelf(int n);
+
   /// No description provided for @hotelAfterSelf.
   ///
   /// In en, this message translates to:
-  /// **'I\'ll find my own place to stay after the conference'**
+  /// **'I\'ll arrange my own stay after the conference (Airbnb, etc.)'**
   String get hotelAfterSelf;
-
-  /// No description provided for @hotelAfterSelfNote.
-  ///
-  /// In en, this message translates to:
-  /// **'No lodging fee is charged for those {nights} night(s) after.'**
-  String hotelAfterSelfNote(int nights);
 
   /// No description provided for @hotelAfterSelfSummary.
   ///

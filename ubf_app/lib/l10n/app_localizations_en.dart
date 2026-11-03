@@ -2128,13 +2128,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not included in your conference fee. You settle this separately.';
 
   @override
-  String get hotelAfterSelf =>
-      'I\'ll find my own place to stay after the conference';
+  String get hotelBeforeSelf =>
+      'I\'ll arrange my own stay before the conference (Airbnb, etc.)';
 
   @override
-  String hotelAfterSelfNote(int nights) {
-    return 'No lodging fee is charged for those $nights night(s) after.';
+  String hotelSelfNote(int nights) {
+    return 'No lodging fee is charged for those $nights night(s).';
   }
+
+  @override
+  String hotelBeforeSelfSummary(int nights) {
+    return '$nights night(s) before on your own · no lodging fee';
+  }
+
+  @override
+  String rosterHotelBeforeSelf(int n) {
+    return '$n before: own lodging';
+  }
+
+  @override
+  String get hotelAfterSelf =>
+      'I\'ll arrange my own stay after the conference (Airbnb, etc.)';
 
   @override
   String hotelAfterSelfSummary(int nights) {
