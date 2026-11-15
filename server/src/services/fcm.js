@@ -111,7 +111,7 @@ export async function notifyAudience(sql, programId, audience, title, body, data
         SELECT r.fcm_token, u.ui_language FROM registrations r
         LEFT JOIN users u ON u.id = r.user_id
         WHERE r.program_id = ${programId} AND r.fcm_token IS NOT NULL
-          AND counts_as_participant(r.real_name, r.submitted)
+          AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
       `;
     } else if (kind === 'room') {
       rows = await sql`
@@ -136,7 +136,7 @@ export async function notifyAudience(sql, programId, audience, title, body, data
         SELECT r.fcm_token, u.ui_language FROM registrations r
         LEFT JOIN users u ON u.id = r.user_id
         WHERE r.program_id = ${programId} AND r.submitted = false
-          AND r.fcm_token IS NOT NULL AND counts_as_participant(r.real_name, r.submitted)
+          AND r.fcm_token IS NOT NULL AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
       `;
     } else if (kind === 'unpaid') {
       rows = await sql`
@@ -145,7 +145,7 @@ export async function notifyAudience(sql, programId, audience, title, body, data
         LEFT JOIN payments pay ON pay.registration_id = r.id
         WHERE r.program_id = ${programId}
           AND COALESCE(pay.status, 'none') <> 'confirmed'
-          AND r.fcm_token IS NOT NULL AND counts_as_participant(r.real_name, r.submitted)
+          AND r.fcm_token IS NOT NULL AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
       `;
     } else if (kind === 'service') {
       // 그 역할을 **맡은** 사람. 거절·반려는 뺀다 — 안 하겠다고 한 사람에게
@@ -157,7 +157,7 @@ export async function notifyAudience(sql, programId, audience, title, body, data
         WHERE r.program_id = ${programId}
           AND ss.service_key = ${id}
           AND ss.status NOT IN ('declined', 'rejected')
-          AND r.fcm_token IS NOT NULL AND counts_as_participant(r.real_name, r.submitted)
+          AND r.fcm_token IS NOT NULL AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
       `;
     } else {
       console.error('알 수 없는 알림 대상:', kind);
@@ -194,6 +194,7 @@ export async function notifyProgramParticipants(sql, programId, title, body, dat
       SELECT fcm_token FROM registrations
       WHERE program_id = ${programId}
         AND fcm_token IS NOT NULL
+        AND cancelled_at IS NULL
     `;
     const tokens = rows.map(r => r.fcm_token);
     await sendPushNotification(tokens, title, body, data);

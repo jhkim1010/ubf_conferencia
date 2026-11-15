@@ -247,7 +247,7 @@ export async function sendDailySummary() {
         COUNT(pay.id) FILTER (WHERE pay.status = 'pending')     AS pending_payments,
         COUNT(pay.id) FILTER (WHERE pay.status = 'confirmed')   AS confirmed_payments
       FROM programs p
-      LEFT JOIN registrations r   ON r.program_id = p.id
+      LEFT JOIN registrations r   ON r.program_id = p.id AND r.cancelled_at IS NULL
       LEFT JOIN payments pay      ON pay.registration_id = r.id
       WHERE p.is_active = true
         AND p.telegram_chat_id IS NOT NULL

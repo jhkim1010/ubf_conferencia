@@ -66,7 +66,7 @@ router.get('/:programId', requireAuth, async (req, res) => {
         COUNT(*) FILTER (WHERE gender = 'F') AS female_regs,
         COUNT(*)                             AS total_regs
       FROM registrations
-      WHERE program_id = ${programId} AND gender IN ('M', 'F')
+      WHERE program_id = ${programId} AND gender IN ('M', 'F') AND cancelled_at IS NULL
     `;
 
     const summary = {

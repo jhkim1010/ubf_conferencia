@@ -10,6 +10,7 @@ import '../../program/providers/program_provider.dart';
 import '../providers/registration_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/utils/api_client.dart';
 import '../../../core/constants/world_countries.dart';
 
 // 등록 요약 화면 - 모든 정보 확인 + 총 비용 표시
@@ -123,6 +124,7 @@ class SummaryScreen extends ConsumerWidget {
           // 셈은 한 곳에서 한다(064). 등록 내내 따라다니는 비용 막대와 이
           // 화면이 다른 숫자를 보여주면 참가자는 어느 쪽을 믿을지 알 수 없다.
           final saved = ref.watch(registrationProvider(programId)).valueOrNull;
+          final cancelled = saved?['cancelled_at'] != null;
           final cost = RegistrationCost.of(
             program: program,
             // 어린이 참가비(073). 비용 막대와 같은 목록을 본다.
@@ -204,6 +206,20 @@ class SummaryScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
+              // 참석을 취소한 사람(076). 제출 버튼이 곧 "다시 간다" 이므로
+              // 그 사실만 알리면 된다.
+              if (cancelled)
+                Card(
+                  color: Colors.orange.shade50,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.event_busy,
+                      color: Colors.deepOrange,
+                    ),
+                    title: Text(l10n.cancelledBanner),
+                  ),
+                ),
               // 프로그램 정보
               _SectionCard(
                 title: l10n.summarySectionProgram,
@@ -581,12 +597,80 @@ class SummaryScreen extends ConsumerWidget {
                 onPressed: () => context.go('/registration/$programId'),
                 child: Text(l10n.summaryEditBtn),
               ),
+              // 못 가게 된 사람이 담당자를 찾지 않아도 되게 한다(076).
+              // 서버에 등록이 있을 때만 — 없으면 취소할 것도 없다.
+              if (saved != null && !cancelled) ...[
+                const SizedBox(height: 28),
+                TextButton.icon(
+                  icon: const Icon(Icons.event_busy),
+                  label: Text(l10n.cancelAttend),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  onPressed: () => _cancel(context, ref),
+                ),
+              ],
               const SizedBox(height: 20),
             ],
           );
         },
       ),
     );
+  }
+
+  Future<void> _cancel(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final reasonCtl = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.cancelAttend),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.cancelAttendConfirm),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonCtl,
+              maxLength: 500,
+              decoration: InputDecoration(labelText: l10n.cancelAttendReason),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancelAttendKeep),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.cancelAttend),
+          ),
+        ],
+      ),
+    );
+    final reason = reasonCtl.text.trim();
+    reasonCtl.dispose();
+    if (ok != true || !context.mounted) return;
+
+    try {
+      await ApiClient.cancelMyRegistration(
+        programId,
+        reason: reason.isEmpty ? null : reason,
+      );
+      ref.invalidate(registrationProvider(programId));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.cancelAttendDone)));
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   Future<void> _submit(
@@ -626,6 +710,8 @@ class SummaryScreen extends ConsumerWidget {
       await ref
           .read(registrationFormProvider(programId).notifier)
           .submit(options);
+      // 취소했던 사람이면 제출로 취소가 풀렸다(076). 안내 띠를 걷는다.
+      ref.invalidate(registrationProvider(programId));
 
       if (!context.mounted) return;
       Navigator.pop(context); // 로딩 닫기

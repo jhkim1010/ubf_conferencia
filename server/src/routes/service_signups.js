@@ -251,7 +251,7 @@ async function loadSignups(programId) {
     FROM service_signups ss
     JOIN registrations r ON r.id = ss.registration_id
     WHERE r.program_id = ${programId}
-      AND counts_as_participant(r.real_name, r.submitted)
+      AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
     ORDER BY r.country NULLS LAST, r.real_name
   `;
 }
@@ -311,7 +311,7 @@ router.get(
                r.volunteer_resources AS resources, r.volunteer_note AS note
         FROM registrations r
         WHERE r.program_id = ${programId}
-          AND counts_as_participant(r.real_name, r.submitted)
+          AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
           AND COALESCE(array_length(r.volunteer_resources, 1), 0) > 0
         ORDER BY r.real_name
       `;
@@ -418,7 +418,7 @@ router.post(
         FROM registrations r
         LEFT JOIN users u ON u.id = r.user_id
         WHERE r.id = ${registrationId} AND r.program_id = ${programId}
-          AND counts_as_participant(r.real_name, r.submitted)
+          AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
       `;
       if (!reg) {
         return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
@@ -835,7 +835,7 @@ router.post('/:programId/apply', requireAuth, async (req, res) => {
     const [me] = await sql`
       SELECT id, real_name FROM registrations
       WHERE program_id = ${programId} AND user_id = ${req.user.userId}
-        AND counts_as_participant(real_name, submitted)
+        AND counts_as_participant(real_name, submitted, cancelled_at)
     `;
     if (!me) {
       return res.status(404).json({ error: '먼저 등록해 주십시오' });

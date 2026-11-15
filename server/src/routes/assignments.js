@@ -29,7 +29,7 @@ async function loadPeople(programId) {
                    AND c.occupies_bed = true) AS beds
       FROM registrations r
      WHERE r.program_id = ${programId}
-       AND counts_as_participant(r.real_name, r.submitted)
+       AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
   `;
 }
 async function loadAcceptedEdges(programId, kind) {
@@ -115,7 +115,7 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, requireScope('
       SELECT id AS "registrationId",
              display_name(bible_name, real_name) AS name, gender
       FROM registrations
-      WHERE program_id = ${programId} AND counts_as_participant(real_name, submitted)
+      WHERE program_id = ${programId} AND counts_as_participant(real_name, submitted, cancelled_at)
         AND id NOT IN (SELECT registration_id FROM room_assignments WHERE registration_id IS NOT NULL)
       ORDER BY real_name
     `;
@@ -159,7 +159,7 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, requireScope(
              display_name(bible_name, real_name) AS name, gender, age,
              study_languages AS "studyLanguages"
       FROM registrations
-      WHERE program_id = ${programId} AND counts_as_participant(real_name, submitted)
+      WHERE program_id = ${programId} AND counts_as_participant(real_name, submitted, cancelled_at)
         AND id NOT IN (SELECT registration_id FROM group_members)
       ORDER BY real_name
     `;

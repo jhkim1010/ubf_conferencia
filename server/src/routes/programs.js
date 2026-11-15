@@ -57,6 +57,7 @@ import {
   SCOPES,
 } from '../middleware/auth.js';
 import { isValidBotToken } from '../services/telegram.js';
+import { cancelRegistration, restoreRegistration } from '../services/registration_cancel.js';
 
 const router = Router();
 
@@ -353,6 +354,7 @@ router.get('/:id', requireAuth, async (req, res) => {
               SELECT COUNT(*) FROM registrations r
               WHERE r.program_id = p.id
                 AND r.submitted = true
+                AND r.cancelled_at IS NULL
                 AND po.id = ANY(r.selected_options)
             )
           ) ORDER BY po.name
@@ -1052,7 +1054,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
       -- 이름을 적기 전의 행은 세지 않는다(038). 앱을 열면 등록 행이 먼저
       -- 생기므로, 열어만 보고 만 사람이 참가자 수에 섞인다.
       LEFT JOIN registrations r
-        ON r.program_id = p.id AND counts_as_participant(r.real_name, r.submitted)
+        ON r.program_id = p.id AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
       LEFT JOIN payments pay ON pay.registration_id = r.id
       WHERE p.id = ${req.params.id}
       GROUP BY p.id, p.name, p.fee_payment, p.tour_payment
@@ -1074,7 +1076,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
       SELECT ss.service_key, ss.status
       FROM service_signups ss
       JOIN registrations r ON r.id = ss.registration_id
-      WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted)
+      WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
     `;
     const serviceRoles = sortRoles(
       rolesOf(progRow?.service_options).filter((x) => x.enabled !== false),
@@ -1103,7 +1105,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
                  AND ss.status NOT IN ('declined', 'rejected')
              ) AS assigned
       FROM registrations r
-      WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted)
+      WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
         AND COALESCE(array_length(r.volunteer_resources, 1), 0) > 0
       ORDER BY array_length(r.volunteer_resources, 1) DESC, r.real_name
       LIMIT ${LIMIT}
@@ -1113,7 +1115,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
       sql`
         SELECT display_name(r.bible_name, r.real_name) AS name, r.country, r.submitted
         FROM registrations r
-        WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted)
+        WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
         ORDER BY r.created_at DESC LIMIT ${LIMIT}
       `,
       // 투어는 사람이 아니라 투어별 줄을 보여 준다 — 담당자가 먼저 보는 것이
@@ -1124,7 +1126,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
         FROM program_options o
         LEFT JOIN registrations r
           ON r.program_id = ${id} AND o.id = ANY(r.selected_options)
-             AND counts_as_participant(r.real_name, r.submitted)
+             AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
         WHERE o.program_id = ${id} AND o.is_active
         GROUP BY o.id, o.name, o.capacity
         ORDER BY COUNT(r.id) DESC, o.name
@@ -1134,7 +1136,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
         SELECT display_name(r.bible_name, r.real_name) AS name, r.country, r.food_requirements AS detail,
                r.submitted
         FROM registrations r
-        WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted)
+        WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
           AND has_food_restriction(r.food_requirements)
         ORDER BY r.country NULLS LAST, r.real_name LIMIT ${LIMIT}
       `,
@@ -1143,7 +1145,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
                COALESCE(r.arrival_flight->>'flight_no', '') AS detail,
                r.submitted
         FROM registrations r
-        WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted)
+        WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
           AND flight_confirmed(r.arrival_flight)
         ORDER BY r.arrival_flight->>'scheduled_arrival' LIMIT ${LIMIT}
       `,
@@ -1155,7 +1157,7 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
                pay.amount::text AS detail
         FROM registrations r
         LEFT JOIN payments pay ON pay.registration_id = r.id
-        WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted)
+        WHERE r.program_id = ${id} AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
         ORDER BY (COALESCE(pay.status, 'none') = 'confirmed'), r.real_name
         LIMIT ${LIMIT}
       `,
@@ -1284,7 +1286,7 @@ router.get('/:id/registrations', requireAuth, requireProgramAdmin,
       -- 판정을 쓴다 — 한쪽만 거르면 "10명인데 9명만 보인다" 가 된다.
       -- 제출한 사람은 이름이 비어도 넣는다(055).
       WHERE r.program_id = ${req.params.id}
-        AND counts_as_participant(r.real_name, r.submitted)
+        AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
       ORDER BY r.created_at ASC
     `;
 
@@ -1369,6 +1371,95 @@ router.patch(
       res.json(row);
     } catch (err) {
       console.error('참가자 수정 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// ─── 참석 취소 (076) ─────────────────────────────────────────
+//
+// 담당자가 대신 취소하는 길. 전화나 메신저로 "못 갑니다" 라고만 알려 오는
+// 사람이 대부분이라, 본인 취소만으로는 명단이 정리되지 않는다.
+// 되살리는 길도 함께 둔다 — 잘못 누르거나 마음을 바꾸는 일이 흔하다.
+
+// GET /programs/:id/registrations/cancelled — 취소된 사람들
+//
+// 명단에서는 빠지지만 **사라지면 안 된다.** 이미 낸 돈을 돌려줄지 정해야
+// 하므로 입금을 함께 준다.
+router.get(
+  '/:id/registrations/cancelled',
+  requireAuth,
+  requireProgramAdmin,
+  requireScope('registration', 'ledger'),
+  async (req, res) => {
+    try {
+      const rows = await sql`
+        SELECT r.id, r.real_name, r.bible_name,
+               display_name(r.bible_name, r.real_name) AS name,
+               r.country, r.branch, r.submitted,
+               r.cancelled_at, r.cancel_reason,
+               (r.cancelled_by IS NOT DISTINCT FROM r.user_id) AS cancelled_by_self,
+               cu.name AS cancelled_by_name,
+               json_build_object('status', pay.status, 'amount', pay.amount) AS payment
+          FROM registrations r
+          LEFT JOIN payments pay ON pay.registration_id = r.id
+          LEFT JOIN users cu ON cu.id = r.cancelled_by
+         WHERE r.program_id = ${req.params.id} AND r.cancelled_at IS NOT NULL
+         ORDER BY r.cancelled_at DESC
+      `;
+      res.json(rows);
+    } catch (err) {
+      console.error('취소 명단 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// POST /programs/:id/registrations/:registrationId/cancel — 담당자가 취소
+router.post(
+  '/:id/registrations/:registrationId/cancel',
+  requireAuth,
+  requireProgramAdmin,
+  requireScope('registration'),
+  async (req, res) => {
+    const { id: programId, registrationId } = req.params;
+    try {
+      const [reg] = await sql`
+        SELECT id FROM registrations
+         WHERE id = ${registrationId} AND program_id = ${programId}
+      `;
+      if (!reg) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+      await cancelRegistration({
+        registrationId,
+        byUserId: req.user.userId,
+        reason: req.body?.reason,
+      });
+      res.json({ success: true });
+    } catch (err) {
+      console.error('참석 취소(담당자) 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// POST /programs/:id/registrations/:registrationId/restore — 취소 되돌리기
+router.post(
+  '/:id/registrations/:registrationId/restore',
+  requireAuth,
+  requireProgramAdmin,
+  requireScope('registration'),
+  async (req, res) => {
+    const { id: programId, registrationId } = req.params;
+    try {
+      const [reg] = await sql`
+        SELECT id FROM registrations
+         WHERE id = ${registrationId} AND program_id = ${programId}
+      `;
+      if (!reg) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+      await restoreRegistration(registrationId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error('취소 되돌리기 오류:', err);
       res.status(500).json({ error: '서버 오류' });
     }
   },
@@ -1531,7 +1622,7 @@ router.get('/:id/readiness', requireAuth, requireProgramAdmin,
             )
         )::int AS pickup_needed
       FROM registrations r
-      WHERE r.program_id = ${programId}
+      WHERE r.program_id = ${programId} AND r.cancelled_at IS NULL
     `;
 
     const [lodging] = await sql`
@@ -1548,7 +1639,7 @@ router.get('/:id/readiness', requireAuth, requireProgramAdmin,
         COUNT(*) FILTER (WHERE pay.status = 'pending')::int AS pending
       FROM payments pay
       JOIN registrations r ON r.id = pay.registration_id
-      WHERE r.program_id = ${programId}
+      WHERE r.program_id = ${programId} AND r.cancelled_at IS NULL
     `;
 
     // 직분 분포. registrations.church_role(등록 시점 스냅샷)을 센다 —
@@ -1557,7 +1648,7 @@ router.get('/:id/readiness', requireAuth, requireProgramAdmin,
     const roleRows = await sql`
       SELECT COALESCE(r.church_role, 'unspecified') AS role, COUNT(*)::int AS count
       FROM registrations r
-      WHERE r.program_id = ${programId}
+      WHERE r.program_id = ${programId} AND r.cancelled_at IS NULL
       GROUP BY 1
       ORDER BY 2 DESC
     `;
@@ -1576,7 +1667,7 @@ router.get('/:id/readiness', requireAuth, requireProgramAdmin,
         COUNT(DISTINCT r.country)::int AS countries
       FROM registrations r
       LEFT JOIN room_assignments ra ON ra.registration_id = r.id
-      WHERE r.program_id = ${programId}
+      WHERE r.program_id = ${programId} AND r.cancelled_at IS NULL
       GROUP BY 1
     `;
 
@@ -1611,6 +1702,7 @@ router.get('/:id/readiness', requireAuth, requireProgramAdmin,
       FROM registrations r
       LEFT JOIN room_assignments ra ON ra.registration_id = r.id
       WHERE r.program_id = ${programId} AND r.submitted = false
+        AND r.cancelled_at IS NULL
       ORDER BY r.updated_at ASC
       LIMIT 100
     `;
@@ -1768,7 +1860,7 @@ router.get('/:id/meals', requireAuth, requireProgramAdmin,
       SELECT r.real_name, r.bible_name, r.country, r.branch, r.gender, r.age,
              r.food_requirements, r.skips_breakfast, r.submitted
       FROM registrations r
-      WHERE r.program_id = ${programId}
+      WHERE r.program_id = ${programId} AND r.cancelled_at IS NULL
         AND has_food_restriction(r.food_requirements)
       ORDER BY r.country NULLS LAST, r.real_name
     `;
@@ -1785,11 +1877,11 @@ router.get('/:id/meals', requireAuth, requireProgramAdmin,
         COALESCE((
           SELECT COUNT(*) FROM companions c
             JOIN registrations r2 ON r2.id = c.registration_id
-           WHERE r2.program_id = ${programId}
+           WHERE r2.program_id = ${programId} AND r2.cancelled_at IS NULL
              AND c.registers_separately = false
         ), 0)::int AS companions
       FROM registrations r
-      WHERE r.program_id = ${programId}
+      WHERE r.program_id = ${programId} AND r.cancelled_at IS NULL
     `;
 
     res.json({
@@ -1848,7 +1940,7 @@ router.get('/:id/option-signups', requireAuth, async (req, res) => {
         JOIN registrations r
           ON r.program_id = ${programId} AND o.id = ANY(r.selected_options)
        WHERE o.program_id = ${programId} AND o.is_active = true
-         AND counts_as_participant(r.real_name, r.submitted)
+         AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
        ORDER BY r.country NULLS LAST, r.real_name
     `;
 
@@ -1912,7 +2004,7 @@ router.get(
         JOIN registrations r
           ON r.program_id = ${programId} AND o.id = ANY(r.selected_options)
         WHERE o.program_id = ${programId} AND o.is_active = true
-          AND counts_as_participant(r.real_name, r.submitted)
+          AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
         ORDER BY r.country NULLS LAST, r.real_name
       `;
 

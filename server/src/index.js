@@ -311,7 +311,7 @@ cron.schedule('* * * * *', async () => {
             FROM service_signups ss
             JOIN registrations r ON r.id = ss.registration_id
             WHERE r.program_id = ${schedule.program_id}
-              AND counts_as_participant(r.real_name, r.submitted)
+              AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
           `;
           const role = rolesOf(schedule.service_options).find(
             (x) => x.key === schedule.service_key,
@@ -381,6 +381,7 @@ cron.schedule('* * * * *', async () => {
         LEFT JOIN users u ON u.id = r.user_id
        WHERE r.departure_check_asked_at IS NULL
          AND r.submitted = true
+         AND r.cancelled_at IS NULL
          AND p.is_active = true
          AND COALESCE(
                r.departure_flight->>'scheduled_departure',

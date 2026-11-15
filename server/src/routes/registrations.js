@@ -7,6 +7,8 @@ import { bedsNeeded } from '../services/companion_role.js';
 import { resolveHotelChoice, normalizeNights } from '../services/hotel.js';
 import { requireAuth } from '../middleware/auth.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
+import { cancelRegistration } from '../services/registration_cancel.js';
+import { normalizeCancelReason } from '../services/cancel_reason.js';
 
 const router = Router();
 
@@ -477,6 +479,7 @@ router.post('/:programId/me/submit', requireAuth, async (req, res) => {
           (SELECT COUNT(*) FROM registrations r
            WHERE r.program_id = ${req.params.programId}
              AND r.submitted = true
+             AND r.cancelled_at IS NULL
              AND r.id <> ${me.id}
              AND po.id = ANY(r.selected_options)) AS signup_count
         FROM program_options po
@@ -502,7 +505,9 @@ router.post('/:programId/me/submit', requireAuth, async (req, res) => {
 
     const result = await sql`
       UPDATE registrations
-      SET submitted = true, updated_at = NOW()
+      -- 취소했던 사람이 다시 제출하면 그것이 곧 "다시 간다" 는 뜻이다(076).
+      SET submitted = true, updated_at = NOW(),
+          cancelled_at = NULL, cancelled_by = NULL, cancel_reason = NULL
       WHERE program_id = ${req.params.programId}
         AND user_id = ${req.user.userId}
       RETURNING id, real_name
@@ -527,6 +532,52 @@ router.post('/:programId/me/submit', requireAuth, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('제출 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// POST /registrations/:programId/me/cancel - 본인이 참석을 취소한다(076)
+//
+// 못 가게 된 사람이 담당자에게 따로 연락하지 않아도 되게 한다. 연락이
+// 안 닿으면 그 사람 몫의 침대와 좌석이 끝까지 잡혀 있다.
+//
+// 행은 남는다 — 다시 제출하면 적어 둔 그대로 되살아난다. 이미 낸 돈은
+// 자동으로 돌려주지 않는다. 환불은 담당자가 판단한다.
+router.post('/:programId/me/cancel', requireAuth, async (req, res) => {
+  try {
+    const [me] = await sql`
+      SELECT id, cancelled_at FROM registrations
+       WHERE program_id = ${req.params.programId} AND user_id = ${req.user.userId}
+    `;
+    if (!me) return res.status(404).json({ error: '등록 정보가 없습니다' });
+    if (me.cancelled_at) return res.json({ success: true, alreadyCancelled: true });
+
+    const reason = normalizeCancelReason(req.body?.reason);
+    const row = await cancelRegistration({
+      registrationId: me.id,
+      byUserId: req.user.userId,
+      reason,
+    });
+
+    if (row) {
+      const [program] = await sql`SELECT name FROM programs WHERE id = ${req.params.programId}`;
+      const who = row.real_name || req.user.name || '';
+      notifyProgramAdmins(req.params.programId, {
+        key: 'admRegistrationCancelled',
+        params: {
+          program: program?.name ?? '',
+          who,
+          // 텔레그램은 HTML 로 받는다. 이유에 < 가 섞이면 메시지 전체가 거절된다.
+          reason: reason
+            ? `\n💬 ${reason.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}`
+            : '',
+        },
+      }).catch((err) => console.error('취소 알림 전송 오류:', err.message));
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('참석 취소 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });

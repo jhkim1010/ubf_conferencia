@@ -2751,5 +2751,76 @@
         "type": "int"
       }
     }
+  },
+  "cancelAttend": "Cancel my attendance",
+  "@cancelAttend": {
+    "description": "참가자·담당자가 참석을 취소하는 버튼 (076)"
+  },
+  "cancelAttendKeep": "Keep it",
+  "@cancelAttendKeep": {
+    "description": "취소 확인 창에서 취소하지 않고 닫는 버튼. '취소'라는 말이 두 번 나오면 헷갈려 따로 둔다"
+  },
+  "cancelAttendConfirm": "Your bed, study group and ride will be released for someone else. What you filled in is kept — if you can come after all, just submit again. Money already paid is not returned automatically; the organizer will contact you.",
+  "@cancelAttendConfirm": {
+    "description": "참가자 본인 취소 확인 창 본문"
+  },
+  "cancelAttendReason": "Reason (optional)",
+  "@cancelAttendReason": {
+    "description": "취소 이유 입력칸"
+  },
+  "cancelAttendDone": "Your attendance was cancelled.",
+  "@cancelAttendDone": {
+    "description": "취소 완료 안내"
+  },
+  "cancelledBanner": "You cancelled your attendance. If you can come after all, submit again below.",
+  "@cancelledBanner": {
+    "description": "취소한 사람이 요약 화면을 열었을 때 맨 위 안내"
+  },
+  "cancelAdminConfirm": "Cancel {name}'s attendance? Their bed, study group and ride will be released. Their form and payments are kept, and you can restore them later.",
+  "@cancelAdminConfirm": {
+    "description": "담당자가 대신 취소할 때 확인 창",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelledListTitle": "Cancelled",
+  "@cancelledListTitle": {
+    "description": "명단 화면의 취소자 목록 제목"
+  },
+  "cancelledListEmpty": "No one has cancelled.",
+  "@cancelledListEmpty": {
+    "description": "취소자 목록이 비었을 때"
+  },
+  "cancelRestore": "Restore",
+  "@cancelRestore": {
+    "description": "취소를 되돌리는 버튼. 방·조·차량 자리는 돌아오지 않는다"
+  },
+  "cancelRestoreHint": "Restored people go back on the list, but need a bed, group and ride again.",
+  "@cancelRestoreHint": {
+    "description": "취소자 목록 위 안내"
+  },
+  "cancelledBySelf": "Cancelled themselves",
+  "@cancelledBySelf": {
+    "description": "누가 취소했는지 — 본인"
+  },
+  "cancelledBy": "Cancelled by {name}",
+  "@cancelledBy": {
+    "description": "누가 취소했는지 — 담당자",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelledPaid": "Paid {amount} — check refund",
+  "@cancelledPaid": {
+    "description": "취소자가 이미 돈을 냈을 때. amount 는 통화 기호가 붙은 문자열",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   }
 }

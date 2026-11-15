@@ -72,6 +72,14 @@ const T = {
     en: '🎉 <b>[{program}] Registration finished</b>\n\n👤 {who} finished registering.',
     pt: '🎉 <b>[{program}] Inscrição concluída</b>\n\n👤 {who} concluiu a inscrição.',
   },
+  // 본인이 참석을 취소했다(076). 담당자가 직접 취소한 것은 알리지 않는다 —
+  // 그 사람이 이미 안다. 남은 일(빈자리·환불)은 본인 취소에서 생긴다.
+  admRegistrationCancelled: {
+    ko: '🚫 <b>[{program}] 참석 취소</b>\n\n👤 {who}{reason}',
+    es: '🚫 <b>[{program}] Canceló su asistencia</b>\n\n👤 {who}{reason}',
+    en: '🚫 <b>[{program}] Attendance cancelled</b>\n\n👤 {who}{reason}',
+    pt: '🚫 <b>[{program}] Cancelou a presença</b>\n\n👤 {who}{reason}',
+  },
   admDepartureChanged: {
     ko: '✈️ <b>출발 변경</b>\n\n👤 {who}\n{what}{note}',
     es: '✈️ <b>Cambió la salida</b>\n\n👤 {who}\n{what}{note}',

@@ -7211,6 +7211,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{base} ({foreign} from abroad)'**
   String withForeign(String base, int foreign);
+
+  /// 참가자·담당자가 참석을 취소하는 버튼 (076)
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel my attendance'**
+  String get cancelAttend;
+
+  /// 취소 확인 창에서 취소하지 않고 닫는 버튼. '취소'라는 말이 두 번 나오면 헷갈려 따로 둔다
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it'**
+  String get cancelAttendKeep;
+
+  /// 참가자 본인 취소 확인 창 본문
+  ///
+  /// In en, this message translates to:
+  /// **'Your bed, study group and ride will be released for someone else. What you filled in is kept — if you can come after all, just submit again. Money already paid is not returned automatically; the organizer will contact you.'**
+  String get cancelAttendConfirm;
+
+  /// 취소 이유 입력칸
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get cancelAttendReason;
+
+  /// 취소 완료 안내
+  ///
+  /// In en, this message translates to:
+  /// **'Your attendance was cancelled.'**
+  String get cancelAttendDone;
+
+  /// 취소한 사람이 요약 화면을 열었을 때 맨 위 안내
+  ///
+  /// In en, this message translates to:
+  /// **'You cancelled your attendance. If you can come after all, submit again below.'**
+  String get cancelledBanner;
+
+  /// 담당자가 대신 취소할 때 확인 창
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel {name}\'s attendance? Their bed, study group and ride will be released. Their form and payments are kept, and you can restore them later.'**
+  String cancelAdminConfirm(String name);
+
+  /// 명단 화면의 취소자 목록 제목
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get cancelledListTitle;
+
+  /// 취소자 목록이 비었을 때
+  ///
+  /// In en, this message translates to:
+  /// **'No one has cancelled.'**
+  String get cancelledListEmpty;
+
+  /// 취소를 되돌리는 버튼. 방·조·차량 자리는 돌아오지 않는다
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get cancelRestore;
+
+  /// 취소자 목록 위 안내
+  ///
+  /// In en, this message translates to:
+  /// **'Restored people go back on the list, but need a bed, group and ride again.'**
+  String get cancelRestoreHint;
+
+  /// 누가 취소했는지 — 본인
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled themselves'**
+  String get cancelledBySelf;
+
+  /// 누가 취소했는지 — 담당자
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled by {name}'**
+  String cancelledBy(String name);
+
+  /// 취소자가 이미 돈을 냈을 때. amount 는 통화 기호가 붙은 문자열
+  ///
+  /// In en, this message translates to:
+  /// **'Paid {amount} — check refund'**
+  String cancelledPaid(String amount);
 }
 
 class _AppLocalizationsDelegate

@@ -4016,4 +4016,55 @@ class AppLocalizationsEs extends AppLocalizations {
   String withForeign(String base, int foreign) {
     return '$base ($foreign del exterior)';
   }
+
+  @override
+  String get cancelAttend => 'Cancelar mi asistencia';
+
+  @override
+  String get cancelAttendKeep => 'Dejarlo así';
+
+  @override
+  String get cancelAttendConfirm =>
+      'Su cama, su grupo de estudio y su lugar en el transporte quedarán libres para otra persona. Lo que cargó se guarda: si al final puede venir, solo envíe de nuevo. El dinero ya pagado no se devuelve automáticamente; el organizador se comunicará con usted.';
+
+  @override
+  String get cancelAttendReason => 'Motivo (opcional)';
+
+  @override
+  String get cancelAttendDone => 'Se canceló su asistencia.';
+
+  @override
+  String get cancelledBanner =>
+      'Canceló su asistencia. Si al final puede venir, envíe de nuevo abajo.';
+
+  @override
+  String cancelAdminConfirm(String name) {
+    return '¿Cancelar la asistencia de $name? Se liberan su cama, su grupo de estudio y su lugar en el transporte. Su inscripción y sus pagos se guardan, y puede restaurarla después.';
+  }
+
+  @override
+  String get cancelledListTitle => 'Cancelados';
+
+  @override
+  String get cancelledListEmpty => 'Nadie canceló.';
+
+  @override
+  String get cancelRestore => 'Restaurar';
+
+  @override
+  String get cancelRestoreHint =>
+      'Al restaurar vuelve a la lista, pero hay que asignarle de nuevo cama, grupo y transporte.';
+
+  @override
+  String get cancelledBySelf => 'Canceló la persona';
+
+  @override
+  String cancelledBy(String name) {
+    return 'Canceló $name';
+  }
+
+  @override
+  String cancelledPaid(String amount) {
+    return 'Pagó $amount: revisar devolución';
+  }
 }

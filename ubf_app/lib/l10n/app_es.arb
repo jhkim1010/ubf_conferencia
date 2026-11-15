@@ -1198,5 +1198,19 @@
   "cpChildFeeFullFrom": "Desde los {age} años, la inscripción completa de adulto.",
   "summaryChildFee": "Inscripción de niños ({count})",
   "costBarChildFee": "Incluye {amount} por {count} niños acompañantes",
-  "withForeign": "{base} ({foreign} del exterior)"
+  "withForeign": "{base} ({foreign} del exterior)",
+  "cancelAttend": "Cancelar mi asistencia",
+  "cancelAttendKeep": "Dejarlo así",
+  "cancelAttendConfirm": "Su cama, su grupo de estudio y su lugar en el transporte quedarán libres para otra persona. Lo que cargó se guarda: si al final puede venir, solo envíe de nuevo. El dinero ya pagado no se devuelve automáticamente; el organizador se comunicará con usted.",
+  "cancelAttendReason": "Motivo (opcional)",
+  "cancelAttendDone": "Se canceló su asistencia.",
+  "cancelledBanner": "Canceló su asistencia. Si al final puede venir, envíe de nuevo abajo.",
+  "cancelAdminConfirm": "¿Cancelar la asistencia de {name}? Se liberan su cama, su grupo de estudio y su lugar en el transporte. Su inscripción y sus pagos se guardan, y puede restaurarla después.",
+  "cancelledListTitle": "Cancelados",
+  "cancelledListEmpty": "Nadie canceló.",
+  "cancelRestore": "Restaurar",
+  "cancelRestoreHint": "Al restaurar vuelve a la lista, pero hay que asignarle de nuevo cama, grupo y transporte.",
+  "cancelledBySelf": "Canceló la persona",
+  "cancelledBy": "Canceló {name}",
+  "cancelledPaid": "Pagó {amount}: revisar devolución"
 }

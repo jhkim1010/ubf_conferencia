@@ -4003,4 +4003,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String withForeign(String base, int foreign) {
     return '$base ($foreign from abroad)';
   }
+
+  @override
+  String get cancelAttend => 'Cancel my attendance';
+
+  @override
+  String get cancelAttendKeep => 'Keep it';
+
+  @override
+  String get cancelAttendConfirm =>
+      'Your bed, study group and ride will be released for someone else. What you filled in is kept — if you can come after all, just submit again. Money already paid is not returned automatically; the organizer will contact you.';
+
+  @override
+  String get cancelAttendReason => 'Reason (optional)';
+
+  @override
+  String get cancelAttendDone => 'Your attendance was cancelled.';
+
+  @override
+  String get cancelledBanner =>
+      'You cancelled your attendance. If you can come after all, submit again below.';
+
+  @override
+  String cancelAdminConfirm(String name) {
+    return 'Cancel $name\'s attendance? Their bed, study group and ride will be released. Their form and payments are kept, and you can restore them later.';
+  }
+
+  @override
+  String get cancelledListTitle => 'Cancelled';
+
+  @override
+  String get cancelledListEmpty => 'No one has cancelled.';
+
+  @override
+  String get cancelRestore => 'Restore';
+
+  @override
+  String get cancelRestoreHint =>
+      'Restored people go back on the list, but need a bed, group and ride again.';
+
+  @override
+  String get cancelledBySelf => 'Cancelled themselves';
+
+  @override
+  String cancelledBy(String name) {
+    return 'Cancelled by $name';
+  }
+
+  @override
+  String cancelledPaid(String amount) {
+    return 'Paid $amount — check refund';
+  }
 }

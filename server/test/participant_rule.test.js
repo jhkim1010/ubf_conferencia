@@ -64,3 +64,25 @@ test('제출하려면 이름이 있어야 한다', () => {
     '제출 처리가 이름을 확인하지 않는다',
   );
 });
+
+test('참가자 판정은 취소를 함께 본다 (076)', () => {
+  // 두 인자 판본은 마이그레이션과 배포 사이의 옛 서버를 위해 DB 에 남아
+  // 있다. 서버가 그것을 다시 부르면 취소한 사람이 명단·방·알림에 돌아온다.
+  const old = [];
+  for (const [p, src] of walk(SRC)) {
+    for (const [i, line] of src.split('\n').entries()) {
+      const m = line.match(/counts_as_participant\(([^)]*)\)/);
+      if (m && m[1].split(',').length !== 3) {
+        old.push(`${p.split('/src/')[1]}:${i + 1}`);
+      }
+    }
+  }
+  assert.deepEqual(old, [], `취소를 안 보는 판정:\n  ${old.join('\n  ')}`);
+});
+
+test('다시 제출하면 취소가 풀린다 (076)', () => {
+  const src = fs.readFileSync(SRC + 'routes/registrations.js', 'utf8');
+  const submit = src.slice(src.indexOf("'/:programId/me/submit'"));
+  const update = submit.slice(submit.indexOf('SET submitted = true'));
+  assert.match(update.slice(0, 300), /cancelled_at = NULL/);
+});

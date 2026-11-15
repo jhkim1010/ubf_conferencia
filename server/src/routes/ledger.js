@@ -28,7 +28,7 @@ async function feeTotals(programId) {
     FROM registrations r
     JOIN programs p ON p.id = r.program_id
     LEFT JOIN payments pay ON pay.registration_id = r.id
-    WHERE r.program_id = ${programId} AND counts_as_participant(r.real_name, r.submitted)
+    WHERE r.program_id = ${programId} AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
   `;
   return {
     collected: Number(row?.collected ?? 0),

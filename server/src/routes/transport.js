@@ -43,7 +43,7 @@ async function loadDispatchPeople(programId, direction) {
              arrival_flight, departure_flight
       FROM registrations
       WHERE program_id = ${programId}
-        AND counts_as_participant(real_name, submitted)
+        AND counts_as_participant(real_name, submitted, cancelled_at)
         AND submitted = true
     `,
     sql`
@@ -53,7 +53,7 @@ async function loadDispatchPeople(programId, direction) {
              r.arrival_flight AS p_arrival, r.departure_flight AS p_departure
       FROM companions c
       JOIN registrations r ON r.id = c.registration_id
-      WHERE r.program_id = ${programId} AND r.submitted = true
+      WHERE r.program_id = ${programId} AND r.submitted = true AND r.cancelled_at IS NULL
     `,
   ]);
 

@@ -497,6 +497,16 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
             ],
           ),
           actions: [
+            // 전화로 "못 갑니다" 라고만 알려 오는 사람이 많다(076).
+            // 그 사람을 대신 취소하는 길이다.
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              onPressed: () {
+                Navigator.pop(ctx, false);
+                _cancelPerson(reg);
+              },
+              child: Text(l10n.cancelAttend),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(l10n.actionCancel),
@@ -533,6 +543,179 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
         );
       }
     }
+  }
+
+  void _refresh() {
+    ref.invalidate(programRegistrationsProvider(widget.programId));
+    ref.invalidate(programStatsProvider(widget.programId));
+  }
+
+  void _showError(Object e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(e is ApiException ? e.message : '$e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  /// 담당자가 대신 참석을 취소한다(076). 등록 내용과 입금은 남는다.
+  Future<void> _cancelPerson(Map<String, dynamic> reg) async {
+    final l10n = AppLocalizations.of(context)!;
+    final reasonCtl = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.cancelAttend),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.cancelAdminConfirm('${reg['real_name'] ?? ''}')),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonCtl,
+              maxLength: 500,
+              decoration: InputDecoration(labelText: l10n.cancelAttendReason),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancelAttendKeep),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.cancelAttend),
+          ),
+        ],
+      ),
+    );
+    final reason = reasonCtl.text.trim();
+    reasonCtl.dispose();
+    if (ok != true || !mounted) return;
+    try {
+      await ApiClient.cancelRegistrationAdmin(
+        widget.programId,
+        reg['id'] as String,
+        reason: reason.isEmpty ? null : reason,
+      );
+      _refresh();
+    } catch (e) {
+      _showError(e);
+    }
+  }
+
+  /// 취소한 사람들(076). 명단에서는 빠지지만 이미 낸 돈을 돌려줄지 정해야
+  /// 하고, 마음을 바꾼 사람은 되살려야 한다.
+  Future<void> _showCancelled(Currency currency) async {
+    final l10n = AppLocalizations.of(context)!;
+    var future = ApiClient.getCancelledRegistrations(widget.programId);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(ctx).size.height * 0.8,
+            ),
+            child: FutureBuilder<List<dynamic>>(
+              future: future,
+              builder: (ctx, snap) {
+                if (snap.hasError) {
+                  return Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(l10n.commonErrorDetail('${snap.error}')),
+                  );
+                }
+                if (!snap.hasData) {
+                  return const Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                final rows = snap.data!.cast<Map<String, dynamic>>();
+                return ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  children: [
+                    Text(
+                      l10n.cancelledListTitle,
+                      style: Theme.of(ctx).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.cancelRestoreHint,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 8),
+                    if (rows.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        child: Text(l10n.cancelledListEmpty),
+                      ),
+                    for (final r in rows)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('${r['name'] ?? r['real_name'] ?? ''}'),
+                        subtitle: Text(_cancelLine(l10n, r, currency)),
+                        trailing: TextButton(
+                          onPressed: () async {
+                            try {
+                              await ApiClient.restoreRegistrationAdmin(
+                                widget.programId,
+                                r['id'] as String,
+                              );
+                              _refresh();
+                              setSheet(() {
+                                future = ApiClient.getCancelledRegistrations(
+                                  widget.programId,
+                                );
+                              });
+                            } catch (e) {
+                              _showError(e);
+                            }
+                          },
+                          child: Text(l10n.cancelRestore),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 취소자 한 줄: 누가 · 언제 · 왜 · 낸 돈.
+  String _cancelLine(
+    AppLocalizations l10n,
+    Map<String, dynamic> r,
+    Currency currency,
+  ) {
+    final by = r['cancelled_by_self'] == true
+        ? l10n.cancelledBySelf
+        : l10n.cancelledBy('${r['cancelled_by_name'] ?? ''}');
+    final when = '${r['cancelled_at'] ?? ''}'.split('T').first;
+    final reason = '${r['cancel_reason'] ?? ''}'.trim();
+    final pay = (r['payment'] as Map?) ?? const {};
+    final paid = pay['status'] == 'confirmed'
+        ? (Money.parse(pay['amount']) ?? 0)
+        : 0;
+    return [
+      by,
+      if (when.isNotEmpty) when,
+      if (reason.isNotEmpty) reason,
+      if (paid > 0) l10n.cancelledPaid(currency.format(paid)),
+    ].join(' · ');
   }
 
   Future<void> _export(
@@ -610,7 +793,17 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     final currency = Currency.of(program?['currency'] as String?);
 
     return Scaffold(
-      appBar: AppBar(title: Text(_title(l10n))),
+      appBar: AppBar(
+        title: Text(_title(l10n)),
+        actions: [
+          if (widget.view != RosterView.meals)
+            IconButton(
+              tooltip: l10n.cancelledListTitle,
+              icon: const Icon(Icons.event_busy),
+              onPressed: () => _showCancelled(currency),
+            ),
+        ],
+      ),
       body: regsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(l10n.commonErrorDetail('$e'))),

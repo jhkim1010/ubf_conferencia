@@ -745,6 +745,19 @@ class ApiClient {
     _decode(response);
   }
 
+  /// 본인이 참석을 취소한다(076). 다시 [submitRegistration] 하면 풀린다.
+  static Future<void> cancelMyRegistration(
+    String programId, {
+    String? reason,
+  }) async {
+    final response = await http.post(
+      _uri('/registrations/$programId/me/cancel'),
+      headers: await _headers(),
+      body: jsonEncode({'reason': ?reason}),
+    );
+    _decode(response);
+  }
+
   // ─── 리더 ────────────────────────────────────────────────
 
   /// 리더 등록. 지부는 "지부장이신가요?" 확인 화면이 찾아낸 값을 함께 보낸다 —
@@ -1204,6 +1217,44 @@ class ApiClient {
       }),
     );
     return _decode(response);
+  }
+
+  // ─── 참석 취소 (076) ──────────────────────────────────────
+
+  /// 담당자가 대신 참석을 취소한다.
+  static Future<void> cancelRegistrationAdmin(
+    String programId,
+    String registrationId, {
+    String? reason,
+  }) async {
+    final response = await http.post(
+      _uri('/programs/$programId/registrations/$registrationId/cancel'),
+      headers: await _headers(),
+      body: jsonEncode({'reason': ?reason}),
+    );
+    _decode(response);
+  }
+
+  /// 취소를 되돌린다. 방·조·차량 자리는 돌아오지 않는다.
+  static Future<void> restoreRegistrationAdmin(
+    String programId,
+    String registrationId,
+  ) async {
+    final response = await http.post(
+      _uri('/programs/$programId/registrations/$registrationId/restore'),
+      headers: await _headers(),
+    );
+    _decode(response);
+  }
+
+  static Future<List<dynamic>> getCancelledRegistrations(
+    String programId,
+  ) async {
+    final response = await http.get(
+      _uri('/programs/$programId/registrations/cancelled'),
+      headers: await _headers(),
+    );
+    return _decodeList(response);
   }
 
   // ─── 장부 (053) ──────────────────────────────────────────

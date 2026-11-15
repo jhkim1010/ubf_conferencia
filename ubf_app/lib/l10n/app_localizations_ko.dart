@@ -3910,4 +3910,53 @@ class AppLocalizationsKo extends AppLocalizations {
   String withForeign(String base, int foreign) {
     return '$base (외국 $foreign명)';
   }
+
+  @override
+  String get cancelAttend => '참석 취소';
+
+  @override
+  String get cancelAttendKeep => '그대로 두기';
+
+  @override
+  String get cancelAttendConfirm =>
+      '잡아 둔 방·말씀조·차량 자리가 다른 분께 돌아갑니다. 적어 두신 내용은 남아 있어, 다시 오실 수 있게 되면 제출만 다시 하시면 됩니다. 이미 내신 돈은 자동으로 돌려드리지 않으며 담당자가 연락드립니다.';
+
+  @override
+  String get cancelAttendReason => '이유 (선택)';
+
+  @override
+  String get cancelAttendDone => '참석을 취소했습니다.';
+
+  @override
+  String get cancelledBanner => '참석을 취소하셨습니다. 다시 오실 수 있게 되면 아래에서 다시 제출해 주세요.';
+
+  @override
+  String cancelAdminConfirm(String name) {
+    return '$name 님의 참석을 취소할까요? 방·말씀조·차량 자리가 비워집니다. 등록 내용과 입금 기록은 남고, 나중에 되살릴 수 있습니다.';
+  }
+
+  @override
+  String get cancelledListTitle => '취소한 사람';
+
+  @override
+  String get cancelledListEmpty => '취소한 사람이 없습니다.';
+
+  @override
+  String get cancelRestore => '되살리기';
+
+  @override
+  String get cancelRestoreHint => '되살리면 명단에 돌아오지만 방·말씀조·차량은 다시 배정해야 합니다.';
+
+  @override
+  String get cancelledBySelf => '본인이 취소';
+
+  @override
+  String cancelledBy(String name) {
+    return '$name 님이 취소';
+  }
+
+  @override
+  String cancelledPaid(String amount) {
+    return '$amount 냄 — 환불 확인';
+  }
 }
