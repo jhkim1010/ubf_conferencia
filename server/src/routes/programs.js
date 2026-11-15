@@ -387,7 +387,15 @@ router.get('/', requireAuth, requireLeader, async (req, res) => {
   try {
     const programs = await sql`
       SELECT p.*,
-        COUNT(r.id) AS registration_count
+        COUNT(r.id) AS registration_count,
+        -- 국제 수양회는 "전체 (외국 n)" 으로 보여 준다. 개최국이 아닌 나라에서
+        -- 오는 사람이다. 나라를 아직 안 적은 사람은 어느 쪽인지 모르므로
+        -- 세지 않는다. 지역 수양회는 null — 화면이 괄호를 붙이지 않는다.
+        CASE WHEN p.program_type = 'international' AND p.host_country IS NOT NULL
+          THEN COUNT(r.id) FILTER (
+            WHERE r.country IS NOT NULL AND r.country <> p.host_country
+          )
+        END AS foreign_count
       FROM programs p
       LEFT JOIN registrations r ON r.program_id = p.id
       -- is_active 를 빠뜨리면 삭제한 수양회가 목록에 그대로 남는다.
@@ -1004,6 +1012,13 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
         p.id AS program_id,
         p.name AS program_name,
         COUNT(r.id) AS total_registrations,
+        -- 국제 수양회만 "전체 (외국 n)" 으로 보여 준다(목록과 같은 규칙).
+        -- 입금 줄과 조인돼 한 사람이 여러 줄일 수 있어 DISTINCT 로 센다.
+        CASE WHEN p.program_type = 'international' AND p.host_country IS NOT NULL
+          THEN COUNT(DISTINCT r.id) FILTER (
+            WHERE r.country IS NOT NULL AND r.country <> p.host_country
+          )
+        END AS foreign_registrations,
         COUNT(r.id) FILTER (WHERE r.submitted = true) AS submitted_count,
         -- 투어를 하나라도 신청한 사람. 신청 건수가 아니라 사람 수다 —
         -- 카드가 "n명" 이라고 말하기 때문이다.

@@ -1183,5 +1183,6 @@
   "cpChildFeePreview": "De {min} a {max} anos pagam {pct}% — {amount} no nível básico.",
   "cpChildFeeFullFrom": "A partir dos {age} anos, a inscrição completa de adulto.",
   "summaryChildFee": "Inscrição de crianças ({count})",
-  "costBarChildFee": "Inclui {amount} por {count} crianças acompanhantes"
+  "costBarChildFee": "Inclui {amount} por {count} crianças acompanhantes",
+  "withForeign": "{base} ({foreign} do exterior)"
 }

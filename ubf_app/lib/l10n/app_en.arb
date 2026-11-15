@@ -2739,5 +2739,17 @@
         "type": "String"
       }
     }
+  },
+  "withForeign": "{base} ({foreign} from abroad)",
+  "@withForeign": {
+    "description": "International conference headcount: total first, then how many come from outside the host country. base is an already formatted count such as \"12 registered\"",
+    "placeholders": {
+      "base": {
+        "type": "String"
+      },
+      "foreign": {
+        "type": "int"
+      }
+    }
   }
 }

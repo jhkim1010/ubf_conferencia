@@ -1197,5 +1197,6 @@
   "cpChildFeePreview": "만 {min}~{max}세는 {pct}% — 기본 등급 기준 {amount} 입니다.",
   "cpChildFeeFullFrom": "만 {age}세부터는 어른과 같은 전액입니다.",
   "summaryChildFee": "동반 어린이 참가비 ({count}명)",
-  "costBarChildFee": "동반 어린이 {count}명 참가비 {amount} 포함"
+  "costBarChildFee": "동반 어린이 {count}명 참가비 {amount} 포함",
+  "withForeign": "{base} (외국 {foreign}명)"
 }

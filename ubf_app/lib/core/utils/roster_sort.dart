@@ -54,3 +54,26 @@ String rosterCountryKey(Map<String, dynamic> r) =>
 
 String rosterBranchKey(Map<String, dynamic> r) =>
     '${r['branch'] ?? ''}'.toLowerCase();
+
+/// 전화번호. 숫자만 남겨 견준다 — "+54 9 11…" 과 "1130…" 이 적은 모양
+/// 때문에 엉뚱한 자리에 서지 않게.
+String rosterPhoneKey(Map<String, dynamic> r) =>
+    '${r['phone'] ?? ''}'.replaceAll(RegExp(r'\D'), '');
+
+/// 숙박비. 수로 서게 자릿수를 채운다. 낼 숙박비가 없으면 빈 값이다 —
+/// 빈 값은 [compareRosterKeys] 가 맨 뒤로 보낸다.
+String rosterHotelKey(Map<String, dynamic> r) {
+  final cost = Money.parse(r['hotel_cost']) ?? 0;
+  return cost > 0 ? cost.toStringAsFixed(2).padLeft(12, '0') : '';
+}
+
+/// 두 줄 세우기 값을 견준다.
+///
+/// **빈 값은 오름차순이든 내림차순이든 맨 뒤다.** 전화번호를 안 적은
+/// 사람이 대부분이라, 빈 값을 그냥 견주면 오름차순일 때 빈 줄만 한 화면
+/// 가득 나오고 정작 번호가 있는 사람은 아래로 밀린다.
+int compareRosterKeys(String a, String b, {required bool ascending}) {
+  if (a.isEmpty != b.isEmpty) return a.isEmpty ? 1 : -1;
+  final c = a.compareTo(b);
+  return ascending ? c : -c;
+}

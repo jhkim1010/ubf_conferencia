@@ -4011,4 +4011,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String costBarChildFee(int count, String amount) {
     return 'Incluye $amount por $count niños acompañantes';
   }
+
+  @override
+  String withForeign(String base, int foreign) {
+    return '$base ($foreign del exterior)';
+  }
 }

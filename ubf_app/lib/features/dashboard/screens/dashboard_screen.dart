@@ -10,6 +10,7 @@ import 'tour_signups_screen.dart';
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/service_role_label.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/utils/headcount.dart';
 
 // 리더용 대시보드 - 통계 + 참가자 관리
 class DashboardScreen extends ConsumerWidget {
@@ -431,7 +432,11 @@ class _StatsGrid extends StatelessWidget {
                 label: l10n.dashStatTotal,
                 total: n('total_registrations'),
                 preview: rows('recent'),
-                value: l10n.unitPeople(n('total_registrations')),
+                value: withForeignCount(
+                  l10n,
+                  l10n.unitPeople(n('total_registrations')),
+                  stats!['foreign_registrations'],
+                ),
                 icon: Icons.people,
                 color: Colors.blue,
                 onOpen: () => _openTable(context, programId, RosterView.all),

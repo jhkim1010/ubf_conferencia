@@ -125,33 +125,6 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     });
   }
 
-  /// 한 칸의 줄 세우기 값.
-  ///
-  /// **표에 적힌 글자가 아니라 원래 값으로 견준다.** 나이를 글자로 보면
-  /// "9" 가 "41" 보다 뒤로 가고, 담당자는 화면이 고장 났다고 여긴다.
-  ///
-  /// 칸 번호는 _headers 의 차례와 같다:
-  /// 0 번호 · 1 본명 · 2 국가 · 3 지부 · 4 성별/나이 · 5 상태 · 6 입금
-  /// 한 칸의 줄 세우기 값. 실제 계산은 core/utils/roster_sort.dart 에 있다 —
-  /// 화면 안에 두면 눈으로만 확인할 수 있고, 그러면 확인하지 않게 된다.
-  ///
-  /// 칸 번호는 _headers 의 차례와 같다:
-  /// 0 번호 · 1 본명 · 2 국가 · 3 지부 · 4 성별/나이 · 5 상태 · 6 입금
-  Comparable<Object> _sortKey(int col, Map<String, dynamic> r) => switch (col) {
-    1 => rosterNameKey(r),
-    2 => rosterCountryKey(r),
-    3 => rosterBranchKey(r),
-    4 => rosterAgeKey(r),
-    5 => switch (widget.view) {
-      RosterView.meals => '${r['food_requirements'] ?? ''}'.toLowerCase(),
-      RosterView.arrival =>
-        '${(r['arrival_flight'] as Map?)?['scheduled_arrival'] ?? ''}',
-      _ => _done(r) ? '0' : '1',
-    },
-    6 => rosterPayKey(r),
-    _ => '',
-  };
-
   void _sortRows(
     List<Map<String, dynamic>> data,
     AppLocalizations l10n,
@@ -167,11 +140,10 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
       );
       return;
     }
-    final col = _sortCol!;
-    data.sort((a, b) {
-      final c = _sortKey(col, a).compareTo(_sortKey(col, b));
-      return _sortAsc ? c : -c;
-    });
+    final cols = _columns(l10n);
+    final key = _sortCol! < cols.length ? cols[_sortCol!].sortKey : null;
+    if (key == null) return;
+    data.sort((a, b) => compareRosterKeys(key(a), key(b), ascending: _sortAsc));
   }
 
   /// 이 줄이 "끝난" 줄인가. 크림색을 입힐지 정한다.
@@ -190,27 +162,54 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     RosterView.arrival => r['arrival_flight'] != null,
   };
 
-  List<String> _headers(AppLocalizations l10n) => [
-    l10n.expColNo,
-    l10n.summaryRealName,
-    l10n.summaryCountry,
-    l10n.summaryBranch,
-    l10n.colGenderAge,
+  /// 표의 칸들 — 머리글과 그 칸의 줄 세우기 값을 **한 줄에 함께** 둔다.
+  ///
+  /// 예전에는 줄 세우기 값을 칸 번호로 따로 골랐다. 전체 명단에 전화번호
+  /// 칸(068)이 끼어들면서 번호가 하나씩 밀렸는데 그쪽은 그대로여서,
+  /// 전화번호를 누르면 상태로, 상태를 누르면 입금으로 섰고 입금은 아예
+  /// 안 섰다. 붙여 두면 칸을 넣고 빼도 어긋날 수가 없다.
+  ///
+  /// **표에 적힌 글자가 아니라 원래 값으로 견준다.** 나이를 글자로 보면
+  /// "9" 가 "41" 보다 뒤로 가고, 담당자는 화면이 고장 났다고 여긴다.
+  /// 실제 계산은 core/utils/roster_sort.dart 에 있다.
+  ///
+  /// sortKey 가 null 이면 그 칸으로는 세우지 않는다(번호).
+  List<({String header, String Function(Map<String, dynamic>)? sortKey})>
+  _columns(AppLocalizations l10n) => [
+    (header: l10n.expColNo, sortKey: null),
+    (header: l10n.summaryRealName, sortKey: rosterNameKey),
+    (header: l10n.summaryCountry, sortKey: rosterCountryKey),
+    (header: l10n.summaryBranch, sortKey: rosterBranchKey),
+    (header: l10n.colGenderAge, sortKey: rosterAgeKey),
     // 전화번호(068). 픽업·배차에서 사람을 찾을 때 쓴다. 전체 명단에만 둔다 —
     // 다른 보기는 각자 볼 것이 따로 있고, 칸을 늘리면 그것이 좁아진다.
-    if (widget.view == RosterView.all) l10n.regPhone,
+    if (widget.view == RosterView.all)
+      (header: l10n.regPhone, sortKey: rosterPhoneKey),
     switch (widget.view) {
-      RosterView.meals => l10n.mealsRestriction,
-      RosterView.arrival => l10n.colFlight,
-      RosterView.payments => l10n.colPayment,
-      _ => l10n.colStatus,
+      RosterView.meals => (
+        header: l10n.mealsRestriction,
+        sortKey: (r) => '${r['food_requirements'] ?? ''}'.toLowerCase(),
+      ),
+      RosterView.arrival => (
+        header: l10n.colFlight,
+        sortKey: (r) =>
+            '${(r['arrival_flight'] as Map?)?['scheduled_arrival'] ?? ''}',
+      ),
+      RosterView.payments => (header: l10n.colPayment, sortKey: rosterPayKey),
+      _ => (header: l10n.colStatus, sortKey: (r) => _done(r) ? '0' : '1'),
     },
     // 숙박비는 참가비와 섞지 않는다 — 호텔에 따로 내는 돈이라
     // 합계에 더해 두면 담당자가 받을 금액을 잘못 세게 된다.
-    if (widget.view == RosterView.payments) l10n.colHotel,
+    if (widget.view == RosterView.payments)
+      (header: l10n.colHotel, sortKey: rosterHotelKey),
     // 전체 명단에서는 입금도 한 칸으로 본다. 돈은 담당자가 가장 자주
     // 확인하는 것인데 지금까지 다른 표로 넘어가야 보였다.
-    if (widget.view == RosterView.all) l10n.colPayment,
+    if (widget.view == RosterView.all)
+      (header: l10n.colPayment, sortKey: rosterPayKey),
+  ];
+
+  List<String> _headers(AppLocalizations l10n) => [
+    for (final c in _columns(l10n)) c.header,
   ];
 
   List<double> get _flex => switch (widget.view) {
@@ -770,6 +769,7 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     List<List<String>> rows,
     Currency currency,
   ) {
+    final sortable = [for (final c in _columns(l10n)) c.sortKey != null];
     return SingleChildScrollView(
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -790,7 +790,7 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
             for (var ci = 0; ci < headers.length; ci++)
               DataColumn(
                 label: InkWell(
-                  onTap: ci == 0 ? null : () => _sortBy(ci),
+                  onTap: sortable[ci] ? () => _sortBy(ci) : null,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
@@ -803,12 +803,22 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                             fontSize: 14,
                           ),
                         ),
+                        // 누를 수 있다는 것이 보여야 누른다. 예전에는
+                        // 누르기 전에 아무 표시가 없어서, 정렬이 있는
+                        // 줄 모르고 따로 만들어 달라는 요청이 왔다.
                         if (_sortCol == ci)
                           Icon(
                             _sortAsc
                                 ? Icons.arrow_upward
                                 : Icons.arrow_downward,
                             size: 15,
+                          )
+                        else if (sortable[ci])
+                          Icon(
+                            Icons.unfold_more,
+                            size: 15,
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.5),
                           ),
                       ],
                     ),

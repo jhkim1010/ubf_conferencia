@@ -86,4 +86,42 @@ void main() {
     expect(rosterCountryKey({'country': 'AR'}), 'argentina');
     expect(rosterCountryKey({'country': null}), '');
   });
+
+  // ── 머리글로 줄 세우기를 고치며 더한 것 ──
+
+  test('전화번호는 숫자만 견준다 — 적은 모양에 흔들리지 않는다', () {
+    expect(rosterPhoneKey({'phone': '+54 9 11 3012-3113'}), '5491130123113');
+    expect(rosterPhoneKey({'phone': null}), '');
+  });
+
+  test('숙박비는 수로 선다', () {
+    final rows = [
+      {'hotel_cost': '300'},
+      {'hotel_cost': 45},
+      {'hotel_cost': '1200.5'},
+    ];
+    final out = [...rows]
+      ..sort(
+        (a, b) => compareRosterKeys(
+          rosterHotelKey(a),
+          rosterHotelKey(b),
+          ascending: true,
+        ),
+      );
+    expect(out.map((r) => '${r['hotel_cost']}').toList(), [
+      '45',
+      '300',
+      '1200.5',
+    ]);
+  });
+
+  test('빈 값은 오름차순이든 내림차순이든 맨 뒤', () {
+    final keys = ['b', '', 'a', '', 'c'];
+    final up = [...keys]
+      ..sort((a, b) => compareRosterKeys(a, b, ascending: true));
+    final down = [...keys]
+      ..sort((a, b) => compareRosterKeys(a, b, ascending: false));
+    expect(up, ['a', 'b', 'c', '', '']);
+    expect(down, ['c', 'b', 'a', '', '']);
+  });
 }

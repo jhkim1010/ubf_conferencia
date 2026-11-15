@@ -7205,6 +7205,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Includes {amount} for {count} accompanying children'**
   String costBarChildFee(int count, String amount);
+
+  /// International conference headcount: total first, then how many come from outside the host country. base is an already formatted count such as "12 registered"
+  ///
+  /// In en, this message translates to:
+  /// **'{base} ({foreign} from abroad)'**
+  String withForeign(String base, int foreign);
 }
 
 class _AppLocalizationsDelegate

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/utils/headcount.dart';
 import '../../../core/utils/api_client.dart';
 import '../providers/program_provider.dart';
 
@@ -182,7 +183,11 @@ class _ProgramCard extends ConsumerWidget {
                 const SizedBox(height: 2),
                 Text(
                   [
-                    l10n.myProgramsRegistered(count),
+                    withForeignCount(
+                      l10n,
+                      l10n.myProgramsRegistered(count),
+                      program['foreign_count'],
+                    ),
                     if (fees.isNotEmpty) fees,
                   ].join(' · '),
                   style: TextStyle(

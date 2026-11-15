@@ -3905,4 +3905,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String costBarChildFee(int count, String amount) {
     return '동반 어린이 $count명 참가비 $amount 포함';
   }
+
+  @override
+  String withForeign(String base, int foreign) {
+    return '$base (외국 $foreign명)';
+  }
 }
