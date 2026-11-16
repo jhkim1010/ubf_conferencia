@@ -1,10 +1,13 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
+import '../../../core/utils/column_widths.dart';
 import '../../../core/utils/hotel_nights.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/payment_state.dart';
@@ -108,6 +111,37 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
   int? _sortCol;
   bool _sortAsc = true;
 
+  // ── 칸 폭 ────────────────────────────────────────────────
+  //
+  // 머리글 오른쪽 끝을 끌어 넓히고 줄인다. 이름이 긴 사람, 비행 편이 긴
+  // 줄이 잘려 보이는데 고칠 길이 없었다. 바꾼 폭은 이 기기에 기억한다 —
+  // 볼 때마다 다시 맞추게 할 수는 없다. 보기마다 따로다(칸이 다르다).
+  ColumnWidths _widths = ColumnWidths();
+  String get _widthsKey => 'roster_col_widths_${widget.view.name}';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWidths();
+  }
+
+  Future<void> _loadWidths() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final w = ColumnWidths.decode(prefs.getString(_widthsKey));
+      if (mounted) setState(() => _widths = w);
+    } catch (_) {
+      // 못 읽으면 기본 폭으로 둔다.
+    }
+  }
+
+  Future<void> _saveWidths() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_widthsKey, _widths.encode());
+    } catch (_) {}
+  }
+
   void _sortBy(int col) {
     setState(() {
       if (_sortCol == col) {
@@ -174,38 +208,86 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
   /// 실제 계산은 core/utils/roster_sort.dart 에 있다.
   ///
   /// sortKey 가 null 이면 그 칸으로는 세우지 않는다(번호).
-  List<({String header, String Function(Map<String, dynamic>)? sortKey})>
+  /// id 와 width 는 칸 폭 조절에 쓴다. id 는 저장 열쇠라 바꾸지 말 것 —
+  /// 바꾸면 담당자가 맞춰 둔 폭이 사라진다.
+  List<
+    ({
+      String id,
+      double width,
+      String header,
+      String Function(Map<String, dynamic>)? sortKey,
+    })
+  >
   _columns(AppLocalizations l10n) => [
-    (header: l10n.expColNo, sortKey: null),
-    (header: l10n.summaryRealName, sortKey: rosterNameKey),
-    (header: l10n.summaryCountry, sortKey: rosterCountryKey),
-    (header: l10n.summaryBranch, sortKey: rosterBranchKey),
-    (header: l10n.colGenderAge, sortKey: rosterAgeKey),
+    (id: 'no', width: 64, header: l10n.expColNo, sortKey: null),
+    (
+      id: 'name',
+      width: 260,
+      header: l10n.summaryRealName,
+      sortKey: rosterNameKey,
+    ),
+    (
+      id: 'country',
+      width: 140,
+      header: l10n.summaryCountry,
+      sortKey: rosterCountryKey,
+    ),
+    (
+      id: 'branch',
+      width: 160,
+      header: l10n.summaryBranch,
+      sortKey: rosterBranchKey,
+    ),
+    (
+      id: 'genderAge',
+      width: 120,
+      header: l10n.colGenderAge,
+      sortKey: rosterAgeKey,
+    ),
     // 전화번호(068). 픽업·배차에서 사람을 찾을 때 쓴다. 전체 명단에만 둔다 —
     // 다른 보기는 각자 볼 것이 따로 있고, 칸을 늘리면 그것이 좁아진다.
     if (widget.view == RosterView.all)
-      (header: l10n.regPhone, sortKey: rosterPhoneKey),
+      (id: 'phone', width: 170, header: l10n.regPhone, sortKey: rosterPhoneKey),
     switch (widget.view) {
       RosterView.meals => (
+        id: 'meals',
+        width: 320,
         header: l10n.mealsRestriction,
         sortKey: (r) => '${r['food_requirements'] ?? ''}'.toLowerCase(),
       ),
       RosterView.arrival => (
+        id: 'flight',
+        width: 240,
         header: l10n.colFlight,
         sortKey: (r) =>
             '${(r['arrival_flight'] as Map?)?['scheduled_arrival'] ?? ''}',
       ),
-      RosterView.payments => (header: l10n.colPayment, sortKey: rosterPayKey),
-      _ => (header: l10n.colStatus, sortKey: (r) => _done(r) ? '0' : '1'),
+      RosterView.payments => (
+        id: 'payment',
+        width: 220,
+        header: l10n.colPayment,
+        sortKey: rosterPayKey,
+      ),
+      _ => (
+        id: 'status',
+        width: 100,
+        header: l10n.colStatus,
+        sortKey: (r) => _done(r) ? '0' : '1',
+      ),
     },
     // 숙박비는 참가비와 섞지 않는다 — 호텔에 따로 내는 돈이라
     // 합계에 더해 두면 담당자가 받을 금액을 잘못 세게 된다.
     if (widget.view == RosterView.payments)
-      (header: l10n.colHotel, sortKey: rosterHotelKey),
+      (id: 'hotel', width: 140, header: l10n.colHotel, sortKey: rosterHotelKey),
     // 전체 명단에서는 입금도 한 칸으로 본다. 돈은 담당자가 가장 자주
     // 확인하는 것인데 지금까지 다른 표로 넘어가야 보였다.
     if (widget.view == RosterView.all)
-      (header: l10n.colPayment, sortKey: rosterPayKey),
+      (
+        id: 'payment',
+        width: 220,
+        header: l10n.colPayment,
+        sortKey: rosterPayKey,
+      ),
   ];
 
   List<String> _headers(AppLocalizations l10n) => [
@@ -950,6 +1032,55 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     );
   }
 
+  /// 머리글 한 칸: 정렬 단추 + 오른쪽 끝의 폭 손잡이.
+  ///
+  /// 손잡이를 끌면 폭이 바뀌고, 두 번 누르면 기본 폭으로 돌아온다.
+  /// 정렬 단추와 겹치지 않게 손잡이는 칸 안쪽 오른쪽 끝에 따로 둔다 —
+  /// 끌려다가 정렬이 뒤집히면 담당자는 왜 순서가 바뀌었는지 모른다.
+  Widget _headerCell(
+    ThemeData theme, {
+    required String id,
+    required double defaultWidth,
+    required double width,
+    required Widget child,
+  }) {
+    return SizedBox(
+      width: width,
+      child: Row(
+        children: [
+          Expanded(child: child),
+          MouseRegion(
+            cursor: SystemMouseCursors.resizeColumn,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              // 누른 자리부터 센다. 기본값이면 끌기로 판정되기까지 움직인
+              // 거리만큼 칸이 커서보다 뒤처진다.
+              dragStartBehavior: DragStartBehavior.down,
+              onHorizontalDragUpdate: (d) =>
+                  setState(() => _widths.resize(id, defaultWidth, d.delta.dx)),
+              onHorizontalDragEnd: (_) => _saveWidths(),
+              onDoubleTap: () {
+                setState(() => _widths.reset(id));
+                _saveWidths();
+              },
+              child: SizedBox(
+                width: 14,
+                height: 56,
+                child: Center(
+                  child: Container(
+                    width: 2,
+                    height: 24,
+                    color: theme.colorScheme.outlineVariant,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 표 하나. 좌우로 나눈 배치와 위아래로 쌓은 배치가 같은 것을 쓴다.
   ///
   /// 표는 가로로 넓다. 화면 밖으로 밀리면 못 읽으므로 표만 따로 가로
@@ -962,7 +1093,9 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     List<List<String>> rows,
     Currency currency,
   ) {
-    final sortable = [for (final c in _columns(l10n)) c.sortKey != null];
+    final cols = _columns(l10n);
+    final sortable = [for (final c in cols) c.sortKey != null];
+    final widths = [for (final c in cols) _widths.of(c.id, c.width)];
     return SingleChildScrollView(
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -974,6 +1107,10 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
           // 기본값과 같은 값을 손으로 박아 둔다 — 비워 두면 글자에 따라
           // 줄이 늘어나 한 화면에 보이던 사람 수가 줄어든다.
           headingRowHeight: 56,
+          // 칸 폭은 각 칸이 직접 정한다(위 _widths). 칸 사이 여백까지 넓으면
+          // 끌어 줄여도 표가 줄지 않는다.
+          columnSpacing: 0,
+          horizontalMargin: 12,
           dataRowMinHeight: 48,
           dataRowMaxHeight: 48,
           // 머리글을 누르면 그 칸으로 줄을 세운다. DataTable 의 sortColumnIndex
@@ -982,38 +1119,50 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
           columns: [
             for (var ci = 0; ci < headers.length; ci++)
               DataColumn(
-                label: InkWell(
-                  onTap: sortable[ci] ? () => _sortBy(ci) : null,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          headers[ci],
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
+                label: _headerCell(
+                  theme,
+                  id: cols[ci].id,
+                  defaultWidth: cols[ci].width,
+                  width: widths[ci],
+                  child: InkWell(
+                    onTap: sortable[ci] ? () => _sortBy(ci) : null,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          // 칸을 좁히면 머리글도 말줄임으로 끝난다. 넘치면
+                          // 옆 칸 위로 글자가 겹친다.
+                          Flexible(
+                            child: Text(
+                              headers[ci],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
-                        ),
-                        // 누를 수 있다는 것이 보여야 누른다. 예전에는
-                        // 누르기 전에 아무 표시가 없어서, 정렬이 있는
-                        // 줄 모르고 따로 만들어 달라는 요청이 왔다.
-                        if (_sortCol == ci)
-                          Icon(
-                            _sortAsc
-                                ? Icons.arrow_upward
-                                : Icons.arrow_downward,
-                            size: 15,
-                          )
-                        else if (sortable[ci])
-                          Icon(
-                            Icons.unfold_more,
-                            size: 15,
-                            color: theme.colorScheme.onSurfaceVariant
-                                .withValues(alpha: 0.5),
-                          ),
-                      ],
+                          // 누를 수 있다는 것이 보여야 누른다. 예전에는
+                          // 누르기 전에 아무 표시가 없어서, 정렬이 있는
+                          // 줄 모르고 따로 만들어 달라는 요청이 왔다.
+                          if (_sortCol == ci)
+                            Icon(
+                              _sortAsc
+                                  ? Icons.arrow_upward
+                                  : Icons.arrow_downward,
+                              size: 15,
+                            )
+                          else if (sortable[ci])
+                            Icon(
+                              Icons.unfold_more,
+                              size: 15,
+                              // 흐리게 두었더니 안 보여서 정렬이 없는 줄
+                              // 알았다. 머리글 글자보다만 옅게 한다.
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1032,12 +1181,12 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                     ? null
                     : WidgetStatePropertyAll(_unfinishedColor(theme)),
                 cells: [
-                  for (final cell in rows[ri])
+                  for (var ci = 0; ci < rows[ri].length; ci++)
                     DataCell(
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 260),
+                      SizedBox(
+                        width: widths[ci],
                         child: Text(
-                          cell,
+                          rows[ri][ci],
                           // 줄 높이를 고정했으니 세 줄로 접히면 잘린다.
                           // 두 줄까지 두고 그 뒤는 말줄임으로 끝낸다 —
                           // 잘린 글자보다 "…" 가 낫다.
