@@ -10,6 +10,11 @@ import {
   assignGroups,
   connectedComponents,
 } from '../services/assignment_engine.js';
+import {
+  companionOccupantId,
+  parseOccupant,
+  companionLabel,
+} from '../services/room_occupant.js';
 
 const router = Router();
 
@@ -26,12 +31,30 @@ async function loadPeople(programId) {
            1 + (SELECT COUNT(*) FROM companions c
                  WHERE c.registration_id = r.id
                    AND c.registers_separately = false
+                   -- 다른 방을 쓰는 동반자는 따로 한 사람이다(077).
+                   AND c.shares_room = true
                    AND c.occupies_bed = true) AS beds
       FROM registrations r
      WHERE r.program_id = ${programId}
        AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
   `;
 }
+/// 대표자와 **다른 방을 쓰는** 동반자들(077). 등록이 없으므로 방 배정에서
+/// 'c:<id>' 로 가리킨다(services/room_occupant.js). 말씀조에는 안 넣는다 —
+/// 동반자는 원래 조에 안 들어간다(069).
+async function loadSeparateCompanions(programId) {
+  return sql`
+    SELECT c.id, c.real_name, c.gender, c.age, r.country, r.branch,
+           display_name(r.bible_name, r.real_name) AS primary_name
+      FROM companions c
+      JOIN registrations r ON r.id = c.registration_id
+     WHERE r.program_id = ${programId}
+       AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
+       AND c.registers_separately = false
+       AND c.shares_room = false
+  `;
+}
+
 async function loadAcceptedEdges(programId, kind) {
   const rows = await sql`
     SELECT from_registration_id AS a, to_registration_id AS b
@@ -101,6 +124,8 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, requireScope('
                                 FROM companions c
                                WHERE c.registration_id = reg.id
                                  AND c.registers_separately = false
+                                 -- 다른 방을 쓰는 동반자는 자기 줄로 나온다(077).
+                                 AND c.shares_room = true
                             ), '[]'::json))
           ORDER BY reg.real_name
         ) FILTER (WHERE reg.id IS NOT NULL), '[]') AS members
@@ -119,9 +144,36 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, requireScope('
         AND id NOT IN (SELECT registration_id FROM room_assignments WHERE registration_id IS NOT NULL)
       ORDER BY real_name
     `;
+    // 다른 방을 쓰는 동반자(077). 자기 줄(companion_id)로 방에 든다.
+    const separate = await loadSeparateCompanions(programId);
+    const placed = await sql`
+      SELECT ra.room_id, ra.companion_id
+        FROM room_assignments ra
+        JOIN rooms rm ON rm.id = ra.room_id
+       WHERE rm.program_id = ${programId} AND ra.companion_id IS NOT NULL
+    `;
+    const roomOf = new Map(placed.map((p) => [p.companion_id, p.room_id]));
+    const asMember = (c) => ({
+      registrationId: companionOccupantId(c.id),
+      name: companionLabel(c.real_name, c.primary_name),
+      gender: c.gender,
+      companions: [],
+      // 앱이 방장 버튼을 감춘다 — 방장은 등록한 사람만 될 수 있다.
+      isCompanion: true,
+    });
+    const byRoom = new Map(rooms.map((r) => [r.id, r]));
+    const loose = [];
+    for (const c of separate) {
+      const room = byRoom.get(roomOf.get(c.id));
+      if (room) room.members.push(asMember(c));
+      else loose.push(asMember(c));
+    }
     res.json({
       rooms,
-      unassigned: await withBuddies(programId, unassigned, 'roommate'),
+      unassigned: [
+        ...(await withBuddies(programId, unassigned, 'roommate')),
+        ...loose.map((m) => ({ ...m, withIds: [] })),
+      ],
     });
   } catch (err) {
     console.error('숙소 배정 조회 오류:', err);
@@ -177,13 +229,26 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, requireScope(
 router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, requireScope('rooms'), async (req, res) => {
   const { programId } = req.params;
   try {
-    const [rooms, people, roommateEdges] = await Promise.all([
+    const [rooms, registrants, separate, roommateEdges] = await Promise.all([
       sql`SELECT id, capacity, extra_capacity AS "extraCapacity", gender,
                  room_type AS "roomType"
             FROM rooms WHERE program_id = ${programId}`,
       loadPeople(programId),
+      loadSeparateCompanions(programId),
       loadAcceptedEdges(programId, 'roommate'),
     ]);
+    // 다른 방을 쓰는 동반자도 한 사람으로 넣는다(077). 엔진은 id 만 본다.
+    const people = [
+      ...registrants,
+      ...separate.map((c) => ({
+        id: companionOccupantId(c.id),
+        gender: c.gender,
+        age: c.age,
+        country: c.country,
+        branch: c.branch,
+        beds: 1,
+      })),
+    ];
     const familyEdges = await loadFamilyEdges(programId);
 
     const { assignments, unplaced } = assignRooms({
@@ -200,9 +265,12 @@ router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, requireS
         [programId],
       );
       for (const a of assignments) {
+        const who = parseOccupant(a.registrationId);
+        if (!who) continue;
         await client.query(
-          `INSERT INTO room_assignments (room_id, registration_id) VALUES ($1, $2)`,
-          [a.roomId, a.registrationId],
+          `INSERT INTO room_assignments (room_id, registration_id, companion_id)
+           VALUES ($1, $2, $3)`,
+          [a.roomId, who.registrationId ?? null, who.companionId ?? null],
         );
       }
       // 자동 배정은 사람을 다른 방으로 옮긴다. 방장을 그대로 두면 그 방에서
@@ -297,13 +365,25 @@ router.post('/:programId/rooms/assign', requireAuth, requireProgramAdmin, requir
                   JOIN companions c3 ON c3.registration_id = ra3.registration_id
                  WHERE ra3.room_id = r.id
                    AND c3.registers_separately = false
+                   AND c3.shares_room = true
                    AND c3.occupies_bed = true) AS occupied
       FROM rooms r WHERE r.id = ${roomId} AND r.program_id = ${programId}
     `;
     if (!room) return res.status(404).json({ error: '방을 찾을 수 없습니다' });
-    const [person] = await sql`
-      SELECT gender FROM registrations WHERE id = ${registrationId} AND program_id = ${programId}
-    `;
+    // 다른 방을 쓰는 동반자일 수 있다(077).
+    const who = parseOccupant(registrationId);
+    if (!who) return res.status(400).json({ error: 'roomId와 registrationId가 필요합니다' });
+    const [person] = who.companionId
+      ? await sql`
+          SELECT c.gender FROM companions c
+            JOIN registrations r ON r.id = c.registration_id
+           WHERE c.id = ${who.companionId} AND r.program_id = ${programId}
+             AND c.registers_separately = false AND c.shares_room = false
+        `
+      : await sql`
+          SELECT gender FROM registrations
+           WHERE id = ${who.registrationId} AND program_id = ${programId}
+        `;
     if (!person) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
 
     // 혼숙 방침: 단체실은 같은 성별만
@@ -318,11 +398,19 @@ router.post('/:programId/rooms/assign', requireAuth, requireProgramAdmin, requir
 
     await sql.transaction(async (client) => {
       // 기존 방 배정 해제 후 새 방에 배정
-      await client.query('DELETE FROM room_assignments WHERE registration_id = $1', [registrationId]);
-      await client.query(
-        'INSERT INTO room_assignments (room_id, registration_id) VALUES ($1, $2)',
-        [roomId, registrationId],
-      );
+      if (who.companionId) {
+        await client.query('DELETE FROM room_assignments WHERE companion_id = $1', [who.companionId]);
+        await client.query(
+          'INSERT INTO room_assignments (room_id, companion_id) VALUES ($1, $2)',
+          [roomId, who.companionId],
+        );
+      } else {
+        await client.query('DELETE FROM room_assignments WHERE registration_id = $1', [who.registrationId]);
+        await client.query(
+          'INSERT INTO room_assignments (room_id, registration_id) VALUES ($1, $2)',
+          [roomId, who.registrationId],
+        );
+      }
     });
     res.json({ success: true });
   } catch (err) {
@@ -334,6 +422,12 @@ router.post('/:programId/rooms/assign', requireAuth, requireProgramAdmin, requir
 // ── DELETE 숙소 배정 해제 ────────────────────────────────────
 router.delete('/:programId/rooms/:registrationId', requireAuth, requireProgramAdmin, requireScope('rooms'), async (req, res) => {
   try {
+    const who = parseOccupant(req.params.registrationId);
+    if (who?.companionId) {
+      // 다른 방을 쓰는 동반자(077). 방장일 수 없으므로 그것만 지운다.
+      await sql`DELETE FROM room_assignments WHERE companion_id = ${who.companionId}`;
+      return res.json({ success: true });
+    }
     await sql`DELETE FROM room_assignments WHERE registration_id = ${req.params.registrationId}`;
     // 방에서 뺐으면 방장도 아니다.
     await sql`
@@ -363,6 +457,10 @@ router.put('/:programId/rooms/:roomId/leader', requireAuth, requireProgramAdmin,
     `;
     if (!room) return res.status(404).json({ error: '숙소를 찾을 수 없습니다' });
 
+    // 방장은 등록한 사람이라야 한다 — 동반자(077)는 앱에 계정이 없다.
+    if (parseOccupant(registrationId)?.companionId) {
+      return res.status(400).json({ error: '동반자는 방장이 될 수 없습니다' });
+    }
     if (registrationId) {
       const [inRoom] = await sql`
         SELECT 1 FROM room_assignments

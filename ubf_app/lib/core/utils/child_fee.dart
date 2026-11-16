@@ -107,3 +107,22 @@ class ChildFeePolicy {
     return (sum * 100).roundToDouble() / 100;
   }
 }
+
+/// 전후 숙박비를 몇 사람 몫으로 내는가 — 본인 한 사람에, 등록할 수 없는
+/// 동반자 중 **침대를 쓰는** 사람을 더한다(069).
+///
+/// 서버의 `bedsNeeded`(companion_role.js) 와 같은 규칙이다. 다른 방을 쓰는
+/// 동반자(077)는 언제나 침대를 쓴다 — 보호자 옆에서 같이 잘 수가 없다.
+/// 숙박 단가는 한 사람 한 밤 값이라, 같은 방이든 다른 방이든 머릿수만큼 낸다.
+int lodgingHeads(List<Map<String, dynamic>> companions) {
+  var n = 1;
+  for (final c in companions) {
+    final separate =
+        c['registersSeparately'] != false && c['registers_separately'] != false;
+    if (separate) continue;
+    final ownRoom = c['sharesRoom'] == false || c['shares_room'] == false;
+    final bed = c['occupiesBed'] ?? c['occupies_bed'];
+    if (ownRoom || bed != false) n++;
+  }
+  return n;
+}

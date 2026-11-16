@@ -4107,4 +4107,65 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get travelTimeNone => 'Sem horário';
+
+  @override
+  String get companionRoomQ => 'Vai dividir o quarto com você?';
+
+  @override
+  String get companionRoomSame => 'Sim, o mesmo quarto';
+
+  @override
+  String get companionRoomOther => 'Não, outro quarto';
+
+  @override
+  String get companionRoomHint =>
+      'O custo é o mesmo — a hospedagem é cobrada por pessoa por noite. Os organizadores vão providenciar o outro quarto.';
+
+  @override
+  String get companionRoomSameTag => 'Mesmo quarto';
+
+  @override
+  String get companionRoomOtherTag => 'Outro quarto';
+
+  @override
+  String familyCostTitle(int count) {
+    return 'Total do seu grupo ($count pessoas)';
+  }
+
+  @override
+  String familyFeeRow(String self, String others) {
+    return 'Você $self + acompanhantes $others';
+  }
+
+  @override
+  String familyHotelTitle(int heads) {
+    return 'Hospedagem antes/depois ($heads pessoas)';
+  }
+
+  @override
+  String familyHotelPerNight(String each, int heads, String all) {
+    return '$each por noite × $heads = $all';
+  }
+
+  @override
+  String familyHotelNights(int nights, String total) {
+    return '$nights noites: $total';
+  }
+
+  @override
+  String get familyHotelNoNights =>
+      'As noites são calculadas quando os voos forem informados.';
+
+  @override
+  String get familyNow => 'Total com as escolhas atuais';
+
+  @override
+  String familySeparateNote(int count) {
+    return 'Quem se inscreve separadamente ($count) paga na própria inscrição.';
+  }
+
+  @override
+  String hotelEstimateHeads(int count) {
+    return 'Hospedagem estimada ($count pessoas)';
+  }
 }

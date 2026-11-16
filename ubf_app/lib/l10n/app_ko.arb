@@ -1223,5 +1223,20 @@
   "travelNightsFromFlights": "박수와 낼 돈은 저장할 때 비행 일정으로 다시 계산됩니다.",
   "travelSaved": "저장했습니다 · 전 {before}박 · 후 {after}박 · 낼 돈 {total}",
   "travelHotelDropped": "고른 숙박 수준을 쓸 수 없어 비웠습니다. 거주 국가나 수준을 확인하십시오.",
-  "travelTimeNone": "시각 없음"
+  "travelTimeNone": "시각 없음",
+  "companionRoomQ": "대표자와 같은 방을 쓰십니까?",
+  "companionRoomSame": "예, 같은 방",
+  "companionRoomOther": "아니오, 다른 방",
+  "companionRoomHint": "다른 방을 써도 비용은 같습니다 — 숙박비는 한 사람 한 밤 값입니다. 방은 담당자가 따로 잡아 드립니다.",
+  "companionRoomSameTag": "같은 방",
+  "companionRoomOtherTag": "다른 방",
+  "familyCostTitle": "함께 내실 금액 ({count}명)",
+  "familyFeeRow": "본인 {self} + 동반자 {others}",
+  "familyHotelTitle": "수양회 전후 숙박 ({heads}명)",
+  "familyHotelPerNight": "1박 {each} × {heads}명 = {all}",
+  "familyHotelNights": "{nights}박이면 {total}",
+  "familyHotelNoNights": "몇 박인지는 비행 일정을 적으면 계산됩니다.",
+  "familyNow": "지금 고르신 대로 합계",
+  "familySeparateNote": "따로 등록하는 분({count}명)의 비용은 그분 등록에서 냅니다.",
+  "hotelEstimateHeads": "예상 숙박비 ({count}명)"
 }

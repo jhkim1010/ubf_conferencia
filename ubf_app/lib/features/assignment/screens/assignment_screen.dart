@@ -315,13 +315,17 @@ class _RoomsAssignTab extends ConsumerWidget {
                         },
                         // 이름을 누르면 방장이 된다. 이미 방장이면 내린다.
                         isLeader: m['registrationId'] == leaderId,
-                        onTap: () => _setRoomLeader(
-                          context,
-                          room,
-                          m,
-                          isLeader: m['registrationId'] == leaderId,
-                          refresh: refresh,
-                        ),
+                        // 다른 방을 쓰는 동반자(077)는 계정이 없어 방장이
+                        // 될 수 없다.
+                        onTap: m['isCompanion'] == true
+                            ? null
+                            : () => _setRoomLeader(
+                                context,
+                                room,
+                                m,
+                                isLeader: m['registrationId'] == leaderId,
+                                refresh: refresh,
+                              ),
                       ),
                     )
                     .toList(),

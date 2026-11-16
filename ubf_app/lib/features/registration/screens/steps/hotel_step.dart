@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mana/l10n/app_localizations.dart';
+import '../../../../core/utils/child_fee.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/hotel_nights.dart';
 import '../../../../core/utils/hotel_price.dart';
@@ -142,8 +143,17 @@ class _HotelStepState extends ConsumerState<HotelStep> {
         ? true
         : (_wantsHotel ?? (nights > 0 || form.hotelOptionKey != null));
     final perNight = Money.parse(picked?['pricePerNight']);
+    // 침대를 쓰는 동반자만큼 머릿수가 는다(069·077). 서버는 그렇게 받는데
+    // 이 화면만 한 사람 몫을 보여 주면 참가자는 덜 내는 줄 안다.
+    final heads = lodgingHeads(
+      (ref.watch(myCompanionsProvider(widget.programId)).valueOrNull ??
+              const [])
+          .whereType<Map>()
+          .map((m) => Map<String, dynamic>.from(m))
+          .toList(),
+    );
     final estimate = perNight != null && chargeable > 0
-        ? perNight * chargeable
+        ? perNight * chargeable * heads
         : null;
 
     final differs =
@@ -323,7 +333,13 @@ class _HotelStepState extends ConsumerState<HotelStep> {
                 ),
                 child: Row(
                   children: [
-                    Expanded(child: Text(l10n.hotelEstimate)),
+                    Expanded(
+                      child: Text(
+                        heads > 1
+                            ? l10n.hotelEstimateHeads(heads)
+                            : l10n.hotelEstimate,
+                      ),
+                    ),
                     Text(
                       estimate != null
                           ? widget.currency.format(estimate)

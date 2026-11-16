@@ -7361,6 +7361,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No time'**
   String get travelTimeNone;
+
+  /// No description provided for @companionRoomQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Will they share your room?'**
+  String get companionRoomQ;
+
+  /// No description provided for @companionRoomSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, same room'**
+  String get companionRoomSame;
+
+  /// No description provided for @companionRoomOther.
+  ///
+  /// In en, this message translates to:
+  /// **'No, another room'**
+  String get companionRoomOther;
+
+  /// No description provided for @companionRoomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The cost is the same either way — lodging is priced per person per night. The organizers will arrange the other room.'**
+  String get companionRoomHint;
+
+  /// No description provided for @companionRoomSameTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Same room'**
+  String get companionRoomSameTag;
+
+  /// No description provided for @companionRoomOtherTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Another room'**
+  String get companionRoomOtherTag;
+
+  /// No description provided for @familyCostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Total for your group ({count} people)'**
+  String familyCostTitle(int count);
+
+  /// No description provided for @familyFeeRow.
+  ///
+  /// In en, this message translates to:
+  /// **'You {self} + companions {others}'**
+  String familyFeeRow(String self, String others);
+
+  /// No description provided for @familyHotelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lodging before/after ({heads} people)'**
+  String familyHotelTitle(int heads);
+
+  /// No description provided for @familyHotelPerNight.
+  ///
+  /// In en, this message translates to:
+  /// **'{each} per night × {heads} = {all}'**
+  String familyHotelPerNight(String each, int heads, String all);
+
+  /// No description provided for @familyHotelNights.
+  ///
+  /// In en, this message translates to:
+  /// **'{nights} nights: {total}'**
+  String familyHotelNights(int nights, String total);
+
+  /// No description provided for @familyHotelNoNights.
+  ///
+  /// In en, this message translates to:
+  /// **'The number of nights is calculated once flights are entered.'**
+  String get familyHotelNoNights;
+
+  /// No description provided for @familyNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Total with your current choices'**
+  String get familyNow;
+
+  /// No description provided for @familySeparateNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Those who register separately ({count}) pay through their own registration.'**
+  String familySeparateNote(int count);
+
+  /// No description provided for @hotelEstimateHeads.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated lodging ({count} people)'**
+  String hotelEstimateHeads(int count);
 }
 
 class _AppLocalizationsDelegate

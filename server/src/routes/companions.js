@@ -33,6 +33,8 @@ router.get('/:programId/me', requireAuth, async (req, res) => {
       SELECT c.id, c.real_name, c.bible_name, c.gender, c.age, c.language,
              -- 069: 이 사람이 따로 등록하는가, 침대를 쓰는가.
              c.registers_separately, c.occupies_bed,
+             -- 077: 대표자와 같은 방을 쓰는가.
+             c.shares_room,
              -- 073: 이 사람만 달리 정한 참가비 몫. NULL 이면 수양회 정책대로.
              c.fee_share,
              -- 적어 둔 값. 편집 화면이 이것을 쓴다 — 체크를 풀면 예전에
@@ -84,12 +86,12 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
              (registration_id, real_name, bible_name, gender, age, language, branch,
               same_branch_as_primary,
               same_flight_as_primary, arrival_flight, departure_flight, needs_pickup,
-              registers_separately, occupies_bed, fee_share)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+              registers_separately, occupies_bed, fee_share, shares_room)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
            RETURNING id, real_name, bible_name, gender, age, language, branch,
                      same_branch_as_primary,
                      same_flight_as_primary, arrival_flight, departure_flight, needs_pickup,
-                     registers_separately, occupies_bed, fee_share`,
+                     registers_separately, occupies_bed, fee_share, shares_room`,
           [
             regId,
             String(c.realName).trim(),
@@ -107,13 +109,20 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
             c.registersSeparately !== false,
             // 침대는 **적어 낸 값이 먼저**다. 안 보냈을 때만 나이로 정한다
             // (만 5세 이하는 안 쓰는 것으로).
-            typeof c.occupiesBed === 'boolean'
-              ? c.occupiesBed
-              : defaultOccupiesBed(c.age),
+            //
+            // 다른 방을 쓰면 침대는 반드시 쓴다(077) — 보호자 옆에서 같이 잘
+            // 수가 없다. 화면도 그때는 묻지 않는다.
+            c.sharesRoom === false
+              ? true
+              : typeof c.occupiesBed === 'boolean'
+                ? c.occupiesBed
+                : defaultOccupiesBed(c.age),
             // 073. 참가비 몫을 **사람별로** 달리 정한 경우에만 값이 있다.
             // 안 보내면 NULL 이고, 그때는 수양회가 정한 나이 구간을 따른다.
             // 0 은 NULL 과 다르다 — "이 아이는 안 받기로 정했다" 이다.
             feeShareOf(c.feeShare),
+            // 077. 안 보내면 예전 뜻 그대로 — 같은 방이다.
+            c.sharesRoom !== false,
           ],
         );
         rows.push(row);

@@ -2846,5 +2846,81 @@
     }
   },
   "travelHotelDropped": "The chosen lodging level could not be used and was cleared. Check their country of residence or the level.",
-  "travelTimeNone": "No time"
+  "travelTimeNone": "No time",
+  "companionRoomQ": "Will they share your room?",
+  "companionRoomSame": "Yes, same room",
+  "companionRoomOther": "No, another room",
+  "companionRoomHint": "The cost is the same either way — lodging is priced per person per night. The organizers will arrange the other room.",
+  "companionRoomSameTag": "Same room",
+  "companionRoomOtherTag": "Another room",
+  "familyCostTitle": "Total for your group ({count} people)",
+  "@familyCostTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "familyFeeRow": "You {self} + companions {others}",
+  "@familyFeeRow": {
+    "placeholders": {
+      "self": {
+        "type": "String"
+      },
+      "others": {
+        "type": "String"
+      }
+    }
+  },
+  "familyHotelTitle": "Lodging before/after ({heads} people)",
+  "@familyHotelTitle": {
+    "placeholders": {
+      "heads": {
+        "type": "int"
+      }
+    }
+  },
+  "familyHotelPerNight": "{each} per night × {heads} = {all}",
+  "@familyHotelPerNight": {
+    "placeholders": {
+      "each": {
+        "type": "String"
+      },
+      "heads": {
+        "type": "int"
+      },
+      "all": {
+        "type": "String"
+      }
+    }
+  },
+  "familyHotelNights": "{nights} nights: {total}",
+  "@familyHotelNights": {
+    "placeholders": {
+      "nights": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "familyHotelNoNights": "The number of nights is calculated once flights are entered.",
+  "familyNow": "Total with your current choices",
+  "familySeparateNote": "Those who register separately ({count}) pay through their own registration.",
+  "@familySeparateNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hotelEstimateHeads": "Estimated lodging ({count} people)",
+  "@hotelEstimateHeads": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

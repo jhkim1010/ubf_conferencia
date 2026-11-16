@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/api_client.dart';
 import '../../../../core/utils/child_fee.dart';
+import '../../../../core/utils/family_cost.dart';
+import '../../../../core/utils/hotel_nights.dart';
+import '../../../../core/utils/registration_cost.dart';
 import '../../../../core/utils/money.dart';
 import '../../providers/registration_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
@@ -70,6 +73,8 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     // 069. 옛 줄에는 칸이 없다 — 그때의 뜻대로 "따로 등록" 으로 본다.
     'registersSeparately': r['registers_separately'] ?? true,
     'occupiesBed': r['occupies_bed'] ?? true,
+    // 077. 옛 줄에는 칸이 없다 — 지금까지처럼 같은 방이다.
+    'sharesRoom': r['shares_room'] ?? true,
     // 073. 따로 정해 둔 참가비 몫. 없으면 수양회 구간을 따른다.
     'feeShare': r['fee_share'],
   };
@@ -97,6 +102,7 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
       'needsPickup': c['needsPickup'] ?? true,
       'registersSeparately': c['registersSeparately'] ?? true,
       'occupiesBed': c['occupiesBed'] ?? true,
+      'sharesRoom': c['sharesRoom'] ?? true,
       // 073. 따로 정하지 않았으면 안 보낸다 — 서버가 수양회 구간을 쓴다.
       'feeShare': c['feeShare'],
     };
@@ -168,6 +174,168 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
   Future<void> _remove(int index) async {
     setState(() => _companions.removeAt(index));
     await _persist();
+  }
+
+  /// 함께 오는 사람까지 합친 금액 (077).
+  ///
+  /// 등급마다(기본·프리미엄, 숙박 수준마다) 합계를 보여 준다. 같은 방이든
+  /// 다른 방이든 금액은 같다 — 숙박 단가가 한 사람 한 밤 값이다.
+  Widget _familyCard(AppLocalizations l10n) {
+    final form = ref.watch(registrationFormProvider(widget.programId));
+    final nights = chargeableHotelNights(
+      before: form.hotelNightsBefore,
+      after: form.hotelNightsAfter,
+      beforeSelf: form.hotelBeforeSelf,
+      afterSelf: form.hotelAfterSelf,
+    );
+    final fam = FamilyCost.of(
+      program: widget.program,
+      companions: _companions,
+      nights: nights,
+    );
+    // 이 등록에 붙는 동반자가 없으면 합칠 것이 없다 — 따로 등록하는 분만
+    // 있으면 그 사실만 말한다.
+    final cur = widget.currency;
+    final lang = Localizations.localeOf(context).languageCode;
+    final now = RegistrationCost.of(
+      program: widget.program,
+      companions: _companions,
+      feeTier: form.feeTier,
+      selectedOptionIds: form.selectedOptions,
+      hotelOptionKey: form.hotelOptionKey,
+      hotelNightsBefore: form.hotelNightsBefore,
+      hotelNightsAfter: form.hotelNightsAfter,
+      hotelBeforeSelf: form.hotelBeforeSelf,
+      hotelAfterSelf: form.hotelAfterSelf,
+    );
+    final small = TextStyle(fontSize: 12, color: Colors.grey[700]);
+    const accent = Color(0xFF7A6BB5);
+
+    return Card(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (fam.people > 1) ...[
+              Text(
+                l10n.familyCostTitle(fam.people),
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              for (final f in fam.fees)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              f.tier == 'premium'
+                                  ? l10n.feeTierPremium
+                                  : l10n.feeTierBasic,
+                            ),
+                            Text(
+                              l10n.familyFeeRow(
+                                cur.format(f.self),
+                                cur.format(f.others),
+                              ),
+                              style: small,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        cur.format(f.total),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: accent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (fam.hotels.isNotEmpty) ...[
+                const Divider(height: 18),
+                Text(
+                  l10n.familyHotelTitle(fam.heads),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 6),
+                for (final h in fam.hotels)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(optionLabelFor(h.option, lang)),
+                              Text(
+                                l10n.familyHotelPerNight(
+                                  cur.format(h.perNight),
+                                  h.heads,
+                                  cur.format(h.perNightAll),
+                                ),
+                                style: small,
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (h.total != null)
+                          Text(
+                            l10n.familyHotelNights(
+                              h.nights,
+                              cur.format(h.total!),
+                            ),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: accent,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                if (nights == 0) Text(l10n.familyHotelNoNights, style: small),
+              ],
+              // 지금 고른 등급·투어·숙박으로 실제로 낼 돈. 비용 막대와 같은
+              // 셈(RegistrationCost)이다.
+              if (form.feeTier != null) ...[
+                const Divider(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.familyNow,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    Text(
+                      cur.format(now.due),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+            if (fam.separateCount > 0) ...[
+              if (fam.people > 1) const SizedBox(height: 8),
+              Text(l10n.familySeparateNote(fam.separateCount), style: small),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -268,6 +436,11 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
                   if (c['sameBranchAsPrimary'] != true &&
                       '${c['branch']}'.isNotEmpty)
                     c['branch'],
+                  // 077: 같은 방인지. 따로 등록하는 분은 자기 등록으로 방을 받는다.
+                  if (c['registersSeparately'] == false)
+                    c['sharesRoom'] == false
+                        ? l10n.companionRoomOtherTag
+                        : l10n.companionRoomSameTag,
                 ].where((x) => x != null && '$x'.isNotEmpty).join(' · ');
                 // 이 사람에게 붙는 참가비(073). 나이를 적은 그 자리에서
                 // 바로 보여야 한다 — 나중에 합계에서 처음 보면 놀란다.
@@ -322,6 +495,8 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
                   ),
                 );
               }),
+              const SizedBox(height: 8),
+              _familyCard(l10n),
             ],
           ],
         ),
@@ -377,6 +552,8 @@ class _CompanionSheetState extends State<_CompanionSheet> {
   // 069: 이분이 따로 등록하는가 / 침대를 쓰는가.
   bool _registersSeparately = true;
   bool? _occupiesBed;
+  // 077: 대표자와 같은 방을 쓰는가.
+  bool _sharesRoom = true;
 
   @override
   void initState() {
@@ -398,6 +575,7 @@ class _CompanionSheetState extends State<_CompanionSheet> {
     _registersSeparately = e?['registersSeparately'] ?? true;
     // 고쳐 둔 값이 있으면 그것, 없으면 아래에서 나이로 정한다.
     _occupiesBed = e?['occupiesBed'] as bool?;
+    _sharesRoom = e?['sharesRoom'] ?? true;
   }
 
   @override
@@ -428,9 +606,11 @@ class _CompanionSheetState extends State<_CompanionSheet> {
       'needsPickup': _needsPickup,
       'registersSeparately': _registersSeparately,
       // 안 고쳤으면 나이로 정한다 — 만 5세 이하는 같이 자는 것으로.
-      'occupiesBed': _registersSeparately
+      // 다른 방을 쓰면 침대는 반드시 쓴다(077) — 보호자 옆에서 잘 수 없다.
+      'occupiesBed': _registersSeparately || !_sharesRoom
           ? true
           : (_occupiesBed ?? _bedByAge(int.tryParse(_age.text.trim()))),
+      'sharesRoom': _sharesRoom,
     });
   }
 
@@ -571,6 +751,37 @@ class _CompanionSheetState extends State<_CompanionSheet> {
             // 069: 등록 못 하는 분에게만 침대를 묻는다. 따로 등록하는 분의
             // 자리는 그분 등록으로 잡히므로 물어볼 것이 없다.
             if (!_registersSeparately) ...[
+              // 077: 같은 방인가. 따로 등록하는 분은 자기 등록으로 방을
+              // 받으므로 묻지 않는다.
+              const SizedBox(height: 14),
+              Text(
+                l10n.companionRoomQ,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              SegmentedButton<bool>(
+                segments: [
+                  ButtonSegment(
+                    value: true,
+                    label: Text(l10n.companionRoomSame),
+                  ),
+                  ButtonSegment(
+                    value: false,
+                    label: Text(l10n.companionRoomOther),
+                  ),
+                ],
+                selected: {_sharesRoom},
+                onSelectionChanged: (v) =>
+                    setState(() => _sharesRoom = v.first),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.companionRoomHint,
+                style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+              ),
+            ],
+            // 다른 방이면 침대는 당연히 쓴다 — 묻지 않는다.
+            if (!_registersSeparately && _sharesRoom) ...[
               const SizedBox(height: 14),
               Text(
                 l10n.companionBedQ,
@@ -593,6 +804,8 @@ class _CompanionSheetState extends State<_CompanionSheet> {
                 l10n.companionBedHint,
                 style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
               ),
+            ],
+            if (!_registersSeparately) ...[
               const SizedBox(height: 10),
               _feeLine(l10n),
             ],

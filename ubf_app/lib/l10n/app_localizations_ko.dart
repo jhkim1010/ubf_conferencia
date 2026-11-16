@@ -3994,4 +3994,64 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get travelTimeNone => '시각 없음';
+
+  @override
+  String get companionRoomQ => '대표자와 같은 방을 쓰십니까?';
+
+  @override
+  String get companionRoomSame => '예, 같은 방';
+
+  @override
+  String get companionRoomOther => '아니오, 다른 방';
+
+  @override
+  String get companionRoomHint =>
+      '다른 방을 써도 비용은 같습니다 — 숙박비는 한 사람 한 밤 값입니다. 방은 담당자가 따로 잡아 드립니다.';
+
+  @override
+  String get companionRoomSameTag => '같은 방';
+
+  @override
+  String get companionRoomOtherTag => '다른 방';
+
+  @override
+  String familyCostTitle(int count) {
+    return '함께 내실 금액 ($count명)';
+  }
+
+  @override
+  String familyFeeRow(String self, String others) {
+    return '본인 $self + 동반자 $others';
+  }
+
+  @override
+  String familyHotelTitle(int heads) {
+    return '수양회 전후 숙박 ($heads명)';
+  }
+
+  @override
+  String familyHotelPerNight(String each, int heads, String all) {
+    return '1박 $each × $heads명 = $all';
+  }
+
+  @override
+  String familyHotelNights(int nights, String total) {
+    return '$nights박이면 $total';
+  }
+
+  @override
+  String get familyHotelNoNights => '몇 박인지는 비행 일정을 적으면 계산됩니다.';
+
+  @override
+  String get familyNow => '지금 고르신 대로 합계';
+
+  @override
+  String familySeparateNote(int count) {
+    return '따로 등록하는 분($count명)의 비용은 그분 등록에서 냅니다.';
+  }
+
+  @override
+  String hotelEstimateHeads(int count) {
+    return '예상 숙박비 ($count명)';
+  }
 }

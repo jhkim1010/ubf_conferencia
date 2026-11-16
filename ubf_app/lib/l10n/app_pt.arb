@@ -1209,5 +1209,20 @@
   "travelNightsFromFlights": "As noites e o valor devido são recalculados pelos voos ao salvar.",
   "travelSaved": "Salvo · antes {before} noites · depois {after} noites · a pagar {total}",
   "travelHotelDropped": "O nível de hospedagem escolhido não pôde ser usado e foi limpo. Verifique o país de residência ou o nível.",
-  "travelTimeNone": "Sem horário"
+  "travelTimeNone": "Sem horário",
+  "companionRoomQ": "Vai dividir o quarto com você?",
+  "companionRoomSame": "Sim, o mesmo quarto",
+  "companionRoomOther": "Não, outro quarto",
+  "companionRoomHint": "O custo é o mesmo — a hospedagem é cobrada por pessoa por noite. Os organizadores vão providenciar o outro quarto.",
+  "companionRoomSameTag": "Mesmo quarto",
+  "companionRoomOtherTag": "Outro quarto",
+  "familyCostTitle": "Total do seu grupo ({count} pessoas)",
+  "familyFeeRow": "Você {self} + acompanhantes {others}",
+  "familyHotelTitle": "Hospedagem antes/depois ({heads} pessoas)",
+  "familyHotelPerNight": "{each} por noite × {heads} = {all}",
+  "familyHotelNights": "{nights} noites: {total}",
+  "familyHotelNoNights": "As noites são calculadas quando os voos forem informados.",
+  "familyNow": "Total com as escolhas atuais",
+  "familySeparateNote": "Quem se inscreve separadamente ({count}) paga na própria inscrição.",
+  "hotelEstimateHeads": "Hospedagem estimada ({count} pessoas)"
 }

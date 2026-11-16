@@ -194,9 +194,17 @@ class RegistrationCost {
       afterSelf: hotelAfterSelf,
     );
     final price = HotelPrice.of(hotelPicked);
-    final hotelEstimate = price.lowFor(hotelNights)?.toDouble();
+    // 단가는 한 사람 한 밤 값이다. 침대를 쓰는 동반자만큼 머릿수가 는다 —
+    // 서버(registration_total.js)는 처음부터 그렇게 셌는데 여기만 한 사람
+    // 몫이라, 등록 화면이 실제로 낼 돈보다 적게 보여 줬다.
+    final heads = lodgingHeads(companions);
+    final hotelEstimate = price.lowFor(hotelNights) == null
+        ? null
+        : price.lowFor(hotelNights)!.toDouble() * heads;
     // 범위로 적어 둔 곳이면 높은 쪽으로도 한 번 센다.
-    final hotelEstimateMax = price.highFor(hotelNights)?.toDouble();
+    final hotelEstimateMax = price.highFor(hotelNights) == null
+        ? null
+        : price.highFor(hotelNights)!.toDouble() * heads;
 
     // 어린이 참가비(073). 보호자가 고른 등급을 따라가므로 tierFee 가
     // 정해진 뒤에 센다. 등급을 아직 안 골랐으면 0 이고, 그때는 화면이

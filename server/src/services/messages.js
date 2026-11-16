@@ -248,6 +248,11 @@ const T = {
     en: 'Only someone assigned to the room can lead it',
     pt: 'Só quem está no quarto pode ser o responsável',
   },
+  '동반자는 방장이 될 수 없습니다': {
+    es: 'Un acompañante no puede ser encargado del cuarto',
+    en: 'A companion cannot lead a room',
+    pt: 'Um acompanhante não pode ser o responsável do quarto',
+  },
   '단체실은 같은 성별만 배정할 수 있습니다': {
     es: 'Los cuartos compartidos son de un solo género',
     en: 'Shared rooms take one gender only',
