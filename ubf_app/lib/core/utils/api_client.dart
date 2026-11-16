@@ -1219,6 +1219,25 @@ class ApiClient {
     return _decode(response);
   }
 
+  /// 담당자가 한 사람의 비행 일정·전후 숙박을 고친다.
+  ///
+  /// [changes] 에 넣은 칸만 바뀐다(arrivalFlight · departureFlight ·
+  /// hotelOptionKey · hotelBeforeSelf · hotelAfterSelf · hotelNightsBefore ·
+  /// hotelNightsAfter). 항공편에 null 을 주면 그 항공편을 지운다.
+  /// 박수와 낼 돈은 서버가 비행 일정에서 다시 센다.
+  static Future<Map<String, dynamic>> updateTravelAdmin(
+    String programId,
+    String registrationId,
+    Map<String, dynamic> changes,
+  ) async {
+    final response = await http.patch(
+      _uri('/programs/$programId/registrations/$registrationId/travel'),
+      headers: await _headers(),
+      body: jsonEncode(changes),
+    );
+    return _decode(response);
+  }
+
   // ─── 참석 취소 (076) ──────────────────────────────────────
 
   /// 담당자가 대신 참석을 취소한다.

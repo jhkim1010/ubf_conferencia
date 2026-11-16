@@ -4067,4 +4067,43 @@ class AppLocalizationsEs extends AppLocalizations {
   String cancelledPaid(String amount) {
     return 'Pagó $amount: revisar devolución';
   }
+
+  @override
+  String get travelEdit => 'Editar vuelos y alojamiento';
+
+  @override
+  String get travelEstimated => 'Aún sin reservar (fecha estimada)';
+
+  @override
+  String get travelRemoveFlight => 'Quitar este vuelo';
+
+  @override
+  String get travelNoFlight => 'Sin vuelo';
+
+  @override
+  String get travelAddFlight => 'Agregar vuelo';
+
+  @override
+  String get travelSelfBefore =>
+      'Consigue su propio alojamiento antes del retiro';
+
+  @override
+  String get travelSelfAfter =>
+      'Consigue su propio alojamiento después del retiro';
+
+  @override
+  String get travelNightsFromFlights =>
+      'Las noches y el monto a pagar se recalculan con los vuelos al guardar.';
+
+  @override
+  String travelSaved(int before, int after, String total) {
+    return 'Guardado · antes $before noches · después $after noches · a pagar $total';
+  }
+
+  @override
+  String get travelHotelDropped =>
+      'No se pudo usar el nivel de alojamiento elegido y se dejó vacío. Revise el país de residencia o el nivel.';
+
+  @override
+  String get travelTimeNone => 'Sin hora';
 }

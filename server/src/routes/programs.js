@@ -3,6 +3,7 @@ import { translateField } from '../services/translate_api.js';
 import { pickLanguage } from '../services/messages.js';
 import { sql } from '../db.js';
 import { recountRegistrationTotal } from '../services/registration_recount.js';
+import { planTravelEdit } from '../services/travel_edit.js';
 import { normalizeOptions } from '../services/option_media.js';
 import { rolesOf, tallyRole, sortRoles } from '../services/service_roles.js';
 import {
@@ -1371,6 +1372,86 @@ router.patch(
       res.json(row);
     } catch (err) {
       console.error('참가자 수정 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// PATCH /programs/:id/registrations/:registrationId/travel — 비행 일정·전후 숙박
+//
+// "비행기가 바뀌었어요" 를 전화로만 알려 오는 사람이 많다. 담당자가 그 자리에서
+// 고칠 수 있어야 배차와 방이 옛 일정으로 잡히지 않는다.
+//
+// 박수와 숙박비는 등록 라우트와 **같은 규칙**으로 다시 낸다
+// (services/travel_edit.js → registration_recount.js). 비행편을 고쳤는데
+// 숙박비가 옛것으로 남으면 낼 돈이 조용히 틀린다.
+router.patch(
+  '/:id/registrations/:registrationId/travel',
+  requireAuth,
+  requireProgramAdmin,
+  // 명단·배차·숙소 담당 모두 이 일을 받는다.
+  requireScope('registration', 'transport', 'rooms'),
+  async (req, res) => {
+    const { id: programId, registrationId } = req.params;
+    const body = req.body ?? {};
+    try {
+      const [existing] = await sql`
+        SELECT r.id, r.country, r.selected_options,
+               r.arrival_flight, r.departure_flight,
+               r.hotel_option_key, r.hotel_nights_before, r.hotel_nights_after,
+               r.hotel_before_self, r.hotel_after_self
+          FROM registrations r
+         WHERE r.id = ${registrationId} AND r.program_id = ${programId}
+      `;
+      if (!existing) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+
+      const [program] = await sql`
+        SELECT start_date, end_date, hotel_options, host_country
+          FROM programs WHERE id = ${programId}
+      `;
+      const picked = Array.isArray(existing.selected_options)
+        ? existing.selected_options
+        : [];
+      // 숙박이 든 투어의 끝날까지는 이미 묵는다 — 등록 라우트와 같은 조회.
+      const tours = picked.length
+        ? await sql`
+            SELECT end_date AS end, includes_lodging AS "includesLodging",
+                   est_lodging_cost AS "estLodgingCost"
+              FROM program_options
+             WHERE program_id = ${programId}
+               AND id = ANY(${picked}) AND end_date IS NOT NULL`
+        : [];
+
+      const plan = planTravelEdit({ existing, program, tours, body });
+
+      await sql`
+        UPDATE registrations
+           SET arrival_flight = ${plan.arrival ? JSON.stringify(plan.arrival) : null},
+               departure_flight = ${plan.departure ? JSON.stringify(plan.departure) : null},
+               hotel_option_key = ${plan.hotelKey},
+               hotel_nights_before = ${plan.nightsBefore},
+               hotel_nights_after = ${plan.nightsAfter},
+               hotel_before_self = ${plan.beforeSelf},
+               hotel_after_self = ${plan.afterSelf},
+               updated_at = NOW()
+         WHERE id = ${registrationId}
+      `;
+      const total = await recountRegistrationTotal(registrationId);
+
+      res.json({
+        id: registrationId,
+        arrival_flight: plan.arrival,
+        departure_flight: plan.departure,
+        hotel_option_key: plan.hotelKey,
+        hotel_nights_before: plan.nightsBefore,
+        hotel_nights_after: plan.nightsAfter,
+        hotel_before_self: plan.beforeSelf,
+        hotel_after_self: plan.afterSelf,
+        hotel_dropped: plan.hotelDropped,
+        total_cost: total,
+      });
+    } catch (err) {
+      console.error('비행·숙박 수정 오류:', err);
       res.status(500).json({ error: '서버 오류' });
     }
   },

@@ -2822,5 +2822,29 @@
         "type": "String"
       }
     }
-  }
+  },
+  "travelEdit": "Edit flights & lodging",
+  "travelEstimated": "Not booked yet (expected date)",
+  "travelRemoveFlight": "Remove this flight",
+  "travelNoFlight": "No flight",
+  "travelAddFlight": "Add flight",
+  "travelSelfBefore": "Arranges their own lodging before the conference",
+  "travelSelfAfter": "Arranges their own lodging after the conference",
+  "travelNightsFromFlights": "Nights and the amount due are recalculated from the flights when you save.",
+  "travelSaved": "Saved · before {before} nights · after {after} nights · due {total}",
+  "@travelSaved": {
+    "placeholders": {
+      "before": {
+        "type": "int"
+      },
+      "after": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "travelHotelDropped": "The chosen lodging level could not be used and was cleared. Check their country of residence or the level.",
+  "travelTimeNone": "No time"
 }

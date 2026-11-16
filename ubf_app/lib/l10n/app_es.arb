@@ -1212,5 +1212,16 @@
   "cancelRestoreHint": "Al restaurar vuelve a la lista, pero hay que asignarle de nuevo cama, grupo y transporte.",
   "cancelledBySelf": "Canceló la persona",
   "cancelledBy": "Canceló {name}",
-  "cancelledPaid": "Pagó {amount}: revisar devolución"
+  "cancelledPaid": "Pagó {amount}: revisar devolución",
+  "travelEdit": "Editar vuelos y alojamiento",
+  "travelEstimated": "Aún sin reservar (fecha estimada)",
+  "travelRemoveFlight": "Quitar este vuelo",
+  "travelNoFlight": "Sin vuelo",
+  "travelAddFlight": "Agregar vuelo",
+  "travelSelfBefore": "Consigue su propio alojamiento antes del retiro",
+  "travelSelfAfter": "Consigue su propio alojamiento después del retiro",
+  "travelNightsFromFlights": "Las noches y el monto a pagar se recalculan con los vuelos al guardar.",
+  "travelSaved": "Guardado · antes {before} noches · después {after} noches · a pagar {total}",
+  "travelHotelDropped": "No se pudo usar el nivel de alojamiento elegido y se dejó vacío. Revise el país de residencia o el nivel.",
+  "travelTimeNone": "Sin hora"
 }

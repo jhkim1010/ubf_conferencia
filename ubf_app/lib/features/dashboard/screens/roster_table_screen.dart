@@ -14,6 +14,7 @@ import '../../../core/utils/payment_state.dart';
 import '../../../core/utils/roster_sort.dart';
 import '../../../core/utils/table_export.dart';
 import '../../program/providers/program_provider.dart';
+import 'travel_edit_dialog.dart';
 
 /// 대시보드 카드에서 열리는 표. 카드마다 무엇을 보여 줄지가 다르다.
 enum RosterView { all, meals, payments, arrival }
@@ -627,6 +628,44 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     }
   }
 
+  /// 비행 일정·전후 숙박을 고친다. 박수와 낼 돈은 서버가 다시 센다.
+  Future<void> _editTravel(Map<String, dynamic> reg, Currency currency) async {
+    final l10n = AppLocalizations.of(context)!;
+    // 숙박 수준 목록과 수양회 날짜가 여기 있다.
+    final program = ref.read(programByIdProvider(widget.programId)).valueOrNull;
+    final changes = await showTravelEditDialog(
+      context,
+      reg: reg,
+      program: program,
+    );
+    if (changes == null || !mounted) return;
+    try {
+      final r = await ApiClient.updateTravelAdmin(
+        widget.programId,
+        reg['id'] as String,
+        changes,
+      );
+      _refresh();
+      if (!mounted) return;
+      // 다시 센 결과를 보여 준다. 숙박비가 바뀌었는지 담당자가 바로 안다.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            r['hotel_dropped'] == true
+                ? l10n.travelHotelDropped
+                : l10n.travelSaved(
+                    (r['hotel_nights_before'] as num?)?.toInt() ?? 0,
+                    (r['hotel_nights_after'] as num?)?.toInt() ?? 0,
+                    currency.format(Money.parse(r['total_cost']) ?? 0),
+                  ),
+          ),
+        ),
+      );
+    } catch (e) {
+      _showError(e);
+    }
+  }
+
   void _refresh() {
     ref.invalidate(programRegistrationsProvider(widget.programId));
     ref.invalidate(programStatsProvider(widget.programId));
@@ -1197,10 +1236,22 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                       ),
                     ),
                   DataCell(
-                    IconButton(
-                      icon: const Icon(Icons.edit_outlined, size: 18),
-                      tooltip: l10n.actionEdit,
-                      onPressed: () => _editPerson(data[ri], currency),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // 비행기가 바뀌었다는 연락은 전화로 온다. 그 자리에서
+                        // 고치는 길이다.
+                        IconButton(
+                          icon: const Icon(Icons.flight_outlined, size: 18),
+                          tooltip: l10n.travelEdit,
+                          onPressed: () => _editTravel(data[ri], currency),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          tooltip: l10n.actionEdit,
+                          onPressed: () => _editPerson(data[ri], currency),
+                        ),
+                      ],
                     ),
                   ),
                 ],

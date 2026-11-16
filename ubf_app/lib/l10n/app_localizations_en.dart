@@ -4054,4 +4054,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String cancelledPaid(String amount) {
     return 'Paid $amount — check refund';
   }
+
+  @override
+  String get travelEdit => 'Edit flights & lodging';
+
+  @override
+  String get travelEstimated => 'Not booked yet (expected date)';
+
+  @override
+  String get travelRemoveFlight => 'Remove this flight';
+
+  @override
+  String get travelNoFlight => 'No flight';
+
+  @override
+  String get travelAddFlight => 'Add flight';
+
+  @override
+  String get travelSelfBefore =>
+      'Arranges their own lodging before the conference';
+
+  @override
+  String get travelSelfAfter =>
+      'Arranges their own lodging after the conference';
+
+  @override
+  String get travelNightsFromFlights =>
+      'Nights and the amount due are recalculated from the flights when you save.';
+
+  @override
+  String travelSaved(int before, int after, String total) {
+    return 'Saved · before $before nights · after $after nights · due $total';
+  }
+
+  @override
+  String get travelHotelDropped =>
+      'The chosen lodging level could not be used and was cleared. Check their country of residence or the level.';
+
+  @override
+  String get travelTimeNone => 'No time';
 }

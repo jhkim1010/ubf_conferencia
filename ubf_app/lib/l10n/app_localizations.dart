@@ -7295,6 +7295,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paid {amount} — check refund'**
   String cancelledPaid(String amount);
+
+  /// No description provided for @travelEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit flights & lodging'**
+  String get travelEdit;
+
+  /// No description provided for @travelEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Not booked yet (expected date)'**
+  String get travelEstimated;
+
+  /// No description provided for @travelRemoveFlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this flight'**
+  String get travelRemoveFlight;
+
+  /// No description provided for @travelNoFlight.
+  ///
+  /// In en, this message translates to:
+  /// **'No flight'**
+  String get travelNoFlight;
+
+  /// No description provided for @travelAddFlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Add flight'**
+  String get travelAddFlight;
+
+  /// No description provided for @travelSelfBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Arranges their own lodging before the conference'**
+  String get travelSelfBefore;
+
+  /// No description provided for @travelSelfAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Arranges their own lodging after the conference'**
+  String get travelSelfAfter;
+
+  /// No description provided for @travelNightsFromFlights.
+  ///
+  /// In en, this message translates to:
+  /// **'Nights and the amount due are recalculated from the flights when you save.'**
+  String get travelNightsFromFlights;
+
+  /// No description provided for @travelSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved · before {before} nights · after {after} nights · due {total}'**
+  String travelSaved(int before, int after, String total);
+
+  /// No description provided for @travelHotelDropped.
+  ///
+  /// In en, this message translates to:
+  /// **'The chosen lodging level could not be used and was cleared. Check their country of residence or the level.'**
+  String get travelHotelDropped;
+
+  /// No description provided for @travelTimeNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No time'**
+  String get travelTimeNone;
 }
 
 class _AppLocalizationsDelegate

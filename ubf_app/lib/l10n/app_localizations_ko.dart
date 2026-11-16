@@ -3959,4 +3959,39 @@ class AppLocalizationsKo extends AppLocalizations {
   String cancelledPaid(String amount) {
     return '$amount 냄 — 환불 확인';
   }
+
+  @override
+  String get travelEdit => '비행·숙박 수정';
+
+  @override
+  String get travelEstimated => '아직 예매 전 (예상 날짜)';
+
+  @override
+  String get travelRemoveFlight => '이 항공편 지우기';
+
+  @override
+  String get travelNoFlight => '항공편 없음';
+
+  @override
+  String get travelAddFlight => '항공편 넣기';
+
+  @override
+  String get travelSelfBefore => '수양회 전 숙소는 본인이 직접 구함';
+
+  @override
+  String get travelSelfAfter => '수양회 후 숙소는 본인이 직접 구함';
+
+  @override
+  String get travelNightsFromFlights => '박수와 낼 돈은 저장할 때 비행 일정으로 다시 계산됩니다.';
+
+  @override
+  String travelSaved(int before, int after, String total) {
+    return '저장했습니다 · 전 $before박 · 후 $after박 · 낼 돈 $total';
+  }
+
+  @override
+  String get travelHotelDropped => '고른 숙박 수준을 쓸 수 없어 비웠습니다. 거주 국가나 수준을 확인하십시오.';
+
+  @override
+  String get travelTimeNone => '시각 없음';
 }

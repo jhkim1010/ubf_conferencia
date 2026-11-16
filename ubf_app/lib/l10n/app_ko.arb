@@ -1212,5 +1212,16 @@
   "cancelRestoreHint": "되살리면 명단에 돌아오지만 방·말씀조·차량은 다시 배정해야 합니다.",
   "cancelledBySelf": "본인이 취소",
   "cancelledBy": "{name} 님이 취소",
-  "cancelledPaid": "{amount} 냄 — 환불 확인"
+  "cancelledPaid": "{amount} 냄 — 환불 확인",
+  "travelEdit": "비행·숙박 수정",
+  "travelEstimated": "아직 예매 전 (예상 날짜)",
+  "travelRemoveFlight": "이 항공편 지우기",
+  "travelNoFlight": "항공편 없음",
+  "travelAddFlight": "항공편 넣기",
+  "travelSelfBefore": "수양회 전 숙소는 본인이 직접 구함",
+  "travelSelfAfter": "수양회 후 숙소는 본인이 직접 구함",
+  "travelNightsFromFlights": "박수와 낼 돈은 저장할 때 비행 일정으로 다시 계산됩니다.",
+  "travelSaved": "저장했습니다 · 전 {before}박 · 후 {after}박 · 낼 돈 {total}",
+  "travelHotelDropped": "고른 숙박 수준을 쓸 수 없어 비웠습니다. 거주 국가나 수준을 확인하십시오.",
+  "travelTimeNone": "시각 없음"
 }
