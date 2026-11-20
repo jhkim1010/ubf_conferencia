@@ -216,6 +216,9 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     'departureFlightNo': (r['departure_flight'] as Map?)?['flight_no'] ?? '',
     'needsPickup': r['needs_pickup'] ?? true,
     'registersSeparately': r['registers_separately'] ?? true,
+    // 따로 등록으로 적힌 분이 실제로 등록했는가. 서버가 이름으로 찾아 준다.
+    // 표에만 쓰고 저장할 때는 보내지 않는다.
+    'ownRegistrationFound': r['own_registration_found'],
     'occupiesBed': r['occupies_bed'] ?? true,
     'sharesRoom': r['shares_room'] ?? true,
     'studyGroup': r['study_group'] ?? 'none',
@@ -694,7 +697,21 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      _muted(l10n.companionOwnRegistration),
+                      // "본인 등록" 한마디로는 했다는 것인지 해야 한다는
+                      // 것인지 알 수 없었다. 했는지 안 했는지를 적는다.
+                      switch (r.data['ownRegistrationFound']) {
+                        true => _muted(l10n.companionRegisteredSeparately),
+                        false => Text(
+                          l10n.companionNotRegisteredYet,
+                          softWrap: false,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFFB45309),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        _ => _muted(l10n.companionOwnRegistration),
+                      },
                     ],
                   )
                 : TextField(

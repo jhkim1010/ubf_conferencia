@@ -11,6 +11,7 @@
 // recountRegistrationTotal 을 부른다 — 셈이 실패해도 적은 이름은 남아야 한다.
 
 import { sql } from '../db.js';
+import { nameKey } from './room_occupant.js';
 import {
   defaultOccupiesBed,
   planCompanionSave,
@@ -154,7 +155,7 @@ export async function saveCompanionList(regId, list) {
 
 /// 등록 [regId] 의 동반자들 — 참가자 화면과 담당자 화면이 같은 모양을 받는다.
 export async function listCompanions(regId) {
-  return sql`
+  const rows = await sql`
     SELECT c.id, c.real_name, c.bible_name, c.gender, c.age, c.language,
            -- 069: 이 사람이 따로 등록하는가, 침대를 쓰는가.
            c.registers_separately, c.occupies_bed,
@@ -182,4 +183,22 @@ export async function listCompanions(regId) {
     WHERE c.registration_id = ${regId}
     ORDER BY c.created_at ASC
   `;
+  if (!rows.some((c) => c.registers_separately)) return rows;
+  // "따로 등록" 으로 적힌 분이 **정말 등록했는가**. 화면이 "등록함" 과
+  // "아직 안 함" 을 갈라 적는다 — "본인 등록" 한마디로는 했다는 것인지
+  // 해야 한다는 것인지 알 수 없었다. 같은 수양회에 이름이 같은 등록이
+  // 있으면 한 것으로 본다(방 배정이 잇는 규칙과 같다, separateFamilyEdges).
+  // 대표자 자신은 빼고 본다 — 대표자 이름을 동반자로 또 적은 줄도 있다.
+  const others = await sql`
+    SELECT o.real_name FROM registrations o
+      JOIN registrations me ON me.program_id = o.program_id
+     WHERE me.id = ${regId} AND o.id <> me.id
+       AND counts_as_participant(o.real_name, o.submitted, o.cancelled_at)
+  `;
+  const names = new Set(others.map((o) => nameKey(o.real_name)).filter(Boolean));
+  return rows.map((c) =>
+    c.registers_separately
+      ? { ...c, own_registration_found: names.has(nameKey(c.real_name)) }
+      : c,
+  );
 }

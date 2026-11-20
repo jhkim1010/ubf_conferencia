@@ -4219,6 +4219,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get companionOwnRegistration => 'Own registration';
 
   @override
+  String get companionRegisteredSeparately => 'Registered separately';
+
+  @override
+  String get companionNotRegisteredYet => 'Not registered yet';
+
+  @override
   String get companionMakeJoint => 'Register together';
 
   @override

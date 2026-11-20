@@ -137,12 +137,13 @@ void main() {
           'real_name': 'Moses Chang',
           'age': 81,
           'registers_separately': true,
+          'own_registration_found': false,
           'study_group': 'none',
         },
       ],
     );
-    // 처음에는 잠겨 있다 — 이름 입력 칸이 없다.
-    expect(find.text('본인 등록'), findsOneWidget);
+    // 처음에는 잠겨 있다 — 이름 입력 칸이 없다. 등록이 없다는 것이 보인다.
+    expect(find.text('아직 등록 안 함'), findsOneWidget);
     expect(find.widgetWithText(TextField, '이름'), findsNothing);
 
     // 취소하면 그대로다.
@@ -150,7 +151,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('취소'));
     await tester.pumpAndSettle();
-    expect(find.text('본인 등록'), findsOneWidget);
+    expect(find.text('아직 등록 안 함'), findsOneWidget);
 
     saves.clear();
     await tester.tap(find.text('함께 등록으로'));
@@ -160,7 +161,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
 
-    expect(find.text('본인 등록'), findsNothing);
+    expect(find.text('아직 등록 안 함'), findsNothing);
     expect(find.widgetWithText(TextField, 'Moses Chang'), findsOneWidget);
     final m = saves.last.single;
     expect(m['id'], 'm1');
@@ -178,10 +179,12 @@ void main() {
           'real_name': 'Soo Yeon Choi',
           'age': 52,
           'registers_separately': true,
+          'own_registration_found': true,
           'shares_room': true,
         },
       ],
     );
+    expect(find.text('따로 등록함'), findsOneWidget);
     saves.clear();
     await tester.tap(find.text('다른 방'));
     await tester.pump(const Duration(seconds: 1));

@@ -4233,6 +4233,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get companionOwnRegistration => 'Inscrição própria';
 
   @override
+  String get companionRegisteredSeparately => 'Inscrito à parte';
+
+  @override
+  String get companionNotRegisteredYet => 'Ainda não inscrito';
+
+  @override
   String get companionMakeJoint => 'Inscrever juntos';
 
   @override

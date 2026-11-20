@@ -1244,6 +1244,8 @@
   "companionSelfRowNamed": "{name} (titular)",
   "companionReference": "Referência",
   "companionOwnRegistration": "Inscrição própria",
+  "companionRegisteredSeparately": "Inscrito à parte",
+  "companionNotRegisteredYet": "Ainda não inscrito",
   "companionMakeJoint": "Inscrever juntos",
   "companionMakeJointTitle": "Incluir {name} nesta inscrição?",
   "companionMakeJointBody": "Faça isso só se esta pessoa não se inscreveu por conta própria; se se inscreveu, pagaria duas vezes. Depois você poderá editar aqui idade, sexo, quarto, grupo de estudo e voo, e a taxa será somada a esta inscrição.",

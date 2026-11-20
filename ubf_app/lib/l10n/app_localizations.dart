@@ -7566,6 +7566,18 @@ abstract class AppLocalizations {
   /// **'Own registration'**
   String get companionOwnRegistration;
 
+  /// Under a companion's name: this person has their own registration in this event (found by name).
+  ///
+  /// In en, this message translates to:
+  /// **'Registered separately'**
+  String get companionRegisteredSeparately;
+
+  /// Under a companion's name: marked to register on their own, but no registration with this name exists yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not registered yet'**
+  String get companionNotRegisteredYet;
+
   /// No description provided for @companionMakeJoint.
   ///
   /// In en, this message translates to:

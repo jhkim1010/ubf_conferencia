@@ -1258,6 +1258,8 @@
   "companionSelfRowNamed": "{name} (대표자)",
   "companionReference": "기준",
   "companionOwnRegistration": "본인 등록",
+  "companionRegisteredSeparately": "따로 등록함",
+  "companionNotRegisteredYet": "아직 등록 안 함",
   "companionMakeJoint": "함께 등록으로",
   "companionMakeJointTitle": "{name} 님을 이 등록에 함께 넣을까요?",
   "companionMakeJointBody": "이분이 따로 등록하지 않았을 때만 바꾸십시오. 따로 등록한 분을 바꾸면 참가비가 두 번 붙습니다. 바꾸면 이 줄에서 나이·성별·방·분반·비행기를 고칠 수 있고, 참가비는 이 등록에 더해집니다.",

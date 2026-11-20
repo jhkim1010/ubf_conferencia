@@ -4119,6 +4119,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get companionOwnRegistration => '본인 등록';
 
   @override
+  String get companionRegisteredSeparately => '따로 등록함';
+
+  @override
+  String get companionNotRegisteredYet => '아직 등록 안 함';
+
+  @override
   String get companionMakeJoint => '함께 등록으로';
 
   @override
