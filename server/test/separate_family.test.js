@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { nameKey, separateFamilyEdges } from '../src/services/room_occupant.js';
 
 test('이름은 대소문자·악센트·공백을 무시하고 비교한다', () => {
-  assert.equal(nameKey('  SOO  YEON Choi '), 'soo yeon choi');
+  assert.equal(nameKey('  SOO  YEON Choi '), 'sooyeonchoi');
+  assert.equal(nameKey('BO HYUN BAEK'), nameKey('bohyun baek'));
   assert.equal(nameKey('Jazmín Rentería'), nameKey('jazmin renteria'));
 });
 

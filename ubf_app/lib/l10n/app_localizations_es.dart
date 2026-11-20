@@ -604,6 +604,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get summaryTotalCost => 'Pago total';
 
   @override
+  String summaryCoveredBy(String name) {
+    return 'Se paga junto con la inscripción de $name';
+  }
+
+  @override
   String get summaryNoPaidOptions => 'No hay opciones de pago seleccionadas';
 
   @override

@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { translateField } from '../services/translate_api.js';
 import { pickLanguage } from '../services/messages.js';
 import { sql } from '../db.js';
-import { recountRegistrationTotal } from '../services/registration_recount.js';
+import { recountRegistrationTotal, recountNamesakes, companionNamesOf } from '../services/registration_recount.js';
+import { jointCompanionHeadcount } from '../services/companion_cover.js';
 import { planTravelEdit } from '../services/travel_edit.js';
 import { cleanProfile, planTours } from '../services/profile_edit.js';
 import { listCompanions, saveCompanionList } from '../services/companion_save.js';
@@ -1017,16 +1018,6 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
         p.id AS program_id,
         p.name AS program_name,
         COUNT(r.id) AS total_registrations,
-        -- 함께 등록한 동반자(069). 등록 인원과 따로 센다 — 합쳐 버리면
-        -- 담당자가 "몇 명이 등록했나" 와 "몇 명이 오나" 를 구별할 수 없다.
-        -- 따로 등록한 동반자는 자기 등록으로 이미 세었으니 넣지 않는다.
-        -- 입금 줄과 조인돼 한 사람이 여러 줄일 수 있어 SUM 이 아니라
-        -- 따로 센다.
-        (SELECT COUNT(*) FROM companions c
-           JOIN registrations r2 ON r2.id = c.registration_id
-          WHERE r2.program_id = p.id
-            AND counts_as_participant(r2.real_name, r2.submitted, r2.cancelled_at)
-            AND c.registers_separately = false) AS companion_count,
         -- 국제 수양회만 "전체 (외국 n)" 으로 보여 준다(목록과 같은 규칙).
         -- 입금 줄과 조인돼 한 사람이 여러 줄일 수 있어 DISTINCT 로 센다.
         CASE WHEN p.program_type = 'international' AND p.host_country IS NOT NULL
@@ -1084,6 +1075,11 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
       WHERE p.id = ${req.params.id}
       GROUP BY p.id, p.name, p.fee_payment, p.tour_payment
     `;
+    // 함께 등록한 동반자(069). 등록 인원과 따로 센다 — 합쳐 버리면 담당자가
+    // "몇 명이 등록했나" 와 "몇 명이 오나" 를 구별할 수 없다. 따로 등록한
+    // 동반자, 그리고 함께 등록됐지만 자기 계정으로도 등록한 사람은 등록
+    // 인원으로 이미 셌으니 넣지 않는다(companion_cover.js).
+    stats.companion_count = await jointCompanionHeadcount(req.params.id);
 
     // 카드 안에 보여 줄 최근 몇 줄.
     //
@@ -1580,6 +1576,7 @@ router.put(
     try {
       const reg = await regOf(req.params.id, req.params.registrationId);
       if (!reg) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+      const before = await companionNamesOf(reg.id);
       const saved = await saveCompanionList(reg.id, list);
       let totalCost = null;
       try {
@@ -1587,6 +1584,11 @@ router.put(
       } catch (err) {
         console.error('담당자 동반자 저장 후 낼 돈 재계산 실패:', err);
       }
+      // 이 동반자들이 자기 계정으로도 등록했으면 그 등록의 낼 돈이 바뀐다
+      // (대표자가 낸다, companion_cover.js). 지운 사람도 넣는다 — 풀려야 한다.
+      recountNamesakes(reg.id, [...before, ...list.map((c) => c?.realName)]).catch(
+        (err) => console.error('동반자 이름이 같은 등록 재계산 실패:', err),
+      );
       res.json({ count: saved.length, companions: saved, totalCost });
     } catch (err) {
       console.error('담당자 동반자 저장 오류:', err);
@@ -2152,13 +2154,7 @@ router.get('/:id/meals', requireAuth, requireProgramAdmin,
     const [counts] = await sql`
       SELECT
         COUNT(*)::int AS total,
-        COUNT(*) FILTER (WHERE r.skips_breakfast)::int AS skips_breakfast,
-        COALESCE((
-          SELECT COUNT(*) FROM companions c
-            JOIN registrations r2 ON r2.id = c.registration_id
-           WHERE r2.program_id = ${programId} AND r2.cancelled_at IS NULL
-             AND c.registers_separately = false
-        ), 0)::int AS companions
+        COUNT(*) FILTER (WHERE r.skips_breakfast)::int AS skips_breakfast
       FROM registrations r
       WHERE r.program_id = ${programId} AND r.cancelled_at IS NULL
     `;
@@ -2172,7 +2168,8 @@ router.get('/:id/meals', requireAuth, requireProgramAdmin,
         end_date: program.end_date,
       },
       total: counts.total,
-      companions: counts.companions,
+      // 자기 계정으로도 등록한 동반자는 위 total 에 이미 들었다(companion_cover.js).
+      companions: await jointCompanionHeadcount(programId),
       skips_breakfast: counts.skips_breakfast,
       people: people.map((p) => ({
         real_name: p.real_name,

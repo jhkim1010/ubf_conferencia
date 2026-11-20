@@ -168,7 +168,10 @@ class SummaryScreen extends ConsumerWidget {
           // 승인된 할인만이다. 신청 중인 금액을 미리 빼면 아직 결정되지도
           // 않은 감액을 확정된 것처럼 보여주게 된다.
           final approvedDiscount = cost.discount;
-          final totalCost = cost.due;
+          // 대표자가 이 사람을 동반자로 함께 등록했으면 돈은 대표자가 낸다 —
+          // 서버가 이 등록의 낼 돈을 0 으로 둔다(companion_cover.js).
+          final coveredBy = '${saved?['covered_by'] ?? ''}'.trim();
+          final totalCost = coveredBy.isNotEmpty ? 0.0 : cost.due;
 
           // 따로 나갈 돈(061). **투어 값에 안 들어 있는 것만이다** — 수양회
           // 전후 숙박비는 064 부터 우리가 받으므로 위의 합계 안에 있다.
@@ -450,7 +453,7 @@ class SummaryScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      cost.dueIsRange
+                      cost.dueIsRange && coveredBy.isEmpty
                           ? l10n.costBarRange(
                               currency.format(cost.due),
                               currency.format(cost.dueMax),
@@ -462,7 +465,13 @@ class SummaryScreen extends ConsumerWidget {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                     ),
-                    if (totalCost == 0)
+                    if (coveredBy.isNotEmpty)
+                      Text(
+                        l10n.summaryCoveredBy(coveredBy),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      )
+                    else if (totalCost == 0)
                       Text(
                         l10n.summaryNoPaidOptions,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(

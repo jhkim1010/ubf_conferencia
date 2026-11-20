@@ -17,6 +17,7 @@ import {
   companionGroupPeople,
   separateFamilyEdges,
 } from '../services/room_occupant.js';
+import { loadCoverMap } from '../services/companion_cover.js';
 
 const router = Router();
 
@@ -129,6 +130,24 @@ async function loadSeparateFamilyEdges(programId) {
   return separateFamilyEdges(companions, registrations);
 }
 
+/// 대표자가 동반자로 함께 등록했는데 자기 계정으로도 등록한 사람
+/// (companion_cover.js). 방에서는 **동반자 줄이 그 사람**이다 — 대표자와
+/// 같은 방이면 대표자를 따라가고, 다른 방이면 'c:<id>' 로 든다. 자기 등록까지
+/// 넣으면 같은 사람이 두 자리를 차지한다.
+async function roomCoveredIds(programId) {
+  return new Set((await loadCoverMap(programId)).keys());
+}
+
+/// 말씀조에서는 동반자 줄이 조에 들 때(same·other)만 그 사람이다.
+/// 동반자 줄이 '안 함' 이면 자기 등록으로 조에 든다.
+async function groupCoveredIds(programId) {
+  const out = new Set();
+  for (const [id, c] of await loadCoverMap(programId)) {
+    if (c.studyGroup === 'same' || c.studyGroup === 'other') out.add(id);
+  }
+  return out;
+}
+
 // 동행(가족) 관계로 수락된 짝. 성별이 달라도 같은 방을 쓸 수 있는 근거다(022).
 async function loadFamilyEdges(programId) {
   const rows = await sql`
@@ -196,6 +215,7 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, requireScope('
         AND reg.id NOT IN (SELECT registration_id FROM room_assignments WHERE registration_id IS NOT NULL)
       ORDER BY reg.real_name
     `;
+    const roomCovered = await roomCoveredIds(programId);
     // 다른 방을 쓰는 동반자(077). 자기 줄(companion_id)로 방에 든다.
     const separate = await loadSeparateCompanions(programId);
     const placed = await sql`
@@ -225,7 +245,7 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, requireScope('
       unassigned: [
         ...(await withBuddies(
           programId,
-          unassigned,
+          unassigned.filter((u) => !roomCovered.has(u.registrationId)),
           'roommate',
           await loadSeparateFamilyEdges(programId),
         )),
@@ -300,6 +320,7 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, requireScope(
                         WHERE registration_id IS NOT NULL)
       ORDER BY real_name
     `;
+    const groupCovered = await groupCoveredIds(programId);
     // 조에 들기로 한 동반자 중 아직 조가 없는 사람(078). 언어는 대표자의 것.
     const companions = await loadGroupCompanions(programId);
     const placed = new Set(
@@ -321,7 +342,10 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, requireScope(
       // "같은 분반" 동반자는 대표자와 함께 움직인다(withIds).
       unassigned: await withBuddies(
         programId,
-        [...unassignedRegs, ...unassignedComps],
+        [
+          ...unassignedRegs.filter((u) => !groupCovered.has(u.registrationId)),
+          ...unassignedComps,
+        ],
         'group',
         sameEdges,
       ),
@@ -336,7 +360,7 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, requireScope(
 router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, requireScope('rooms'), async (req, res) => {
   const { programId } = req.params;
   try {
-    const [rooms, registrants, separate, acceptedRoommates, separateFamily] = await Promise.all([
+    const [rooms, allRegistrants, separate, acceptedRoommates, separateFamily, roomCovered] = await Promise.all([
       sql`SELECT id, capacity, extra_capacity AS "extraCapacity", gender,
                  room_type AS "roomType"
             FROM rooms WHERE program_id = ${programId}`,
@@ -344,7 +368,9 @@ router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, requireS
       loadSeparateCompanions(programId),
       loadAcceptedEdges(programId, 'roommate'),
       loadSeparateFamilyEdges(programId),
+      roomCoveredIds(programId),
     ]);
+    const registrants = allRegistrants.filter((p) => !roomCovered.has(p.id));
     // 따로 등록한 가족도 짝이다. 엔진은 가족 짝이 짝 목록의 일부이기를
     // 바란다(assignRooms 의 familyEdges 설명).
     const roommateEdges = [...acceptedRoommates, ...separateFamily];
@@ -411,7 +437,7 @@ router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, requireS
 router.post('/:programId/groups/auto', requireAuth, requireProgramAdmin, requireScope('groups'), async (req, res) => {
   const { programId } = req.params;
   try {
-    const [groups, registrants, acceptedEdges, companions, [program]] = await Promise.all([
+    const [groups, allRegistrants, acceptedEdges, companions, [program], groupCovered] = await Promise.all([
       sql`SELECT id, study_language AS "studyLanguage", age_band AS "ageBand",
                  capacity
             FROM groups WHERE program_id = ${programId} ORDER BY sort_order`,
@@ -419,7 +445,9 @@ router.post('/:programId/groups/auto', requireAuth, requireProgramAdmin, require
       loadAcceptedEdges(programId, 'group'),
       loadGroupCompanions(programId),
       sql`SELECT small_cohort_policy, min_team_size FROM programs WHERE id = ${programId}`,
+      groupCoveredIds(programId),
     ]);
+    const registrants = allRegistrants.filter((p) => !groupCovered.has(p.id));
     // 함께 등록한 동반자도 한 사람으로 넣는다(078). "같은 분반" 은 대표자와
     // 짝으로 묶여 한 조로 간다.
     const fromCompanions = companionGroupPeople(companions);

@@ -587,6 +587,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get summaryTotalCost => '총 납부 비용';
 
   @override
+  String summaryCoveredBy(String name) {
+    return '$name 님 등록에서 함께 냅니다';
+  }
+
+  @override
   String get summaryNoPaidOptions => '선택한 유료 옵션이 없습니다';
 
   @override

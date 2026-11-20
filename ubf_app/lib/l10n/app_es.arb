@@ -179,6 +179,7 @@
   "summarySectionOptions": "Programas seleccionados",
   "summarySectionRoommate": "Preferencia de compañero",
   "summaryTotalCost": "Pago total",
+  "summaryCoveredBy": "Se paga junto con la inscripción de {name}",
   "summaryNoPaidOptions": "No hay opciones de pago seleccionadas",
   "summaryViewImmigration": "Ver tarjeta de inmigración",
   "summarySubmit": "Enviar",

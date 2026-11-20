@@ -1200,6 +1200,12 @@ abstract class AppLocalizations {
   /// **'Total payment'**
   String get summaryTotalCost;
 
+  /// Under the total on the summary: another person registered this participant as their companion, so the cost is paid in that registration.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid together in {name}\'s registration'**
+  String summaryCoveredBy(String name);
+
   /// No description provided for @summaryNoPaidOptions.
   ///
   /// In en, this message translates to:

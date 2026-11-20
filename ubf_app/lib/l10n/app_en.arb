@@ -344,6 +344,8 @@
   "summarySectionOptions": "Selected programs",
   "summarySectionRoommate": "Roommate preference",
   "summaryTotalCost": "Total payment",
+  "summaryCoveredBy": "Paid together in {name}'s registration",
+  "@summaryCoveredBy": {"description": "Under the total on the summary: another person registered this participant as their companion, so the cost is paid in that registration.", "placeholders": {"name": {"type": "String"}}},
   "summaryNoPaidOptions": "No paid options selected",
   "summaryViewImmigration": "View immigration card",
   "summarySubmit": "Submit",

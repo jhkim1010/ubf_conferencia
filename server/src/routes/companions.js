@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { listCompanions, saveCompanionList } from '../services/companion_save.js';
-import { recountRegistrationTotal } from '../services/registration_recount.js';
+import { recountRegistrationTotal, recountNamesakes, companionNamesOf } from '../services/registration_recount.js';
 import { sql } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -50,6 +50,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     const regId = await myRegistrationId(req.user.userId, req.params.programId);
     if (!regId) return res.status(403).json({ error: '이 프로그램에 먼저 등록하세요' });
 
+    const before = await companionNamesOf(regId);
     const saved = await saveCompanionList(regId, list);
 
     // 동반자가 바뀌면 낼 돈도 바뀐다(073) — 어린이 참가비가 붙고, 침대를
@@ -64,6 +65,11 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     } catch (err) {
       console.error('동반자 저장 후 낼 돈 재계산 실패:', err);
     }
+    // 이 동반자들이 자기 계정으로도 등록했으면 그 등록의 낼 돈이 바뀐다
+    // (대표자가 낸다, companion_cover.js). 지운 사람도 넣는다 — 풀려야 한다.
+    recountNamesakes(regId, [...before, ...list.map((c) => c?.realName)]).catch(
+      (err) => console.error('동반자 이름이 같은 등록 재계산 실패:', err),
+    );
 
     res.json({ count: saved.length, companions: saved, totalCost });
   } catch (err) {

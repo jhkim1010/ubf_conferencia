@@ -601,6 +601,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get summaryTotalCost => 'Total payment';
 
   @override
+  String summaryCoveredBy(String name) {
+    return 'Paid together in $name\'s registration';
+  }
+
+  @override
   String get summaryNoPaidOptions => 'No paid options selected';
 
   @override

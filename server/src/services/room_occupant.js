@@ -68,15 +68,16 @@ export function companionGroupPeople(rows) {
   return { people, edges };
 }
 
-/// 이름 비교용으로 다듬는다 — 대소문자, 악센트, 겹친 공백을 무시한다.
-/// 'SOO YEON CHOI' 와 'Soo Yeon Choi', 'Jazmín' 과 'Jazmin' 을 같은 이름으로 본다.
+/// 이름 비교용으로 다듬는다 — 대소문자, 악센트, 띄어쓰기, 문장부호를
+/// 무시한다. 'SOO YEON CHOI' 와 'Soo Yeon Choi', 'Jazmín' 과 'Jazmin',
+/// 'BO HYUN BAEK' 과 'bohyun baek' 을 같은 이름으로 본다(운영에서 실제로
+/// 띄어쓰기만 달라 못 찾은 부부가 있었다).
 export function nameKey(name) {
   return String(name ?? '')
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
     .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim();
+    .replace(/[^\p{L}\p{N}]/gu, '');
 }
 
 /// **따로 등록했지만 같은 방을 원하는** 동반자를 그 사람의 등록과 잇는다.
@@ -112,4 +113,35 @@ export function separateFamilyEdges(companions, registrations) {
     edges.push(pair);
   }
   return edges;
+}
+
+/// 함께 등록한 동반자가 자기 계정으로 또 등록한 경우 — 그 등록은 대표자가
+/// 낸다(services/companion_cover.js 설명).
+///
+/// companions:    [{ id, registration_id, real_name, registers_separately, study_group }]
+/// registrations: [{ id, real_name, primary_name? }] (같은 수양회, 참가로 치는 것)
+/// 반환: Map<덮인 등록 id, { companionId, primaryId, studyGroup }>
+export function coverMap(companions, registrations) {
+  const byName = new Map();
+  for (const r of Array.isArray(registrations) ? registrations : []) {
+    const k = nameKey(r.real_name);
+    if (!k) continue;
+    byName.set(k, [...(byName.get(k) ?? []), r.id]);
+  }
+  const out = new Map();
+  for (const c of Array.isArray(companions) ? companions : []) {
+    if (c.registers_separately !== false) continue;
+    const ids = (byName.get(nameKey(c.real_name)) ?? []).filter(
+      (id) => id !== c.registration_id,
+    );
+    if (ids.length !== 1) continue;
+    // 두 대표자가 같은 사람을 적었으면 먼저 적은 쪽이다.
+    if (out.has(ids[0])) continue;
+    out.set(ids[0], {
+      companionId: c.id,
+      primaryId: c.registration_id,
+      studyGroup: c.study_group ?? 'none',
+    });
+  }
+  return out;
 }

@@ -23,6 +23,7 @@ import { sql } from '../db.js';
 import { registrationTotal } from './registration_total.js';
 import { chargeableNights } from './hotel_nights.js';
 import { bedsNeeded, toursCostOf } from './companion_role.js';
+import { loadCoverMap, registrationsNamed } from './companion_cover.js';
 
 /// 등록 [registrationId] 의 total_cost 를 다시 세어 저장한다.
 ///
@@ -69,7 +70,7 @@ export async function recountRegistrationTotal(registrationId) {
     afterSelf: reg.hotel_after_self,
   });
 
-  const { total } = registrationTotal({
+  const { total: counted } = registrationTotal({
     tier: reg.fee_tier,
     feeBasic: reg.fee_basic,
     feePremium: reg.fee_premium,
@@ -85,9 +86,34 @@ export async function recountRegistrationTotal(registrationId) {
     program: reg,
   });
 
+  // 대표자가 함께 등록한 동반자가 또 등록한 것이면 낼 돈은 0 이다 —
+  // 대표자 등록에서 동반자 몫으로 이미 셌다(companion_cover.js).
+  const total = (await loadCoverMap(reg.program_id)).has(reg.id) ? 0 : counted;
+
   // 같으면 쓰지 않는다. updated_at 이 있는 표라면 뜻 없는 변경이 남는다.
   if (Number(reg.total_cost ?? 0) !== total) {
     await sql`UPDATE registrations SET total_cost = ${total} WHERE id = ${reg.id}`;
   }
   return total;
+}
+
+/// 동반자 [names] 와 이름이 같은 **다른 등록들**의 낼 돈을 다시 센다.
+///
+/// 대표자가 동반자를 더하거나 지우거나 "따로 등록" 으로 바꾸면, 그 사람이
+/// 자기 계정으로 한 등록이 대표자에게 덮이거나(0 원) 풀린다(제 몫을 냄).
+/// 그 등록은 손대지 않았으므로 여기서 따라 맞춘다. 고친 뒤의 이름뿐 아니라
+/// **고치기 전의 이름도** 넘겨야 한다 — 지운 동반자의 등록이 풀려야 한다.
+export async function recountNamesakes(registrationId, names) {
+  const [reg] = await sql`SELECT program_id FROM registrations WHERE id = ${registrationId}`;
+  if (!reg) return;
+  const ids = await registrationsNamed(reg.program_id, names, registrationId);
+  for (const id of ids) await recountRegistrationTotal(id);
+}
+
+/// 등록 [registrationId] 에 지금 적혀 있는 동반자 이름들.
+export async function companionNamesOf(registrationId) {
+  const rows = await sql`
+    SELECT real_name FROM companions WHERE registration_id = ${registrationId}
+  `;
+  return rows.map((r) => r.real_name);
 }

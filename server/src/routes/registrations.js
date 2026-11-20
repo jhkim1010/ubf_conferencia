@@ -9,6 +9,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
 import { cancelRegistration } from '../services/registration_cancel.js';
 import { normalizeCancelReason } from '../services/cancel_reason.js';
+import { coverOf } from '../services/companion_cover.js';
 
 const router = Router();
 
@@ -28,7 +29,11 @@ router.get('/:programId/me', requireAuth, async (req, res) => {
         AND r.user_id = ${req.user.userId}
     `;
 
-    res.json(registration ?? null);
+    if (!registration) return res.json(null);
+    // 대표자가 이 사람을 동반자로 함께 등록했으면 돈은 대표자가 낸다
+    // (companion_cover.js). 화면이 "○○ 님 등록에서 함께 냅니다" 라고 적는다.
+    const cover = await coverOf(registration.id);
+    res.json({ ...registration, covered_by: cover?.primaryName ?? null });
   } catch (err) {
     console.error('등록 정보 조회 오류:', err);
     res.status(500).json({ error: '서버 오류' });
@@ -420,6 +425,12 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
       notifyProgramAdmins(req.params.programId, msg).catch(err =>
         console.error('관리자 알림 전송 오류:', err.message)
       );
+    }
+
+    // 대표자가 이미 동반자로 함께 등록한 사람이면 낼 돈은 0 이다 —
+    // 대표자 등록에서 셌다. 위에서 센 금액을 그대로 두면 두 번 낸다.
+    if (await coverOf(registration.id)) {
+      await sql`UPDATE registrations SET total_cost = 0 WHERE id = ${registration.id}`;
     }
 
     res.json({ id: registration.id });
