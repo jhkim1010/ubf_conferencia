@@ -144,7 +144,11 @@ jobs:
 
   # ---------------------------------------------------------------- Linux
   linux:
-    runs-on: ubuntu-latest
+    # 24.04 로 묶어 둔다. ubuntu-latest 가 26.04 로 바뀌면서 새 clang 이
+    # flutter_secure_storage_linux 의 json.hpp(`operator "" _json`)를
+    # -Werror,-Wdeprecated-literal-operator 로 막아 빌드가 깨졌다(2026-11-20).
+    # 플러그인이 고쳐지면 latest 로 되돌린다.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Install Linux build deps
