@@ -22,7 +22,7 @@
 import { sql } from '../db.js';
 import { registrationTotal } from './registration_total.js';
 import { chargeableNights } from './hotel_nights.js';
-import { bedsNeeded } from './companion_role.js';
+import { bedsNeeded, tourHeads } from './companion_role.js';
 
 /// 등록 [registrationId] 의 total_cost 를 다시 세어 저장한다.
 ///
@@ -56,7 +56,7 @@ export async function recountRegistrationTotal(registrationId) {
     : [{ s: 0 }];
 
   const companions = await sql`
-    SELECT age, registers_separately, occupies_bed, fee_share
+    SELECT age, registers_separately, occupies_bed, fee_share, joins_tours
       FROM companions WHERE registration_id = ${reg.id}
   `;
 
@@ -74,6 +74,7 @@ export async function recountRegistrationTotal(registrationId) {
     feeBasic: reg.fee_basic,
     feePremium: reg.fee_premium,
     optionsCost: Number(sum?.s ?? 0),
+    tourPeople: tourHeads(companions),
     hotelOptions: reg.hotel_options,
     hotelKey: reg.hotel_option_key,
     hotelNights: nights,

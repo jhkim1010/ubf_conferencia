@@ -248,6 +248,11 @@ const T = {
     en: 'Only someone assigned to the room can lead it',
     pt: 'Só quem está no quarto pode ser o responsável',
   },
+  '동반자를 찾을 수 없습니다': {
+    es: 'No se encontró el acompañante',
+    en: 'Companion not found',
+    pt: 'Acompanhante não encontrado',
+  },
   '동반자는 방장이 될 수 없습니다': {
     es: 'Un acompañante no puede ser encargado del cuarto',
     en: 'A companion cannot lead a room',

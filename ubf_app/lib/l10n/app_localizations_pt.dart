@@ -2568,11 +2568,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get companionMustRegister =>
-      'Cada acompanhante também precisa se inscrever por conta própria.';
+      'A família que chega com você no mesmo voo fica inscrita por esta tabela. Uma pessoa por linha.';
 
   @override
   String get companionWhy =>
-      'Você os adiciona aqui para ficarem no mesmo quarto. Se não fizer diferença ficarem em quartos separados, não é preciso adicionar.';
+      'Basta informar nome, idade, sexo, quarto e grupo de estudo. O custo somado aparece abaixo. Escolha \"Inscreve-se por conta própria\" só para quem vai se inscrever com a própria conta.';
 
   @override
   String get homeAlsoAttending => 'Eu também participo';
@@ -3883,17 +3883,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'Veio do que você informou antes — mude se não for mais esse';
 
   @override
-  String get companionRegistersQ => 'Esta pessoa se inscreve separadamente?';
+  String get companionRegistersQ => 'Como esta pessoa vai se inscrever?';
 
   @override
-  String get companionRegistersYes => 'Sim, separadamente';
+  String get companionRegistersYes => 'Inscreve-se por conta própria';
 
   @override
-  String get companionRegistersNo => 'Não — não pode se inscrever';
+  String get companionRegistersNo => 'Inscrever aqui comigo';
 
   @override
   String get companionRegistersHint =>
-      'Escolha \"Não\" para um bebê ou criança sem conta. Este registro passa a ser o dela e conta para quarto e refeições.';
+      'Inscrita aqui, esta ficha é a inscrição dela: conta para quarto, refeições e grupo de estudo, e o custo é somado ao seu. Se escolher \"por conta própria\", ela precisará se inscrever com a própria conta.';
 
   @override
   String get companionBedQ => 'Precisa de cama?';
@@ -4167,5 +4167,117 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String hotelEstimateHeads(int count) {
     return 'Hospedagem estimada ($count pessoas)';
+  }
+
+  @override
+  String get companionStudyQ => 'Vai estudar no mesmo grupo que você?';
+
+  @override
+  String get companionStudySame => 'Mesmo grupo';
+
+  @override
+  String get companionStudyOther => 'Outro grupo';
+
+  @override
+  String get companionStudyNone => 'Nenhum';
+
+  @override
+  String get companionStudyHint =>
+      'Crianças de até 5 anos ficam em \"Nenhum\". Se for outro grupo, os organizadores vão definir.';
+
+  @override
+  String get companionMore =>
+      'Mais dados (nome bíblico, idioma, sede, traslado)';
+
+  @override
+  String get companionColName => 'Nome';
+
+  @override
+  String get companionColAge => 'Idade';
+
+  @override
+  String get companionColRoom => 'Mesmo quarto';
+
+  @override
+  String get companionColBed => 'Cama';
+
+  @override
+  String get companionColStudy => 'Estudo bíblico';
+
+  @override
+  String get companionColTour => 'Tour';
+
+  @override
+  String get companionColFlight => 'Mesmo voo';
+
+  @override
+  String get companionColFlightNo => 'Voo de chegada';
+
+  @override
+  String get companionColFee => 'Valor';
+
+  @override
+  String get companionSelfRow => 'Eu (titular)';
+
+  @override
+  String get companionOwnRegistration => 'Inscrição própria';
+
+  @override
+  String get companionRemoveRow => 'Remover linha';
+
+  @override
+  String get companionMaleShort => 'M';
+
+  @override
+  String get companionFemaleShort => 'F';
+
+  @override
+  String get companionRoomSameShort => 'Mesmo';
+
+  @override
+  String get companionRoomOtherShort => 'Outro';
+
+  @override
+  String get companionBedOwnRoom => 'Própria (outro quarto)';
+
+  @override
+  String get companionBedUses => 'Própria';
+
+  @override
+  String get companionBedShares => 'Divide';
+
+  @override
+  String get companionTourYes => 'Vai';
+
+  @override
+  String get companionTourNo => 'Não vai';
+
+  @override
+  String get companionFlightSame => 'Mesmo';
+
+  @override
+  String get companionFlightOther => 'Outro';
+
+  @override
+  String get companionFeeNeedAge => 'Falta a idade';
+
+  @override
+  String get companionFeeFree => 'Grátis';
+
+  @override
+  String get companionAddRow => 'Adicionar linha';
+
+  @override
+  String get companionTableHint =>
+      'Pressione Enter na última linha para adicionar outra. Ao informar a idade, cama, grupo e valor já vêm escolhidos. As alterações são salvas enquanto você digita.';
+
+  @override
+  String familyTourNote(int count) {
+    return '$count pessoas vão aos tours — o valor de cada tour é multiplicado pelo número de pessoas.';
+  }
+
+  @override
+  String optionsTimesPeople(String price, int count) {
+    return '$price × $count pessoas';
   }
 }

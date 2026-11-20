@@ -2495,11 +2495,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get companionSameBranchSub => '다른 지부에서 오시면 꺼 주세요';
 
   @override
-  String get companionMustRegister => '동반자도 각자 따로 등록해야 합니다.';
+  String get companionMustRegister =>
+      '같은 비행기로 함께 오시는 가족은 이 표에 적으면 등록이 끝납니다. 한 줄에 한 분씩 적어 주세요.';
 
   @override
   String get companionWhy =>
-      '여기에 적는 것은 같은 방에 배정받기 위해서입니다. 방이 따로 배정되어도 괜찮으시면 적지 않으셔도 됩니다.';
+      '이름·나이·성별과 방·분반만 적어 주시면 됩니다. 비용은 아래에 합쳐서 보여 드립니다. 본인 계정으로 따로 등록하실 분만 \"본인이 따로 등록\"을 고르세요.';
 
   @override
   String get homeAlsoAttending => '저도 참석합니다';
@@ -3779,17 +3780,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get regPhoneFromBefore => '전에 적으신 것을 가져왔습니다 — 바뀌었으면 고치십시오';
 
   @override
-  String get companionRegistersQ => '이분도 따로 등록하십니까?';
+  String get companionRegistersQ => '어떻게 등록하십니까?';
 
   @override
-  String get companionRegistersYes => '예, 따로 등록합니다';
+  String get companionRegistersYes => '본인이 따로 등록';
 
   @override
-  String get companionRegistersNo => '아니오 — 등록할 수 없습니다';
+  String get companionRegistersNo => '여기서 함께 등록';
 
   @override
   String get companionRegistersHint =>
-      '아기처럼 계정을 만들 수 없는 분은 \"아니오\" 입니다. 그러면 이 칸이 그분의 기록이 되어 방과 식사 인원에 들어갑니다.';
+      '함께 등록하면 이 칸이 그분의 등록이 됩니다 — 방·식사·분반에 들어가고, 비용은 제 등록에 합쳐집니다. \"따로 등록\"을 고르시면 그분이 본인 계정으로 다시 등록하셔야 합니다.';
 
   @override
   String get companionBedQ => '침대를 쓰십니까?';
@@ -4053,5 +4054,116 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String hotelEstimateHeads(int count) {
     return '예상 숙박비 ($count명)';
+  }
+
+  @override
+  String get companionStudyQ => '대표자와 같은 분반에서 공부하십니까?';
+
+  @override
+  String get companionStudySame => '같은 분반';
+
+  @override
+  String get companionStudyOther => '다른 분반';
+
+  @override
+  String get companionStudyNone => '안 함';
+
+  @override
+  String get companionStudyHint =>
+      '만 5세 이하는 \"안 함\"으로 미리 골라 두었습니다. 다른 분반이면 담당자가 따로 배정합니다.';
+
+  @override
+  String get companionMore => '그 밖의 정보 (성경 이름·언어·지부·픽업)';
+
+  @override
+  String get companionColName => '이름';
+
+  @override
+  String get companionColAge => '나이';
+
+  @override
+  String get companionColRoom => '같은 방';
+
+  @override
+  String get companionColBed => '침대';
+
+  @override
+  String get companionColStudy => '분반 공부';
+
+  @override
+  String get companionColTour => '투어';
+
+  @override
+  String get companionColFlight => '같은 비행기';
+
+  @override
+  String get companionColFlightNo => '도착 편명';
+
+  @override
+  String get companionColFee => '참가비';
+
+  @override
+  String get companionSelfRow => '나 (대표자)';
+
+  @override
+  String get companionOwnRegistration => '본인 등록';
+
+  @override
+  String get companionRemoveRow => '줄 지우기';
+
+  @override
+  String get companionMaleShort => '남';
+
+  @override
+  String get companionFemaleShort => '여';
+
+  @override
+  String get companionRoomSameShort => '같은 방';
+
+  @override
+  String get companionRoomOtherShort => '다른 방';
+
+  @override
+  String get companionBedOwnRoom => '씀 (다른 방)';
+
+  @override
+  String get companionBedUses => '씀';
+
+  @override
+  String get companionBedShares => '같이 잠';
+
+  @override
+  String get companionTourYes => '함께';
+
+  @override
+  String get companionTourNo => '안 감';
+
+  @override
+  String get companionFlightSame => '같음';
+
+  @override
+  String get companionFlightOther => '다름';
+
+  @override
+  String get companionFeeNeedAge => '나이 필요';
+
+  @override
+  String get companionFeeFree => '무료';
+
+  @override
+  String get companionAddRow => '줄 추가';
+
+  @override
+  String get companionTableHint =>
+      '마지막 줄에서 Enter 를 누르면 새 줄이 생깁니다. 나이를 적으면 침대·분반·참가비가 알맞게 미리 골라집니다. 적는 대로 저장됩니다.';
+
+  @override
+  String familyTourNote(int count) {
+    return '투어에 $count명이 함께 갑니다 — 고르신 투어 값에 인원수를 곱해 계산합니다.';
+  }
+
+  @override
+  String optionsTimesPeople(String price, int count) {
+    return '$price × $count명';
   }
 }

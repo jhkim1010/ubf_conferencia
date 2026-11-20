@@ -32,6 +32,7 @@ class RegistrationCost {
     required this.childFee,
     required this.childCount,
     required this.optionsTotal,
+    this.tourPeople = 1,
     required this.discount,
     required this.due,
     required this.dueMax,
@@ -57,8 +58,11 @@ class RegistrationCost {
   /// "어린이 2명" 이라고 적는데 그중 하나가 무료면 숫자가 설명이 안 된다.
   final int childCount;
 
-  /// 고른 투어 값의 합.
+  /// 고른 투어 값의 합 — 함께 가는 사람 수를 곱한 뒤다(079).
   final double optionsTotal;
+
+  /// 투어에 가는 사람 수. 본인 한 사람에 함께 가는 동반자를 더한 것이다.
+  final int tourPeople;
 
   /// **승인된** 할인만이다. 신청 중인 금액을 미리 빼면 아직 결정되지도 않은
   /// 감액을 확정된 것처럼 보여주게 된다.
@@ -163,10 +167,15 @@ class RegistrationCost {
         .where((o) => selectedOptionIds.contains(o['id'] as String?))
         .toList();
 
-    final optionsTotal = picked.fold<double>(
-      0,
-      (sum, o) => sum + (Money.parse(o['cost']) ?? 0).toDouble(),
-    );
+    // 투어 값은 한 사람 값이다. 함께 가는 동반자만큼 곱한다(079) — 서버
+    // (registration_total.js)와 같은 셈이다.
+    final tourPeople = tourHeads(companions);
+    final optionsTotal =
+        picked.fold<double>(
+          0,
+          (sum, o) => sum + (Money.parse(o['cost']) ?? 0).toDouble(),
+        ) *
+        tourPeople;
 
     final tierFee = switch (feeTier) {
       'basic' => Money.parse(program['fee_basic']),
@@ -226,6 +235,7 @@ class RegistrationCost {
       childFee: _round(childFee),
       childCount: childCount,
       optionsTotal: _round(optionsTotal),
+      tourPeople: tourPeople,
       discount: _round(discount),
       due: _round(due < 0 ? 0 : due),
       dueMax: _round(dueMax < 0 ? 0 : dueMax),
@@ -235,7 +245,8 @@ class RegistrationCost {
       hotelNights: hotelNights,
       hotelEstimate: hotelEstimate == null ? null : _round(hotelEstimate),
       // 투어 값에 안 든 것만이다. 숙박비는 위에서 due 로 갔다.
-      extrasKnown: _round(tour.known),
+      // 투어에서 따로 쓸 돈도 한 사람 몫이다 — 가는 사람만큼 곱한다(079).
+      extrasKnown: _round(tour.known * tourPeople),
       extrasUnsure: tour.unknown.isNotEmpty,
       // 나온 순서대로, 겹치지 않게. 담당자가 이름 붙여 더한 항목(062)은
       // kind 가 없으므로 여기 안 들어간다 — 이름이 제각각이라 한 낱말로

@@ -137,3 +137,61 @@ export function peopleAmong(companions = []) {
 export function bedsNeeded(companions = []) {
   return (Array.isArray(companions) ? companions : []).filter(occupiesBed).length;
 }
+
+/// 함께 등록한 동반자의 말씀조(078) — 'same' | 'other' | 'none'.
+///
+/// 따로 등록하는 동반자는 자기 등록으로 조에 들므로 늘 'none' 이다. 여기서도
+/// 넣으면 같은 사람이 두 조에 있게 된다.
+///
+/// **안 보냈거나 못 알아들은 값은 'none'** 이다. 078 이전 앱은 이 칸을 모르고,
+/// 그때까지 동반자는 조에 안 들었다 — 예전 앱으로 다시 저장했다고 아기가
+/// 조에 들어가면 안 된다.
+export const STUDY_GROUPS = ['same', 'other', 'none'];
+
+export function studyGroupOf({ studyGroup, registersSeparately } = {}) {
+  if (registersSeparately !== false) return 'none';
+  return STUDY_GROUPS.includes(studyGroup) ? studyGroup : 'none';
+}
+
+/// 동반자 목록을 저장할 때 무엇을 고치고, 더하고, 지울지 (078).
+///
+/// 예전에는 통째로 지우고 다시 넣었다. 그러면 동반자 id 가 매번 바뀌어
+/// **담당자가 잡아 둔 방·차·조가 저장할 때마다 사라졌다**(CASCADE). 이제
+/// 앱이 받은 id 를 돌려보내고, 그 id 가 이 등록의 것이면 그 줄을 고친다.
+///
+/// 남의 id 나 모르는 id 는 새 사람으로 본다 — 다른 등록의 동반자를 고치게
+/// 두면 안 된다. 같은 id 가 두 번 오면 두 번째는 새 사람이다.
+///
+/// [existingIds] 이 등록에 지금 있는 동반자 id 들.
+/// [list] 보내온 동반자들. 이름 없는 항목은 건너뛴다.
+/// 반환: { keep: [{ id, item }], add: [item], drop: [id] } — 순서는 보낸 대로다.
+export function planCompanionSave(existingIds, list) {
+  const known = new Set(existingIds ?? []);
+  const used = new Set();
+  const keep = [];
+  const add = [];
+  const ordered = [];
+  for (const item of Array.isArray(list) ? list : []) {
+    if (!item || !String(item.realName ?? '').trim()) continue;
+    const id = typeof item.id === 'string' ? item.id : null;
+    if (id && known.has(id) && !used.has(id)) {
+      used.add(id);
+      keep.push({ id, item });
+      ordered.push({ id, item });
+    } else {
+      add.push(item);
+      ordered.push({ id: null, item });
+    }
+  }
+  const drop = [...known].filter((id) => !used.has(id));
+  return { keep, add, drop, ordered };
+}
+
+/// 투어에 함께 가는 머릿수 — 본인 한 사람에 함께 가는 동반자를 더한다 (079).
+///
+/// 따로 등록하는 동반자는 자기 등록에서 투어를 고르고 낸다. 여기서 또 세면
+/// 두 번이 된다. 투어 값은 **한 사람 값**이라 이 수를 그대로 곱한다.
+export function tourHeads(companions = []) {
+  const list = Array.isArray(companions) ? companions : [];
+  return 1 + list.filter((c) => countsAsPerson(c) && c?.joins_tours === true).length;
+}

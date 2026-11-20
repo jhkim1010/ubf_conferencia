@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,7 +12,15 @@ import '../../../../core/utils/money.dart';
 import '../../providers/registration_provider.dart';
 import 'package:mana/l10n/app_localizations.dart';
 
-// PRD F3 — 동반 가족/참석자 (부부·가족). 인원수·픽업에 각각 반영.
+// PRD F3 — 동반 가족/참석자. **표 한 장으로 등록을 끝낸다**(078·079).
+//
+// 같은 비행기로 함께 오는 가족은 대표자의 등록 안에서 끝낸다. 한 줄에 한
+// 사람 — 이름·나이·성별·같은 방·침대·분반·투어·같은 비행기. 줄은 마음대로
+// 더하고 지운다.
+//
+// 예전에는 사람마다 바텀시트를 열어 열 가지를 묻고, "동반자도 각자 따로
+// 등록해야 합니다" 라고 안내했다. 함께 오는 가족에게 그것은 등록을 두 번
+// 하라는 말이었다.
 class CompanionStep extends ConsumerStatefulWidget {
   final String programId;
 
@@ -20,20 +30,120 @@ class CompanionStep extends ConsumerStatefulWidget {
   /// 이 수양회의 통화. 금액을 적을 때 쓴다.
   final Currency currency;
 
+  /// 테스트에서 서버 대신 쓰는 불러오기·저장. 안 주면 ApiClient 를 쓴다.
+  @visibleForTesting
+  final Future<List<dynamic>> Function()? loadForTest;
+  @visibleForTesting
+  final Future<List<Map<String, dynamic>>> Function(
+    List<Map<String, dynamic>> payload,
+  )?
+  saveForTest;
+
   const CompanionStep({
     super.key,
     required this.programId,
     required this.program,
     required this.currency,
+    this.loadForTest,
+    this.saveForTest,
   });
 
   @override
   ConsumerState<CompanionStep> createState() => _CompanionStepState();
 }
 
+/// 표의 한 줄. 입력 칸의 컨트롤러와 고른 값들을 함께 든다.
+class _Row {
+  _Row(this.data)
+    : name = TextEditingController(text: '${data['realName'] ?? ''}'),
+      age = TextEditingController(text: data['age']?.toString() ?? ''),
+      flight = TextEditingController(text: '${data['arrivalFlightNo'] ?? ''}');
+
+  /// 서버와 주고받는 값들. 표에 칸이 없는 것(성경 이름·언어·지부·픽업·
+  /// 출발편)도 여기 그대로 남아 다시 저장할 때 함께 간다 — 칸이 없다고
+  /// 빼면 예전에 적어 둔 것이 지워진다.
+  final Map<String, dynamic> data;
+  final TextEditingController name;
+  final TextEditingController age;
+  final TextEditingController flight;
+  final FocusNode focus = FocusNode();
+
+  /// 069 이전의 뜻대로 "본인 계정으로 따로 등록하는 분" 으로 적힌 줄.
+  /// 함께 등록으로 바꾸면 그분 등록과 겹쳐 참가비가 두 번 붙는다 —
+  /// 바꾸지 않고 이름만 보여 준다.
+  bool get ownRegistration => data['registersSeparately'] == true;
+
+  int? get ageValue => int.tryParse(age.text.trim());
+  bool get named => name.text.trim().isNotEmpty;
+
+  /// 침대 — 다른 방이면 늘 쓴다(077). 안 골랐으면 나이로 정한다.
+  bool get bed {
+    if (data['sharesRoom'] == false) return true;
+    final v = data['occupiesBed'];
+    if (v is bool) return v;
+    final a = ageValue;
+    return a == null || a > _freeAgeMax;
+  }
+
+  /// 분반(078). 안 골랐으면 나이로 정한다 — 만 5세 이하는 안 한다.
+  String get study {
+    final v = data['studyGroup'];
+    if (v is String) return v;
+    final a = ageValue;
+    return a != null && a <= _freeAgeMax ? 'none' : 'same';
+  }
+
+  /// 셈과 저장에 쓰는 모양. 입력 칸의 지금 값과 나이로 정한 기본값을
+  /// 풀어 넣는다.
+  Map<String, dynamic> resolved() {
+    final sameFlight = data['sameFlightAsPrimary'] != false;
+    final flightNo = flight.text.trim().toUpperCase();
+    final departure = '${data['departureFlightNo'] ?? ''}';
+    return {
+      ...data,
+      'realName': name.text.trim(),
+      'age': ageValue,
+      'registersSeparately': ownRegistration,
+      'occupiesBed': bed,
+      'studyGroup': ownRegistration ? 'none' : study,
+      'joinsTours': !ownRegistration && data['joinsTours'] == true,
+      'sameFlightAsPrimary': sameFlight,
+      'arrivalFlightNo': flightNo,
+      'arrivalFlight': (!sameFlight && flightNo.isNotEmpty)
+          ? {'flight_no': flightNo}
+          : null,
+      'departureFlight': (!sameFlight && departure.isNotEmpty)
+          ? {'flight_no': departure}
+          : null,
+    };
+  }
+
+  void dispose() {
+    name.dispose();
+    age.dispose();
+    flight.dispose();
+    focus.dispose();
+  }
+}
+
+/// 만 5세 이하는 침대를 기본으로 안 쓰고 분반도 안 한다.
+/// 서버의 companion_role.js FREE_AGE_MAX 와 같다.
+const _freeAgeMax = 5;
+
+const _accent = Color(0xFF5B4BA0);
+const _rowH = 56.0;
+const _headH = 40.0;
+
 class _CompanionStepState extends ConsumerState<CompanionStep> {
-  List<Map<String, dynamic>> _companions = [];
+  final List<_Row> _rows = [];
   bool _loading = true;
+
+  // 저장은 손을 멈춘 뒤 잠시 있다가 한 번에 한다. 저장 중에 또 바뀌면
+  // 끝난 뒤 한 번 더 한다 — 두 저장이 겹치면 새 줄이 두 번 들어간다.
+  Timer? _debounce;
+  bool _saving = false;
+  bool _dirty = false;
+  ProviderContainer? _container;
 
   @override
   void initState() {
@@ -41,14 +151,42 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     _load();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _container = ProviderScope.containerOf(context, listen: false);
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    // 손을 멈추자마자 다음 단계로 넘어가도 적은 것은 남아야 한다.
+    if (_dirty) {
+      final payload = _payload();
+      final container = _container;
+      (widget.saveForTest?.call(payload) ??
+              ApiClient.saveMyCompanions(widget.programId, payload))
+          .then((_) {
+            container?.invalidate(myCompanionsProvider(widget.programId));
+            container?.invalidate(registrationProvider(widget.programId));
+          }, onError: (_) {});
+    }
+    for (final r in _rows) {
+      r.dispose();
+    }
+    super.dispose();
+  }
+
   Future<void> _load() async {
     try {
-      final rows = await ApiClient.getMyCompanions(widget.programId);
+      final rows =
+          await (widget.loadForTest?.call() ??
+              ApiClient.getMyCompanions(widget.programId));
       if (!mounted) return;
       setState(() {
-        _companions = rows
-            .map((r) => _fromServer(r as Map<String, dynamic>))
-            .toList();
+        _rows.addAll(
+          rows.map((r) => _Row(_fromServer(r as Map<String, dynamic>))),
+        );
         _loading = false;
       });
     } catch (_) {
@@ -57,62 +195,153 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
   }
 
   Map<String, dynamic> _fromServer(Map<String, dynamic> r) => {
+    // 다시 저장할 때 같은 사람으로 고쳐지도록 id 를 들고 있는다(078).
+    'id': r['id'],
     'realName': r['real_name'] ?? '',
     'bibleName': r['bible_name'] ?? '',
     'gender': r['gender'],
     'age': r['age'],
     'language': r['language'] ?? '',
     'branch': r['branch'] ?? '',
-    // 기본은 "같은 지부". 이미 있는 동반자는 서버 기본값이 false 라
-    // 적어 둔 지부를 그대로 쓴다(032).
     'sameBranchAsPrimary': r['same_branch_as_primary'] ?? false,
     'sameFlightAsPrimary': r['same_flight_as_primary'] ?? true,
     'arrivalFlightNo': (r['arrival_flight'] as Map?)?['flight_no'] ?? '',
     'departureFlightNo': (r['departure_flight'] as Map?)?['flight_no'] ?? '',
     'needsPickup': r['needs_pickup'] ?? true,
-    // 069. 옛 줄에는 칸이 없다 — 그때의 뜻대로 "따로 등록" 으로 본다.
     'registersSeparately': r['registers_separately'] ?? true,
     'occupiesBed': r['occupies_bed'] ?? true,
-    // 077. 옛 줄에는 칸이 없다 — 지금까지처럼 같은 방이다.
     'sharesRoom': r['shares_room'] ?? true,
-    // 073. 따로 정해 둔 참가비 몫. 없으면 수양회 구간을 따른다.
+    'studyGroup': r['study_group'] ?? 'none',
+    'joinsTours': r['joins_tours'] ?? false,
     'feeShare': r['fee_share'],
   };
 
-  // 로컬 → 서버 payload
-  List<Map<String, dynamic>> _toPayload() => _companions.map((c) {
-    final same = c['sameFlightAsPrimary'] == true;
+  /// 새 줄. 같은 방·같은 비행기·투어 함께가 기본이다 — 같은 비행기로 오는
+  /// 가족은 대부분 그렇고, 아무것도 안 해도 맞는 쪽이 기본이어야 한다.
+  /// 침대와 분반은 비워 두어 나이로 정하게 한다.
+  _Row _newRow() => _Row({
+    'registersSeparately': false,
+    'sharesRoom': true,
+    'sameFlightAsPrimary': true,
+    'joinsTours': true,
+    'sameBranchAsPrimary': true,
+    'needsPickup': true,
+  });
+
+  /// 이름이 있는 줄만 보낸다. 서버도 이름 없는 줄은 건너뛴다.
+  List<_Row> get _namedRows => _rows.where((r) => r.named).toList();
+
+  List<Map<String, dynamic>> _payload() => _namedRows.map((r) {
+    final c = r.resolved();
     return {
+      'id': c['id'],
       'realName': c['realName'],
       'bibleName': c['bibleName'],
       'gender': c['gender'],
       'age': c['age'],
       'language': c['language'],
-      // 체크가 켜져 있어도 적어 둔 값은 지우지 않고 함께 보낸다 —
-      // 체크를 풀면 예전에 적은 값이 다시 보여야 한다.
       'branch': c['branch'],
-      'sameBranchAsPrimary': c['sameBranchAsPrimary'] == true,
-      'sameFlightAsPrimary': same,
-      'arrivalFlight': (!same && '${c['arrivalFlightNo']}'.isNotEmpty)
-          ? {'flight_no': c['arrivalFlightNo']}
-          : null,
-      'departureFlight': (!same && '${c['departureFlightNo']}'.isNotEmpty)
-          ? {'flight_no': c['departureFlightNo']}
-          : null,
+      'sameBranchAsPrimary': c['sameBranchAsPrimary'] != false,
+      'sameFlightAsPrimary': c['sameFlightAsPrimary'],
+      'arrivalFlight': c['arrivalFlight'],
+      'departureFlight': c['departureFlight'],
       'needsPickup': c['needsPickup'] ?? true,
-      'registersSeparately': c['registersSeparately'] ?? true,
-      'occupiesBed': c['occupiesBed'] ?? true,
+      'registersSeparately': c['registersSeparately'],
+      'occupiesBed': c['occupiesBed'],
       'sharesRoom': c['sharesRoom'] ?? true,
-      // 073. 따로 정하지 않았으면 안 보낸다 — 서버가 수양회 구간을 쓴다.
+      'studyGroup': c['studyGroup'],
+      'joinsTours': c['joinsTours'],
+      // 073. 따로 정하지 않았으면 null — 서버가 수양회 구간을 쓴다.
       'feeShare': c['feeShare'],
     };
   }).toList();
 
+  /// 셈(합계 카드)에 쓰는 목록 — 이름이 있는 줄만.
+  List<Map<String, dynamic>> get _companions =>
+      _namedRows.map((r) => r.resolved()).toList();
+
+  void _changed() {
+    _dirty = true;
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 700), _persist);
+    setState(() {});
+  }
+
+  Future<void> _persist() async {
+    if (_saving) return; // 끝나면 _dirty 를 보고 다시 한다
+    _saving = true;
+    _dirty = false;
+    final sent = _namedRows;
+    var failed = false;
+    try {
+      final payload = _payload();
+      final saved =
+          await (widget.saveForTest?.call(payload) ??
+              ApiClient.saveMyCompanions(widget.programId, payload));
+      // 새로 넣은 사람의 id 를 받아 둔다. 서버는 보낸 순서대로 돌려준다.
+      if (saved.length == sent.length) {
+        for (var i = 0; i < saved.length; i++) {
+          sent[i].data['id'] = saved[i]['id'];
+        }
+      }
+      // 이름을 지운 줄은 서버에서 지워졌다 — 다시 적으면 새 사람이다.
+      for (final r in _rows) {
+        if (!r.named) r.data.remove('id');
+      }
+      // 어린이·투어·침대가 바뀌면 낼 돈이 달라진다. 서버가 다시 셈해
+      // 저장하므로 비용 막대와 확인 화면이 그것을 다시 읽게 한다.
+      // 그새 다음 단계로 넘어갔으면 ref 를 못 쓴다 — 붙잡아 둔 컨테이너로.
+      _container?.invalidate(myCompanionsProvider(widget.programId));
+      _container?.invalidate(registrationProvider(widget.programId));
+    } on ApiException catch (e) {
+      _dirty = true;
+      failed = true;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    } catch (_) {
+      _dirty = true;
+      failed = true;
+    } finally {
+      _saving = false;
+    }
+    // 저장 중에 또 바뀌었으면 한 번 더. **실패했으면 되풀이하지 않는다** —
+    // 서버가 안 받는 동안 같은 요청을 계속 보내게 된다. 다음에 고치거나
+    // 단계를 떠날 때 다시 보낸다(_dirty 가 남아 있다).
+    if (_dirty && !failed && mounted) _changed();
+  }
+
+  void _addRow() {
+    final row = _newRow();
+    setState(() => _rows.add(row));
+    // 바로 이름을 칠 수 있게.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) row.focus.requestFocus();
+    });
+  }
+
+  void _removeRow(_Row r) {
+    setState(() => _rows.remove(r));
+    r.dispose();
+    _changed();
+  }
+
+  /// 마지막 줄에서 Enter 를 누르면 새 줄을 연다.
+  void _submitted(_Row r) {
+    if (identical(
+      r,
+      _rows.lastWhere((x) => !x.ownRegistration, orElse: () => r),
+    )) {
+      _addRow();
+    }
+  }
+
   /// 이 수양회의 어린이 참가비 구간 (073).
   ChildFeePolicy get _policy => ChildFeePolicy.of(widget.program);
 
-  /// 보호자가 고른 등급의 값. 아직 안 골랐으면 null 이다 — 그때는 금액을
-  /// 말할 수 없고 "등급을 고르면" 이라고만 적는다.
+  /// 보호자가 고른 등급의 값. 아직 안 골랐으면 null 이다.
   double? get _tierFee {
     final tier = ref.read(registrationFormProvider(widget.programId)).feeTier;
     final v = switch (tier) {
@@ -123,57 +352,17 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     return v?.toDouble();
   }
 
-  /// 이 사람에게 붙는 참가비. 몫이 0 이면 null 이다(붙지 않는다).
-  double? _feeFor(Map<String, dynamic> c) {
+  /// 참가비 칸에 적을 말. 나이를 적은 그 자리에서 보여야 한다(073) —
+  /// 나중에 합계에서 처음 보면 무엇 때문에 늘었는지 되물을 자리가 없다.
+  String _feeText(AppLocalizations l10n, _Row r) {
+    final age = r.ageValue;
+    if (age == null) return l10n.companionFeeNeedAge;
+    final share = _policy.shareForCompanion(r.resolved());
+    if (share <= 0) return l10n.companionFeeFree;
     final fee = _tierFee;
-    if (fee == null || fee <= 0) return null;
-    final share = _policy.shareForCompanion(c);
-    if (share <= 0) return null;
-    return (fee * share * 100).roundToDouble() / 100;
-  }
-
-  Future<void> _persist() async {
-    try {
-      await ApiClient.saveMyCompanions(widget.programId, _toPayload());
-      // 어린이가 늘거나 줄면 낼 돈이 달라진다(073). 서버가 다시 셈해
-      // 저장하므로, 비용 막대와 확인 화면이 그것을 다시 읽게 한다.
-      ref.invalidate(myCompanionsProvider(widget.programId));
-      ref.invalidate(registrationProvider(widget.programId));
-    } on ApiException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
-
-  Future<void> _addOrEdit({int? index}) async {
-    final result = await showModalBottomSheet<Map<String, dynamic>>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _CompanionSheet(
-        existing: index != null ? _companions[index] : null,
-        // 나이를 치는 그 자리에서 참가비를 보여주기 위한 것들(073).
-        policy: _policy,
-        tierFee: _tierFee,
-        currency: widget.currency,
-      ),
-    );
-    if (result == null) return;
-    setState(() {
-      if (index != null) {
-        _companions[index] = result;
-      } else {
-        _companions.add(result);
-      }
-    });
-    await _persist();
-  }
-
-  Future<void> _remove(int index) async {
-    setState(() => _companions.removeAt(index));
-    await _persist();
+    // 등급을 아직 안 골랐으면 몫만 말한다. 0 이라고 적으면 공짜로 읽힌다.
+    if (fee == null || fee <= 0) return '${(share * 100).round()}%';
+    return widget.currency.format((fee * share * 100).round() / 100);
   }
 
   /// 함께 오는 사람까지 합친 금액 (077).
@@ -338,571 +527,469 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     );
   }
 
+  // ── 표 ──────────────────────────────────────────────────────
+
+  Widget _cell(Widget child, {double? width, bool head = false}) => SizedBox(
+    height: head ? _headH : _rowH,
+    width: width,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Align(alignment: Alignment.centerLeft, child: child),
+    ),
+  );
+
+  Widget _head(String text, {double? width}) => _cell(
+    Text(
+      text,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF4A4560),
+      ),
+      softWrap: false,
+    ),
+    width: width,
+    head: true,
+  );
+
+  Widget _muted(String text) => Text(
+    text,
+    style: const TextStyle(fontSize: 13, color: Color(0xFF5F5A73)),
+    softWrap: false,
+  );
+
+  Widget _seg<T>(
+    List<(T, String)> options,
+    T selected,
+    ValueChanged<T> onChanged,
+  ) => _Seg<T>(options: options, selected: selected, onChanged: onChanged);
+
+  TableRow _line(List<Widget> cells, {Color? color}) => TableRow(
+    decoration: BoxDecoration(
+      color: color,
+      border: const Border(top: BorderSide(color: Color(0xFFECEAF3))),
+    ),
+    children: cells,
+  );
+
+  /// 왼쪽에 붙어 있는 칸 — 번호와 이름. 휴대폰에서 표를 옆으로 밀어도
+  /// 누구의 줄인지 보여야 한다.
+  Widget _fixedTable(AppLocalizations l10n, double nameWidth) {
+    final rows = <TableRow>[
+      TableRow(
+        decoration: const BoxDecoration(color: Color(0xFFEFEDF7)),
+        children: [_head('#', width: 34), _head(l10n.companionColName)],
+      ),
+      // 기준이 되는 대표자. 아래 칸의 "같은" 이 누구와 같다는 뜻인지 보인다.
+      _line([
+        _cell(_muted('—'), width: 34),
+        _cell(
+          Text(
+            l10n.companionSelfRow,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ], color: const Color(0xFFFAF9FD)),
+    ];
+    var n = 0;
+    for (final r in _rows) {
+      n++;
+      rows.add(
+        _line([
+          _cell(_muted('$n'), width: 34),
+          _cell(
+            r.ownRegistration
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        r.name.text,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      _muted(l10n.companionOwnRegistration),
+                    ],
+                  )
+                : TextField(
+                    controller: r.name,
+                    focusNode: r.focus,
+                    textInputAction: TextInputAction.next,
+                    onChanged: (_) => _changed(),
+                    onSubmitted: (_) => _submitted(r),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      hintText: l10n.companionColName,
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                    ),
+                  ),
+          ),
+        ]),
+      );
+    }
+    return SizedBox(
+      width: 34 + nameWidth,
+      child: Table(
+        columnWidths: {
+          0: const FixedColumnWidth(34),
+          1: FixedColumnWidth(nameWidth),
+        },
+        children: rows,
+      ),
+    );
+  }
+
+  /// 옆으로 미는 칸들. 칸 너비는 내용에 맞춘다(IntrinsicColumnWidth) —
+  /// 언어마다 낱말 길이가 달라 고정 너비로는 어디선가 잘린다.
+  Widget _scrollTable(AppLocalizations l10n) {
+    final anyOtherFlight = _rows.any(
+      (r) => !r.ownRegistration && r.data['sameFlightAsPrimary'] == false,
+    );
+    final selfFee = _tierFee;
+    final rows = <TableRow>[
+      TableRow(
+        decoration: const BoxDecoration(color: Color(0xFFEFEDF7)),
+        children: [
+          _head(l10n.companionColAge),
+          _head(l10n.regGender),
+          _head(l10n.companionColRoom),
+          _head(l10n.companionColBed),
+          _head(l10n.companionColStudy),
+          _head(l10n.companionColTour),
+          _head(l10n.companionColFlight),
+          if (anyOtherFlight) _head(l10n.companionColFlightNo),
+          _head(l10n.companionColFee),
+          _head(''),
+        ],
+      ),
+      _line([
+        _cell(_muted('—')),
+        _cell(_muted('—')),
+        _cell(_muted('—')),
+        _cell(_muted('—')),
+        _cell(_muted('—')),
+        _cell(_muted('—')),
+        _cell(_muted('—')),
+        if (anyOtherFlight) _cell(_muted('—')),
+        _cell(_muted(selfFee == null ? '—' : widget.currency.format(selfFee))),
+        _cell(const SizedBox(width: 40)),
+      ], color: const Color(0xFFFAF9FD)),
+    ];
+
+    for (final r in _rows) {
+      final del = _cell(
+        IconButton(
+          tooltip: l10n.companionRemoveRow,
+          icon: const Icon(
+            Icons.delete_outline,
+            size: 20,
+            color: Color(0xFF8A3B3B),
+          ),
+          onPressed: () => _removeRow(r),
+        ),
+      );
+      if (r.ownRegistration) {
+        rows.add(
+          _line([
+            _cell(_muted(r.age.text.isEmpty ? '—' : r.age.text)),
+            _cell(_muted('—')),
+            _cell(_muted('—')),
+            _cell(_muted('—')),
+            _cell(_muted('—')),
+            _cell(_muted('—')),
+            _cell(_muted('—')),
+            if (anyOtherFlight) _cell(_muted('—')),
+            _cell(_muted('—')),
+            del,
+          ]),
+        );
+        continue;
+      }
+      void set(String key, Object? value) {
+        r.data[key] = value;
+        _changed();
+      }
+
+      final otherFlight = r.data['sameFlightAsPrimary'] == false;
+      rows.add(
+        _line([
+          _cell(
+            SizedBox(
+              width: 58,
+              child: TextField(
+                controller: r.age,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                textAlign: TextAlign.center,
+                textInputAction: TextInputAction.next,
+                // 참가비·침대·분반 기본값이 나이로 갈린다.
+                onChanged: (_) => _changed(),
+                onSubmitted: (_) => _submitted(r),
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 10,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          _cell(
+            _seg<String?>(
+              [
+                ('M', l10n.companionMaleShort),
+                ('F', l10n.companionFemaleShort),
+              ],
+              r.data['gender'] as String?,
+              (v) => set('gender', v),
+            ),
+          ),
+          _cell(
+            _seg<bool>(
+              [
+                (true, l10n.companionRoomSameShort),
+                (false, l10n.companionRoomOtherShort),
+              ],
+              r.data['sharesRoom'] != false,
+              (v) => set('sharesRoom', v),
+            ),
+          ),
+          // 다른 방이면 침대는 늘 쓴다(077) — 묻지 않는다.
+          _cell(
+            r.data['sharesRoom'] == false
+                ? _muted(l10n.companionBedOwnRoom)
+                : _seg<bool>(
+                    [
+                      (true, l10n.companionBedUses),
+                      (false, l10n.companionBedShares),
+                    ],
+                    r.bed,
+                    (v) => set('occupiesBed', v),
+                  ),
+          ),
+          _cell(
+            _seg<String>(
+              [
+                ('same', l10n.companionStudySame),
+                ('other', l10n.companionStudyOther),
+                ('none', l10n.companionStudyNone),
+              ],
+              r.study,
+              (v) => set('studyGroup', v),
+            ),
+          ),
+          _cell(
+            _seg<bool>(
+              [(true, l10n.companionTourYes), (false, l10n.companionTourNo)],
+              r.data['joinsTours'] == true,
+              (v) => set('joinsTours', v),
+            ),
+          ),
+          _cell(
+            _seg<bool>(
+              [
+                (true, l10n.companionFlightSame),
+                (false, l10n.companionFlightOther),
+              ],
+              !otherFlight,
+              (v) => set('sameFlightAsPrimary', v),
+            ),
+          ),
+          if (anyOtherFlight)
+            _cell(
+              otherFlight
+                  ? SizedBox(
+                      width: 130,
+                      child: TextField(
+                        controller: r.flight,
+                        textCapitalization: TextCapitalization.characters,
+                        onChanged: (_) => _changed(),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          hintText: 'KE123',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 10,
+                          ),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          _cell(
+            Text(
+              _feeText(l10n, r),
+              softWrap: false,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: _accent,
+              ),
+            ),
+          ),
+          del,
+        ]),
+      );
+    }
+    return Table(
+      defaultColumnWidth: const IntrinsicColumnWidth(),
+      children: rows,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    final companions = _companions;
+    final tourPeople = tourHeads(companions);
 
-    return Stack(
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
-        ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 90),
-          children: [
-            const Icon(
-              Icons.family_restroom,
-              size: 48,
-              color: Color(0xFF7A6BB5),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.companionTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              l10n.companionDesc,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 14),
-            // 여기에 적는 것이 "등록"이라고 오해하는 사람이 있다. 실제로는
-            // 방 배정에만 쓰이고, 동반자도 각자 등록해야 한다. 그 사실을
-            // 안 적어 두면 등록하지 않은 사람이 명단에 없는 채로 온다.
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+        Text(
+          l10n.companionTitle,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          l10n.companionMustRegister,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
+        ),
+        const SizedBox(height: 14),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: const Color(0xFFE2DFEE)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              LayoutBuilder(
+                builder: (context, box) {
+                  final nameWidth = box.maxWidth >= 700 ? 200.0 : 130.0;
+                  return Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.info_outline, size: 18),
-                      const SizedBox(width: 8),
+                      _fixedTable(l10n, nameWidth),
                       Expanded(
-                        child: Text(
-                          l10n.companionMustRegister,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: _scrollTable(l10n),
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    l10n.companionWhy,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
+                  );
+                },
               ),
-            ),
-            const SizedBox(height: 20),
-            if (_companions.isEmpty)
+              const Divider(height: 1, color: Color(0xFFECEAF3)),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Center(
-                  child: Text(
-                    l10n.companionEmpty,
-                    style: TextStyle(color: Colors.grey[500]),
-                  ),
-                ),
-              )
-            else ...[
-              Text(
-                l10n.companionCount(_companions.length),
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
+                padding: const EdgeInsets.all(12),
+                child: Wrap(
+                  spacing: 14,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _addRow,
+                      icon: const Icon(Icons.add),
+                      label: Text(l10n.companionAddRow),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _accent,
+                        minimumSize: const Size(0, 44),
+                      ),
+                    ),
+                    Text(
+                      l10n.companionTableHint,
+                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              ..._companions.asMap().entries.map((e) {
-                final c = e.value;
-                final sub = [
-                  if (c['gender'] == 'M')
-                    l10n.genderMale
-                  else if (c['gender'] == 'F')
-                    l10n.genderFemale,
-                  if (c['age'] != null) '${c['age']}',
-                  // 같은 지부면 굳이 되풀이하지 않는다 — 등록자 것과 같다.
-                  if (c['sameBranchAsPrimary'] != true &&
-                      '${c['branch']}'.isNotEmpty)
-                    c['branch'],
-                  // 077: 같은 방인지. 따로 등록하는 분은 자기 등록으로 방을 받는다.
-                  if (c['registersSeparately'] == false)
-                    c['sharesRoom'] == false
-                        ? l10n.companionRoomOtherTag
-                        : l10n.companionRoomSameTag,
-                ].where((x) => x != null && '$x'.isNotEmpty).join(' · ');
-                // 이 사람에게 붙는 참가비(073). 나이를 적은 그 자리에서
-                // 바로 보여야 한다 — 나중에 합계에서 처음 보면 놀란다.
-                final fee = _feeFor(c);
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: Color(0xFF7A6BB5),
-                      child: Icon(Icons.person, color: Colors.white, size: 20),
-                    ),
-                    title: Text(
-                      c['realName'] as String? ?? '',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Row(
-                      children: [
-                        Flexible(child: Text(sub)),
-                        if (fee != null) ...[
-                          if (sub.isNotEmpty)
-                            Text(
-                              '  ·  ',
-                              style: TextStyle(color: Colors.grey[500]),
-                            ),
-                          Text(
-                            widget.currency.format(fee),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF7A6BB5),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 20),
-                          onPressed: () => _addOrEdit(index: e.key),
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            size: 20,
-                            color: Colors.red,
-                          ),
-                          onPressed: () => _remove(e.key),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-              const SizedBox(height: 8),
-              _familyCard(l10n),
             ],
-          ],
-        ),
-        Positioned(
-          left: 20,
-          right: 20,
-          bottom: 16,
-          child: FilledButton.icon(
-            onPressed: () => _addOrEdit(),
-            icon: const Icon(Icons.person_add_alt),
-            label: Text(l10n.companionAdd),
           ),
         ),
+        if (companions.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _familyCard(l10n),
+          if (tourPeople > 1) ...[
+            const SizedBox(height: 8),
+            Text(
+              l10n.familyTourNote(tourPeople),
+              style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+            ),
+          ],
+        ],
       ],
     );
   }
 }
 
-// ── 동반자 입력 바텀시트 ──────────────────────────────────────
-class _CompanionSheet extends StatefulWidget {
-  final Map<String, dynamic>? existing;
-
-  /// 이 수양회의 어린이 참가비 구간 (073).
-  final ChildFeePolicy policy;
-
-  /// 보호자가 고른 등급의 값. 아직 안 골랐으면 null 이다.
-  final double? tierFee;
-
-  final Currency currency;
-
-  const _CompanionSheet({
-    this.existing,
-    required this.policy,
-    required this.tierFee,
-    required this.currency,
+/// 칸 안의 작은 고르기 단추. SegmentedButton 은 표 한 칸에 넣기에 크고,
+/// 체크 표시가 붙어 너비가 흔들린다.
+class _Seg<T> extends StatelessWidget {
+  const _Seg({
+    required this.options,
+    required this.selected,
+    required this.onChanged,
   });
-  @override
-  State<_CompanionSheet> createState() => _CompanionSheetState();
-}
 
-class _CompanionSheetState extends State<_CompanionSheet> {
-  late final TextEditingController _name;
-  late final TextEditingController _bible;
-  late final TextEditingController _age;
-  late final TextEditingController _language;
-  late final TextEditingController _branch;
-  late final TextEditingController _arrFlight;
-  late final TextEditingController _depFlight;
-  String? _gender;
-  bool _sameBranch = true;
-  bool _sameFlight = true;
-  bool _needsPickup = true;
-  // 069: 이분이 따로 등록하는가 / 침대를 쓰는가.
-  bool _registersSeparately = true;
-  bool? _occupiesBed;
-  // 077: 대표자와 같은 방을 쓰는가.
-  bool _sharesRoom = true;
-
-  @override
-  void initState() {
-    super.initState();
-    final e = widget.existing;
-    _name = TextEditingController(text: e?['realName'] ?? '');
-    _bible = TextEditingController(text: e?['bibleName'] ?? '');
-    _age = TextEditingController(text: e?['age']?.toString() ?? '');
-    _language = TextEditingController(text: e?['language'] ?? '');
-    _branch = TextEditingController(text: e?['branch'] ?? '');
-    _arrFlight = TextEditingController(text: e?['arrivalFlightNo'] ?? '');
-    _depFlight = TextEditingController(text: e?['departureFlightNo'] ?? '');
-    _gender = e?['gender'] as String?;
-    // 새로 추가하는 동반자는 "같은 지부"가 기본이다 — 대부분 그렇고,
-    // 아무것도 안 해도 맞는 쪽이 기본이어야 한다.
-    _sameBranch = e?['sameBranchAsPrimary'] ?? true;
-    _sameFlight = e?['sameFlightAsPrimary'] ?? true;
-    _needsPickup = e?['needsPickup'] ?? true;
-    _registersSeparately = e?['registersSeparately'] ?? true;
-    // 고쳐 둔 값이 있으면 그것, 없으면 아래에서 나이로 정한다.
-    _occupiesBed = e?['occupiesBed'] as bool?;
-    _sharesRoom = e?['sharesRoom'] ?? true;
-  }
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _bible.dispose();
-    _age.dispose();
-    _language.dispose();
-    _branch.dispose();
-    _arrFlight.dispose();
-    _depFlight.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    if (_name.text.trim().isEmpty) return;
-    Navigator.pop(context, {
-      'realName': _name.text.trim(),
-      'bibleName': _bible.text.trim(),
-      'gender': _gender,
-      'age': int.tryParse(_age.text.trim()),
-      'language': _language.text.trim(),
-      'branch': _branch.text.trim(),
-      'sameBranchAsPrimary': _sameBranch,
-      'sameFlightAsPrimary': _sameFlight,
-      'arrivalFlightNo': _arrFlight.text.trim(),
-      'departureFlightNo': _depFlight.text.trim(),
-      'needsPickup': _needsPickup,
-      'registersSeparately': _registersSeparately,
-      // 안 고쳤으면 나이로 정한다 — 만 5세 이하는 같이 자는 것으로.
-      // 다른 방을 쓰면 침대는 반드시 쓴다(077) — 보호자 옆에서 잘 수 없다.
-      'occupiesBed': _registersSeparately || !_sharesRoom
-          ? true
-          : (_occupiesBed ?? _bedByAge(int.tryParse(_age.text.trim()))),
-      'sharesRoom': _sharesRoom,
-    });
-  }
-
-  /// 침대 기본값. 서버의 companion_role.js defaultOccupiesBed 와 같은 규칙이다.
-  /// 나이를 모르면 쓰는 쪽으로 둔다 — 자리를 덜 잡으면 당일에 손쓸 수가 없다.
-  static bool _bedByAge(int? age) => age == null || age > _freeAgeMax;
-
-  /// 이분에게 붙는 참가비를 나이 바로 아래에 적는다 (073).
-  ///
-  /// **여기서 보여주지 않으면 합계에서 처음 보게 된다.** 그때는 무엇 때문에
-  /// 늘었는지 되물을 자리가 없다. 나이를 고치면 금액도 따라 바뀐다.
-  Widget _feeLine(AppLocalizations l10n) {
-    final age = int.tryParse(_age.text.trim());
-    final p = widget.policy;
-
-    // 무엇을 말할지는 세 가지로 갈린다.
-    final (String text, bool strong) = switch (age) {
-      // 나이를 아직 안 적었다. 구간만 알려 준다 — 얼마가 될지 미리 알고
-      // 적을 수 있어야 한다.
-      null =>
-        p.inUse
-            ? (l10n.companionFeeBand(p.minAge, p.maxAge, _pct(p.rate)), false)
-            : ('', false),
-      _ => switch (p.shareForAge(age)) {
-        0 => (l10n.companionFeeNone, false),
-        _ => (_feeText(l10n, age), true),
-      },
-    };
-    if (text.isEmpty) return const SizedBox.shrink();
-
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 11.5,
-        color: strong ? const Color(0xFF7A6BB5) : Colors.grey[700],
-        fontWeight: strong ? FontWeight.w700 : FontWeight.w400,
-      ),
-    );
-  }
-
-  /// 금액까지 말할 수 있으면 금액을, 등급을 아직 안 골랐으면 몫만 말한다.
-  ///
-  /// 등급을 안 골랐을 때 0 이라고 적으면 공짜로 읽힌다 — 숙박에서 이미
-  /// 겪은 함정이다(064 의 dueUnsure).
-  String _feeText(AppLocalizations l10n, int age) {
-    final share = widget.policy.shareForAge(age);
-    final fee = widget.tierFee;
-    if (fee == null || fee <= 0) {
-      return share >= 1
-          ? l10n.companionFeeFullPending
-          : l10n.companionFeeSharePending(_pct(share));
-    }
-    final amount = widget.currency.format((fee * share * 100).round() / 100);
-    return share >= 1
-        ? l10n.companionFeeFull(amount)
-        : l10n.companionFeeShare(_pct(share), amount);
-  }
-
-  /// 0.5 → 50. 화면에는 퍼센트로 적는다 — "0.5 를 냅니다" 는 아무도 안 읽는다.
-  static int _pct(double rate) => (rate * 100).round();
-
-  /// 만 5세 이하는 참가비가 없고 침대도 기본으로 안 쓴다.
-  static const _freeAgeMax = 5;
+  final List<(T, String)> options;
+  final T selected;
+  final ValueChanged<T> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final bottom = MediaQuery.of(context).viewInsets.bottom;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottom),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.existing == null
-                  ? l10n.companionAddTitle
-                  : l10n.companionEditTitle,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            // 069: 이분이 따로 등록하는지부터 묻는다. 아기는 계정을 만들 수
-            // 없어 등록이 없고, 그때는 이 칸이 그분의 기록이 된다.
-            Text(
-              l10n.companionRegistersQ,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 6),
-            SegmentedButton<bool>(
-              segments: [
-                ButtonSegment(
-                  value: true,
-                  label: Text(l10n.companionRegistersYes),
-                ),
-                ButtonSegment(
-                  value: false,
-                  label: Text(l10n.companionRegistersNo),
-                ),
-              ],
-              selected: {_registersSeparately},
-              onSelectionChanged: (v) =>
-                  setState(() => _registersSeparately = v.first),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              l10n.companionRegistersHint,
-              style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: _name,
-              decoration: InputDecoration(labelText: l10n.profileNameLabel),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _bible,
-                    decoration: InputDecoration(labelText: l10n.regBibleName),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 90,
-                  child: TextField(
-                    controller: _age,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: InputDecoration(labelText: l10n.summaryAge),
-                    // 참가비가 나이로 갈리므로(073) 고칠 때마다 다시 그린다.
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-              ],
-            ),
-            // 069: 등록 못 하는 분에게만 침대를 묻는다. 따로 등록하는 분의
-            // 자리는 그분 등록으로 잡히므로 물어볼 것이 없다.
-            if (!_registersSeparately) ...[
-              // 077: 같은 방인가. 따로 등록하는 분은 자기 등록으로 방을
-              // 받으므로 묻지 않는다.
-              const SizedBox(height: 14),
-              Text(
-                l10n.companionRoomQ,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 6),
-              SegmentedButton<bool>(
-                segments: [
-                  ButtonSegment(
-                    value: true,
-                    label: Text(l10n.companionRoomSame),
-                  ),
-                  ButtonSegment(
-                    value: false,
-                    label: Text(l10n.companionRoomOther),
-                  ),
-                ],
-                selected: {_sharesRoom},
-                onSelectionChanged: (v) =>
-                    setState(() => _sharesRoom = v.first),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                l10n.companionRoomHint,
-                style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
-              ),
-            ],
-            // 다른 방이면 침대는 당연히 쓴다 — 묻지 않는다.
-            if (!_registersSeparately && _sharesRoom) ...[
-              const SizedBox(height: 14),
-              Text(
-                l10n.companionBedQ,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 6),
-              SegmentedButton<bool>(
-                segments: [
-                  ButtonSegment(value: true, label: Text(l10n.companionBedYes)),
-                  ButtonSegment(value: false, label: Text(l10n.companionBedNo)),
-                ],
-                selected: {
-                  _occupiesBed ?? _bedByAge(int.tryParse(_age.text.trim())),
-                },
-                onSelectionChanged: (v) =>
-                    setState(() => _occupiesBed = v.first),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                l10n.companionBedHint,
-                style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
-              ),
-            ],
-            if (!_registersSeparately) ...[
-              const SizedBox(height: 10),
-              _feeLine(l10n),
-            ],
-            const SizedBox(height: 12),
-            Text(
-              l10n.regGender,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 4),
-            SegmentedButton<String>(
-              segments: [
-                ButtonSegment(value: 'M', label: Text(l10n.genderMale)),
-                ButtonSegment(value: 'F', label: Text(l10n.genderFemale)),
-              ],
-              selected: _gender != null ? {_gender!} : {},
-              emptySelectionAllowed: true,
-              onSelectionChanged: (s) =>
-                  setState(() => _gender = s.isEmpty ? null : s.first),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _language,
-                    decoration: InputDecoration(
-                      labelText: l10n.companionLanguage,
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFFD9D5E8)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final (value, label) in options)
+            Material(
+              color: value == selected ? _accent : Colors.white,
+              child: InkWell(
+                onTap: () => onChanged(value),
+                child: Container(
+                  height: 40,
+                  padding: const EdgeInsets.symmetric(horizontal: 11),
+                  alignment: Alignment.center,
+                  child: Text(
+                    label,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: value == selected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      color: value == selected
+                          ? Colors.white
+                          : const Color(0xFF4A4560),
                     ),
                   ),
                 ),
-                if (!_sameBranch) ...[
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _branch,
-                      decoration: InputDecoration(
-                        labelText: l10n.summaryBranch,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            // 동반자는 거의 언제나 등록자와 같은 지부다(부부·부모와 자녀).
-            // 다시 적게 하면 같은 지부가 'São Paulo UBF' / 'Sao Paulo' 로
-            // 갈라져 적힌다.
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              value: _sameBranch,
-              onChanged: (v) => setState(() => _sameBranch = v),
-              title: Text(l10n.companionSameBranch),
-              subtitle: Text(l10n.companionSameBranchSub),
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.companionSameFlight),
-              value: _sameFlight,
-              onChanged: (v) => setState(() => _sameFlight = v),
-            ),
-            if (!_sameFlight) ...[
-              TextField(
-                controller: _arrFlight,
-                textCapitalization: TextCapitalization.characters,
-                decoration: InputDecoration(
-                  labelText: l10n.companionArrivalFlightNo,
-                  hintText: 'KE123',
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _depFlight,
-                textCapitalization: TextCapitalization.characters,
-                decoration: InputDecoration(
-                  labelText: l10n.companionDepartureFlightNo,
-                  hintText: 'KE124',
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.companionNeedsPickup),
-              value: _needsPickup,
-              onChanged: (v) => setState(() => _needsPickup = v),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _submit,
-                child: Text(l10n.actionSave),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

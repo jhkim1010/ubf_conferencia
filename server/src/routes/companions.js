@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { defaultOccupiesBed } from '../services/companion_role.js';
+import {
+  defaultOccupiesBed,
+  planCompanionSave,
+  studyGroupOf,
+} from '../services/companion_role.js';
 import { recountRegistrationTotal } from '../services/registration_recount.js';
 import { sql } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -35,6 +39,10 @@ router.get('/:programId/me', requireAuth, async (req, res) => {
              c.registers_separately, c.occupies_bed,
              -- 077: 대표자와 같은 방을 쓰는가.
              c.shares_room,
+             -- 078: 말씀조 — same·other·none.
+             c.study_group,
+             -- 079: 대표자가 고른 투어에 함께 가는가.
+             c.joins_tours,
              -- 073: 이 사람만 달리 정한 참가비 몫. NULL 이면 수양회 정책대로.
              c.fee_share,
              -- 적어 둔 값. 편집 화면이 이것을 쓴다 — 체크를 풀면 예전에
@@ -61,9 +69,14 @@ router.get('/:programId/me', requireAuth, async (req, res) => {
 });
 
 // PUT /companions/:programId/me — 내 동반자 목록 전체 교체
-// body: { companions: [{ realName, bibleName, gender, age, language, branch,
+// body: { companions: [{ id?, realName, bibleName, gender, age, language, branch,
 //                         sameBranchAsPrimary, sameFlightAsPrimary,
-//                         arrivalFlight, departureFlight, needsPickup }] }
+//                         arrivalFlight, departureFlight, needsPickup,
+//                         registersSeparately, occupiesBed, sharesRoom,
+//                         studyGroup, joinsTours, feeShare }] }
+//
+// id 는 GET 이 준 것이다. 있으면 그 줄을 고치고, 없으면 새로 넣고, 목록에서
+// 빠진 줄은 지운다(078).
 //
 // sameBranchAsPrimary 가 참이면 지부는 등록자의 것을 쓴다(032).
 // branch 값 자체는 지우지 않는다 — 체크를 풀면 예전에 적은 값이 다시 보인다.
@@ -77,56 +90,125 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     if (!regId) return res.status(403).json({ error: '이 프로그램에 먼저 등록하세요' });
 
     const saved = await sql.transaction(async (client) => {
-      await client.query('DELETE FROM companions WHERE registration_id = $1', [regId]);
+      // 지우고 다시 넣지 않는다(078). 받은 id 가 이 등록의 것이면 그 줄을
+      // 고친다 — 그래야 담당자가 잡아 둔 방·차·조가 살아남는다.
+      const { rows: existing } = await client.query(
+        'SELECT id FROM companions WHERE registration_id = $1',
+        [regId],
+      );
+      const plan = planCompanionSave(
+        existing.map((r) => r.id),
+        list,
+      );
+      if (plan.drop.length > 0) {
+        await client.query(
+          'DELETE FROM companions WHERE registration_id = $1 AND id = ANY($2::uuid[])',
+          [regId, plan.drop],
+        );
+      }
       const rows = [];
-      for (const c of list) {
-        if (!c.realName || !String(c.realName).trim()) continue; // 이름 없는 항목 건너뜀
-        const { rows: [row] } = await client.query(
-          `INSERT INTO companions
-             (registration_id, real_name, bible_name, gender, age, language, branch,
-              same_branch_as_primary,
-              same_flight_as_primary, arrival_flight, departure_flight, needs_pickup,
-              registers_separately, occupies_bed, fee_share, shares_room)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
-           RETURNING id, real_name, bible_name, gender, age, language, branch,
+      for (const { id, item: c } of plan.ordered) {
+        const values = [
+          String(c.realName).trim(),
+          c.bibleName ?? null,
+          c.gender ?? null,
+          c.age ?? null,
+          c.language ?? null,
+          c.branch ?? null,
+          c.sameBranchAsPrimary === true,
+          c.sameFlightAsPrimary ?? true,
+          c.arrivalFlight ? JSON.stringify(c.arrivalFlight) : null,
+          c.departureFlight ? JSON.stringify(c.departureFlight) : null,
+          c.needsPickup ?? true,
+          // 069. 안 보내면 예전 뜻 그대로 — 따로 등록하는 동반자다.
+          c.registersSeparately !== false,
+          // 침대는 **적어 낸 값이 먼저**다. 안 보냈을 때만 나이로 정한다
+          // (만 5세 이하는 안 쓰는 것으로).
+          //
+          // 다른 방을 쓰면 침대는 반드시 쓴다(077) — 보호자 옆에서 같이 잘
+          // 수가 없다. 화면도 그때는 묻지 않는다.
+          c.sharesRoom === false
+            ? true
+            : typeof c.occupiesBed === 'boolean'
+              ? c.occupiesBed
+              : defaultOccupiesBed(c.age),
+          // 073. 참가비 몫을 **사람별로** 달리 정한 경우에만 값이 있다.
+          // 안 보내면 NULL 이고, 그때는 수양회가 정한 나이 구간을 따른다.
+          // 0 은 NULL 과 다르다 — "이 아이는 안 받기로 정했다" 이다.
+          feeShareOf(c.feeShare),
+          // 077. 안 보내면 예전 뜻 그대로 — 같은 방이다.
+          c.sharesRoom !== false,
+          // 078. 안 보내면 예전 뜻 그대로 — 조에 안 든다.
+          studyGroupOf(c),
+          // 079. 함께 등록한 사람만. 안 보내면 예전 뜻 — 안 간다.
+          c.registersSeparately === false && c.joinsTours === true,
+        ];
+        const returning = `RETURNING id, real_name, bible_name, gender, age, language, branch,
                      same_branch_as_primary,
                      same_flight_as_primary, arrival_flight, departure_flight, needs_pickup,
-                     registers_separately, occupies_bed, fee_share, shares_room`,
-          [
-            regId,
-            String(c.realName).trim(),
-            c.bibleName ?? null,
-            c.gender ?? null,
-            c.age ?? null,
-            c.language ?? null,
-            c.branch ?? null,
-            c.sameBranchAsPrimary === true,
-            c.sameFlightAsPrimary ?? true,
-            c.arrivalFlight ? JSON.stringify(c.arrivalFlight) : null,
-            c.departureFlight ? JSON.stringify(c.departureFlight) : null,
-            c.needsPickup ?? true,
-            // 069. 안 보내면 예전 뜻 그대로 — 따로 등록하는 동반자다.
-            c.registersSeparately !== false,
-            // 침대는 **적어 낸 값이 먼저**다. 안 보냈을 때만 나이로 정한다
-            // (만 5세 이하는 안 쓰는 것으로).
-            //
-            // 다른 방을 쓰면 침대는 반드시 쓴다(077) — 보호자 옆에서 같이 잘
-            // 수가 없다. 화면도 그때는 묻지 않는다.
-            c.sharesRoom === false
-              ? true
-              : typeof c.occupiesBed === 'boolean'
-                ? c.occupiesBed
-                : defaultOccupiesBed(c.age),
-            // 073. 참가비 몫을 **사람별로** 달리 정한 경우에만 값이 있다.
-            // 안 보내면 NULL 이고, 그때는 수양회가 정한 나이 구간을 따른다.
-            // 0 은 NULL 과 다르다 — "이 아이는 안 받기로 정했다" 이다.
-            feeShareOf(c.feeShare),
-            // 077. 안 보내면 예전 뜻 그대로 — 같은 방이다.
-            c.sharesRoom !== false,
-          ],
-        );
+                     registers_separately, occupies_bed, fee_share, shares_room, study_group,
+                     joins_tours`;
+        const { rows: [row] } = id
+          ? await client.query(
+              `UPDATE companions SET
+                 real_name = $2, bible_name = $3, gender = $4, age = $5,
+                 language = $6, branch = $7, same_branch_as_primary = $8,
+                 same_flight_as_primary = $9, arrival_flight = $10,
+                 departure_flight = $11, needs_pickup = $12,
+                 registers_separately = $13, occupies_bed = $14,
+                 fee_share = $15, shares_room = $16, study_group = $17,
+                 joins_tours = $18
+               WHERE id = $1
+               ${returning}`,
+              [id, ...values],
+            )
+          : await client.query(
+              `INSERT INTO companions
+                 (registration_id, real_name, bible_name, gender, age, language, branch,
+                  same_branch_as_primary,
+                  same_flight_as_primary, arrival_flight, departure_flight, needs_pickup,
+                  registers_separately, occupies_bed, fee_share, shares_room, study_group,
+                  joins_tours)
+               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+               ${returning}`,
+              [regId, ...values],
+            );
         rows.push(row);
       }
+
+      // 답이 바뀌어 더는 맞지 않는 배정을 걷어낸다(077·078).
+      //   같은 방으로 바꿨거나 따로 등록한다 → 자기 방 줄이 필요 없다.
+      //   조에 안 들거나 따로 등록한다     → 자기 조 줄이 필요 없다.
+      await client.query(
+        `DELETE FROM room_assignments
+          WHERE companion_id IN (
+            SELECT id FROM companions
+             WHERE registration_id = $1
+               AND (registers_separately OR shares_room))`,
+        [regId],
+      );
+      await client.query(
+        `DELETE FROM group_members
+          WHERE companion_id IN (
+            SELECT id FROM companions
+             WHERE registration_id = $1
+               AND (registers_separately OR study_group = 'none'))`,
+        [regId],
+      );
+      // "같은 분반" 이면 대표자가 이미 조에 있을 때 그 조로 바로 넣는다.
+      // 안 넣으면 담당자가 미배정 목록에서 이 사람을 다시 찾아 옮겨야 한다.
+      await client.query(
+        `INSERT INTO group_members (group_id, companion_id)
+         SELECT gm.group_id, c.id
+           FROM companions c
+           JOIN group_members gm ON gm.registration_id = c.registration_id
+          WHERE c.registration_id = $1
+            AND c.registers_separately = false
+            AND c.study_group = 'same'
+         ON CONFLICT (companion_id) WHERE companion_id IS NOT NULL
+         DO UPDATE SET group_id = EXCLUDED.group_id`,
+        [regId],
+      );
       return rows;
     });
 

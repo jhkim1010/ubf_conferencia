@@ -1120,7 +1120,10 @@ class ApiClient {
 
   // companions: 각 항목 { realName, bibleName, gender, age, language, branch,
   //                       sameFlightAsPrimary, arrivalFlight, departureFlight, needsPickup }
-  static Future<void> saveMyCompanions(
+  //
+  // 저장된 줄들을 보낸 순서대로 돌려준다. 새로 넣은 사람의 id 가 여기서
+  // 처음 생긴다 — 다음 저장 때 그 id 를 보내야 같은 사람으로 고쳐진다(078).
+  static Future<List<Map<String, dynamic>>> saveMyCompanions(
     String programId,
     List<Map<String, dynamic>> companions,
   ) async {
@@ -1129,7 +1132,11 @@ class ApiClient {
       headers: await _headers(),
       body: jsonEncode({'companions': companions}),
     );
-    _decode(response);
+    final data = _decode(response);
+    return ((data['companions'] as List?) ?? const [])
+        .whereType<Map>()
+        .map((m) => Map<String, dynamic>.from(m))
+        .toList();
   }
 
   // ─── 배정(assignments) — 관리자 ───────────────────────────

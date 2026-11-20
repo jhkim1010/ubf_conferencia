@@ -100,4 +100,36 @@ void main() {
     expect(cost.hotelEstimate, 120);
     expect(cost.due, 320);
   });
+
+  test('투어 값은 함께 가는 사람 수만큼 곱한다 — 서버와 같다 (079)', () {
+    final program = {
+      ..._program,
+      'program_options': [
+        {'id': 't1', 'cost': 250},
+      ],
+    };
+    RegistrationCost cost(List<Map<String, dynamic>> companions) =>
+        RegistrationCost.of(
+          program: program,
+          companions: companions,
+          feeTier: 'basic',
+          selectedOptionIds: const ['t1'],
+          hotelOptionKey: null,
+          hotelNightsBefore: 0,
+          hotelNightsAfter: 0,
+        );
+    final two = cost([
+      {..._c(age: 40), 'joinsTours': true},
+      {..._c(age: 1, bed: false), 'joinsTours': false},
+    ]);
+    expect(two.tourPeople, 2);
+    expect(two.optionsTotal, 500);
+    // 따로 등록하는 분은 자기 등록에서 낸다.
+    expect(
+      tourHeads([
+        {..._c(age: 40, separately: true), 'joinsTours': true},
+      ]),
+      1,
+    );
+  });
 }

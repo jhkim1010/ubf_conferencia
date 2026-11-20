@@ -4695,13 +4695,13 @@ abstract class AppLocalizations {
   /// No description provided for @companionMustRegister.
   ///
   /// In en, this message translates to:
-  /// **'Each companion has to register on their own as well.'**
+  /// **'Family flying in with you on the same flight is fully registered in this table. One person per row.'**
   String get companionMustRegister;
 
   /// No description provided for @companionWhy.
   ///
   /// In en, this message translates to:
-  /// **'You add them here so you are placed in the same room. If it is fine for you to be placed separately, you do not need to add them.'**
+  /// **'Just enter name, age, gender, room and study group. The combined cost is shown below. Choose \"Registers on their own\" only for someone who will sign up with their own account.'**
   String get companionWhy;
 
   /// No description provided for @homeAlsoAttending.
@@ -7011,25 +7011,25 @@ abstract class AppLocalizations {
   /// No description provided for @companionRegistersQ.
   ///
   /// In en, this message translates to:
-  /// **'Will this person register separately?'**
+  /// **'How will this person register?'**
   String get companionRegistersQ;
 
   /// No description provided for @companionRegistersYes.
   ///
   /// In en, this message translates to:
-  /// **'Yes, separately'**
+  /// **'Registers on their own'**
   String get companionRegistersYes;
 
   /// No description provided for @companionRegistersNo.
   ///
   /// In en, this message translates to:
-  /// **'No — cannot register'**
+  /// **'Register here with me'**
   String get companionRegistersNo;
 
   /// No description provided for @companionRegistersHint.
   ///
   /// In en, this message translates to:
-  /// **'Choose \"No\" for a baby or child with no account. This entry then becomes their record — they are counted for rooms and meals.'**
+  /// **'Registered here, this entry is their registration — they count for rooms, meals and study groups, and their cost is added to yours. If you choose \"on their own\", they must sign up with their own account.'**
   String get companionRegistersHint;
 
   /// No description provided for @companionBedQ.
@@ -7451,6 +7451,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Estimated lodging ({count} people)'**
   String hotelEstimateHeads(int count);
+
+  /// No description provided for @companionStudyQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Will they study in the same group as you?'**
+  String get companionStudyQ;
+
+  /// No description provided for @companionStudySame.
+  ///
+  /// In en, this message translates to:
+  /// **'Same group'**
+  String get companionStudySame;
+
+  /// No description provided for @companionStudyOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Another group'**
+  String get companionStudyOther;
+
+  /// No description provided for @companionStudyNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get companionStudyNone;
+
+  /// No description provided for @companionStudyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Children aged 5 or under are preset to \"None\". For another group, the organizers will assign one.'**
+  String get companionStudyHint;
+
+  /// No description provided for @companionMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More details (Bible name, language, chapter, pickup)'**
+  String get companionMore;
+
+  /// No description provided for @companionColName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get companionColName;
+
+  /// No description provided for @companionColAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get companionColAge;
+
+  /// No description provided for @companionColRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Same room'**
+  String get companionColRoom;
+
+  /// No description provided for @companionColBed.
+  ///
+  /// In en, this message translates to:
+  /// **'Bed'**
+  String get companionColBed;
+
+  /// No description provided for @companionColStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Bible study'**
+  String get companionColStudy;
+
+  /// No description provided for @companionColTour.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour'**
+  String get companionColTour;
+
+  /// No description provided for @companionColFlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Same flight'**
+  String get companionColFlight;
+
+  /// No description provided for @companionColFlightNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival flight'**
+  String get companionColFlightNo;
+
+  /// No description provided for @companionColFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Fee'**
+  String get companionColFee;
+
+  /// No description provided for @companionSelfRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Me (main registrant)'**
+  String get companionSelfRow;
+
+  /// No description provided for @companionOwnRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Own registration'**
+  String get companionOwnRegistration;
+
+  /// No description provided for @companionRemoveRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove row'**
+  String get companionRemoveRow;
+
+  /// No description provided for @companionMaleShort.
+  ///
+  /// In en, this message translates to:
+  /// **'M'**
+  String get companionMaleShort;
+
+  /// No description provided for @companionFemaleShort.
+  ///
+  /// In en, this message translates to:
+  /// **'F'**
+  String get companionFemaleShort;
+
+  /// No description provided for @companionRoomSameShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Same'**
+  String get companionRoomSameShort;
+
+  /// No description provided for @companionRoomOtherShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Separate'**
+  String get companionRoomOtherShort;
+
+  /// No description provided for @companionBedOwnRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Own bed (separate room)'**
+  String get companionBedOwnRoom;
+
+  /// No description provided for @companionBedUses.
+  ///
+  /// In en, this message translates to:
+  /// **'Own bed'**
+  String get companionBedUses;
+
+  /// No description provided for @companionBedShares.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares'**
+  String get companionBedShares;
+
+  /// No description provided for @companionTourYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Joins'**
+  String get companionTourYes;
+
+  /// No description provided for @companionTourNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get companionTourNo;
+
+  /// No description provided for @companionFlightSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Same'**
+  String get companionFlightSame;
+
+  /// No description provided for @companionFlightOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Different'**
+  String get companionFlightOther;
+
+  /// No description provided for @companionFeeNeedAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter age'**
+  String get companionFeeNeedAge;
+
+  /// No description provided for @companionFeeFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get companionFeeFree;
+
+  /// No description provided for @companionAddRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Add row'**
+  String get companionAddRow;
+
+  /// No description provided for @companionTableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Press Enter on the last row to add another. Entering an age presets the bed, study group and fee. Changes are saved as you type.'**
+  String get companionTableHint;
+
+  /// No description provided for @familyTourNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} people are joining the tours — each tour price is multiplied by the number of people.'**
+  String familyTourNote(int count);
+
+  /// No description provided for @optionsTimesPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'{price} × {count} people'**
+  String optionsTimesPeople(String price, int count);
 }
 
 class _AppLocalizationsDelegate

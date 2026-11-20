@@ -14,6 +14,7 @@ import {
   companionOccupantId,
   parseOccupant,
   companionLabel,
+  companionGroupPeople,
 } from '../services/room_occupant.js';
 
 const router = Router();
@@ -55,6 +56,22 @@ async function loadSeparateCompanions(programId) {
   `;
 }
 
+/// 말씀조에 드는 동반자들(078). 함께 등록했고 study_group 이 same·other 인
+/// 사람이다. 언어는 대표자의 것을 쓴다(companionGroupPeople).
+async function loadGroupCompanions(programId) {
+  return sql`
+    SELECT c.id, c.registration_id, c.study_group, c.real_name, c.gender, c.age,
+           r.study_language, r.study_languages, r.country, r.branch,
+           display_name(r.bible_name, r.real_name) AS primary_name
+      FROM companions c
+      JOIN registrations r ON r.id = c.registration_id
+     WHERE r.program_id = ${programId}
+       AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
+       AND c.registers_separately = false
+       AND c.study_group IN ('same', 'other')
+  `;
+}
+
 async function loadAcceptedEdges(programId, kind) {
   const rows = await sql`
     SELECT from_registration_id AS a, to_registration_id AS b
@@ -69,9 +86,9 @@ async function loadAcceptedEdges(programId, kind) {
 /// 서로 지목하고 수락한 사람들은 자동 배정이 한 묶음으로 다룬다. 그런데
 /// 손으로 옮길 때는 한 명씩 눌러야 했고, 담당자가 한쪽만 옮기면 자동 배정이
 /// 지켜 준 짝이 손으로 깨졌다. 목록에서부터 묶어 보여 주고 함께 옮긴다.
-async function withBuddies(programId, rows, kind) {
+async function withBuddies(programId, rows, kind, extraEdges = []) {
   if (rows.length === 0) return rows;
-  const edges = await loadAcceptedEdges(programId, kind);
+  const edges = [...(await loadAcceptedEdges(programId, kind)), ...extraEdges];
   const ids = rows.map((r) => r.registrationId);
   const comps = connectedComponents(ids, edges);
   const mate = new Map();
@@ -190,34 +207,84 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, requireScope(
     const groups = await sql`
       SELECT g.id, g.name, g.passage, g.location, g.leader_name,
         g.study_language AS "studyLanguage", g.age_band AS "ageBand",
-        g.capacity,
-        COALESCE(json_agg(
-          json_build_object('registrationId', reg.id,
-                            'name', display_name(reg.bible_name, reg.real_name),
-                            'gender', reg.gender, 'age', reg.age)
-          ORDER BY reg.real_name
-        ) FILTER (WHERE reg.id IS NOT NULL), '[]') AS members
+        g.capacity
       FROM groups g
-      LEFT JOIN group_members gm ON gm.group_id = g.id
-      LEFT JOIN registrations reg ON reg.id = gm.registration_id
       WHERE g.program_id = ${programId}
-      GROUP BY g.id
       ORDER BY g.sort_order, g.created_at
     `;
+    // 조원 — 등록자와, 함께 등록해 조에 드는 동반자(078). 동반자는
+    // 'c:<id>' 로 가리키고 누구의 동반자인지 이름에 붙인다.
+    const members = await sql`
+      SELECT gm.group_id,
+             COALESCE(reg.id::text, 'c:' || comp.id::text) AS "registrationId",
+             CASE WHEN reg.id IS NOT NULL
+                  THEN display_name(reg.bible_name, reg.real_name)
+                  ELSE comp.real_name END AS name,
+             CASE WHEN reg.id IS NULL
+                  THEN display_name(owner.bible_name, owner.real_name) END
+               AS primary_name,
+             COALESCE(reg.gender, comp.gender) AS gender,
+             COALESCE(reg.age, comp.age) AS age,
+             comp.id IS NOT NULL AS "isCompanion",
+             COALESCE(reg.real_name, comp.real_name) AS sort_name
+        FROM group_members gm
+        JOIN groups g ON g.id = gm.group_id
+        LEFT JOIN registrations reg ON reg.id = gm.registration_id
+        LEFT JOIN companions comp ON comp.id = gm.companion_id
+        LEFT JOIN registrations owner ON owner.id = comp.registration_id
+       WHERE g.program_id = ${programId}
+         AND (reg.id IS NOT NULL OR comp.id IS NOT NULL)
+       ORDER BY sort_name
+    `;
+    const byGroup = new Map(groups.map((g) => [g.id, []]));
+    for (const m of members) {
+      byGroup.get(m.group_id)?.push({
+        registrationId: m.registrationId,
+        name: m.isCompanion ? companionLabel(m.name, m.primary_name) : m.name,
+        gender: m.gender,
+        age: m.age,
+        isCompanion: m.isCompanion,
+      });
+    }
+    for (const g of groups) g.members = byGroup.get(g.id) ?? [];
+
     // 아직 조가 없는 사람에게도 희망 언어(034)를 실어 준다 — 어느 조로
     // 보낼지는 그것으로 갈린다.
-    const unassigned = await sql`
+    const unassignedRegs = await sql`
       SELECT id AS "registrationId",
              display_name(bible_name, real_name) AS name, gender, age,
              study_languages AS "studyLanguages"
       FROM registrations
       WHERE program_id = ${programId} AND counts_as_participant(real_name, submitted, cancelled_at)
-        AND id NOT IN (SELECT registration_id FROM group_members)
+        AND id NOT IN (SELECT registration_id FROM group_members
+                        WHERE registration_id IS NOT NULL)
       ORDER BY real_name
     `;
+    // 조에 들기로 한 동반자 중 아직 조가 없는 사람(078). 언어는 대표자의 것.
+    const companions = await loadGroupCompanions(programId);
+    const placed = new Set(
+      members.filter((m) => m.isCompanion).map((m) => m.registrationId),
+    );
+    const { edges: sameEdges } = companionGroupPeople(companions);
+    const unassignedComps = companions
+      .map((c) => ({
+        registrationId: companionOccupantId(c.id),
+        name: companionLabel(c.real_name, c.primary_name),
+        gender: c.gender,
+        age: c.age,
+        studyLanguages: c.study_languages,
+        isCompanion: true,
+      }))
+      .filter((c) => !placed.has(c.registrationId));
     res.json({
       groups,
-      unassigned: await withBuddies(programId, unassigned, 'group'),
+      // "같은 분반" 동반자는 대표자와 함께 움직인다(withIds).
+      unassigned: await withBuddies(
+        programId,
+        [...unassignedRegs, ...unassignedComps],
+        'group',
+        sameEdges,
+      ),
     });
   } catch (err) {
     console.error('말씀조 배정 조회 오류:', err);
@@ -300,14 +367,20 @@ router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, requireS
 router.post('/:programId/groups/auto', requireAuth, requireProgramAdmin, requireScope('groups'), async (req, res) => {
   const { programId } = req.params;
   try {
-    const [groups, people, groupEdges, [program]] = await Promise.all([
+    const [groups, registrants, acceptedEdges, companions, [program]] = await Promise.all([
       sql`SELECT id, study_language AS "studyLanguage", age_band AS "ageBand",
                  capacity
             FROM groups WHERE program_id = ${programId} ORDER BY sort_order`,
       loadPeople(programId),
       loadAcceptedEdges(programId, 'group'),
+      loadGroupCompanions(programId),
       sql`SELECT small_cohort_policy, min_team_size FROM programs WHERE id = ${programId}`,
     ]);
+    // 함께 등록한 동반자도 한 사람으로 넣는다(078). "같은 분반" 은 대표자와
+    // 짝으로 묶여 한 조로 간다.
+    const fromCompanions = companionGroupPeople(companions);
+    const people = [...registrants, ...fromCompanions.people];
+    const groupEdges = [...acceptedEdges, ...fromCompanions.edges];
 
     const { assignments, unplaced, notes } = assignGroups({
       groups,
@@ -324,9 +397,12 @@ router.post('/:programId/groups/auto', requireAuth, requireProgramAdmin, require
         [programId],
       );
       for (const a of assignments) {
+        const who = parseOccupant(a.registrationId);
+        if (!who) continue;
         await client.query(
-          `INSERT INTO group_members (group_id, registration_id) VALUES ($1, $2)`,
-          [a.groupId, a.registrationId],
+          `INSERT INTO group_members (group_id, registration_id, companion_id)
+           VALUES ($1, $2, $3)`,
+          [a.groupId, who.registrationId ?? null, who.companionId ?? null],
         );
       }
     });
@@ -493,12 +569,35 @@ router.post('/:programId/groups/assign', requireAuth, requireProgramAdmin, requi
     const [group] = await sql`SELECT id FROM groups WHERE id = ${groupId} AND program_id = ${programId}`;
     if (!group) return res.status(404).json({ error: '조를 찾을 수 없습니다' });
 
+    // 동반자는 'c:<id>' 로 온다(078). 이 수양회의, 조에 들기로 한 동반자인지
+    // 확인한다 — 아기를 조에 넣거나 남의 수양회 사람을 넣으면 안 된다.
+    const who = parseOccupant(registrationId);
+    if (!who) return res.status(400).json({ error: 'groupId와 registrationId가 필요합니다' });
+    if (who.companionId) {
+      const [comp] = await sql`
+        SELECT c.id FROM companions c
+          JOIN registrations r ON r.id = c.registration_id
+         WHERE c.id = ${who.companionId} AND r.program_id = ${programId}
+           AND c.registers_separately = false
+           AND c.study_group IN ('same', 'other')
+      `;
+      if (!comp) return res.status(404).json({ error: '동반자를 찾을 수 없습니다' });
+    }
+
     await sql.transaction(async (client) => {
-      await client.query('DELETE FROM group_members WHERE registration_id = $1', [registrationId]);
-      await client.query(
-        'INSERT INTO group_members (group_id, registration_id) VALUES ($1, $2)',
-        [groupId, registrationId],
-      );
+      if (who.companionId) {
+        await client.query('DELETE FROM group_members WHERE companion_id = $1', [who.companionId]);
+        await client.query(
+          'INSERT INTO group_members (group_id, companion_id) VALUES ($1, $2)',
+          [groupId, who.companionId],
+        );
+      } else {
+        await client.query('DELETE FROM group_members WHERE registration_id = $1', [registrationId]);
+        await client.query(
+          'INSERT INTO group_members (group_id, registration_id) VALUES ($1, $2)',
+          [groupId, registrationId],
+        );
+      }
     });
     res.json({ success: true });
   } catch (err) {
@@ -510,7 +609,12 @@ router.post('/:programId/groups/assign', requireAuth, requireProgramAdmin, requi
 // ── DELETE 말씀조 배정 해제 ──────────────────────────────────
 router.delete('/:programId/groups/:registrationId', requireAuth, requireProgramAdmin, requireScope('groups'), async (req, res) => {
   try {
-    await sql`DELETE FROM group_members WHERE registration_id = ${req.params.registrationId}`;
+    const who = parseOccupant(req.params.registrationId);
+    if (who?.companionId) {
+      await sql`DELETE FROM group_members WHERE companion_id = ${who.companionId}`;
+    } else if (who?.registrationId) {
+      await sql`DELETE FROM group_members WHERE registration_id = ${who.registrationId}`;
+    }
     res.json({ success: true });
   } catch (err) {
     console.error('말씀조 배정 해제 오류:', err);

@@ -42,9 +42,11 @@ export async function cancelRegistration({ registrationId, byUserId, reason }) {
         WHERE registration_id = $1 OR companion_id IN (${companions})`,
       [registrationId],
     );
-    await client.query(`DELETE FROM group_members WHERE registration_id = $1`, [
-      registrationId,
-    ]);
+    await client.query(
+      `DELETE FROM group_members
+        WHERE registration_id = $1 OR companion_id IN (${companions})`,
+      [registrationId],
+    );
     // 방장·조장이었다면 그 자리를 비운다(010·046).
     await client.query(
       `UPDATE rooms SET leader_registration_id = NULL WHERE leader_registration_id = $1`,

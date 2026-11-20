@@ -1029,11 +1029,17 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
         -- **살아 있는 옵션만 센다.** 예전에는 저장할 때마다 옵션 id 가 바뀌어
         -- 죽은 id 를 가리키는 선택이 남았는데, 그것까지 세는 바람에 카드는
         -- 4명인데 투어 화면에는 2명이었다.
-        COUNT(r.id) FILTER (WHERE EXISTS (
+        --
+        -- 함께 가는 동반자도 한 사람으로 센다(079).
+        COALESCE(SUM(1 + (
+          SELECT COUNT(*) FROM companions c
+           WHERE c.registration_id = r.id
+             AND c.registers_separately = false AND c.joins_tours = true
+        )) FILTER (WHERE EXISTS (
           SELECT 1 FROM program_options po
           WHERE po.program_id = p.id AND po.is_active
             AND po.id = ANY(r.selected_options)
-        )) AS tour_signup_count,
+        )), 0) AS tour_signup_count,
         -- 판정은 has_food_restriction(027) 하나로 모았다. 여기만 예전 조건이
         -- 남아 있어서 대시보드 카드는 4명, 표는 2명이 됐다 — 같은 것을 두
         -- 규칙으로 세면 어느 쪽도 믿을 수 없다.
@@ -1122,15 +1128,21 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
       // 투어는 사람이 아니라 투어별 줄을 보여 준다 — 담당자가 먼저 보는 것이
       // "어느 투어가 찼나" 이기 때문이다. 신청자가 없는 투어도 남긴다.
       sql`
+        -- 사람 수로 센다 — 함께 가는 동반자도 한 자리다(079).
         SELECT o.name, o.capacity,
-               COUNT(r.id)::int AS signup_count
+               COALESCE(SUM(1 + (
+                 SELECT COUNT(*) FROM companions c
+                  WHERE c.registration_id = r.id
+                    AND c.registers_separately = false
+                    AND c.joins_tours = true)) FILTER (WHERE r.id IS NOT NULL), 0)::int
+                 AS signup_count
         FROM program_options o
         LEFT JOIN registrations r
           ON r.program_id = ${id} AND o.id = ANY(r.selected_options)
              AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
         WHERE o.program_id = ${id} AND o.is_active
         GROUP BY o.id, o.name, o.capacity
-        ORDER BY COUNT(r.id) DESC, o.name
+        ORDER BY signup_count DESC, o.name
         LIMIT ${LIMIT}
       `,
       sql`
@@ -2088,6 +2100,29 @@ router.get(
           AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
         ORDER BY r.country NULLS LAST, r.real_name
       `;
+      // 함께 가는 동반자(079). 대표자가 고른 투어마다 한 사람으로 센다 —
+      // 버스 좌석·입장권은 사람 수로 잡는다.
+      const companions = await sql`
+        SELECT o.id AS option_id, r.id AS registration_id,
+               c.real_name, display_name(r.bible_name, r.real_name) AS primary_name,
+               r.country, r.branch, c.gender, c.age, r.submitted
+        FROM program_options o
+        JOIN registrations r
+          ON r.program_id = ${programId} AND o.id = ANY(r.selected_options)
+        JOIN companions c ON c.registration_id = r.id
+        WHERE o.program_id = ${programId} AND o.is_active = true
+          AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
+          AND c.registers_separately = false AND c.joins_tours = true
+        ORDER BY c.created_at
+      `;
+      for (const c of companions) {
+        people.push({
+          ...c,
+          bible_name: null,
+          real_name: `${c.real_name} (${c.primary_name})`,
+          is_companion: true,
+        });
+      }
 
       const byOption = new Map();
       for (const p of people) {
@@ -2101,6 +2136,7 @@ router.get(
           gender: p.gender,
           age: p.age,
           submitted: p.submitted,
+          is_companion: p.is_companion === true,
         });
       }
 

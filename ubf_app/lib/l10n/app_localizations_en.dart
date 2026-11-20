@@ -2554,11 +2554,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get companionMustRegister =>
-      'Each companion has to register on their own as well.';
+      'Family flying in with you on the same flight is fully registered in this table. One person per row.';
 
   @override
   String get companionWhy =>
-      'You add them here so you are placed in the same room. If it is fine for you to be placed separately, you do not need to add them.';
+      'Just enter name, age, gender, room and study group. The combined cost is shown below. Choose \"Registers on their own\" only for someone who will sign up with their own account.';
 
   @override
   String get homeAlsoAttending => 'I\'m attending too';
@@ -3870,17 +3870,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'From what you entered before — change it if it has changed';
 
   @override
-  String get companionRegistersQ => 'Will this person register separately?';
+  String get companionRegistersQ => 'How will this person register?';
 
   @override
-  String get companionRegistersYes => 'Yes, separately';
+  String get companionRegistersYes => 'Registers on their own';
 
   @override
-  String get companionRegistersNo => 'No — cannot register';
+  String get companionRegistersNo => 'Register here with me';
 
   @override
   String get companionRegistersHint =>
-      'Choose \"No\" for a baby or child with no account. This entry then becomes their record — they are counted for rooms and meals.';
+      'Registered here, this entry is their registration — they count for rooms, meals and study groups, and their cost is added to yours. If you choose \"on their own\", they must sign up with their own account.';
 
   @override
   String get companionBedQ => 'Does this person need a bed?';
@@ -4153,5 +4153,117 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String hotelEstimateHeads(int count) {
     return 'Estimated lodging ($count people)';
+  }
+
+  @override
+  String get companionStudyQ => 'Will they study in the same group as you?';
+
+  @override
+  String get companionStudySame => 'Same group';
+
+  @override
+  String get companionStudyOther => 'Another group';
+
+  @override
+  String get companionStudyNone => 'None';
+
+  @override
+  String get companionStudyHint =>
+      'Children aged 5 or under are preset to \"None\". For another group, the organizers will assign one.';
+
+  @override
+  String get companionMore =>
+      'More details (Bible name, language, chapter, pickup)';
+
+  @override
+  String get companionColName => 'Name';
+
+  @override
+  String get companionColAge => 'Age';
+
+  @override
+  String get companionColRoom => 'Same room';
+
+  @override
+  String get companionColBed => 'Bed';
+
+  @override
+  String get companionColStudy => 'Bible study';
+
+  @override
+  String get companionColTour => 'Tour';
+
+  @override
+  String get companionColFlight => 'Same flight';
+
+  @override
+  String get companionColFlightNo => 'Arrival flight';
+
+  @override
+  String get companionColFee => 'Fee';
+
+  @override
+  String get companionSelfRow => 'Me (main registrant)';
+
+  @override
+  String get companionOwnRegistration => 'Own registration';
+
+  @override
+  String get companionRemoveRow => 'Remove row';
+
+  @override
+  String get companionMaleShort => 'M';
+
+  @override
+  String get companionFemaleShort => 'F';
+
+  @override
+  String get companionRoomSameShort => 'Same';
+
+  @override
+  String get companionRoomOtherShort => 'Separate';
+
+  @override
+  String get companionBedOwnRoom => 'Own bed (separate room)';
+
+  @override
+  String get companionBedUses => 'Own bed';
+
+  @override
+  String get companionBedShares => 'Shares';
+
+  @override
+  String get companionTourYes => 'Joins';
+
+  @override
+  String get companionTourNo => 'No';
+
+  @override
+  String get companionFlightSame => 'Same';
+
+  @override
+  String get companionFlightOther => 'Different';
+
+  @override
+  String get companionFeeNeedAge => 'Enter age';
+
+  @override
+  String get companionFeeFree => 'Free';
+
+  @override
+  String get companionAddRow => 'Add row';
+
+  @override
+  String get companionTableHint =>
+      'Press Enter on the last row to add another. Entering an age presets the bed, study group and fee. Changes are saved as you type.';
+
+  @override
+  String familyTourNote(int count) {
+    return '$count people are joining the tours — each tour price is multiplied by the number of people.';
+  }
+
+  @override
+  String optionsTimesPeople(String price, int count) {
+    return '$price × $count people';
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/child_fee.dart';
 import '../../../program/providers/program_provider.dart';
 import '../../../../core/constants/world_countries.dart';
 import '../../../../core/utils/tour_extras.dart';
@@ -42,13 +43,18 @@ class OptionsStep extends ConsumerWidget {
     final formState = ref.watch(registrationFormProvider(programId));
     final selectedOptions = formState.selectedOptions;
 
-    // 선택된 옵션의 총 비용 계산
-    double totalCost = 0;
+    // 선택된 옵션의 총 비용 계산 — 한 사람 값에 함께 가는 사람 수를
+    // 곱한다(079). 동반자 표에서 "투어 함께" 를 고른 분들이다.
+    final companions =
+        ref.watch(myCompanionsProvider(programId)).valueOrNull ?? const [];
+    final people = tourHeads(companions);
+    double perPerson = 0;
     for (final option in options) {
       if (selectedOptions.contains(option['id'] as String)) {
-        totalCost += (Money.parse(option['cost']) ?? 0).toDouble();
+        perPerson += (Money.parse(option['cost']) ?? 0).toDouble();
       }
     }
+    final totalCost = perPerson * people;
 
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -79,9 +85,24 @@ class OptionsStep extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  l10n.optionsSelectedTotal,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.optionsSelectedTotal,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      if (people > 1)
+                        Text(
+                          l10n.optionsTimesPeople(
+                            currency.format(perPerson),
+                            people,
+                          ),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                    ],
+                  ),
                 ),
                 Text(
                   currency.format(totalCost),
