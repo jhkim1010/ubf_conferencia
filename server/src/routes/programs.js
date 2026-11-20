@@ -4,6 +4,7 @@ import { pickLanguage } from '../services/messages.js';
 import { sql } from '../db.js';
 import { recountRegistrationTotal, recountNamesakes, companionNamesOf } from '../services/registration_recount.js';
 import { jointCompanionHeadcount } from '../services/companion_cover.js';
+import { noteAdminEdit } from '../services/edit_mail.js';
 import { planTravelEdit } from '../services/travel_edit.js';
 import { cleanProfile, planTours } from '../services/profile_edit.js';
 import { listCompanions, saveCompanionList } from '../services/companion_save.js';
@@ -1384,12 +1385,14 @@ router.patch(
           `;
           // 등급이 바뀌면 참가비가 바뀐다 — 아이 몫(073)도 등급을 따라간다.
           tierChanged = on('fee_tier');
+          noteAdminEdit(registrationId, 'profile', req.user.userId);
         }
       }
       if (tierChanged) await recountRegistrationTotal(registrationId);
 
       // 등록 완료 여부. 본문에 없으면 손대지 않는다.
       if (typeof body.submitted === 'boolean') {
+        noteAdminEdit(registrationId, 'payment', req.user.userId);
         await sql`
           UPDATE registrations SET submitted = ${body.submitted}, updated_at = NOW()
           WHERE id = ${registrationId}
@@ -1398,6 +1401,7 @@ router.patch(
 
       // 입금. payments 는 등록 하나에 한 줄이다(001 의 UNIQUE).
       if (Object.prototype.hasOwnProperty.call(body, 'payment')) {
+        noteAdminEdit(registrationId, 'payment', req.user.userId);
         const pay = body.payment;
         if (pay === null) {
           // 잘못 적었을 때 되돌릴 길. 줄을 지운다.
@@ -1521,6 +1525,8 @@ router.patch(
     try {
       const out = await applyTravel(programId, registrationId, req.body ?? {});
       if (!out) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+      // 본인에게 메일로 알린다 — 몇 분 모았다가 한 통(services/edit_mail.js).
+      noteAdminEdit(registrationId, 'travel', req.user.userId);
       res.json(out);
     } catch (err) {
       console.error('비행·숙박 수정 오류:', err);
@@ -1578,6 +1584,7 @@ router.put(
       if (!reg) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
       const before = await companionNamesOf(reg.id);
       const saved = await saveCompanionList(reg.id, list);
+      noteAdminEdit(reg.id, 'companions', req.user.userId);
       let totalCost = null;
       try {
         totalCost = await recountRegistrationTotal(reg.id);
@@ -1641,6 +1648,7 @@ router.put(
           );
         }
       });
+      noteAdminEdit(registrationId, 'tours', req.user.userId);
       // 숙박이 든 투어는 박수를 바꾼다 — 비행 일정 셈을 다시 한다.
       const travel = await applyTravel(programId, registrationId, {});
       res.json({
@@ -1715,6 +1723,7 @@ router.post(
         byUserId: req.user.userId,
         reason: req.body?.reason,
       });
+      noteAdminEdit(registrationId, 'cancel', req.user.userId);
       res.json({ success: true });
     } catch (err) {
       console.error('참석 취소(담당자) 오류:', err);
