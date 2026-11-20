@@ -669,6 +669,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get dashStatTotal => '총 등록';
 
   @override
+  String dashStatTotalWithCompanions(int count) {
+    return '총 등록 · 동반 $count명 별도';
+  }
+
+  @override
   String get dashStatSubmitted => '등록 완료';
 
   @override
@@ -4103,7 +4108,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get companionSelfRow => '나 (대표자)';
 
   @override
+  String companionSelfRowNamed(String name) {
+    return '$name (대표자)';
+  }
+
+  @override
+  String get companionReference => '기준';
+
+  @override
   String get companionOwnRegistration => '본인 등록';
+
+  @override
+  String get companionMakeJoint => '함께 등록으로';
+
+  @override
+  String companionMakeJointTitle(String name) {
+    return '$name 님을 이 등록에 함께 넣을까요?';
+  }
+
+  @override
+  String get companionMakeJointBody =>
+      '이분이 따로 등록하지 않았을 때만 바꾸십시오. 따로 등록한 분을 바꾸면 참가비가 두 번 붙습니다. 바꾸면 이 줄에서 나이·성별·방·분반·비행기를 고칠 수 있고, 참가비는 이 등록에 더해집니다.';
+
+  @override
+  String get companionMakeJointConfirm => '바꾸기';
 
   @override
   String get companionRemoveRow => '줄 지우기';

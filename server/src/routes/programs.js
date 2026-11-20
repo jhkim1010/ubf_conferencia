@@ -1017,6 +1017,16 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
         p.id AS program_id,
         p.name AS program_name,
         COUNT(r.id) AS total_registrations,
+        -- 함께 등록한 동반자(069). 등록 인원과 따로 센다 — 합쳐 버리면
+        -- 담당자가 "몇 명이 등록했나" 와 "몇 명이 오나" 를 구별할 수 없다.
+        -- 따로 등록한 동반자는 자기 등록으로 이미 세었으니 넣지 않는다.
+        -- 입금 줄과 조인돼 한 사람이 여러 줄일 수 있어 SUM 이 아니라
+        -- 따로 센다.
+        (SELECT COUNT(*) FROM companions c
+           JOIN registrations r2 ON r2.id = c.registration_id
+          WHERE r2.program_id = p.id
+            AND counts_as_participant(r2.real_name, r2.submitted, r2.cancelled_at)
+            AND c.registers_separately = false) AS companion_count,
         -- 국제 수양회만 "전체 (외국 n)" 으로 보여 준다(목록과 같은 규칙).
         -- 입금 줄과 조인돼 한 사람이 여러 줄일 수 있어 DISTINCT 로 센다.
         CASE WHEN p.program_type = 'international' AND p.host_country IS NOT NULL

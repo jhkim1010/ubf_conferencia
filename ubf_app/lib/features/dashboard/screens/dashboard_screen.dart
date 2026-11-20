@@ -429,7 +429,12 @@ class _StatsGrid extends StatelessWidget {
           children: [
             if (sees('registration'))
               _StatCard(
-                label: l10n.dashStatTotal,
+                // 함께 등록한 동반자는 등록 수에 섞지 않고 따로 적는다.
+                // 방·식사·버스는 동반자까지 세어야 하고, 등록·입금은
+                // 등록 수로 본다 — 둘 다 보여야 한다.
+                label: n('companion_count') > 0
+                    ? l10n.dashStatTotalWithCompanions(n('companion_count'))
+                    : l10n.dashStatTotal,
                 total: n('total_registrations'),
                 preview: rows('recent'),
                 value: withForeignCount(

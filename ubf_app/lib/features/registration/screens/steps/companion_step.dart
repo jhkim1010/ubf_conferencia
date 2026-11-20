@@ -335,6 +335,36 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     _changed();
   }
 
+  /// "본인 등록" 으로 적힌 줄을 함께 등록으로 바꾼다. 실제로는 따로
+  /// 등록하지 않은 분이 069 이전 기본값 때문에 그렇게 적힌 경우가 있다
+  /// (운영 12명 중 4명은 같은 수양회에 같은 이름의 등록이 없다).
+  /// 따로 등록한 분을 바꾸면 참가비가 두 번 붙으므로 묻고 바꾼다.
+  Future<void> _makeJoint(_Row r) async {
+    final l10n = AppLocalizations.of(context)!;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.companionMakeJointTitle(r.name.text.trim())),
+        content: Text(l10n.companionMakeJointBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.companionMakeJointConfirm),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    r.data['registersSeparately'] = false;
+    // 따로 등록이라 'none' 으로 저장돼 있던 분반은 지우고 나이로 다시 정한다.
+    r.data.remove('studyGroup');
+    _changed();
+  }
+
   /// 마지막 줄에서 Enter 를 누르면 새 줄을 연다.
   void _submitted(_Row r) {
     if (identical(
@@ -356,6 +386,12 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     int n(Object? v) => (v as num?)?.toInt() ?? 0;
     return RegistrationFormState(
       programId: widget.programId,
+      // 표 첫 줄(대표자)에 보인다.
+      realName: r['real_name'] as String?,
+      bibleName: r['bible_name'] as String?,
+      gender: r['gender'] as String?,
+      age: (r['age'] as num?)?.toInt(),
+      arrivalFlight: (r['arrival_flight'] as Map?)?.cast<String, dynamic>(),
       feeTier: r['fee_tier'] as String?,
       selectedOptions: ((r['selected_options'] as List?) ?? const [])
           .map((e) => '$e')
@@ -602,6 +638,25 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     children: cells,
   );
 
+  /// 대표자 줄의 이름 — "Gonzalo Solis (대표자)". "나 (대표자)" 는 담당자가
+  /// 남의 등록을 열었을 때 담당자 자신으로 읽혀 헷갈렸다. 이름이 아직
+  /// 없으면 예전처럼 "나" 로 둔다.
+  String _selfName(AppLocalizations l10n) {
+    final f = _form();
+    final name = [f.realName, f.bibleName]
+        .map((s) => (s ?? '').trim())
+        .firstWhere((s) => s.isNotEmpty, orElse: () => '');
+    return name.isEmpty
+        ? l10n.companionSelfRow
+        : l10n.companionSelfRowNamed(name);
+  }
+
+  String _genderShort(AppLocalizations l10n, String? g) => switch (g) {
+    'M' => l10n.companionMaleShort,
+    'F' => l10n.companionFemaleShort,
+    _ => '—',
+  };
+
   /// 왼쪽에 붙어 있는 칸 — 번호와 이름. 휴대폰에서 표를 옆으로 밀어도
   /// 누구의 줄인지 보여야 한다.
   Widget _fixedTable(AppLocalizations l10n, double nameWidth) {
@@ -615,7 +670,7 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
         _cell(_muted('—'), width: 34),
         _cell(
           Text(
-            l10n.companionSelfRow,
+            _selfName(l10n),
             style: const TextStyle(fontWeight: FontWeight.w700),
             overflow: TextOverflow.ellipsis,
           ),
@@ -681,6 +736,10 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
       (r) => !r.ownRegistration && r.data['sameFlightAsPrimary'] == false,
     );
     final selfFee = _tierFee;
+    final self = _form();
+    final selfFlight = '${self.arrivalFlight?['flight_no'] ?? ''}'
+        .trim()
+        .toUpperCase();
     final rows = <TableRow>[
       TableRow(
         decoration: const BoxDecoration(color: Color(0xFFEFEDF7)),
@@ -696,14 +755,20 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
           _head(''),
         ],
       ),
+      // 대표자 줄. 아래 줄의 "같은 방·같은 분반·같은 비행기" 가 이 사람과
+      // 같다는 뜻이므로 그 칸에는 "기준" 이라고 적는다. 칸을 비워 두면
+      // 표가 비어 보이고, 무엇과 같은지도 안 보인다.
       _line([
-        _cell(_muted('—')),
-        _cell(_muted('—')),
-        _cell(_muted('—')),
-        _cell(_muted('—')),
-        _cell(_muted('—')),
-        _cell(_muted('—')),
-        if (anyOtherFlight) _cell(_muted('—')),
+        _cell(_muted(self.age == null ? '—' : '${self.age}')),
+        _cell(_muted(_genderShort(l10n, self.gender))),
+        _cell(_muted(l10n.companionReference)),
+        _cell(_muted(l10n.companionBedUses)),
+        _cell(_muted(l10n.companionReference)),
+        _cell(
+          _muted(selfFlight.isEmpty ? l10n.companionReference : selfFlight),
+        ),
+        if (anyOtherFlight)
+          _cell(_muted(selfFlight.isEmpty ? '—' : selfFlight)),
         _cell(_muted(selfFee == null ? '—' : widget.currency.format(selfFee))),
         _cell(const SizedBox(width: 40)),
       ], color: const Color(0xFFFAF9FD)),
@@ -725,13 +790,37 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
         rows.add(
           _line([
             _cell(_muted(r.age.text.isEmpty ? '—' : r.age.text)),
-            _cell(_muted('—')),
-            _cell(_muted('—')),
+            _cell(_muted(_genderShort(l10n, r.data['gender'] as String?))),
+            // 따로 등록했어도 같은 방은 고를 수 있다. 같은 방이면 방 배정에서
+            // 그분 등록과 한 묶음("누구 + 누구")이 된다 — 이름이 같은 등록이
+            // 꼭 하나일 때(서버 room_occupant.js separateFamilyEdges).
+            _cell(
+              _seg<bool>(
+                [
+                  (true, l10n.companionRoomSameShort),
+                  (false, l10n.companionRoomOtherShort),
+                ],
+                r.data['sharesRoom'] != false,
+                (v) {
+                  r.data['sharesRoom'] = v;
+                  _changed();
+                },
+              ),
+            ),
             _cell(_muted('—')),
             _cell(_muted('—')),
             _cell(_muted('—')),
             if (anyOtherFlight) _cell(_muted('—')),
-            _cell(_muted('—')),
+            _cell(
+              TextButton(
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+                onPressed: () => _makeJoint(r),
+                child: Text(l10n.companionMakeJoint),
+              ),
+            ),
             del,
           ]),
         );

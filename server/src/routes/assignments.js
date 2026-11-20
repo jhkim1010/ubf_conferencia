@@ -15,6 +15,7 @@ import {
   parseOccupant,
   companionLabel,
   companionGroupPeople,
+  separateFamilyEdges,
 } from '../services/room_occupant.js';
 
 const router = Router();
@@ -105,6 +106,29 @@ async function withBuddies(programId, rows, kind, extraEdges = []) {
   }));
 }
 
+/// 따로 등록했지만 같은 방을 원하는 가족. 동반자 표에 "본인
+/// 등록" 으로 적힌 사람을 이름으로 그 사람의 등록과 잇는다
+/// (services/room_occupant.js separateFamilyEdges). 가족 짝으로 다룬다 —
+/// 부부는 성별이 달라도 한 방이다.
+async function loadSeparateFamilyEdges(programId) {
+  const [companions, registrations] = await Promise.all([
+    sql`
+      SELECT c.registration_id, c.real_name, c.shares_room
+        FROM companions c
+        JOIN registrations r ON r.id = c.registration_id
+       WHERE r.program_id = ${programId}
+         AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
+         AND c.registers_separately = true
+    `,
+    sql`
+      SELECT id, real_name FROM registrations
+       WHERE program_id = ${programId}
+         AND counts_as_participant(real_name, submitted, cancelled_at)
+    `,
+  ]);
+  return separateFamilyEdges(companions, registrations);
+}
+
 // 동행(가족) 관계로 수락된 짝. 성별이 달라도 같은 방을 쓸 수 있는 근거다(022).
 async function loadFamilyEdges(programId) {
   const rows = await sql`
@@ -154,12 +178,23 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, requireScope('
       ORDER BY r.floor NULLS FIRST, r.name
     `;
     const unassigned = await sql`
-      SELECT id AS "registrationId",
-             display_name(bible_name, real_name) AS name, gender
-      FROM registrations
-      WHERE program_id = ${programId} AND counts_as_participant(real_name, submitted, cancelled_at)
-        AND id NOT IN (SELECT registration_id FROM room_assignments WHERE registration_id IS NOT NULL)
-      ORDER BY real_name
+      SELECT reg.id AS "registrationId",
+             display_name(reg.bible_name, reg.real_name) AS name, reg.gender,
+             -- 이 사람과 한 방에 드는, 함께 등록한 동반자(069). 미배정
+             -- 목록에서 "누구 + 누구" 로 한 줄에 보인다.
+             COALESCE((
+               SELECT json_agg(json_build_object('name', c.real_name, 'age', c.age)
+                               ORDER BY c.age DESC NULLS LAST)
+                 FROM companions c
+                WHERE c.registration_id = reg.id
+                  AND c.registers_separately = false
+                  AND c.shares_room = true
+             ), '[]'::json) AS companions
+      FROM registrations reg
+      WHERE reg.program_id = ${programId}
+        AND counts_as_participant(reg.real_name, reg.submitted, reg.cancelled_at)
+        AND reg.id NOT IN (SELECT registration_id FROM room_assignments WHERE registration_id IS NOT NULL)
+      ORDER BY reg.real_name
     `;
     // 다른 방을 쓰는 동반자(077). 자기 줄(companion_id)로 방에 든다.
     const separate = await loadSeparateCompanions(programId);
@@ -188,7 +223,12 @@ router.get('/:programId/rooms', requireAuth, requireProgramAdmin, requireScope('
     res.json({
       rooms,
       unassigned: [
-        ...(await withBuddies(programId, unassigned, 'roommate')),
+        ...(await withBuddies(
+          programId,
+          unassigned,
+          'roommate',
+          await loadSeparateFamilyEdges(programId),
+        )),
         ...loose.map((m) => ({ ...m, withIds: [] })),
       ],
     });
@@ -296,14 +336,18 @@ router.get('/:programId/groups', requireAuth, requireProgramAdmin, requireScope(
 router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, requireScope('rooms'), async (req, res) => {
   const { programId } = req.params;
   try {
-    const [rooms, registrants, separate, roommateEdges] = await Promise.all([
+    const [rooms, registrants, separate, acceptedRoommates, separateFamily] = await Promise.all([
       sql`SELECT id, capacity, extra_capacity AS "extraCapacity", gender,
                  room_type AS "roomType"
             FROM rooms WHERE program_id = ${programId}`,
       loadPeople(programId),
       loadSeparateCompanions(programId),
       loadAcceptedEdges(programId, 'roommate'),
+      loadSeparateFamilyEdges(programId),
     ]);
+    // 따로 등록한 가족도 짝이다. 엔진은 가족 짝이 짝 목록의 일부이기를
+    // 바란다(assignRooms 의 familyEdges 설명).
+    const roommateEdges = [...acceptedRoommates, ...separateFamily];
     // 다른 방을 쓰는 동반자도 한 사람으로 넣는다(077). 엔진은 id 만 본다.
     const people = [
       ...registrants,
@@ -316,7 +360,7 @@ router.post('/:programId/rooms/auto', requireAuth, requireProgramAdmin, requireS
         beds: 1,
       })),
     ];
-    const familyEdges = await loadFamilyEdges(programId);
+    const familyEdges = [...(await loadFamilyEdges(programId)), ...separateFamily];
 
     const { assignments, unplaced } = assignRooms({
       rooms,

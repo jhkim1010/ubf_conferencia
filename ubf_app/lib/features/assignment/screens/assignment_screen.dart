@@ -667,6 +667,43 @@ class _UnassignedCard extends StatelessWidget {
     this.languageOf,
   });
 
+  /// 함께 옮겨 가는 사람들을 **한 줄**로 묶는다 — "누구 + 누구".
+  ///
+  /// 서로 지목한 짝(057), 따로 등록했지만 같은 방을 원하는 가족이 한 묶음이다.
+  /// 예전에는 사람마다 칩이 하나씩이고 "+1" 만 붙어, 누구와 묶였는지 알려면
+  /// 눌러 봐야 했다. 누르면 묶음 전체가 함께 옮겨 간다(_movesWith).
+  List<List<Map<String, dynamic>>> _lines() {
+    final byId = {for (final p in people) '${p['registrationId']}': p};
+    final shown = <String>{};
+    final lines = <List<Map<String, dynamic>>>[];
+    for (final p in people) {
+      final id = '${p['registrationId']}';
+      if (shown.contains(id)) continue;
+      final line = [
+        for (final m in _movesWith(p))
+          if (byId[m] != null && !shown.contains(m)) byId[m]!,
+      ];
+      shown.addAll(line.map((m) => '${m['registrationId']}'));
+      lines.add(line.isEmpty ? [p] : line);
+    }
+    return lines;
+  }
+
+  bool _hasCompanions(Map<String, dynamic> p) =>
+      ((p['companions'] as List?) ?? const []).isNotEmpty;
+
+  /// 한 사람과, 그 사람과 한 방에 드는 함께 등록한 동반자(069).
+  /// 동반자에게는 나이를 붙인다 — 아기인지 아이인지에 따라 침대가 다르다.
+  String _label(Map<String, dynamic> p) {
+    final lang = languageOf?.call(p) ?? '';
+    final name = lang.isEmpty ? '${p['name']}' : '${p['name']} · $lang';
+    final cs = ((p['companions'] as List?) ?? const []).map((c) {
+      final m = c as Map;
+      return m['age'] == null ? '${m['name']}' : '${m['name']} (${m['age']})';
+    });
+    return [name, ...cs].join(' + ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -711,40 +748,32 @@ class _UnassignedCard extends StatelessWidget {
           Wrap(
             spacing: 6,
             runSpacing: 4,
-            children: people
-                .map(
-                  (p) => ActionChip(
-                    avatar: CircleAvatar(
-                      backgroundColor: _genderColor(p['gender'] as String?),
-                      child: Text(
-                        '${p['name']}'.isNotEmpty
-                            ? '${p['name']}'.characters.first
-                            : '?',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                        ),
-                      ),
+            children: [
+              for (final line in _lines())
+                ActionChip(
+                  avatar: CircleAvatar(
+                    backgroundColor: _genderColor(
+                      line.first['gender'] as String?,
                     ),
-                    // 짝이 있으면 몇 명이 함께 가는지 적는다(057). 눌렀을
-                    // 때 여럿이 한꺼번에 옮겨 가는 것을 미리 알아야 한다.
-                    label: Text(() {
-                      final lang = languageOf?.call(p) ?? '';
-                      final mates = _movesWith(p).length;
-                      final base = lang.isEmpty
-                          ? '${p['name']}'
-                          : '${p['name']} · $lang';
-                      return mates > 1 ? '$base  +${mates - 1}' : base;
-                    }(), style: const TextStyle(fontSize: 12)),
-                    // 짝이 있는 사람은 테두리로 구별한다.
-                    side: _movesWith(p).length > 1
-                        ? BorderSide(color: Colors.indigo.shade300, width: 1.4)
-                        : null,
-                    onPressed: () => onTap(p),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    child: Text(
+                      '${line.first['name']}'.isNotEmpty
+                          ? '${line.first['name']}'.characters.first
+                          : '?',
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
+                    ),
                   ),
-                )
-                .toList(),
+                  label: Text(
+                    line.map(_label).join(' + '),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  // 둘 이상이 함께 가는 줄은 테두리로 구별한다.
+                  side: line.length > 1 || _hasCompanions(line.first)
+                      ? BorderSide(color: Colors.indigo.shade300, width: 1.4)
+                      : null,
+                  onPressed: () => onTap(line.first),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+            ],
           ),
         ],
       ),

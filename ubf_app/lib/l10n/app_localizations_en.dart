@@ -685,6 +685,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashStatTotal => 'Total registered';
 
   @override
+  String dashStatTotalWithCompanions(int count) {
+    return 'Registered · plus $count companions';
+  }
+
+  @override
   String get dashStatSubmitted => 'Completed';
 
   @override
@@ -4203,7 +4208,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get companionSelfRow => 'Me (main registrant)';
 
   @override
+  String companionSelfRowNamed(String name) {
+    return '$name (main registrant)';
+  }
+
+  @override
+  String get companionReference => 'Reference';
+
+  @override
   String get companionOwnRegistration => 'Own registration';
+
+  @override
+  String get companionMakeJoint => 'Register together';
+
+  @override
+  String companionMakeJointTitle(String name) {
+    return 'Register $name together with this registration?';
+  }
+
+  @override
+  String get companionMakeJointBody =>
+      'Only do this if this person has not registered on their own — if they have, they will be charged twice. After this you can edit their age, gender, room, study group and flight here, and their fee is added to this registration.';
+
+  @override
+  String get companionMakeJointConfirm => 'Change';
 
   @override
   String get companionRemoveRow => 'Remove row';

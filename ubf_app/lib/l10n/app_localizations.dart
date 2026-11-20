@@ -1350,6 +1350,12 @@ abstract class AppLocalizations {
   /// **'Total registered'**
   String get dashStatTotal;
 
+  /// Dashboard card label under the registration count. Companions registered together are counted apart from registrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered · plus {count} companions'**
+  String dashStatTotalWithCompanions(int count);
+
   /// No description provided for @dashStatSubmitted.
   ///
   /// In en, this message translates to:
@@ -7542,11 +7548,47 @@ abstract class AppLocalizations {
   /// **'Me (main registrant)'**
   String get companionSelfRow;
 
+  /// First row of the companion table: the main registrant, by name.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (main registrant)'**
+  String companionSelfRowNamed(String name);
+
+  /// Shown in the main registrant row under Same room / Study group / Same flight: the others are compared to this person.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference'**
+  String get companionReference;
+
   /// No description provided for @companionOwnRegistration.
   ///
   /// In en, this message translates to:
   /// **'Own registration'**
   String get companionOwnRegistration;
+
+  /// No description provided for @companionMakeJoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Register together'**
+  String get companionMakeJoint;
+
+  /// No description provided for @companionMakeJointTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Register {name} together with this registration?'**
+  String companionMakeJointTitle(String name);
+
+  /// No description provided for @companionMakeJointBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Only do this if this person has not registered on their own — if they have, they will be charged twice. After this you can edit their age, gender, room, study group and flight here, and their fee is added to this registration.'**
+  String get companionMakeJointBody;
+
+  /// No description provided for @companionMakeJointConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get companionMakeJointConfirm;
 
   /// No description provided for @companionRemoveRow.
   ///

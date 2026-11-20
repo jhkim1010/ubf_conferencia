@@ -67,3 +67,49 @@ export function companionGroupPeople(rows) {
   }
   return { people, edges };
 }
+
+/// 이름 비교용으로 다듬는다 — 대소문자, 악센트, 겹친 공백을 무시한다.
+/// 'SOO YEON CHOI' 와 'Soo Yeon Choi', 'Jazmín' 과 'Jazmin' 을 같은 이름으로 본다.
+export function nameKey(name) {
+  return String(name ?? '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/// **따로 등록했지만 같은 방을 원하는** 동반자를 그 사람의 등록과 잇는다.
+///
+/// 069 이전에는 부부가 각자 등록하고 서로를 "본인 등록" 동반자로 적었다.
+/// 동반자 줄에는 그 사람의 등록 id 가 없으므로 같은 수양회에서 **이름이
+/// 같은 등록이 꼭 하나일 때만** 잇는다. 둘 이상이면 누구인지 알 수 없어
+/// 잇지 않는다 — 엉뚱한 사람과 한 방에 넣는 것보다 담당자가 손으로 옮기는
+/// 편이 낫다.
+///
+/// companions:    [{ registration_id, real_name, shares_room }] (registers_separately 인 것)
+/// registrations: [{ id, real_name }] (같은 수양회, 참가로 치는 것)
+/// 반환: [[대표자 등록 id, 그 사람의 등록 id], ...] — 중복 없이
+export function separateFamilyEdges(companions, registrations) {
+  const byName = new Map();
+  for (const r of Array.isArray(registrations) ? registrations : []) {
+    const k = nameKey(r.real_name);
+    if (!k) continue;
+    byName.set(k, [...(byName.get(k) ?? []), r.id]);
+  }
+  const seen = new Set();
+  const edges = [];
+  for (const c of Array.isArray(companions) ? companions : []) {
+    if (c.shares_room === false) continue;
+    const ids = (byName.get(nameKey(c.real_name)) ?? []).filter(
+      (id) => id !== c.registration_id,
+    );
+    if (ids.length !== 1) continue;
+    const pair = [c.registration_id, ids[0]];
+    const key = [...pair].sort().join('|');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    edges.push(pair);
+  }
+  return edges;
+}

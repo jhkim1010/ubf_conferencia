@@ -10,7 +10,11 @@ import 'package:mana/l10n/app_localizations.dart';
 // 서버 대신 빈 목록에서 시작하고, 저장한 내용을 [saves] 에 모은다.
 final saves = <List<Map<String, dynamic>>>[];
 
-Future<void> _pump(WidgetTester tester) async {
+Future<void> _pump(
+  WidgetTester tester, {
+  List<Map<String, dynamic>> rows = const [],
+  Map<String, dynamic>? registration,
+}) async {
   tester.view.physicalSize = const Size(1400, 1000);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -30,7 +34,8 @@ Future<void> _pump(WidgetTester tester) async {
               'fee_child_rate': 0.5,
             },
             currency: Currency.of('USD'),
-            load: () async => const [],
+            registration: registration,
+            load: () async => rows,
             save: (payload) async {
               saves.add(payload);
               // 서버처럼 보낸 순서대로 id 를 붙여 돌려준다.
@@ -121,5 +126,90 @@ void main() {
     expect(find.text('도착 편명'), findsOneWidget);
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('본인 등록으로 적힌 줄을 함께 등록으로 바꿀 수 있다', (tester) async {
+    await _pump(
+      tester,
+      rows: [
+        {
+          'id': 'm1',
+          'real_name': 'Moses Chang',
+          'age': 81,
+          'registers_separately': true,
+          'study_group': 'none',
+        },
+      ],
+    );
+    // 처음에는 잠겨 있다 — 이름 입력 칸이 없다.
+    expect(find.text('본인 등록'), findsOneWidget);
+    expect(find.widgetWithText(TextField, '이름'), findsNothing);
+
+    // 취소하면 그대로다.
+    await tester.tap(find.text('함께 등록으로'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    expect(find.text('본인 등록'), findsOneWidget);
+
+    saves.clear();
+    await tester.tap(find.text('함께 등록으로'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Moses Chang 님을'), findsOneWidget);
+    await tester.tap(find.text('바꾸기'));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+
+    expect(find.text('본인 등록'), findsNothing);
+    expect(find.widgetWithText(TextField, 'Moses Chang'), findsOneWidget);
+    final m = saves.last.single;
+    expect(m['id'], 'm1');
+    expect(m['registersSeparately'], false);
+    // 따로 등록 때의 'none' 대신 나이로 정한 분반.
+    expect(m['studyGroup'], 'same');
+  });
+
+  testWidgets('본인 등록 줄도 같은 방·다른 방을 고를 수 있다', (tester) async {
+    await _pump(
+      tester,
+      rows: [
+        {
+          'id': 's1',
+          'real_name': 'Soo Yeon Choi',
+          'age': 52,
+          'registers_separately': true,
+          'shares_room': true,
+        },
+      ],
+    );
+    saves.clear();
+    await tester.tap(find.text('다른 방'));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    final c = saves.last.single;
+    expect(c['id'], 's1');
+    // 여전히 따로 등록 — 참가비는 그분 등록에서 낸다.
+    expect(c['registersSeparately'], true);
+    expect(c['sharesRoom'], false);
+  });
+
+  testWidgets('담당자가 연 등록에서는 대표자 줄에 그 사람 이름과 값이 보인다', (tester) async {
+    await _pump(
+      tester,
+      registration: {
+        'id': 'r1',
+        'real_name': 'Gonzalo Solis',
+        'gender': 'M',
+        'age': 41,
+        'fee_tier': 'basic',
+        'arrival_flight': {'flight_no': 'ar1300'},
+      },
+    );
+    expect(find.text('Gonzalo Solis (대표자)'), findsOneWidget);
+    expect(find.text('나 (대표자)'), findsNothing);
+    expect(find.text('41'), findsOneWidget);
+    expect(find.text('남'), findsOneWidget);
+    expect(find.text('기준'), findsNWidgets(2)); // 같은 방 · 분반
+    expect(find.text('AR1300'), findsOneWidget); // 같은 비행기 칸
   });
 }
