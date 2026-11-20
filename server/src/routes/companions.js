@@ -1,24 +1,10 @@
 import { Router } from 'express';
-import {
-  defaultOccupiesBed,
-  planCompanionSave,
-  studyGroupOf,
-} from '../services/companion_role.js';
+import { listCompanions, saveCompanionList } from '../services/companion_save.js';
 import { recountRegistrationTotal } from '../services/registration_recount.js';
 import { sql } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
-
-/// 보내온 참가비 몫을 다듬는다. 0~1 밖이거나 숫자가 아니면 NULL 이다 —
-/// 못 알아들은 값을 0 으로 읽으면 안 받게 되고, 1 로 읽으면 더 받게 된다.
-/// 둘 다 조용히 틀리는 것보다 "정책대로" 로 돌아가는 편이 낫다.
-function feeShareOf(v) {
-  if (v === null || v === undefined || v === '') return null;
-  const n = Number(v);
-  if (!Number.isFinite(n) || n < 0 || n > 1) return null;
-  return n;
-}
 
 async function myRegistrationId(userId, programId) {
   const [reg] = await sql`
@@ -33,34 +19,7 @@ router.get('/:programId/me', requireAuth, async (req, res) => {
   try {
     const regId = await myRegistrationId(req.user.userId, req.params.programId);
     if (!regId) return res.json([]);
-    const rows = await sql`
-      SELECT c.id, c.real_name, c.bible_name, c.gender, c.age, c.language,
-             -- 069: 이 사람이 따로 등록하는가, 침대를 쓰는가.
-             c.registers_separately, c.occupies_bed,
-             -- 077: 대표자와 같은 방을 쓰는가.
-             c.shares_room,
-             -- 078: 말씀조 — same·other·none.
-             c.study_group,
-             -- 079: 대표자가 고른 투어에 함께 가는가.
-             c.joins_tours,
-             -- 073: 이 사람만 달리 정한 참가비 몫. NULL 이면 수양회 정책대로.
-             c.fee_share,
-             -- 적어 둔 값. 편집 화면이 이것을 쓴다 — 체크를 풀면 예전에
-             -- 적은 값이 다시 보여야 한다.
-             c.branch,
-             c.same_branch_as_primary,
-             -- 실제로 쓸 지부. 체크가 켜져 있으면 등록자의 것이다.
-             -- 나중에 명단·내보내기가 동반자 지부를 읽을 때 낡은 값을
-             -- 보지 않도록 여기서 미리 풀어 준다.
-             CASE WHEN c.same_branch_as_primary THEN r.branch ELSE c.branch END
-               AS effective_branch,
-             c.same_flight_as_primary, c.arrival_flight, c.departure_flight,
-             c.needs_pickup
-      FROM companions c
-      JOIN registrations r ON r.id = c.registration_id
-      WHERE c.registration_id = ${regId}
-      ORDER BY c.created_at ASC
-    `;
+    const rows = await listCompanions(regId);
     res.json(rows);
   } catch (err) {
     console.error('동반자 조회 오류:', err);
@@ -73,7 +32,9 @@ router.get('/:programId/me', requireAuth, async (req, res) => {
 //                         sameBranchAsPrimary, sameFlightAsPrimary,
 //                         arrivalFlight, departureFlight, needsPickup,
 //                         registersSeparately, occupiesBed, sharesRoom,
-//                         studyGroup, joinsTours, feeShare }] }
+//                         studyGroup, feeShare }] }
+//
+// 투어(tour_ids)는 여기서 안 바꾼다 — PUT /:programId/me/tours/:optionId.
 //
 // id 는 GET 이 준 것이다. 있으면 그 줄을 고치고, 없으면 새로 넣고, 목록에서
 // 빠진 줄은 지운다(078).
@@ -89,128 +50,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     const regId = await myRegistrationId(req.user.userId, req.params.programId);
     if (!regId) return res.status(403).json({ error: '이 프로그램에 먼저 등록하세요' });
 
-    const saved = await sql.transaction(async (client) => {
-      // 지우고 다시 넣지 않는다(078). 받은 id 가 이 등록의 것이면 그 줄을
-      // 고친다 — 그래야 담당자가 잡아 둔 방·차·조가 살아남는다.
-      const { rows: existing } = await client.query(
-        'SELECT id FROM companions WHERE registration_id = $1',
-        [regId],
-      );
-      const plan = planCompanionSave(
-        existing.map((r) => r.id),
-        list,
-      );
-      if (plan.drop.length > 0) {
-        await client.query(
-          'DELETE FROM companions WHERE registration_id = $1 AND id = ANY($2::uuid[])',
-          [regId, plan.drop],
-        );
-      }
-      const rows = [];
-      for (const { id, item: c } of plan.ordered) {
-        const values = [
-          String(c.realName).trim(),
-          c.bibleName ?? null,
-          c.gender ?? null,
-          c.age ?? null,
-          c.language ?? null,
-          c.branch ?? null,
-          c.sameBranchAsPrimary === true,
-          c.sameFlightAsPrimary ?? true,
-          c.arrivalFlight ? JSON.stringify(c.arrivalFlight) : null,
-          c.departureFlight ? JSON.stringify(c.departureFlight) : null,
-          c.needsPickup ?? true,
-          // 069. 안 보내면 예전 뜻 그대로 — 따로 등록하는 동반자다.
-          c.registersSeparately !== false,
-          // 침대는 **적어 낸 값이 먼저**다. 안 보냈을 때만 나이로 정한다
-          // (만 5세 이하는 안 쓰는 것으로).
-          //
-          // 다른 방을 쓰면 침대는 반드시 쓴다(077) — 보호자 옆에서 같이 잘
-          // 수가 없다. 화면도 그때는 묻지 않는다.
-          c.sharesRoom === false
-            ? true
-            : typeof c.occupiesBed === 'boolean'
-              ? c.occupiesBed
-              : defaultOccupiesBed(c.age),
-          // 073. 참가비 몫을 **사람별로** 달리 정한 경우에만 값이 있다.
-          // 안 보내면 NULL 이고, 그때는 수양회가 정한 나이 구간을 따른다.
-          // 0 은 NULL 과 다르다 — "이 아이는 안 받기로 정했다" 이다.
-          feeShareOf(c.feeShare),
-          // 077. 안 보내면 예전 뜻 그대로 — 같은 방이다.
-          c.sharesRoom !== false,
-          // 078. 안 보내면 예전 뜻 그대로 — 조에 안 든다.
-          studyGroupOf(c),
-          // 079. 함께 등록한 사람만. 안 보내면 예전 뜻 — 안 간다.
-          c.registersSeparately === false && c.joinsTours === true,
-        ];
-        const returning = `RETURNING id, real_name, bible_name, gender, age, language, branch,
-                     same_branch_as_primary,
-                     same_flight_as_primary, arrival_flight, departure_flight, needs_pickup,
-                     registers_separately, occupies_bed, fee_share, shares_room, study_group,
-                     joins_tours`;
-        const { rows: [row] } = id
-          ? await client.query(
-              `UPDATE companions SET
-                 real_name = $2, bible_name = $3, gender = $4, age = $5,
-                 language = $6, branch = $7, same_branch_as_primary = $8,
-                 same_flight_as_primary = $9, arrival_flight = $10,
-                 departure_flight = $11, needs_pickup = $12,
-                 registers_separately = $13, occupies_bed = $14,
-                 fee_share = $15, shares_room = $16, study_group = $17,
-                 joins_tours = $18
-               WHERE id = $1
-               ${returning}`,
-              [id, ...values],
-            )
-          : await client.query(
-              `INSERT INTO companions
-                 (registration_id, real_name, bible_name, gender, age, language, branch,
-                  same_branch_as_primary,
-                  same_flight_as_primary, arrival_flight, departure_flight, needs_pickup,
-                  registers_separately, occupies_bed, fee_share, shares_room, study_group,
-                  joins_tours)
-               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
-               ${returning}`,
-              [regId, ...values],
-            );
-        rows.push(row);
-      }
-
-      // 답이 바뀌어 더는 맞지 않는 배정을 걷어낸다(077·078).
-      //   같은 방으로 바꿨거나 따로 등록한다 → 자기 방 줄이 필요 없다.
-      //   조에 안 들거나 따로 등록한다     → 자기 조 줄이 필요 없다.
-      await client.query(
-        `DELETE FROM room_assignments
-          WHERE companion_id IN (
-            SELECT id FROM companions
-             WHERE registration_id = $1
-               AND (registers_separately OR shares_room))`,
-        [regId],
-      );
-      await client.query(
-        `DELETE FROM group_members
-          WHERE companion_id IN (
-            SELECT id FROM companions
-             WHERE registration_id = $1
-               AND (registers_separately OR study_group = 'none'))`,
-        [regId],
-      );
-      // "같은 분반" 이면 대표자가 이미 조에 있을 때 그 조로 바로 넣는다.
-      // 안 넣으면 담당자가 미배정 목록에서 이 사람을 다시 찾아 옮겨야 한다.
-      await client.query(
-        `INSERT INTO group_members (group_id, companion_id)
-         SELECT gm.group_id, c.id
-           FROM companions c
-           JOIN group_members gm ON gm.registration_id = c.registration_id
-          WHERE c.registration_id = $1
-            AND c.registers_separately = false
-            AND c.study_group = 'same'
-         ON CONFLICT (companion_id) WHERE companion_id IS NOT NULL
-         DO UPDATE SET group_id = EXCLUDED.group_id`,
-        [regId],
-      );
-      return rows;
-    });
+    const saved = await saveCompanionList(regId, list);
 
     // 동반자가 바뀌면 낼 돈도 바뀐다(073) — 어린이 참가비가 붙고, 침대를
     // 쓰는 사람이 늘면 숙박비도 는다(069). 등록 라우트는 요청 본문으로
@@ -228,6 +68,57 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     res.json({ count: saved.length, companions: saved, totalCost });
   } catch (err) {
     console.error('동반자 저장 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// PUT /companions/:programId/me/tours/:optionId — 이 투어에 함께 가는 동반자
+// body: { companionIds: [...] }
+//
+// 대표자가 투어를 고를 때 "함께 오시는 분도 가십니까?" 에 답한 것이다(080).
+// 이 투어에 대해서만 바꾼다 — 목록에 있는 동반자는 넣고, 없는 동반자는 뺀다.
+// 다른 투어의 선택은 건드리지 않는다.
+router.put('/:programId/me/tours/:optionId', requireAuth, async (req, res) => {
+  const { programId, optionId } = req.params;
+  const ids = Array.isArray(req.body.companionIds)
+    ? req.body.companionIds.filter((x) => typeof x === 'string')
+    : [];
+  try {
+    const regId = await myRegistrationId(req.user.userId, programId);
+    if (!regId) return res.status(403).json({ error: '이 프로그램에 먼저 등록하세요' });
+    const [opt] = await sql`
+      SELECT id FROM program_options WHERE id = ${optionId} AND program_id = ${programId}
+    `;
+    if (!opt) return res.status(404).json({ error: '투어를 찾을 수 없습니다' });
+
+    await sql.transaction(async (client) => {
+      await client.query(
+        `UPDATE companions SET tour_ids = array_remove(tour_ids, $2::uuid)
+          WHERE registration_id = $1`,
+        [regId, optionId],
+      );
+      // 이 등록의, 함께 등록한 동반자만. 남의 id 나 따로 등록하는 분은 무시한다.
+      await client.query(
+        `UPDATE companions SET tour_ids = array_append(tour_ids, $2::uuid)
+          WHERE registration_id = $1
+            AND registers_separately = false
+            AND id::text = ANY($3::text[])`,
+        [regId, optionId, ids],
+      );
+    });
+
+    let totalCost = null;
+    try {
+      totalCost = await recountRegistrationTotal(regId);
+    } catch (err) {
+      console.error('투어 동반자 저장 후 낼 돈 재계산 실패:', err);
+    }
+    const rows = await sql`
+      SELECT id, tour_ids FROM companions WHERE registration_id = ${regId}
+    `;
+    res.json({ companions: rows, totalCost });
+  } catch (err) {
+    console.error('투어 동반자 저장 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });

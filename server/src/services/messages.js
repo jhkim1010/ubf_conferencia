@@ -248,6 +248,16 @@ const T = {
     en: 'Only someone assigned to the room can lead it',
     pt: 'Só quem está no quarto pode ser o responsável',
   },
+  '값이 올바르지 않습니다': {
+    es: 'El valor no es válido',
+    en: 'Invalid value',
+    pt: 'Valor inválido',
+  },
+  '투어를 찾을 수 없습니다': {
+    es: 'No se encontró el tour',
+    en: 'Tour not found',
+    pt: 'Tour não encontrado',
+  },
   '동반자를 찾을 수 없습니다': {
     es: 'No se encontró el acompañante',
     en: 'Companion not found',

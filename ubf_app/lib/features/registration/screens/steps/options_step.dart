@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/api_client.dart';
 import '../../../../core/utils/child_fee.dart';
 import '../../../program/providers/program_provider.dart';
 import '../../../../core/constants/world_countries.dart';
@@ -43,18 +44,19 @@ class OptionsStep extends ConsumerWidget {
     final formState = ref.watch(registrationFormProvider(programId));
     final selectedOptions = formState.selectedOptions;
 
-    // 선택된 옵션의 총 비용 계산 — 한 사람 값에 함께 가는 사람 수를
-    // 곱한다(079). 동반자 표에서 "투어 함께" 를 고른 분들이다.
+    // 선택된 옵션의 총 비용 — 투어마다 한 사람 값 × 그 투어에 가는
+    // 사람 수(080). 서버(toursCostOf)와 같은 셈이다.
     final companions =
         ref.watch(myCompanionsProvider(programId)).valueOrNull ?? const [];
-    final people = tourHeads(companions);
-    double perPerson = 0;
+    double totalCost = 0;
     for (final option in options) {
-      if (selectedOptions.contains(option['id'] as String)) {
-        perPerson += (Money.parse(option['cost']) ?? 0).toDouble();
+      final id = option['id'] as String;
+      if (selectedOptions.contains(id)) {
+        totalCost +=
+            (Money.parse(option['cost']) ?? 0).toDouble() *
+            tourHeadsFor(id, companions);
       }
     }
-    final totalCost = perPerson * people;
 
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -85,24 +87,9 @@ class OptionsStep extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.optionsSelectedTotal,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      if (people > 1)
-                        Text(
-                          l10n.optionsTimesPeople(
-                            currency.format(perPerson),
-                            people,
-                          ),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                    ],
-                  ),
+                Text(
+                  l10n.optionsSelectedTotal,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
                   currency.format(totalCost),
@@ -163,11 +150,35 @@ class _TourCard extends ConsumerWidget {
     // 이미 선택한 항목은 언제나 해제 가능. 새로 선택하는 것만 마감/정원으로 차단.
     final locked = (isFull || isClosed) && !isSelected;
 
-    void toggle() {
+    // 함께 등록한 동반자(078). 이분들에게 이 투어에 가는지 묻는다(080).
+    final companions =
+        (ref.watch(myCompanionsProvider(programId)).valueOrNull ??
+                const <Map<String, dynamic>>[])
+            .where((c) => c['registers_separately'] == false)
+            .toList();
+    final going = companions
+        .where((c) => companionTourIds(c).contains(optionId))
+        .toList();
+    final heads = 1 + going.length;
+
+    Future<void> toggle() async {
       if (locked) return;
       ref
           .read(registrationFormProvider(programId).notifier)
           .toggleOption(optionId);
+      if (companions.isEmpty) return;
+      if (isSelected) {
+        // 투어를 뺐다 — 동반자도 이 투어에서 뺀다. 남겨 두면 다시 고를 때
+        // 묻지도 않고 예전 사람들이 붙는다.
+        if (going.isNotEmpty) await _saveCompanions(context, ref, const []);
+      } else {
+        await _askCompanions(
+          context,
+          ref,
+          companions,
+          firstTime: going.isEmpty,
+        );
+      }
     }
 
     return Card(
@@ -246,6 +257,56 @@ class _TourCard extends ConsumerWidget {
               value: isSelected,
               onChanged: locked ? null : (_) => toggle(),
             ),
+            // 함께 가는 분과 그만큼 곱한 값(080). 고른 투어에만 보인다.
+            if (isSelected && companions.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 8, 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.group_outlined, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            going.isEmpty
+                                ? l10n.tourCompanionsNone
+                                : l10n.tourCompanionsGoing(
+                                    going
+                                        .map((c) => '${c['real_name'] ?? ''}')
+                                        .join(', '),
+                                  ),
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                          if (heads > 1 && cost > 0)
+                            Text(
+                              l10n.tourCostTimes(
+                                currency.format(cost),
+                                heads,
+                                currency.format(cost * heads),
+                              ),
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => _askCompanions(
+                        context,
+                        ref,
+                        companions,
+                        firstTime: false,
+                      ),
+                      child: Text(l10n.tourCompanionsChange),
+                    ),
+                  ],
+                ),
+              ),
             // 이 투어 값에 무엇이 들었고 무엇이 안 들었는지(061).
             // **고르기 전에** 보여야 한다 — 값만 보고 고른 뒤에 항공권이
             // 따로라는 것을 알면 늦다.
@@ -407,6 +468,92 @@ class _TourCard extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// "함께 오시는 분도 이 투어에 가십니까?" — 사람마다 체크한다(080).
+  ///
+  /// 처음 물을 때는 모두 체크해 둔다. 함께 오는 가족은 대개 같이 가고,
+  /// 아무것도 안 해도 맞는 쪽이 기본이어야 한다. 아기는 부모가 뺀다.
+  Future<void> _askCompanions(
+    BuildContext context,
+    WidgetRef ref,
+    List<Map<String, dynamic>> companions, {
+    required bool firstTime,
+  }) async {
+    final optionId = option['id'] as String;
+    final picked = <String>{
+      for (final c in companions)
+        if (firstTime || companionTourIds(c).contains(optionId)) '${c['id']}',
+    };
+    final l10n = AppLocalizations.of(context)!;
+    final result = await showDialog<Set<String>>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: Text(l10n.tourCompanionsQ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.tourCompanionsHint,
+                  style: const TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                for (final c in companions)
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: picked.contains('${c['id']}'),
+                    onChanged: (v) => setLocal(() {
+                      if (v == true) {
+                        picked.add('${c['id']}');
+                      } else {
+                        picked.remove('${c['id']}');
+                      }
+                    }),
+                    title: Text('${c['real_name'] ?? ''}'),
+                    subtitle: c['age'] == null
+                        ? null
+                        : Text(l10n.tourCompanionsAge(c['age'] as int)),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.actionCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, picked),
+              child: Text(l10n.actionSave),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (result == null || !context.mounted) return;
+    await _saveCompanions(context, ref, result.toList());
+  }
+
+  Future<void> _saveCompanions(
+    BuildContext context,
+    WidgetRef ref,
+    List<String> ids,
+  ) async {
+    try {
+      await ApiClient.setCompanionTours(programId, option['id'] as String, ids);
+      // 값이 바뀌었다 — 비용 막대와 이 화면이 다시 읽게 한다.
+      ref.invalidate(myCompanionsProvider(programId));
+      ref.invalidate(registrationProvider(programId));
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   String _fmtDeadline(DateTime d) =>

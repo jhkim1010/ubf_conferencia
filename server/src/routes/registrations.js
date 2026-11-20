@@ -3,7 +3,7 @@ import { sql } from '../db.js';
 import { hotelNights, chargeableNights } from '../services/hotel_nights.js';
 import { hotelChoiceOk } from '../services/hotel_choice.js';
 import { registrationTotal } from '../services/registration_total.js';
-import { bedsNeeded, tourHeads } from '../services/companion_role.js';
+import { bedsNeeded, toursCostOf } from '../services/companion_role.js';
 import { resolveHotelChoice, normalizeNights } from '../services/hotel.js';
 import { requireAuth } from '../middleware/auth.js';
 import { notifyProgramAdmins } from '../services/telegram.js';
@@ -188,15 +188,15 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     // 화면에 안 보이는 것은 값도 안 매긴다. 남은 id 자체를 지우는 것은
     // 따로 한다(scripts/prune-dead-tour-choices.js) — 여기서 지우면 담당자가
     // 실수로 껐다 켜는 사이에 저장한 사람의 신청이 영영 사라진다.
-    const optionRows = picked_ids.length
+    // 투어마다 값을 따로 받는다 — 함께 가는 동반자 수가 투어마다 다르다(080).
+    const pickedTours = picked_ids.length
       ? await sql`
-          SELECT COALESCE(SUM(cost), 0)::numeric AS sum
+          SELECT id, cost
             FROM program_options
            WHERE program_id = ${req.params.programId}
              AND id = ANY(${picked_ids})
              AND is_active = true`
-      : [{ sum: 0 }];
-    const optionsCost = Number(optionRows[0]?.sum ?? 0);
+      : [];
 
     const approvedDiscount =
       discountStatus === 'approved' ? Number(discountAmount ?? 0) : 0;
@@ -261,7 +261,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     // 내는데, 세는 규칙은 services/companion_role.js 한 곳에 있다.
     const companions = existing
       ? await sql`
-          SELECT age, registers_separately, occupies_bed, fee_share, joins_tours
+          SELECT age, registers_separately, occupies_bed, fee_share, tour_ids
             FROM companions WHERE registration_id = ${existing.id}`
       : [];
 
@@ -287,9 +287,8 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
       tier,
       feeBasic: program.fee_basic,
       feePremium: program.fee_premium,
-      optionsCost,
-      // 투어에 함께 가는 동반자만큼 투어 값이 곱해진다(079).
-      tourPeople: tourHeads(companions),
+      // 투어마다 한 사람 값 × (본인 + 그 투어에 가는 동반자)(080).
+      optionsCost: toursCostOf({ options: pickedTours, companions }),
       hotelOptions: program.hotel_options,
       hotelKey,
       hotelNights: billedNights,
@@ -476,20 +475,19 @@ router.post('/:programId/me/submit', requireAuth, async (req, res) => {
     const selected = me.selected_options ?? [];
     if (selected.length > 0) {
       // 선택한 옵션 중 마감·정원 제약이 있는 것들 조회
-      // 정원은 **사람 수**로 센다(079) — 한 등록에 함께 가는 동반자가 있으면
+      // 정원은 **사람 수**로 센다(080) — 이 투어에 함께 가는 동반자가 있으면
       // 그만큼 자리를 먹는다. 등록 수로 세면 4인 가족이 한 자리로 들어간다.
-      const [{ n: myHeads }] = await sql`
-        SELECT 1 + COUNT(*)::int AS n FROM companions
-         WHERE registration_id = ${me.id}
-           AND registers_separately = false AND joins_tours = true
-      `;
       const constrained = await sql`
         SELECT po.id, po.name, po.capacity, po.signup_deadline,
+          1 + (SELECT COUNT(*) FROM companions c
+                WHERE c.registration_id = ${me.id}
+                  AND c.registers_separately = false
+                  AND po.id = ANY(c.tour_ids))::int AS my_heads,
           (SELECT COALESCE(SUM(1 + (
                     SELECT COUNT(*) FROM companions c
                      WHERE c.registration_id = r.id
                        AND c.registers_separately = false
-                       AND c.joins_tours = true)), 0)
+                       AND po.id = ANY(c.tour_ids))), 0)
              FROM registrations r
            WHERE r.program_id = ${req.params.programId}
              AND r.submitted = true
@@ -508,7 +506,7 @@ router.post('/:programId/me/submit', requireAuth, async (req, res) => {
             error: `"${o.name}" 투어는 신청이 마감되었습니다`,
           });
         }
-        if (o.capacity != null && Number(o.signup_count) + Number(myHeads) > o.capacity) {
+        if (o.capacity != null && Number(o.signup_count) + Number(o.my_heads) > o.capacity) {
           return res.status(422).json({
             code: 'TOUR_FULL', optionId: o.id, optionName: o.name,
             error: `"${o.name}" 투어는 정원이 마감되었습니다`,

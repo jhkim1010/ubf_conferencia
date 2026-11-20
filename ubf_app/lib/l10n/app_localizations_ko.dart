@@ -4091,9 +4091,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get companionColStudy => '분반 공부';
 
   @override
-  String get companionColTour => '투어';
-
-  @override
   String get companionColFlight => '같은 비행기';
 
   @override
@@ -4133,12 +4130,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get companionBedShares => '같이 잠';
 
   @override
-  String get companionTourYes => '함께';
-
-  @override
-  String get companionTourNo => '안 감';
-
-  @override
   String get companionFlightSame => '같음';
 
   @override
@@ -4158,12 +4149,78 @@ class AppLocalizationsKo extends AppLocalizations {
       '마지막 줄에서 Enter 를 누르면 새 줄이 생깁니다. 나이를 적으면 침대·분반·참가비가 알맞게 미리 골라집니다. 적는 대로 저장됩니다.';
 
   @override
-  String familyTourNote(int count) {
-    return '투어에 $count명이 함께 갑니다 — 고르신 투어 값에 인원수를 곱해 계산합니다.';
+  String get tourCompanionsQ => '함께 오시는 분도 이 투어에 가십니까?';
+
+  @override
+  String get tourCompanionsHint => '가실 분만 체크해 주세요. 투어 값은 가는 사람 수만큼 계산됩니다.';
+
+  @override
+  String tourCompanionsGoing(String names) {
+    return '함께 가는 분: $names';
   }
 
   @override
-  String optionsTimesPeople(String price, int count) {
-    return '$price × $count명';
+  String get tourCompanionsNone => '동반자는 이 투어에 안 갑니다';
+
+  @override
+  String get tourCompanionsChange => '바꾸기';
+
+  @override
+  String tourCompanionsAge(int age) {
+    return '만 $age세';
   }
+
+  @override
+  String tourCostTimes(String price, int count, String total) {
+    return '$price × $count명 = $total';
+  }
+
+  @override
+  String get peTabBasic => '기본 정보';
+
+  @override
+  String get peTabCompanions => '동반자';
+
+  @override
+  String get peTabTours => '투어';
+
+  @override
+  String get peTabTravel => '항공·숙박';
+
+  @override
+  String get pePayment => '입금·등록 완료';
+
+  @override
+  String get peNothingChanged => '바뀐 것이 없습니다';
+
+  @override
+  String peSavedTotal(String amount) {
+    return '저장했습니다 — 낼 돈 $amount';
+  }
+
+  @override
+  String get peTourCompanions => '함께 가는 동반자';
+
+  @override
+  String get peArrival => '도착';
+
+  @override
+  String get peDeparture => '출발';
+
+  @override
+  String get peLodging => '전후 숙박';
+
+  @override
+  String get peNights => '박수';
+
+  @override
+  String peNightsValue(int before, int after) {
+    return '수양회 전 $before박 · 후 $after박';
+  }
+
+  @override
+  String get peTotal => '낼 돈';
+
+  @override
+  String get peOpen => '열어서 고치기';
 }

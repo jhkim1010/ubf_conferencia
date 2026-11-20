@@ -101,35 +101,48 @@ void main() {
     expect(cost.due, 320);
   });
 
-  test('투어 값은 함께 가는 사람 수만큼 곱한다 — 서버와 같다 (079)', () {
+  test('투어마다 그 투어에 가는 사람 수만큼 곱한다 — 서버와 같다 (080)', () {
     final program = {
       ..._program,
       'program_options': [
-        {'id': 't1', 'cost': 250},
+        {'id': 'iguazu', 'cost': 250},
+        {'id': 'city', 'cost': 40},
       ],
     };
-    RegistrationCost cost(List<Map<String, dynamic>> companions) =>
-        RegistrationCost.of(
-          program: program,
-          companions: companions,
-          feeTier: 'basic',
-          selectedOptionIds: const ['t1'],
-          hotelOptionKey: null,
-          hotelNightsBefore: 0,
-          hotelNightsAfter: 0,
-        );
-    final two = cost([
-      {..._c(age: 40), 'joinsTours': true},
-      {..._c(age: 1, bed: false), 'joinsTours': false},
-    ]);
-    expect(two.tourPeople, 2);
-    expect(two.optionsTotal, 500);
-    // 따로 등록하는 분은 자기 등록에서 낸다.
+    final cost = RegistrationCost.of(
+      program: program,
+      companions: [
+        {
+          ..._c(age: 40),
+          'tourIds': ['iguazu'],
+        },
+        {
+          ..._c(age: 1, bed: false),
+          'tourIds': ['iguazu', 'city'],
+        },
+        // 따로 등록하는 분은 자기 등록에서 낸다.
+        {
+          ..._c(age: 30, separately: true),
+          'tourIds': ['iguazu', 'city'],
+        },
+      ],
+      feeTier: 'basic',
+      selectedOptionIds: const ['iguazu', 'city'],
+      hotelOptionKey: null,
+      hotelNightsBefore: 0,
+      hotelNightsAfter: 0,
+    );
+    // 이과수 250 × 3 + 시내 40 × 2
+    expect(cost.optionsTotal, 830);
+    // 서버 줄(tour_ids)도 읽는다.
     expect(
-      tourHeads([
-        {..._c(age: 40, separately: true), 'joinsTours': true},
+      tourHeadsFor('city', [
+        {
+          'registers_separately': false,
+          'tour_ids': ['city'],
+        },
       ]),
-      1,
+      2,
     );
   });
 }

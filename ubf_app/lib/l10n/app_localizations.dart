@@ -7518,12 +7518,6 @@ abstract class AppLocalizations {
   /// **'Bible study'**
   String get companionColStudy;
 
-  /// No description provided for @companionColTour.
-  ///
-  /// In en, this message translates to:
-  /// **'Tour'**
-  String get companionColTour;
-
   /// No description provided for @companionColFlight.
   ///
   /// In en, this message translates to:
@@ -7602,18 +7596,6 @@ abstract class AppLocalizations {
   /// **'Shares'**
   String get companionBedShares;
 
-  /// No description provided for @companionTourYes.
-  ///
-  /// In en, this message translates to:
-  /// **'Joins'**
-  String get companionTourYes;
-
-  /// No description provided for @companionTourNo.
-  ///
-  /// In en, this message translates to:
-  /// **'No'**
-  String get companionTourNo;
-
   /// No description provided for @companionFlightSame.
   ///
   /// In en, this message translates to:
@@ -7650,17 +7632,137 @@ abstract class AppLocalizations {
   /// **'Press Enter on the last row to add another. Entering an age presets the bed, study group and fee. Changes are saved as you type.'**
   String get companionTableHint;
 
-  /// No description provided for @familyTourNote.
+  /// No description provided for @tourCompanionsQ.
   ///
   /// In en, this message translates to:
-  /// **'{count} people are joining the tours — each tour price is multiplied by the number of people.'**
-  String familyTourNote(int count);
+  /// **'Are your companions joining this tour too?'**
+  String get tourCompanionsQ;
 
-  /// No description provided for @optionsTimesPeople.
+  /// No description provided for @tourCompanionsHint.
   ///
   /// In en, this message translates to:
-  /// **'{price} × {count} people'**
-  String optionsTimesPeople(String price, int count);
+  /// **'Tick only those who are going. The tour price is counted for each person going.'**
+  String get tourCompanionsHint;
+
+  /// No description provided for @tourCompanionsGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Going with you: {names}'**
+  String tourCompanionsGoing(String names);
+
+  /// No description provided for @tourCompanionsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No companions on this tour'**
+  String get tourCompanionsNone;
+
+  /// No description provided for @tourCompanionsChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get tourCompanionsChange;
+
+  /// No description provided for @tourCompanionsAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age {age}'**
+  String tourCompanionsAge(int age);
+
+  /// No description provided for @tourCostTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{price} × {count} people = {total}'**
+  String tourCostTimes(String price, int count, String total);
+
+  /// No description provided for @peTabBasic.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get peTabBasic;
+
+  /// No description provided for @peTabCompanions.
+  ///
+  /// In en, this message translates to:
+  /// **'Companions'**
+  String get peTabCompanions;
+
+  /// No description provided for @peTabTours.
+  ///
+  /// In en, this message translates to:
+  /// **'Tours'**
+  String get peTabTours;
+
+  /// No description provided for @peTabTravel.
+  ///
+  /// In en, this message translates to:
+  /// **'Flights & lodging'**
+  String get peTabTravel;
+
+  /// No description provided for @pePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment & status'**
+  String get pePayment;
+
+  /// No description provided for @peNothingChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has changed'**
+  String get peNothingChanged;
+
+  /// No description provided for @peSavedTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved — amount due {amount}'**
+  String peSavedTotal(String amount);
+
+  /// No description provided for @peTourCompanions.
+  ///
+  /// In en, this message translates to:
+  /// **'Companions going'**
+  String get peTourCompanions;
+
+  /// No description provided for @peArrival.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival'**
+  String get peArrival;
+
+  /// No description provided for @peDeparture.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure'**
+  String get peDeparture;
+
+  /// No description provided for @peLodging.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra lodging'**
+  String get peLodging;
+
+  /// No description provided for @peNights.
+  ///
+  /// In en, this message translates to:
+  /// **'Nights'**
+  String get peNights;
+
+  /// No description provided for @peNightsValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{before} before · {after} after the retreat'**
+  String peNightsValue(int before, int after);
+
+  /// No description provided for @peTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount due'**
+  String get peTotal;
+
+  /// No description provided for @peOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open to edit'**
+  String get peOpen;
 }
 
 class _AppLocalizationsDelegate

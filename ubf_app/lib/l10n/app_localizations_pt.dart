@@ -4205,9 +4205,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get companionColStudy => 'Estudo bíblico';
 
   @override
-  String get companionColTour => 'Tour';
-
-  @override
   String get companionColFlight => 'Mesmo voo';
 
   @override
@@ -4247,12 +4244,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get companionBedShares => 'Divide';
 
   @override
-  String get companionTourYes => 'Vai';
-
-  @override
-  String get companionTourNo => 'Não vai';
-
-  @override
   String get companionFlightSame => 'Mesmo';
 
   @override
@@ -4272,12 +4263,79 @@ class AppLocalizationsPt extends AppLocalizations {
       'Pressione Enter na última linha para adicionar outra. Ao informar a idade, cama, grupo e valor já vêm escolhidos. As alterações são salvas enquanto você digita.';
 
   @override
-  String familyTourNote(int count) {
-    return '$count pessoas vão aos tours — o valor de cada tour é multiplicado pelo número de pessoas.';
+  String get tourCompanionsQ => 'Seus acompanhantes também vão a este tour?';
+
+  @override
+  String get tourCompanionsHint =>
+      'Marque só quem vai. O valor do tour é cobrado por pessoa que vai.';
+
+  @override
+  String tourCompanionsGoing(String names) {
+    return 'Vão com você: $names';
   }
 
   @override
-  String optionsTimesPeople(String price, int count) {
-    return '$price × $count pessoas';
+  String get tourCompanionsNone => 'Nenhum acompanhante vai a este tour';
+
+  @override
+  String get tourCompanionsChange => 'Alterar';
+
+  @override
+  String tourCompanionsAge(int age) {
+    return '$age anos';
   }
+
+  @override
+  String tourCostTimes(String price, int count, String total) {
+    return '$price × $count pessoas = $total';
+  }
+
+  @override
+  String get peTabBasic => 'Dados';
+
+  @override
+  String get peTabCompanions => 'Acompanhantes';
+
+  @override
+  String get peTabTours => 'Tours';
+
+  @override
+  String get peTabTravel => 'Voos e hospedagem';
+
+  @override
+  String get pePayment => 'Pagamento e status';
+
+  @override
+  String get peNothingChanged => 'Nada foi alterado';
+
+  @override
+  String peSavedTotal(String amount) {
+    return 'Salvo — a pagar $amount';
+  }
+
+  @override
+  String get peTourCompanions => 'Acompanhantes que vão';
+
+  @override
+  String get peArrival => 'Chegada';
+
+  @override
+  String get peDeparture => 'Partida';
+
+  @override
+  String get peLodging => 'Hospedagem extra';
+
+  @override
+  String get peNights => 'Noites';
+
+  @override
+  String peNightsValue(int before, int after) {
+    return '$before antes · $after depois do retiro';
+  }
+
+  @override
+  String get peTotal => 'A pagar';
+
+  @override
+  String get peOpen => 'Abrir para editar';
 }

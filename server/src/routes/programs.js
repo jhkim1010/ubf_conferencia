@@ -4,6 +4,8 @@ import { pickLanguage } from '../services/messages.js';
 import { sql } from '../db.js';
 import { recountRegistrationTotal } from '../services/registration_recount.js';
 import { planTravelEdit } from '../services/travel_edit.js';
+import { cleanProfile, planTours } from '../services/profile_edit.js';
+import { listCompanions, saveCompanionList } from '../services/companion_save.js';
 import { normalizeOptions } from '../services/option_media.js';
 import { rolesOf, tallyRole, sortRoles } from '../services/service_roles.js';
 import {
@@ -1030,11 +1032,17 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
         -- 죽은 id 를 가리키는 선택이 남았는데, 그것까지 세는 바람에 카드는
         -- 4명인데 투어 화면에는 2명이었다.
         --
-        -- 함께 가는 동반자도 한 사람으로 센다(079).
+        -- 투어에 함께 가는 동반자도 한 사람으로 센다(080) — 대표자도 고른
+        -- 살아 있는 투어를 하나라도 가진 사람이다.
         COALESCE(SUM(1 + (
           SELECT COUNT(*) FROM companions c
            WHERE c.registration_id = r.id
-             AND c.registers_separately = false AND c.joins_tours = true
+             AND c.registers_separately = false
+             AND EXISTS (
+               SELECT 1 FROM program_options po2
+                WHERE po2.program_id = p.id AND po2.is_active
+                  AND po2.id = ANY(r.selected_options)
+                  AND po2.id = ANY(c.tour_ids))
         )) FILTER (WHERE EXISTS (
           SELECT 1 FROM program_options po
           WHERE po.program_id = p.id AND po.is_active
@@ -1128,13 +1136,13 @@ router.get('/:id/stats', requireAuth, requireProgramAdmin, requireScope(...SCOPE
       // 투어는 사람이 아니라 투어별 줄을 보여 준다 — 담당자가 먼저 보는 것이
       // "어느 투어가 찼나" 이기 때문이다. 신청자가 없는 투어도 남긴다.
       sql`
-        -- 사람 수로 센다 — 함께 가는 동반자도 한 자리다(079).
+        -- 사람 수로 센다 — 이 투어에 함께 가는 동반자도 한 자리다(080).
         SELECT o.name, o.capacity,
                COALESCE(SUM(1 + (
                  SELECT COUNT(*) FROM companions c
                   WHERE c.registration_id = r.id
                     AND c.registers_separately = false
-                    AND c.joins_tours = true)) FILTER (WHERE r.id IS NOT NULL), 0)::int
+                    AND o.id = ANY(c.tour_ids))) FILTER (WHERE r.id IS NOT NULL), 0)::int
                  AS signup_count
         FROM program_options o
         LEFT JOIN registrations r
@@ -1339,6 +1347,41 @@ router.patch(
       `;
       if (!reg) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
 
+      // 기본 정보 — 이름·성경 이름·나라·지부·성별·나이·전화·식사·참가비 등급.
+      // 보낸 칸만 바꾼다(services/profile_edit.js).
+      let tierChanged = false;
+      if (body.profile && typeof body.profile === 'object') {
+        // 회계만 맡은 분은 돈만 고친다. 이름·지부는 등록 담당의 일이다.
+        const mine = req.adminScopes;
+        if (Array.isArray(mine) && !mine.includes('registration')) {
+          return res.status(403).json({ error: '이 분야는 맡지 않으셨습니다' });
+        }
+        const { set, error } = cleanProfile(body.profile);
+        if (error) return res.status(400).json({ error });
+        const on = (k) => Object.prototype.hasOwnProperty.call(set, k);
+        if (Object.keys(set).length > 0) {
+          // 열 이름은 보간할 수 없으므로 칸마다 "보냈으면 새 값, 아니면 그대로".
+          await sql`
+            UPDATE registrations SET
+              real_name = CASE WHEN ${on('real_name')} THEN ${set.real_name ?? null} ELSE real_name END,
+              bible_name = CASE WHEN ${on('bible_name')} THEN ${set.bible_name ?? null} ELSE bible_name END,
+              country = CASE WHEN ${on('country')} THEN ${set.country ?? null} ELSE country END,
+              branch = CASE WHEN ${on('branch')} THEN ${set.branch ?? null} ELSE branch END,
+              gender = CASE WHEN ${on('gender')} THEN ${set.gender ?? null} ELSE gender END,
+              age = CASE WHEN ${on('age')} THEN ${set.age ?? null}::int ELSE age END,
+              phone = CASE WHEN ${on('phone')} THEN ${set.phone ?? null} ELSE phone END,
+              food_requirements = CASE WHEN ${on('food_requirements')}
+                                       THEN ${set.food_requirements ?? null} ELSE food_requirements END,
+              fee_tier = CASE WHEN ${on('fee_tier')} THEN ${set.fee_tier ?? null} ELSE fee_tier END,
+              updated_at = NOW()
+            WHERE id = ${registrationId}
+          `;
+          // 등급이 바뀌면 참가비가 바뀐다 — 아이 몫(073)도 등급을 따라간다.
+          tierChanged = on('fee_tier');
+        }
+      }
+      if (tierChanged) await recountRegistrationTotal(registrationId);
+
       // 등록 완료 여부. 본문에 없으면 손대지 않는다.
       if (typeof body.submitted === 'boolean') {
         await sql`
@@ -1375,7 +1418,8 @@ router.patch(
       }
 
       const [row] = await sql`
-        SELECT r.id, r.submitted,
+        SELECT r.id, r.submitted, r.real_name, r.bible_name, r.country, r.branch,
+               r.gender, r.age, r.phone, r.food_requirements, r.fee_tier, r.total_cost,
                json_build_object('status', pay.status, 'amount', pay.amount) AS payment
         FROM registrations r
         LEFT JOIN payments pay ON pay.registration_id = r.id
@@ -1388,6 +1432,69 @@ router.patch(
     }
   },
 );
+
+/// 비행 일정·전후 숙박을 다시 맞춘다. 본문에 없는 칸은 그대로 두고, 박수와
+/// 낼 돈은 등록 라우트와 같은 규칙으로 다시 낸다. 등록이 없으면 null.
+///
+/// 투어를 고쳐도 부른다 — 숙박이 든 투어의 끝날까지는 이미 묵으므로 박수가
+/// 달라진다. 투어만 바꾸고 박수를 그대로 두면 숙박비가 두 번 붙는다.
+async function applyTravel(programId, registrationId, body) {
+  const [existing] = await sql`
+    SELECT r.id, r.country, r.selected_options,
+           r.arrival_flight, r.departure_flight,
+           r.hotel_option_key, r.hotel_nights_before, r.hotel_nights_after,
+           r.hotel_before_self, r.hotel_after_self
+      FROM registrations r
+     WHERE r.id = ${registrationId} AND r.program_id = ${programId}
+  `;
+  if (!existing) return null;
+
+  const [program] = await sql`
+    SELECT start_date, end_date, hotel_options, host_country
+      FROM programs WHERE id = ${programId}
+  `;
+  const picked = Array.isArray(existing.selected_options)
+    ? existing.selected_options
+    : [];
+  // 숙박이 든 투어의 끝날까지는 이미 묵는다 — 등록 라우트와 같은 조회.
+  const tours = picked.length
+    ? await sql`
+        SELECT end_date AS end, includes_lodging AS "includesLodging",
+               est_lodging_cost AS "estLodgingCost"
+          FROM program_options
+         WHERE program_id = ${programId}
+           AND id = ANY(${picked}) AND end_date IS NOT NULL`
+    : [];
+
+  const plan = planTravelEdit({ existing, program, tours, body });
+
+  await sql`
+    UPDATE registrations
+       SET arrival_flight = ${plan.arrival ? JSON.stringify(plan.arrival) : null},
+           departure_flight = ${plan.departure ? JSON.stringify(plan.departure) : null},
+           hotel_option_key = ${plan.hotelKey},
+           hotel_nights_before = ${plan.nightsBefore},
+           hotel_nights_after = ${plan.nightsAfter},
+           hotel_before_self = ${plan.beforeSelf},
+           hotel_after_self = ${plan.afterSelf},
+           updated_at = NOW()
+     WHERE id = ${registrationId}
+  `;
+  const total = await recountRegistrationTotal(registrationId);
+
+  return {
+    id: registrationId,
+    arrival_flight: plan.arrival,
+    departure_flight: plan.departure,
+    hotel_option_key: plan.hotelKey,
+    hotel_nights_before: plan.nightsBefore,
+    hotel_nights_after: plan.nightsAfter,
+    hotel_before_self: plan.beforeSelf,
+    hotel_after_self: plan.afterSelf,
+    hotel_dropped: plan.hotelDropped,
+    total_cost: total,
+  };
+}
 
 // PATCH /programs/:id/registrations/:registrationId/travel — 비행 일정·전후 숙박
 //
@@ -1405,65 +1512,134 @@ router.patch(
   requireScope('registration', 'transport', 'rooms'),
   async (req, res) => {
     const { id: programId, registrationId } = req.params;
-    const body = req.body ?? {};
     try {
-      const [existing] = await sql`
-        SELECT r.id, r.country, r.selected_options,
-               r.arrival_flight, r.departure_flight,
-               r.hotel_option_key, r.hotel_nights_before, r.hotel_nights_after,
-               r.hotel_before_self, r.hotel_after_self
-          FROM registrations r
-         WHERE r.id = ${registrationId} AND r.program_id = ${programId}
-      `;
-      if (!existing) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
-
-      const [program] = await sql`
-        SELECT start_date, end_date, hotel_options, host_country
-          FROM programs WHERE id = ${programId}
-      `;
-      const picked = Array.isArray(existing.selected_options)
-        ? existing.selected_options
-        : [];
-      // 숙박이 든 투어의 끝날까지는 이미 묵는다 — 등록 라우트와 같은 조회.
-      const tours = picked.length
-        ? await sql`
-            SELECT end_date AS end, includes_lodging AS "includesLodging",
-                   est_lodging_cost AS "estLodgingCost"
-              FROM program_options
-             WHERE program_id = ${programId}
-               AND id = ANY(${picked}) AND end_date IS NOT NULL`
-        : [];
-
-      const plan = planTravelEdit({ existing, program, tours, body });
-
-      await sql`
-        UPDATE registrations
-           SET arrival_flight = ${plan.arrival ? JSON.stringify(plan.arrival) : null},
-               departure_flight = ${plan.departure ? JSON.stringify(plan.departure) : null},
-               hotel_option_key = ${plan.hotelKey},
-               hotel_nights_before = ${plan.nightsBefore},
-               hotel_nights_after = ${plan.nightsAfter},
-               hotel_before_self = ${plan.beforeSelf},
-               hotel_after_self = ${plan.afterSelf},
-               updated_at = NOW()
-         WHERE id = ${registrationId}
-      `;
-      const total = await recountRegistrationTotal(registrationId);
-
-      res.json({
-        id: registrationId,
-        arrival_flight: plan.arrival,
-        departure_flight: plan.departure,
-        hotel_option_key: plan.hotelKey,
-        hotel_nights_before: plan.nightsBefore,
-        hotel_nights_after: plan.nightsAfter,
-        hotel_before_self: plan.beforeSelf,
-        hotel_after_self: plan.afterSelf,
-        hotel_dropped: plan.hotelDropped,
-        total_cost: total,
-      });
+      const out = await applyTravel(programId, registrationId, req.body ?? {});
+      if (!out) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+      res.json(out);
     } catch (err) {
       console.error('비행·숙박 수정 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// ─── 담당자가 고치는 동반자·투어 ───────────────────────────
+//
+// 명단에서 한 사람을 열어 동반자와 투어를 고친다. 참가자 본인이 쓰는 것과
+// **같은 저장 함수**를 쓴다(services/companion_save.js) — 침대·분반 규칙이
+// 두 벌이 되면 담당자가 고친 줄만 다르게 들어간다.
+
+async function regOf(programId, registrationId) {
+  const [reg] = await sql`
+    SELECT id FROM registrations
+     WHERE id = ${registrationId} AND program_id = ${programId}
+  `;
+  return reg ?? null;
+}
+
+// GET /programs/:id/registrations/:registrationId/companions
+router.get(
+  '/:id/registrations/:registrationId/companions',
+  requireAuth,
+  requireProgramAdmin,
+  requireScope('registration'),
+  async (req, res) => {
+    try {
+      const reg = await regOf(req.params.id, req.params.registrationId);
+      if (!reg) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+      res.json(await listCompanions(reg.id));
+    } catch (err) {
+      console.error('담당자 동반자 조회 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// PUT /programs/:id/registrations/:registrationId/companions — 목록 전체 맞추기
+// body: PUT /companions/:programId/me 와 같다.
+router.put(
+  '/:id/registrations/:registrationId/companions',
+  requireAuth,
+  requireProgramAdmin,
+  requireScope('registration'),
+  async (req, res) => {
+    const list = Array.isArray(req.body?.companions) ? req.body.companions : [];
+    if (list.length > 15) {
+      return res.status(400).json({ error: '동반자는 최대 15명까지입니다' });
+    }
+    try {
+      const reg = await regOf(req.params.id, req.params.registrationId);
+      if (!reg) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+      const saved = await saveCompanionList(reg.id, list);
+      let totalCost = null;
+      try {
+        totalCost = await recountRegistrationTotal(reg.id);
+      } catch (err) {
+        console.error('담당자 동반자 저장 후 낼 돈 재계산 실패:', err);
+      }
+      res.json({ count: saved.length, companions: saved, totalCost });
+    } catch (err) {
+      console.error('담당자 동반자 저장 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
+
+// PUT /programs/:id/registrations/:registrationId/tours
+// body: { selectedOptions: [투어 id], companionTours: { 투어 id: [동반자 id] } }
+//
+// 대표자의 투어와 동반자마다의 투어(080)를 한 번에 맞춘다. 담당자는 정원이
+// 찼어도 넣을 수 있다 — 자리를 더 구했다는 연락을 받고 넣는 사람이 담당자다.
+router.put(
+  '/:id/registrations/:registrationId/tours',
+  requireAuth,
+  requireProgramAdmin,
+  requireScope('registration'),
+  async (req, res) => {
+    const { id: programId, registrationId } = req.params;
+    try {
+      const reg = await regOf(programId, registrationId);
+      if (!reg) return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+      const [active, comps] = await Promise.all([
+        sql`SELECT id FROM program_options WHERE program_id = ${programId} AND is_active = true`,
+        sql`SELECT id FROM companions
+             WHERE registration_id = ${registrationId} AND registers_separately = false`,
+      ]);
+      const plan = planTours({
+        selected: req.body?.selectedOptions,
+        companionTours: req.body?.companionTours,
+        activeIds: active.map((o) => o.id),
+        companionIds: comps.map((c) => c.id),
+      });
+      await sql.transaction(async (client) => {
+        await client.query(
+          'UPDATE registrations SET selected_options = $2::uuid[], updated_at = NOW() WHERE id = $1',
+          [registrationId, plan.selected],
+        );
+        // 따로 등록하는 동반자의 투어는 그분 등록에서 정한다 — 비운다.
+        await client.query(
+          `UPDATE companions SET tour_ids = '{}'::uuid[]
+            WHERE registration_id = $1 AND registers_separately = true`,
+          [registrationId],
+        );
+        for (const [cid, tours] of plan.toursOf) {
+          await client.query(
+            'UPDATE companions SET tour_ids = $2::uuid[] WHERE id = $1',
+            [cid, tours],
+          );
+        }
+      });
+      // 숙박이 든 투어는 박수를 바꾼다 — 비행 일정 셈을 다시 한다.
+      const travel = await applyTravel(programId, registrationId, {});
+      res.json({
+        selected_options: plan.selected,
+        companion_tours: Object.fromEntries(plan.toursOf),
+        hotel_nights_before: travel?.hotel_nights_before,
+        hotel_nights_after: travel?.hotel_nights_after,
+        total_cost: travel?.total_cost ?? null,
+      });
+    } catch (err) {
+      console.error('담당자 투어 수정 오류:', err);
       res.status(500).json({ error: '서버 오류' });
     }
   },
@@ -2100,7 +2276,7 @@ router.get(
           AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
         ORDER BY r.country NULLS LAST, r.real_name
       `;
-      // 함께 가는 동반자(079). 대표자가 고른 투어마다 한 사람으로 센다 —
+      // 함께 가는 동반자(080). 대표자도 고른 투어 중 그 사람이 고른 것마다 —
       // 버스 좌석·입장권은 사람 수로 잡는다.
       const companions = await sql`
         SELECT o.id AS option_id, r.id AS registration_id,
@@ -2112,7 +2288,7 @@ router.get(
         JOIN companions c ON c.registration_id = r.id
         WHERE o.program_id = ${programId} AND o.is_active = true
           AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
-          AND c.registers_separately = false AND c.joins_tours = true
+          AND c.registers_separately = false AND o.id = ANY(c.tour_ids)
         ORDER BY c.created_at
       `;
       for (const c of companions) {

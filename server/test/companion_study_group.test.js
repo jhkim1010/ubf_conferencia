@@ -83,25 +83,30 @@ test('자동 배정: same 은 대표자와 같은 조, other 는 따로 센다',
   assert.equal(assignments.length, 4);
 });
 
-// 투어에 함께 가는 동반자 (079)
-test('tourHeads: 함께 등록하고 joins_tours 인 사람만 더한다', async () => {
-  const { tourHeads } = await import('../src/services/companion_role.js');
-  assert.equal(tourHeads([]), 1);
-  assert.equal(tourHeads([
-    { registers_separately: false, joins_tours: true },
-    { registers_separately: false, joins_tours: false },
-    { registers_separately: true, joins_tours: true },
-  ]), 2);
+// 투어마다 함께 가는 동반자 (080)
+test('tourHeadsFor: 이 투어를 고른, 함께 등록한 동반자만 더한다', async () => {
+  const { tourHeadsFor } = await import('../src/services/companion_role.js');
+  const cs = [
+    { registers_separately: false, tour_ids: ['t1', 't2'] },
+    { registers_separately: false, tour_ids: ['t2'] },
+    { registers_separately: true, tour_ids: ['t1'] },
+    { registers_separately: false },
+  ];
+  assert.equal(tourHeadsFor('t1', cs), 2);
+  assert.equal(tourHeadsFor('t2', cs), 3);
+  assert.equal(tourHeadsFor('t3', cs), 1);
 });
 
-test('registrationTotal: 투어 값 × 머릿수', async () => {
-  const { registrationTotal } = await import('../src/services/registration_total.js');
-  const r = registrationTotal({
-    tier: 'basic', feeBasic: 100, feePremium: 160,
-    optionsCost: 250, tourPeople: 3,
-  });
-  assert.equal(r.optionsTotal, 750);
-  assert.equal(r.total, 850);
-  // 안 주면 한 사람 — 예전과 같다.
-  assert.equal(registrationTotal({ tier: 'basic', feeBasic: 100, optionsCost: 250 }).total, 350);
+test('toursCostOf: 투어마다 값 × 머릿수, 그것을 다 더한다', async () => {
+  const { toursCostOf } = await import('../src/services/companion_role.js');
+  const companions = [
+    { registers_separately: false, tour_ids: ['iguazu'] },
+    { registers_separately: false, tour_ids: ['iguazu'] },
+  ];
+  // 이과수 250 × 3 + 시내 40 × 1
+  assert.equal(
+    toursCostOf({ options: [{ id: 'iguazu', cost: 250 }, { id: 'city', cost: '40' }], companions }),
+    790,
+  );
+  assert.equal(toursCostOf({ options: [], companions }), 0);
 });

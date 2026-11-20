@@ -127,17 +127,24 @@ int lodgingHeads(List<Map<String, dynamic>> companions) {
   return n;
 }
 
-/// 투어에 함께 가는 머릿수 — 본인 한 사람에 함께 가는 동반자를 더한다 (079).
+/// 이 동반자가 함께 가는 투어들(080). 서버 줄(tour_ids)과 앱 줄(tourIds)
+/// 둘 다 읽는다.
+List<String> companionTourIds(Map<String, dynamic> c) =>
+    ((c['tourIds'] ?? c['tour_ids']) as List? ?? const [])
+        .map((e) => '$e')
+        .toList();
+
+/// 이 투어에 가는 머릿수 — 본인 한 사람에 이 투어를 고른 동반자를 더한다 (080).
 ///
-/// 서버의 `tourHeads`(companion_role.js) 와 같은 규칙이다. 투어 값은 한 사람
-/// 값이라 이 수를 그대로 곱한다. 따로 등록하는 동반자는 자기 등록에서 낸다.
-int tourHeads(List<Map<String, dynamic>> companions) {
+/// 서버의 `tourHeadsFor`(companion_role.js) 와 같은 규칙이다. 투어 값은 한
+/// 사람 값이라 이 수를 그대로 곱한다. 따로 등록하는 동반자는 자기 등록에서 낸다.
+int tourHeadsFor(String optionId, List<Map<String, dynamic>> companions) {
   var n = 1;
   for (final c in companions) {
     final separate =
         c['registersSeparately'] != false && c['registers_separately'] != false;
     if (separate) continue;
-    if (c['joinsTours'] == true || c['joins_tours'] == true) n++;
+    if (companionTourIds(c).contains(optionId)) n++;
   }
   return n;
 }

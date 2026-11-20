@@ -22,7 +22,7 @@
 import { sql } from '../db.js';
 import { registrationTotal } from './registration_total.js';
 import { chargeableNights } from './hotel_nights.js';
-import { bedsNeeded, tourHeads } from './companion_role.js';
+import { bedsNeeded, toursCostOf } from './companion_role.js';
 
 /// 등록 [registrationId] 의 total_cost 를 다시 세어 저장한다.
 ///
@@ -46,17 +46,17 @@ export async function recountRegistrationTotal(registrationId) {
 
   // 죽은 옵션(고쳐 다시 만든 투어)은 세지 않는다 — 라우트와 같은 규칙이다.
   const picked = Array.isArray(reg.selected_options) ? reg.selected_options : [];
-  const [sum] = picked.length
+  const pickedTours = picked.length
     ? await sql`
-        SELECT COALESCE(SUM(cost), 0)::numeric AS s
+        SELECT id, cost
           FROM program_options
          WHERE program_id = ${reg.program_id}
            AND id = ANY(${picked})
            AND is_active = true`
-    : [{ s: 0 }];
+    : [];
 
   const companions = await sql`
-    SELECT age, registers_separately, occupies_bed, fee_share, joins_tours
+    SELECT age, registers_separately, occupies_bed, fee_share, tour_ids
       FROM companions WHERE registration_id = ${reg.id}
   `;
 
@@ -73,8 +73,8 @@ export async function recountRegistrationTotal(registrationId) {
     tier: reg.fee_tier,
     feeBasic: reg.fee_basic,
     feePremium: reg.fee_premium,
-    optionsCost: Number(sum?.s ?? 0),
-    tourPeople: tourHeads(companions),
+    // 투어마다 한 사람 값 × (본인 + 그 투어에 가는 동반자)(080).
+    optionsCost: toursCostOf({ options: pickedTours, companions }),
     hotelOptions: reg.hotel_options,
     hotelKey: reg.hotel_option_key,
     hotelNights: nights,

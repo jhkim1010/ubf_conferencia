@@ -1139,6 +1139,70 @@ class ApiClient {
         .toList();
   }
 
+  /// 담당자가 한 사람의 동반자를 읽는다. 본인 화면과 같은 모양이다.
+  static Future<List<dynamic>> getCompanionsAdmin(
+    String programId,
+    String registrationId,
+  ) async {
+    final response = await http.get(
+      _uri('/programs/$programId/registrations/$registrationId/companions'),
+      headers: await _headers(),
+    );
+    return _decodeList(response);
+  }
+
+  /// 담당자가 한 사람의 동반자 목록을 맞춘다. 저장된 줄을 보낸 순서대로 준다.
+  static Future<List<Map<String, dynamic>>> saveCompanionsAdmin(
+    String programId,
+    String registrationId,
+    List<Map<String, dynamic>> companions,
+  ) async {
+    final response = await http.put(
+      _uri('/programs/$programId/registrations/$registrationId/companions'),
+      headers: await _headers(),
+      body: jsonEncode({'companions': companions}),
+    );
+    final data = _decode(response);
+    return ((data['companions'] as List?) ?? const [])
+        .whereType<Map>()
+        .map((m) => Map<String, dynamic>.from(m))
+        .toList();
+  }
+
+  /// 담당자가 한 사람의 투어와 동반자마다의 투어를 맞춘다(080).
+  /// [companionTours] 는 { 투어 id: [동반자 id] }. 박수·낼 돈은 서버가 다시 센다.
+  static Future<Map<String, dynamic>> updateToursAdmin(
+    String programId,
+    String registrationId, {
+    required List<String> selectedOptions,
+    required Map<String, List<String>> companionTours,
+  }) async {
+    final response = await http.put(
+      _uri('/programs/$programId/registrations/$registrationId/tours'),
+      headers: await _headers(),
+      body: jsonEncode({
+        'selectedOptions': selectedOptions,
+        'companionTours': companionTours,
+      }),
+    );
+    return _decode(response);
+  }
+
+  /// 이 투어에 함께 가는 동반자를 정한다(080). 목록에 없는 동반자는 이
+  /// 투어에서 빠진다. 다른 투어의 선택은 그대로다.
+  static Future<void> setCompanionTours(
+    String programId,
+    String optionId,
+    List<String> companionIds,
+  ) async {
+    final response = await http.put(
+      _uri('/companions/$programId/me/tours/$optionId'),
+      headers: await _headers(),
+      body: jsonEncode({'companionIds': companionIds}),
+    );
+    _decode(response);
+  }
+
   // ─── 배정(assignments) — 관리자 ───────────────────────────
 
   // { rooms: [...], unassigned: [...] }
@@ -1214,12 +1278,16 @@ class ApiClient {
     String registrationId, {
     bool? submitted,
     Object? payment = _unset,
+    // 기본 정보 — 넣은 칸만 바뀐다(realName · bibleName · country · branch ·
+    // gender · age · phone · foodRequirements · feeTier).
+    Map<String, dynamic>? profile,
   }) async {
     final response = await http.patch(
       _uri('/programs/$programId/registrations/$registrationId'),
       headers: await _headers(),
       body: jsonEncode({
         'submitted': ?submitted,
+        'profile': ?profile,
         if (!identical(payment, _unset)) 'payment': payment,
       }),
     );

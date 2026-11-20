@@ -187,11 +187,31 @@ export function planCompanionSave(existingIds, list) {
   return { keep, add, drop, ordered };
 }
 
-/// 투어에 함께 가는 머릿수 — 본인 한 사람에 함께 가는 동반자를 더한다 (079).
+/// 이 투어에 가는 머릿수 — 본인 한 사람에 이 투어를 고른 동반자를 더한다 (080).
 ///
 /// 따로 등록하는 동반자는 자기 등록에서 투어를 고르고 낸다. 여기서 또 세면
-/// 두 번이 된다. 투어 값은 **한 사람 값**이라 이 수를 그대로 곱한다.
-export function tourHeads(companions = []) {
+/// 두 번이 된다.
+export function tourHeadsFor(optionId, companions = []) {
   const list = Array.isArray(companions) ? companions : [];
-  return 1 + list.filter((c) => countsAsPerson(c) && c?.joins_tours === true).length;
+  return (
+    1 +
+    list.filter(
+      (c) =>
+        countsAsPerson(c) &&
+        Array.isArray(c?.tour_ids) &&
+        c.tour_ids.includes(optionId),
+    ).length
+  );
+}
+
+/// 고른 투어 값의 합 — 투어마다 한 사람 값 × 그 투어에 가는 머릿수 (080).
+///
+/// [options] 대표자가 고른, 살아 있는 투어들 [{ id, cost }].
+export function toursCostOf({ options = [], companions = [] } = {}) {
+  const sum = (Array.isArray(options) ? options : []).reduce((acc, o) => {
+    const cost = Number(o?.cost);
+    if (!Number.isFinite(cost) || cost <= 0) return acc;
+    return acc + cost * tourHeadsFor(o.id, companions);
+  }, 0);
+  return Math.round(sum * 100) / 100;
 }

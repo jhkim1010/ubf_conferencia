@@ -15,7 +15,7 @@ import 'package:mana/l10n/app_localizations.dart';
 // PRD F3 — 동반 가족/참석자. **표 한 장으로 등록을 끝낸다**(078·079).
 //
 // 같은 비행기로 함께 오는 가족은 대표자의 등록 안에서 끝낸다. 한 줄에 한
-// 사람 — 이름·나이·성별·같은 방·침대·분반·투어·같은 비행기. 줄은 마음대로
+// 사람 — 이름·나이·성별·같은 방·침대·분반·같은 비행기. 줄은 마음대로
 // 더하고 지운다.
 //
 // 예전에는 사람마다 바텀시트를 열어 열 가지를 묻고, "동반자도 각자 따로
@@ -30,22 +30,30 @@ class CompanionStep extends ConsumerStatefulWidget {
   /// 이 수양회의 통화. 금액을 적을 때 쓴다.
   final Currency currency;
 
-  /// 테스트에서 서버 대신 쓰는 불러오기·저장. 안 주면 ApiClient 를 쓴다.
-  @visibleForTesting
-  final Future<List<dynamic>> Function()? loadForTest;
-  @visibleForTesting
+  /// 서버 대신 쓰는 불러오기·저장. 안 주면 본인 것(ApiClient …MyCompanions)을
+  /// 쓴다. 담당자 화면은 그 사람의 등록 것을, 테스트는 가짜를 준다.
+  final Future<List<dynamic>> Function()? load;
   final Future<List<Map<String, dynamic>>> Function(
     List<Map<String, dynamic>> payload,
   )?
-  saveForTest;
+  save;
+
+  /// 담당자가 남의 등록을 열었을 때 그 등록(명단 줄). 있으면 참가비 등급과
+  /// 숙박을 등록 폼이 아니라 여기서 읽고, 제목 글은 감춘다.
+  final Map<String, dynamic>? registration;
+
+  /// 저장할 때마다 부른다. 담당자 화면이 명단을 다시 읽는 데 쓴다.
+  final VoidCallback? onSaved;
 
   const CompanionStep({
     super.key,
     required this.programId,
     required this.program,
     required this.currency,
-    this.loadForTest,
-    this.saveForTest,
+    this.load,
+    this.save,
+    this.registration,
+    this.onSaved,
   });
 
   @override
@@ -106,7 +114,6 @@ class _Row {
       'registersSeparately': ownRegistration,
       'occupiesBed': bed,
       'studyGroup': ownRegistration ? 'none' : study,
-      'joinsTours': !ownRegistration && data['joinsTours'] == true,
       'sameFlightAsPrimary': sameFlight,
       'arrivalFlightNo': flightNo,
       'arrivalFlight': (!sameFlight && flightNo.isNotEmpty)
@@ -164,7 +171,7 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     if (_dirty) {
       final payload = _payload();
       final container = _container;
-      (widget.saveForTest?.call(payload) ??
+      (widget.save?.call(payload) ??
               ApiClient.saveMyCompanions(widget.programId, payload))
           .then((_) {
             container?.invalidate(myCompanionsProvider(widget.programId));
@@ -180,7 +187,7 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
   Future<void> _load() async {
     try {
       final rows =
-          await (widget.loadForTest?.call() ??
+          await (widget.load?.call() ??
               ApiClient.getMyCompanions(widget.programId));
       if (!mounted) return;
       setState(() {
@@ -212,18 +219,18 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     'occupiesBed': r['occupies_bed'] ?? true,
     'sharesRoom': r['shares_room'] ?? true,
     'studyGroup': r['study_group'] ?? 'none',
-    'joinsTours': r['joins_tours'] ?? false,
+    // 080: 함께 가는 투어. 투어 화면에서 정한다 — 여기서는 들고만 있는다.
+    'tourIds': r['tour_ids'] ?? const [],
     'feeShare': r['fee_share'],
   };
 
-  /// 새 줄. 같은 방·같은 비행기·투어 함께가 기본이다 — 같은 비행기로 오는
+  /// 새 줄. 같은 방·같은 비행기가 기본이다 — 같은 비행기로 오는
   /// 가족은 대부분 그렇고, 아무것도 안 해도 맞는 쪽이 기본이어야 한다.
   /// 침대와 분반은 비워 두어 나이로 정하게 한다.
   _Row _newRow() => _Row({
     'registersSeparately': false,
     'sharesRoom': true,
     'sameFlightAsPrimary': true,
-    'joinsTours': true,
     'sameBranchAsPrimary': true,
     'needsPickup': true,
   });
@@ -250,7 +257,6 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
       'occupiesBed': c['occupiesBed'],
       'sharesRoom': c['sharesRoom'] ?? true,
       'studyGroup': c['studyGroup'],
-      'joinsTours': c['joinsTours'],
       // 073. 따로 정하지 않았으면 null — 서버가 수양회 구간을 쓴다.
       'feeShare': c['feeShare'],
     };
@@ -276,7 +282,7 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     try {
       final payload = _payload();
       final saved =
-          await (widget.saveForTest?.call(payload) ??
+          await (widget.save?.call(payload) ??
               ApiClient.saveMyCompanions(widget.programId, payload));
       // 새로 넣은 사람의 id 를 받아 둔다. 서버는 보낸 순서대로 돌려준다.
       if (saved.length == sent.length) {
@@ -293,6 +299,7 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
       // 그새 다음 단계로 넘어갔으면 ref 를 못 쓴다 — 붙잡아 둔 컨테이너로.
       _container?.invalidate(myCompanionsProvider(widget.programId));
       _container?.invalidate(registrationProvider(widget.programId));
+      widget.onSaved?.call();
     } on ApiException catch (e) {
       _dirty = true;
       failed = true;
@@ -338,12 +345,35 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
     }
   }
 
+  /// 참가비 등급·투어·숙박. 본인 등록 중이면 등록 폼, 담당자가 연 등록이면
+  /// 그 등록의 저장된 값이다.
+  RegistrationFormState _form({bool watch = false}) {
+    final r = widget.registration;
+    if (r == null) {
+      final p = registrationFormProvider(widget.programId);
+      return watch ? ref.watch(p) : ref.read(p);
+    }
+    int n(Object? v) => (v as num?)?.toInt() ?? 0;
+    return RegistrationFormState(
+      programId: widget.programId,
+      feeTier: r['fee_tier'] as String?,
+      selectedOptions: ((r['selected_options'] as List?) ?? const [])
+          .map((e) => '$e')
+          .toList(),
+      hotelOptionKey: r['hotel_option_key'] as String?,
+      hotelNightsBefore: n(r['hotel_nights_before']),
+      hotelNightsAfter: n(r['hotel_nights_after']),
+      hotelBeforeSelf: r['hotel_before_self'] == true,
+      hotelAfterSelf: r['hotel_after_self'] == true,
+    );
+  }
+
   /// 이 수양회의 어린이 참가비 구간 (073).
   ChildFeePolicy get _policy => ChildFeePolicy.of(widget.program);
 
   /// 보호자가 고른 등급의 값. 아직 안 골랐으면 null 이다.
   double? get _tierFee {
-    final tier = ref.read(registrationFormProvider(widget.programId)).feeTier;
+    final tier = _form().feeTier;
     final v = switch (tier) {
       'basic' => Money.parse(widget.program['fee_basic']),
       'premium' => Money.parse(widget.program['fee_premium']),
@@ -370,7 +400,7 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
   /// 등급마다(기본·프리미엄, 숙박 수준마다) 합계를 보여 준다. 같은 방이든
   /// 다른 방이든 금액은 같다 — 숙박 단가가 한 사람 한 밤 값이다.
   Widget _familyCard(AppLocalizations l10n) {
-    final form = ref.watch(registrationFormProvider(widget.programId));
+    final form = _form(watch: true);
     final nights = chargeableHotelNights(
       before: form.hotelNightsBefore,
       after: form.hotelNightsAfter,
@@ -660,7 +690,6 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
           _head(l10n.companionColRoom),
           _head(l10n.companionColBed),
           _head(l10n.companionColStudy),
-          _head(l10n.companionColTour),
           _head(l10n.companionColFlight),
           if (anyOtherFlight) _head(l10n.companionColFlightNo),
           _head(l10n.companionColFee),
@@ -668,7 +697,6 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
         ],
       ),
       _line([
-        _cell(_muted('—')),
         _cell(_muted('—')),
         _cell(_muted('—')),
         _cell(_muted('—')),
@@ -697,7 +725,6 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
         rows.add(
           _line([
             _cell(_muted(r.age.text.isEmpty ? '—' : r.age.text)),
-            _cell(_muted('—')),
             _cell(_muted('—')),
             _cell(_muted('—')),
             _cell(_muted('—')),
@@ -787,13 +814,6 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
           ),
           _cell(
             _seg<bool>(
-              [(true, l10n.companionTourYes), (false, l10n.companionTourNo)],
-              r.data['joinsTours'] == true,
-              (v) => set('joinsTours', v),
-            ),
-          ),
-          _cell(
-            _seg<bool>(
               [
                 (true, l10n.companionFlightSame),
                 (false, l10n.companionFlightOther),
@@ -851,25 +871,27 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
       return const Center(child: CircularProgressIndicator());
     }
     final companions = _companions;
-    final tourPeople = tourHeads(companions);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
-        Text(
-          l10n.companionTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          l10n.companionMustRegister,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
-        ),
-        const SizedBox(height: 14),
+        // 담당자 화면에서는 탭 이름이 이미 말해 준다.
+        if (widget.registration == null) ...[
+          Text(
+            l10n.companionTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.companionMustRegister,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
+          ),
+          const SizedBox(height: 14),
+        ],
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -927,13 +949,6 @@ class _CompanionStepState extends ConsumerState<CompanionStep> {
         if (companions.isNotEmpty) ...[
           const SizedBox(height: 12),
           _familyCard(l10n),
-          if (tourPeople > 1) ...[
-            const SizedBox(height: 8),
-            Text(
-              l10n.familyTourNote(tourPeople),
-              style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-            ),
-          ],
         ],
       ],
     );

@@ -30,8 +30,8 @@ Future<void> _pump(WidgetTester tester) async {
               'fee_child_rate': 0.5,
             },
             currency: Currency.of('USD'),
-            loadForTest: () async => const [],
-            saveForTest: (payload) async {
+            load: () async => const [],
+            save: (payload) async {
               saves.add(payload);
               // 서버처럼 보낸 순서대로 id 를 붙여 돌려준다.
               return [
@@ -58,8 +58,8 @@ void main() {
     await tester.pumpAndSettle();
     // 이름 칸이 둘 — 이름 칸의 안내 글로 센다.
     expect(find.widgetWithText(TextField, '이름'), findsNWidgets(2));
-    // 새 줄의 기본값: 같은 방·투어 함께·같은 비행기.
-    expect(find.text('함께'), findsNWidgets(2));
+    // 투어는 이 표에서 묻지 않는다 — 투어를 고를 때 묻는다(080).
+    expect(find.text('투어'), findsNothing);
     expect(find.text('나이 필요'), findsNWidgets(2));
   });
 
@@ -103,7 +103,6 @@ void main() {
     expect(joy['registersSeparately'], false);
     expect(joy['studyGroup'], 'same');
     expect(joy['occupiesBed'], true);
-    expect(joy['joinsTours'], true);
 
     // 다음 저장은 받은 id 로 같은 사람을 고친다.
     await tester.enterText(ageField, '8');

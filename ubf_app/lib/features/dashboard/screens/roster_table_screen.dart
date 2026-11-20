@@ -14,7 +14,7 @@ import '../../../core/utils/payment_state.dart';
 import '../../../core/utils/roster_sort.dart';
 import '../../../core/utils/table_export.dart';
 import '../../program/providers/program_provider.dart';
-import 'travel_edit_dialog.dart';
+import 'participant_editor.dart';
 
 /// 대시보드 카드에서 열리는 표. 카드마다 무엇을 보여 줄지가 다르다.
 enum RosterView { all, meals, payments, arrival }
@@ -628,42 +628,22 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
     }
   }
 
-  /// 비행 일정·전후 숙박을 고친다. 박수와 낼 돈은 서버가 다시 센다.
-  Future<void> _editTravel(Map<String, dynamic> reg, Currency currency) async {
-    final l10n = AppLocalizations.of(context)!;
-    // 숙박 수준 목록과 수양회 날짜가 여기 있다.
-    final program = ref.read(programByIdProvider(widget.programId)).valueOrNull;
-    final changes = await showTravelEditDialog(
+  /// 한 사람을 연다 — 기본 정보 · 동반자 · 투어 · 항공·숙박.
+  Future<void> _openEditor(Map<String, dynamic> reg, Currency currency) async {
+    // 투어 목록·숙박 수준·참가비 등급이 여기 있다.
+    final program = await ref.read(
+      programByIdProvider(widget.programId).future,
+    );
+    if (!mounted) return;
+    await showParticipantEditor(
       context,
+      programId: widget.programId,
       reg: reg,
       program: program,
+      currency: currency,
+      onChanged: _refresh,
+      onPayment: () => _editPerson(reg, currency),
     );
-    if (changes == null || !mounted) return;
-    try {
-      final r = await ApiClient.updateTravelAdmin(
-        widget.programId,
-        reg['id'] as String,
-        changes,
-      );
-      _refresh();
-      if (!mounted) return;
-      // 다시 센 결과를 보여 준다. 숙박비가 바뀌었는지 담당자가 바로 안다.
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            r['hotel_dropped'] == true
-                ? l10n.travelHotelDropped
-                : l10n.travelSaved(
-                    (r['hotel_nights_before'] as num?)?.toInt() ?? 0,
-                    (r['hotel_nights_after'] as num?)?.toInt() ?? 0,
-                    currency.format(Money.parse(r['total_cost']) ?? 0),
-                  ),
-          ),
-        ),
-      );
-    } catch (e) {
-      _showError(e);
-    }
   }
 
   void _refresh() {
@@ -1155,7 +1135,13 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
           // 머리글을 누르면 그 칸으로 줄을 세운다. DataTable 의 sortColumnIndex
           // 대신 직접 그린다 — 저 기능은 정렬을 표 안에서만 하는데, 여기서는
           // 걸러 낸 뒤에 세워야 해서 자료를 바깥에서 다룬다.
+          // 줄을 누르면 그 사람을 연다. 체크 칸은 쓰지 않는다.
+          showCheckboxColumn: false,
           columns: [
+            // 고치기 칸은 **맨 앞**이다. 맨 뒤에 두었더니 표가 넓어 화면
+            // 밖으로 밀려, 고칠 수 있다는 것 자체를 몰랐다. 내보내기에는
+            // 넣지 않는다 — 인쇄된 표에 버튼 자리가 있으면 이상하다.
+            const DataColumn(label: Text('')),
             for (var ci = 0; ci < headers.length; ci++)
               DataColumn(
                 label: _headerCell(
@@ -1206,9 +1192,6 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                   ),
                 ),
               ),
-            // 고치기 칸. 내보내기에는 넣지 않는다 — 종이에
-            // 인쇄된 표에 버튼 자리가 있으면 이상하다.
-            const DataColumn(label: Text('')),
           ],
           rows: [
             for (var ri = 0; ri < rows.length; ri++)
@@ -1219,7 +1202,28 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                 color: _done(data[ri])
                     ? null
                     : WidgetStatePropertyAll(_unfinishedColor(theme)),
+                // 줄 아무 데나 누르면 그 사람을 연다 — 기본 정보·동반자·
+                // 투어·항공을 한 곳에서 고친다.
+                onSelectChanged: (_) => _openEditor(data[ri], currency),
                 cells: [
+                  DataCell(
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          tooltip: l10n.peOpen,
+                          onPressed: () => _openEditor(data[ri], currency),
+                        ),
+                        // 현장에서 현금을 받는 일이 잦다 — 입금은 한 번에.
+                        IconButton(
+                          icon: const Icon(Icons.payments_outlined, size: 18),
+                          tooltip: l10n.pePayment,
+                          onPressed: () => _editPerson(data[ri], currency),
+                        ),
+                      ],
+                    ),
+                  ),
                   for (var ci = 0; ci < rows[ri].length; ci++)
                     DataCell(
                       SizedBox(
@@ -1235,25 +1239,6 @@ class _RosterTableScreenState extends ConsumerState<RosterTableScreen> {
                         ),
                       ),
                     ),
-                  DataCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // 비행기가 바뀌었다는 연락은 전화로 온다. 그 자리에서
-                        // 고치는 길이다.
-                        IconButton(
-                          icon: const Icon(Icons.flight_outlined, size: 18),
-                          tooltip: l10n.travelEdit,
-                          onPressed: () => _editTravel(data[ri], currency),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 18),
-                          tooltip: l10n.actionEdit,
-                          onPressed: () => _editPerson(data[ri], currency),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
           ],

@@ -88,7 +88,8 @@ void main() {
   setUp(() {});
 
   Future<void> open(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1600, 1000);
+    // 고치기 칸이 맨 앞에 붙어 표가 넓어졌다 — 맨 끝 머리글까지 보이게.
+    tester.view.physicalSize = const Size(1900, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(_harness());

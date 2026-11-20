@@ -55,9 +55,8 @@ export function registrationTotal({
   tier,
   feeBasic,
   feePremium,
+  // 투어 값 — 함께 가는 동반자만큼 이미 곱한 것이다(toursCostOf, 080).
   optionsCost = 0,
-  // 투어에 가는 머릿수(079). 투어 값은 한 사람 값이라 그대로 곱한다.
-  tourPeople = 1,
   hotelOptions,
   hotelKey,
   hotelNights = 0,
@@ -76,9 +75,7 @@ export function registrationTotal({
   // 따로 등록할 수 없는 동반자의 참가비(073). 어린이는 자기 등급을 고를 수
   // 없으므로 보호자가 고른 등급을 따라간다.
   const companionFee = companionFeeOf({ companions, program, tierFee });
-  const tp = Number(tourPeople);
-  const tourHeadcount = Number.isFinite(tp) && tp >= 1 ? Math.trunc(tp) : 1;
-  const optionsTotal = money(optionsCost) * tourHeadcount;
+  const optionsTotal = money(optionsCost);
   const total = Math.max(
     0,
     tierFee +
