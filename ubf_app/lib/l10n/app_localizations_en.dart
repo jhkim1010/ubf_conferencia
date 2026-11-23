@@ -90,6 +90,34 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get authSignInApple => 'Sign in with Apple';
+
+  @override
+  String authAppleFailed(String error) {
+    return 'Apple sign-in failed: $error';
+  }
+
+  @override
+  String get accountDelete => 'Delete account';
+
+  @override
+  String get accountDeleteTitle => 'Delete your account?';
+
+  @override
+  String get accountDeleteBody =>
+      'Your account and all your conference registrations, payment records, companions, room and group assignments and contact card will be deleted. This cannot be undone.';
+
+  @override
+  String get accountDeleteConfirm => 'Delete';
+
+  @override
+  String get accountDeleteDone => 'Your account was deleted.';
+
+  @override
+  String get accountDeleteBlockedOwner =>
+      'You created a conference, so this account cannot be deleted. Delete the conference first or contact the organizers.';
+
+  @override
   String authDevFailed(String error) {
     return 'Test login failed: $error';
   }

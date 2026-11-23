@@ -89,6 +89,34 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get authSignInApple => 'Apple로 로그인';
+
+  @override
+  String authAppleFailed(String error) {
+    return 'Apple 로그인 실패: $error';
+  }
+
+  @override
+  String get accountDelete => '계정 삭제';
+
+  @override
+  String get accountDeleteTitle => '계정을 지우시겠습니까?';
+
+  @override
+  String get accountDeleteBody =>
+      '계정과 함께 모든 수양회 등록, 입금 기록, 동반자, 방·조 배정, 명함이 지워집니다. 되돌릴 수 없습니다.';
+
+  @override
+  String get accountDeleteConfirm => '지우기';
+
+  @override
+  String get accountDeleteDone => '계정을 지웠습니다.';
+
+  @override
+  String get accountDeleteBlockedOwner =>
+      '수양회를 만든 사람이라 지울 수 없습니다. 먼저 수양회를 지우거나 담당자에게 문의해 주십시오.';
+
+  @override
   String authDevFailed(String error) {
     return '테스트 로그인 실패: $error';
   }

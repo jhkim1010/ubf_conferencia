@@ -31,6 +31,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
+  Future<void> _confirmDeleteAccount() async {
+    final l10n = AppLocalizations.of(context)!;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.accountDeleteTitle),
+        content: Text(l10n.accountDeleteBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.accountDeleteConfirm),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(authProvider.notifier).deleteAccount();
+      _leaderCheckDone = false;
+      messenger.showSnackBar(SnackBar(content: Text(l10n.accountDeleteDone)));
+    } on AccountDeleteBlockedException {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.accountDeleteBlockedOwner)),
+      );
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
@@ -78,6 +113,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 await ref.read(authProvider.notifier).signOut();
               }
             },
+          ),
+          // 계정 삭제 (애플 심사 지침 5.1.1(v)). 잘못 누르지 않게 메뉴 안에 둔다.
+          PopupMenuButton<String>(
+            onSelected: (_) => _confirmDeleteAccount(),
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'delete',
+                child: Text(
+                  l10n.accountDelete,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
         ],
       ),

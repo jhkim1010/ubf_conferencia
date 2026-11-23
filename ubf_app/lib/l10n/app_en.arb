@@ -96,6 +96,15 @@
       }
     }
   },
+  "authSignInApple": "Sign in with Apple",
+  "authAppleFailed": "Apple sign-in failed: {error}",
+  "@authAppleFailed": {"placeholders": {"error": {"type": "String"}}},
+  "accountDelete": "Delete account",
+  "accountDeleteTitle": "Delete your account?",
+  "accountDeleteBody": "Your account and all your conference registrations, payment records, companions, room and group assignments and contact card will be deleted. This cannot be undone.",
+  "accountDeleteConfirm": "Delete",
+  "accountDeleteDone": "Your account was deleted.",
+  "accountDeleteBlockedOwner": "You created a conference, so this account cannot be deleted. Delete the conference first or contact the organizers.",
   "authDevFailed": "Test login failed: {error}",
   "@authDevFailed": {
     "placeholders": {

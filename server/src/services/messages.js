@@ -623,6 +623,11 @@ const T = {
     en: 'idToken or accessToken is required',
     pt: 'Falta idToken ou accessToken',
   },
+  'identityToken이 필요합니다': {
+    es: 'Falta identityToken',
+    en: 'identityToken is required',
+    pt: 'Falta identityToken',
+  },
 };
 
 // ── 빈칸이 들어가는 말 ────────────────────────────────────────

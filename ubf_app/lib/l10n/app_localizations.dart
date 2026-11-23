@@ -258,6 +258,54 @@ abstract class AppLocalizations {
   /// **'Google sign-in failed: {error}'**
   String authGoogleFailed(String error);
 
+  /// No description provided for @authSignInApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Apple'**
+  String get authSignInApple;
+
+  /// No description provided for @authAppleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple sign-in failed: {error}'**
+  String authAppleFailed(String error);
+
+  /// No description provided for @accountDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get accountDelete;
+
+  /// No description provided for @accountDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get accountDeleteTitle;
+
+  /// No description provided for @accountDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account and all your conference registrations, payment records, companions, room and group assignments and contact card will be deleted. This cannot be undone.'**
+  String get accountDeleteBody;
+
+  /// No description provided for @accountDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get accountDeleteConfirm;
+
+  /// No description provided for @accountDeleteDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account was deleted.'**
+  String get accountDeleteDone;
+
+  /// No description provided for @accountDeleteBlockedOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'You created a conference, so this account cannot be deleted. Delete the conference first or contact the organizers.'**
+  String get accountDeleteBlockedOwner;
+
   /// No description provided for @authDevFailed.
   ///
   /// In en, this message translates to:

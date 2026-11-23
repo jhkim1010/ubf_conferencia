@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/api_client.dart';
 
@@ -191,6 +192,39 @@ class AuthNotifier extends StateNotifier<AuthState> {
     debugPrint('[AUTH] 7. 완료! userId: ${userMap['id']}');
     // DB에서 profileCompleted 등 전체 프로필 로드
     await _init();
+  }
+
+  // Apple 로 로그인 — 아이폰 전용 (애플 심사 지침 4.8).
+  //
+  // 취소하면 조용히 돌아간다. 이름은 애플이 처음 한 번만 준다.
+  Future<void> signInWithApple() async {
+    final AuthorizationCredentialAppleID cred;
+    try {
+      cred = await SignInWithApple.getAppleIDCredential(
+        scopes: const [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) return;
+      rethrow;
+    }
+    final token = cred.identityToken;
+    if (token == null) throw Exception('Apple identityToken 이 없습니다');
+    await ApiClient.loginWithApple(
+      identityToken: token,
+      givenName: cred.givenName,
+      familyName: cred.familyName,
+    );
+    await _init();
+  }
+
+  // 본인 계정 삭제 (애플 심사 지침 5.1.1(v)). 지운 뒤 로그아웃한다.
+  // 수양회를 만든 사람이면 AccountDeleteBlockedException 이 그대로 올라간다.
+  Future<void> deleteAccount() async {
+    await ApiClient.deleteMyAccount();
+    await signOut();
   }
 
   // 개발용 테스트 로그인 (kDebugMode 전용)

@@ -5,6 +5,7 @@ import { SCOPES, requireScope } from '../services/admin_scopes.js';
 
 import { sql } from '../db.js';
 import { pickLanguage } from '../services/messages.js';
+import { verifyAppleToken } from '../services/apple_token.js';
 
 export { SCOPES, requireScope };
 
@@ -153,6 +154,66 @@ export async function googleLogin(req, res) {
     });
   } catch (err) {
     console.error('Google 로그인 오류:', err);
+    return res.status(401).json({ error: '인증에 실패했습니다' });
+  }
+}
+
+function issueToken(user, leader) {
+  const role = effectiveRole(user.role, !!leader);
+  const isLeader = role === 'director' || role === 'admin';
+  const token = jwt.sign(
+    { userId: user.id, email: user.email, name: user.name, role, isLeader, leaderId: leader?.id ?? null },
+    process.env.JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+  return { token, user: { id: user.id, email: user.email, name: user.name, role }, isLeader };
+}
+
+// 우리 앱의 번들 ID. 아이폰 앱과 맥 앱이 같은 ID 를 쓴다.
+const appleAudiences = (process.env.APPLE_BUNDLE_IDS ?? 'com.ubf.ubfApp')
+  .split(',').map((s) => s.trim()).filter(Boolean);
+
+// Apple 로 로그인 (2026-11) — 애플 심사 지침 4.8
+//
+// users.google_id 는 NOT NULL 이라 애플 사용자는 'apple:<sub>' 로 적는다
+// (dev-login 이 'dev:' 를 쓰는 것과 같은 방식).
+//
+// 같은 이메일로 이미 구글 계정이 있으면 **그 계정으로 들어간다.** 애플이
+// 확인한 이메일일 때만이다. 한 사람이 아이폰에서는 애플로, 컴퓨터에서는
+// 구글로 들어와도 등록이 둘로 갈라지지 않게 하려는 것이다.
+export async function appleLogin(req, res) {
+  const { identityToken, givenName, familyName } = req.body ?? {};
+  if (!identityToken) return res.status(400).json({ error: 'identityToken이 필요합니다' });
+
+  try {
+    const apple = await verifyAppleToken(identityToken, { audiences: appleAudiences });
+    const appleKey = `apple:${apple.sub}`;
+    const lang = pickLanguage(req.headers['accept-language']);
+    // 애플은 이름을 처음 한 번만 준다. 그 뒤로는 비어 온다.
+    const fullName = [givenName, familyName].map((s) => String(s ?? '').trim()).filter(Boolean).join(' ') || null;
+
+    let [user] = await sql`SELECT id, email, name, role FROM users WHERE google_id = ${appleKey}`;
+    if (!user && apple.email && apple.emailVerified) {
+      [user] = await sql`SELECT id, email, name, role FROM users WHERE lower(email) = lower(${apple.email})`;
+    }
+    if (!user) {
+      // 이메일을 숨기지 않고 안 주는 경우는 드물지만, email 칸이 NOT NULL 이다.
+      const email = apple.email ?? `${apple.sub}@apple.invalid`;
+      [user] = await sql`
+        INSERT INTO users (google_id, email, name, ui_language)
+        VALUES (${appleKey}, ${email}, ${fullName ?? email.split('@')[0]}, ${lang})
+        RETURNING id, email, name, role
+      `;
+    } else {
+      await sql`UPDATE users SET ui_language = ${lang}, updated_at = NOW() WHERE id = ${user.id}`;
+    }
+
+    const [leader] = await sql`SELECT id FROM leaders WHERE user_id = ${user.id}`;
+    const out = issueToken(user, leader);
+    console.log(`[LOGIN] Apple | userId=${user.id} role=${out.user.role}`);
+    return res.json(out);
+  } catch (err) {
+    console.error('Apple 로그인 오류:', err.message);
     return res.status(401).json({ error: '인증에 실패했습니다' });
   }
 }

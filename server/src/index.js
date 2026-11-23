@@ -7,7 +7,8 @@ import rateLimit from 'express-rate-limit';
 import cron from 'node-cron';
 import { sql } from './db.js';
 import jwt from 'jsonwebtoken';
-import { googleLogin, requireAuth, effectiveRole } from './middleware/auth.js';
+import { googleLogin, appleLogin, requireAuth, effectiveRole } from './middleware/auth.js';
+import { deleteAccount, AccountDeleteBlocked } from './services/account_delete.js';
 import { sendDailySummary } from './services/telegram.js';
 import { notifyProgramParticipants, sendPushNotification } from './services/fcm.js';
 import { rolesOf, tallyRole } from './services/service_roles.js';
@@ -121,6 +122,7 @@ app.use(apiLimiter);
 
 // 인증
 app.post('/auth/google', authLimiter, googleLogin);
+app.post('/auth/apple', authLimiter, appleLogin);
 // /auth/dev-login — 개발 전용 테스트 로그인 (OAuth 생략)
 //
 // 이 엔드포인트는 **아무 이메일로나 유효한 JWT 를 발급한다.** 열려 있으면
@@ -216,6 +218,22 @@ app.get('/auth/me', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('/auth/me 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// DELETE /auth/me — 본인 계정 삭제 (애플 심사 지침 5.1.1(v))
+// 등록·입금·동반자 기록이 함께 지워진다. 수양회를 만든 사람은 막는다.
+app.delete('/auth/me', requireAuth, async (req, res) => {
+  try {
+    const done = await deleteAccount(req.user.userId);
+    console.log(`[ACCOUNT] 삭제 | userId=${req.user.userId} done=${done}`);
+    res.json({ ok: true });
+  } catch (err) {
+    if (err instanceof AccountDeleteBlocked) {
+      return res.status(409).json({ error: err.reason, reason: err.reason });
+    }
+    console.error('계정 삭제 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../providers/auth_provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/widgets/language_picker.dart';
@@ -26,6 +28,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!.authGoogleFailed('$e')),
+            duration: const Duration(seconds: 10),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // 아이폰에서만 보인다(애플 심사 지침 4.8). 맥·안드로이드·웹은 구글만.
+  static bool get _showApple =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  Future<void> _signInWithApple() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authProvider.notifier).signInWithApple();
+    } catch (e, st) {
+      debugPrint('[AUTH] 애플 오류: $e\n$st');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.authAppleFailed('$e')),
             duration: const Duration(seconds: 10),
           ),
         );
@@ -147,6 +172,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                             ),
+                      // 애플은 자기 단추 모양을 쓰라고 한다(HIG).
+                      if (_showApple && !_isLoading) ...[
+                        const SizedBox(height: 12),
+                        SignInWithAppleButton(
+                          onPressed: _signInWithApple,
+                          text: l10n.authSignInApple,
+                          height: 56,
+                          style: SignInWithAppleButtonStyle.black,
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(12),
+                          ),
+                        ),
+                      ],
                       if (_showDevLogin) ...[
                         const SizedBox(height: 20),
                         const Divider(),

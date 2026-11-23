@@ -89,6 +89,34 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get authSignInApple => 'Entrar com a Apple';
+
+  @override
+  String authAppleFailed(String error) {
+    return 'Falha ao entrar com a Apple: $error';
+  }
+
+  @override
+  String get accountDelete => 'Excluir conta';
+
+  @override
+  String get accountDeleteTitle => 'Excluir sua conta?';
+
+  @override
+  String get accountDeleteBody =>
+      'Sua conta e todas as suas inscrições, registros de pagamento, acompanhantes, atribuições de quarto e grupo e seu cartão de contato serão excluídos. Isso não pode ser desfeito.';
+
+  @override
+  String get accountDeleteConfirm => 'Excluir';
+
+  @override
+  String get accountDeleteDone => 'Sua conta foi excluída.';
+
+  @override
+  String get accountDeleteBlockedOwner =>
+      'Você criou uma conferência, por isso esta conta não pode ser excluída. Exclua a conferência primeiro ou fale com os responsáveis.';
+
+  @override
   String authDevFailed(String error) {
     return 'Falha no login de teste: $error';
   }

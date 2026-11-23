@@ -90,6 +90,34 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get authSignInApple => 'Iniciar sesión con Apple';
+
+  @override
+  String authAppleFailed(String error) {
+    return 'Error al iniciar sesión con Apple: $error';
+  }
+
+  @override
+  String get accountDelete => 'Eliminar cuenta';
+
+  @override
+  String get accountDeleteTitle => '¿Eliminar su cuenta?';
+
+  @override
+  String get accountDeleteBody =>
+      'Se eliminarán su cuenta y todas sus inscripciones, registros de pago, acompañantes, asignaciones de habitación y grupo, y su tarjeta de contacto. No se puede deshacer.';
+
+  @override
+  String get accountDeleteConfirm => 'Eliminar';
+
+  @override
+  String get accountDeleteDone => 'Se eliminó su cuenta.';
+
+  @override
+  String get accountDeleteBlockedOwner =>
+      'Usted creó una conferencia, por eso no se puede eliminar esta cuenta. Elimine primero la conferencia o consulte a los responsables.';
+
+  @override
   String authDevFailed(String error) {
     return 'Error en el inicio de prueba: $error';
   }

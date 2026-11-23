@@ -142,6 +142,37 @@ class ApiClient {
     return data;
   }
 
+  // Apple 로 로그인 — 아이폰이 준 identityToken 을 JWT 로 바꾼다.
+  // 이름은 애플이 처음 한 번만 주므로 그때 함께 보낸다.
+  static Future<Map<String, dynamic>> loginWithApple({
+    required String identityToken,
+    String? givenName,
+    String? familyName,
+  }) async {
+    final response = await http.post(
+      _uri('/auth/apple'),
+      headers: _publicHeaders,
+      body: jsonEncode({
+        'identityToken': identityToken,
+        'givenName': givenName,
+        'familyName': familyName,
+      }),
+    );
+    final data = _decode(response);
+    await saveToken(data['token'] as String);
+    return data;
+  }
+
+  /// 본인 계정 삭제. 수양회를 만든 사람이면 409 와 reason('owner'·'director').
+  static Future<void> deleteMyAccount() async {
+    final r = await http.delete(_uri('/auth/me'), headers: await _headers());
+    if (r.statusCode == 409) {
+      final body = jsonDecode(r.body) as Map<String, dynamic>;
+      throw AccountDeleteBlockedException(body['reason'] as String? ?? '');
+    }
+    _decode(r);
+  }
+
   static Future<Map<String, dynamic>?> getMe() async {
     final response = await http.get(
       _uri('/auth/me'),
@@ -1587,6 +1618,12 @@ class ApiClient {
     );
     _decode(response);
   }
+}
+
+/// 수양회를 만든 사람(또는 director)이라 계정을 지울 수 없을 때.
+class AccountDeleteBlockedException implements Exception {
+  final String reason;
+  const AccountDeleteBlockedException(this.reason);
 }
 
 class ApiException implements Exception {
