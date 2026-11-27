@@ -63,3 +63,8 @@ Set<String>? scopesOf(Object? raw) {
 /// 이 분야를 볼 수 있는가. null 이면 전부라는 뜻이다.
 bool canSee(Set<String>? mine, String scope) =>
     mine == null || mine.contains(scope);
+
+/// 전부 맡았는가 — 제한이 없거나, 분야를 하나하나 다 골라 받았을 때.
+/// 수양회 설정처럼 여러 분야에 걸친 화면이 이것을 본다(서버 EVERY_SCOPE).
+bool seesEverything(Set<String>? mine) =>
+    mine == null || adminScopes.every((s) => mine.contains(s.key));

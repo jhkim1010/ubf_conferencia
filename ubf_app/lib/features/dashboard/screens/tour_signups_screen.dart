@@ -6,6 +6,7 @@ import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/table_export.dart';
 import '../../program/providers/program_provider.dart';
+import 'participant_editor.dart';
 
 // 투어별 신청 상황.
 //
@@ -193,6 +194,17 @@ class _TourSignupsScreenState extends ConsumerState<TourSignupsScreen> {
                   itemBuilder: (_, i) => _TourCard(
                     tour: tours[i] as Map<String, dynamic>,
                     currency: currency,
+                    // 이름을 누르면 그 사람을 연다 — 투어를 빼 달라는 전화를
+                    // 이 화면을 보다가 받는다.
+                    onOpen: (id) => openParticipantById(
+                      context,
+                      ref,
+                      programId: widget.programId,
+                      registrationId: id,
+                      onChanged: () => ref.invalidate(
+                        programTourSignupsProvider(widget.programId),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -213,8 +225,9 @@ Color _unfinishedColor(ThemeData theme) => theme.brightness == Brightness.dark
 class _TourCard extends StatelessWidget {
   final Map<String, dynamic> tour;
   final Currency currency;
+  final void Function(String registrationId)? onOpen;
 
-  const _TourCard({required this.tour, required this.currency});
+  const _TourCard({required this.tour, required this.currency, this.onOpen});
 
   static String _date(Object? v) {
     final s = '${v ?? ''}';
@@ -312,7 +325,7 @@ class _TourCard extends StatelessWidget {
               )
             else
               for (final p in people.cast<Map<String, dynamic>>())
-                _PersonRow(person: p),
+                _PersonRow(person: p, onOpen: onOpen),
           ],
         ),
       ),
@@ -322,8 +335,9 @@ class _TourCard extends StatelessWidget {
 
 class _PersonRow extends StatelessWidget {
   final Map<String, dynamic> person;
+  final void Function(String registrationId)? onOpen;
 
-  const _PersonRow({required this.person});
+  const _PersonRow({required this.person, this.onOpen});
 
   @override
   Widget build(BuildContext context) {
@@ -335,7 +349,8 @@ class _PersonRow extends StatelessWidget {
       '${person['branch'] ?? ''}',
     ].where((s) => s.isNotEmpty).join(' · ');
 
-    return Container(
+    final id = person['registration_id'] as String?;
+    final row = Container(
       // 아직 완료하지 않은 사람은 배경으로 구분한다. 글자만 다르게 하면
       // 목록이 길어졌을 때 눈에 걸리지 않는다.
       color: done ? null : _unfinishedColor(theme),
@@ -370,5 +385,7 @@ class _PersonRow extends StatelessWidget {
         ],
       ),
     );
+    if (onOpen == null || id == null) return row;
+    return InkWell(onTap: () => onOpen!(id), child: row);
   }
 }

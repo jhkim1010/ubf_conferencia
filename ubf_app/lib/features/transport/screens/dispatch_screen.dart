@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/api_client.dart';
 import '../providers/transport_provider.dart';
@@ -18,6 +19,15 @@ class DispatchScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.dspTitle),
+          actions: [
+            // 투어 날 공항 배차·돌아오는 날 픽업은 저쪽에서 편별로 본다(081).
+            IconButton(
+              icon: const Icon(Icons.connecting_airports),
+              tooltip: l10n.tfmTitle,
+              onPressed: () =>
+                  context.push('/leader/program/$programId/tour-flights'),
+            ),
+          ],
           bottom: TabBar(
             tabs: [
               Tab(

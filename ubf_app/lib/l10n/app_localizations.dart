@@ -7871,6 +7871,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open to edit'**
   String get peOpen;
+
+  /// No description provided for @regStepTourFlights.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour travel'**
+  String get regStepTourFlights;
+
+  /// No description provided for @tfIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Your tours: {tours}. Please add the flights to and from the tour too. If you haven\'t bought the ticket yet, a date is enough. If the tour goes by bus, you can leave this empty.'**
+  String tfIntro(String tours);
+
+  /// No description provided for @tfKindOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Flight to the tour'**
+  String get tfKindOut;
+
+  /// No description provided for @tfKindReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Flight back from the tour'**
+  String get tfKindReturn;
+
+  /// No description provided for @tfKindOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other flight'**
+  String get tfKindOther;
+
+  /// No description provided for @tfArrivalLeg.
+  ///
+  /// In en, this message translates to:
+  /// **'Flight to the conference'**
+  String get tfArrivalLeg;
+
+  /// No description provided for @tfHomeLeg.
+  ///
+  /// In en, this message translates to:
+  /// **'Flight home'**
+  String get tfHomeLeg;
+
+  /// No description provided for @tfHomeNextStep.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll enter it in the next step'**
+  String get tfHomeNextStep;
+
+  /// No description provided for @tfHomeFromTourHint.
+  ///
+  /// In en, this message translates to:
+  /// **'In the next step, enter the flight leaving from the tour\'s airport'**
+  String get tfHomeFromTourHint;
+
+  /// No description provided for @tfNotEntered.
+  ///
+  /// In en, this message translates to:
+  /// **'Not entered yet'**
+  String get tfNotEntered;
+
+  /// No description provided for @tfDirectHome.
+  ///
+  /// In en, this message translates to:
+  /// **'I go home straight from the tour'**
+  String get tfDirectHome;
+
+  /// No description provided for @tfDirectHomeSub.
+  ///
+  /// In en, this message translates to:
+  /// **'I won\'t come back to the conference city'**
+  String get tfDirectHomeSub;
+
+  /// No description provided for @tfAddOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Add flight to the tour'**
+  String get tfAddOut;
+
+  /// No description provided for @tfAddReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Add flight back'**
+  String get tfAddReturn;
+
+  /// No description provided for @tfAddOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another flight (connection, domestic…)'**
+  String get tfAddOther;
+
+  /// No description provided for @tfConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Booked'**
+  String get tfConfirmed;
+
+  /// No description provided for @tfNoTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'No ticket yet'**
+  String get tfNoTicket;
+
+  /// No description provided for @tfTapToEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to edit'**
+  String get tfTapToEdit;
+
+  /// No description provided for @tfSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Flight'**
+  String get tfSheetTitle;
+
+  /// No description provided for @tfWhichKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Which flight is this?'**
+  String get tfWhichKind;
+
+  /// No description provided for @tfTour.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour'**
+  String get tfTour;
+
+  /// No description provided for @tfDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get tfDate;
+
+  /// No description provided for @tfTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time (e.g. 08:10)'**
+  String get tfTime;
+
+  /// No description provided for @tfFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From (airport)'**
+  String get tfFrom;
+
+  /// No description provided for @tfTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To (airport)'**
+  String get tfTo;
+
+  /// No description provided for @tfNotBooked.
+  ///
+  /// In en, this message translates to:
+  /// **'I haven\'t bought the ticket yet — just the date for now'**
+  String get tfNotBooked;
+
+  /// No description provided for @tfNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (how you get from the airport, etc.)'**
+  String get tfNote;
+
+  /// No description provided for @tfWithCompanions.
+  ///
+  /// In en, this message translates to:
+  /// **'My companions are on the same flight'**
+  String get tfWithCompanions;
+
+  /// No description provided for @tfDeleteLeg.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove flight'**
+  String get tfDeleteLeg;
+
+  /// No description provided for @tfNeedSomething.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a date or a flight number'**
+  String get tfNeedSomething;
+
+  /// No description provided for @tfSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour travel saved'**
+  String get tfSaved;
+
+  /// No description provided for @tfNoLegs.
+  ///
+  /// In en, this message translates to:
+  /// **'No flights entered'**
+  String get tfNoLegs;
+
+  /// No description provided for @tfmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour travel schedule'**
+  String get tfmTitle;
+
+  /// No description provided for @tfmAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get tfmAll;
+
+  /// No description provided for @tfmDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Home from tour'**
+  String get tfmDirect;
+
+  /// No description provided for @tfmMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Of {total} people on tours, {ret} haven\'t entered the flight back and {home} haven\'t entered the flight home.'**
+  String tfmMissing(int total, int ret, int home);
+
+  /// No description provided for @tfmShowNames.
+  ///
+  /// In en, this message translates to:
+  /// **'See who'**
+  String get tfmShowNames;
+
+  /// No description provided for @tfmDirectFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaves from {airport} · no pickup'**
+  String tfmDirectFrom(String airport);
+
+  /// No description provided for @tfmDateOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Date only · time unknown'**
+  String get tfmDateOnly;
+
+  /// No description provided for @tfmNoDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date unknown'**
+  String get tfmNoDate;
+
+  /// No description provided for @tfmEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has entered a tour flight yet.'**
+  String get tfmEmpty;
+
+  /// No description provided for @tfmMissingReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing flight back'**
+  String get tfmMissingReturn;
+
+  /// No description provided for @tfmMissingHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing flight home'**
+  String get tfmMissingHome;
+
+  /// No description provided for @dashRosterMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants · edit details'**
+  String get dashRosterMenu;
+
+  /// No description provided for @dashRosterMenuSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Open anyone to fix name, companions, tours and flights'**
+  String get dashRosterMenuSub;
+
+  /// No description provided for @peOpenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a name to edit their details'**
+  String get peOpenHint;
 }
 
 class _AppLocalizationsDelegate

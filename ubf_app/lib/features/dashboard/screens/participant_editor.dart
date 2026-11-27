@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/world_countries.dart';
 import '../../../core/utils/api_client.dart';
 import '../../../core/utils/child_fee.dart';
 import '../../../core/utils/i18n_text.dart';
 import '../../../core/utils/money.dart';
+import '../../program/providers/program_provider.dart';
+import '../../registration/providers/registration_provider.dart'
+    show sortTourLegs, tourLegsFrom;
 import '../../registration/screens/steps/companion_step.dart';
+import '../../registration/widgets/tour_legs.dart';
 import 'travel_edit_dialog.dart';
 import 'package:mana/l10n/app_localizations.dart';
 
@@ -38,6 +43,54 @@ Future<void> showParticipantEditor(
       onPayment: onPayment,
     ),
   );
+}
+
+/// 명단 표가 아닌 곳(준비 현황 · 투어 신청 · 투어 이동)에서 한 사람을 연다.
+///
+/// 담당자는 사람을 **보는 자리에서** 고치고 싶어 한다. 이름은 여러 화면에
+/// 보이는데 고치는 길은 명단 표 하나뿐이라, 공동 관리자들이 "고칠 수가
+/// 없다" 고 여겼다. 그 화면들의 이름을 누르면 이 창이 뜨게 한다.
+///
+/// 명단 줄을 다시 받아 온다 — 각 화면이 들고 있는 것은 이름 정도뿐이다.
+/// 명단을 볼 권한(registration)이 없는 담당자에게는 서버가 막고, 그 말을
+/// 그대로 보여 준다.
+Future<void> openParticipantById(
+  BuildContext context,
+  WidgetRef ref, {
+  required String programId,
+  required String registrationId,
+  VoidCallback? onChanged,
+}) async {
+  final messenger = ScaffoldMessenger.of(context);
+  try {
+    final rows = await ApiClient.getProgramRegistrations(programId);
+    final reg = rows
+        .whereType<Map>()
+        .map((m) => Map<String, dynamic>.from(m))
+        .where((r) => r['id'] == registrationId)
+        .firstOrNull;
+    final program = await ApiClient.getProgram(programId);
+    if (reg == null || !context.mounted) return;
+    await showParticipantEditor(
+      context,
+      programId: programId,
+      reg: reg,
+      program: program,
+      currency: Currency.of(program?['currency'] as String?),
+      onChanged: () {
+        ref.invalidate(programRegistrationsProvider(programId));
+        ref.invalidate(programStatsProvider(programId));
+        onChanged?.call();
+      },
+    );
+  } catch (e) {
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(e is ApiException ? e.message : '$e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
 }
 
 class _ParticipantEditor extends StatefulWidget {
@@ -746,6 +799,143 @@ class _TravelTabState extends State<_TravelTab> {
     }
   }
 
+  // ── 투어 때 타는 비행기(081) ──
+
+  List<Map<String, dynamic>> get _legs =>
+      tourLegsFrom(widget.reg['tour_flights']);
+
+  List<Map<String, dynamic>> get _tours => pickedTours(
+    widget.program['program_options'],
+    (widget.reg['selected_options'] as List?) ?? const [],
+  );
+
+  bool get _hasCompanions => ((widget.reg['companions'] as List?) ?? const [])
+      .whereType<Map>()
+      .any((c) => c['registersSeparately'] != true);
+
+  Future<void> _saveTour(
+    List<Map<String, dynamic>> legs, {
+    bool? homeFromTour,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final r = await ApiClient.updateTravelAdmin(
+        widget.programId,
+        widget.reg['id'] as String,
+        {
+          'tourFlights': legs,
+          'homeFromTour': homeFromTour ?? widget.reg['home_from_tour'] == true,
+        },
+      );
+      setState(() {
+        widget.reg['tour_flights'] = r['tour_flights'];
+        widget.reg['home_from_tour'] = r['home_from_tour'];
+      });
+      widget.onSaved({'total_cost': r['total_cost']});
+      if (mounted) _snack(context, l10n.tfSaved);
+    } catch (e) {
+      if (mounted) {
+        _snack(context, e is ApiException ? e.message : '$e', error: true);
+      }
+    }
+  }
+
+  Future<void> _editLeg({int? index, String kind = 'tour_out'}) async {
+    final legs = _legs;
+    final tours = _tours;
+    final window = tourLegWindow(widget.program, tours);
+    final r = await showTourLegSheet(
+      context,
+      leg: index == null ? null : legs[index],
+      initialKind: kind,
+      tours: tours,
+      hasCompanions: _hasCompanions,
+      first: window.first,
+      last: window.last,
+    );
+    if (r == null || !mounted) return;
+    if (r.delete && index != null) {
+      legs.removeAt(index);
+    } else if (r.leg != null) {
+      if (index == null) {
+        legs.add(r.leg!);
+      } else {
+        legs[index] = r.leg!;
+      }
+    } else {
+      return;
+    }
+    await _saveTour(sortTourLegs(legs));
+  }
+
+  List<Widget> _tourSection(AppLocalizations l10n) {
+    final tours = _tours;
+    if (tours.isEmpty && _legs.isEmpty) return const [];
+    final lang = Localizations.localeOf(context).languageCode;
+    final legs = _legs;
+    String? tourName(Object? id) => tours
+        .where((t) => '${t['id']}' == '$id')
+        .map((t) => tourNameOf(t, lang))
+        .firstOrNull;
+    return [
+      const Divider(height: 32),
+      Text(
+        l10n.regStepTourFlights,
+        style: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 8),
+      if (legs.isEmpty)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(l10n.tfNoLegs, style: TextStyle(color: Colors.grey[700])),
+        ),
+      for (var i = 0; i < legs.length; i++) ...[
+        TourLegCard(
+          leg: legs[i],
+          tourName: tourName(legs[i]['tour_id']),
+          onTap: () => _editLeg(index: i),
+        ),
+        const SizedBox(height: 8),
+      ],
+      if (tours.isNotEmpty)
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          value: widget.reg['home_from_tour'] == true,
+          onChanged: (v) => _saveTour(
+            v ? legs.where((l) => l['kind'] != 'tour_return').toList() : legs,
+            homeFromTour: v,
+          ),
+          title: Text(l10n.tfDirectHome),
+          subtitle: Text(l10n.tfDirectHomeSub),
+        ),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          if (tours.isNotEmpty)
+            OutlinedButton.icon(
+              onPressed: () => _editLeg(kind: 'tour_out'),
+              icon: const Icon(Icons.add, size: 18),
+              label: Text(l10n.tfAddOut),
+            ),
+          if (tours.isNotEmpty && widget.reg['home_from_tour'] != true)
+            OutlinedButton.icon(
+              onPressed: () => _editLeg(kind: 'tour_return'),
+              icon: const Icon(Icons.add, size: 18),
+              label: Text(l10n.tfAddReturn),
+            ),
+          OutlinedButton.icon(
+            onPressed: () => _editLeg(kind: 'other'),
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(l10n.tfKindOther),
+          ),
+        ],
+      ),
+    ];
+  }
+
   String _flight(Object? f, String timeKey) {
     if (f is! Map) return '—';
     final when = '${f[timeKey] ?? ''}';
@@ -816,6 +1006,7 @@ class _TravelTabState extends State<_TravelTab> {
             label: Text(l10n.travelEdit),
           ),
         ),
+        ..._tourSection(l10n),
       ],
     );
   }

@@ -1,13 +1,13 @@
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 // 분야 목록과 requireScope 는 DB 를 타지 않는 곳에 둔다(위 파일의 설명 참조).
-import { SCOPES, requireScope } from '../services/admin_scopes.js';
+import { SCOPES, EVERY_SCOPE, requireScope } from '../services/admin_scopes.js';
 
 import { sql } from '../db.js';
 import { pickLanguage } from '../services/messages.js';
 import { verifyAppleToken } from '../services/apple_token.js';
 
-export { SCOPES, requireScope };
+export { SCOPES, EVERY_SCOPE, requireScope };
 
 export async function scopesFor(programId, userId, role) {
   if (role === 'director') return null;

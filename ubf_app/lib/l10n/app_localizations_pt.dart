@@ -4405,4 +4405,151 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get peOpen => 'Abrir para editar';
+
+  @override
+  String get regStepTourFlights => 'Viagens do passeio';
+
+  @override
+  String tfIntro(String tours) {
+    return 'Seus passeios: $tours. Anote também os voos de ida e volta do passeio. Se ainda não comprou a passagem, basta a data. Se o passeio for de ônibus, pode deixar em branco.';
+  }
+
+  @override
+  String get tfKindOut => 'Voo para o passeio';
+
+  @override
+  String get tfKindReturn => 'Voo de volta do passeio';
+
+  @override
+  String get tfKindOther => 'Outro voo';
+
+  @override
+  String get tfArrivalLeg => 'Voo para a conferência';
+
+  @override
+  String get tfHomeLeg => 'Voo para casa';
+
+  @override
+  String get tfHomeNextStep => 'Você anota no próximo passo';
+
+  @override
+  String get tfHomeFromTourHint =>
+      'No próximo passo, anote o voo que sai do aeroporto do passeio';
+
+  @override
+  String get tfNotEntered => 'Ainda não anotado';
+
+  @override
+  String get tfDirectHome => 'Volto para casa direto do passeio';
+
+  @override
+  String get tfDirectHomeSub => 'Não volto para a cidade da conferência';
+
+  @override
+  String get tfAddOut => 'Anotar voo para o passeio';
+
+  @override
+  String get tfAddReturn => 'Anotar voo de volta';
+
+  @override
+  String get tfAddOther => 'Adicionar outro voo (escala, nacional…)';
+
+  @override
+  String get tfConfirmed => 'Confirmado';
+
+  @override
+  String get tfNoTicket => 'Sem passagem ainda';
+
+  @override
+  String get tfTapToEdit => 'Toque para editar';
+
+  @override
+  String get tfSheetTitle => 'Voo';
+
+  @override
+  String get tfWhichKind => 'Qual voo é?';
+
+  @override
+  String get tfTour => 'Passeio';
+
+  @override
+  String get tfDate => 'Data';
+
+  @override
+  String get tfTime => 'Hora (ex.: 08:10)';
+
+  @override
+  String get tfFrom => 'De (aeroporto)';
+
+  @override
+  String get tfTo => 'Para (aeroporto)';
+
+  @override
+  String get tfNotBooked =>
+      'Ainda não comprei a passagem — por enquanto só a data';
+
+  @override
+  String get tfNote => 'Observação (como chega do aeroporto etc.)';
+
+  @override
+  String get tfWithCompanions => 'Meus acompanhantes estão no mesmo voo';
+
+  @override
+  String get tfDeleteLeg => 'Remover voo';
+
+  @override
+  String get tfNeedSomething => 'Anote uma data ou um número de voo';
+
+  @override
+  String get tfSaved => 'Viagens do passeio salvas';
+
+  @override
+  String get tfNoLegs => 'Nenhum voo anotado';
+
+  @override
+  String get tfmTitle => 'Viagens dos passeios';
+
+  @override
+  String get tfmAll => 'Todos';
+
+  @override
+  String get tfmDirect => 'Direto para casa';
+
+  @override
+  String tfmMissing(int total, int ret, int home) {
+    return 'De $total inscritos em passeios, $ret não anotaram o voo de volta e $home não anotaram o voo para casa.';
+  }
+
+  @override
+  String get tfmShowNames => 'Ver quem';
+
+  @override
+  String tfmDirectFrom(String airport) {
+    return 'Sai de $airport · sem transfer';
+  }
+
+  @override
+  String get tfmDateOnly => 'Só a data · hora desconhecida';
+
+  @override
+  String get tfmNoDate => 'Data desconhecida';
+
+  @override
+  String get tfmEmpty => 'Ninguém anotou ainda um voo de passeio.';
+
+  @override
+  String get tfmMissingReturn => 'Sem voo de volta';
+
+  @override
+  String get tfmMissingHome => 'Sem voo para casa';
+
+  @override
+  String get dashRosterMenu => 'Participantes · editar dados';
+
+  @override
+  String get dashRosterMenuSub =>
+      'Abra qualquer pessoa para corrigir nome, acompanhantes, passeios e voos';
+
+  @override
+  String get peOpenHint => 'Toque um nome para editar os dados';
 }

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../program/providers/program_provider.dart';
 import '../providers/registration_provider.dart';
+import '../widgets/tour_legs.dart';
 import 'package:mana/l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/api_client.dart';
@@ -290,6 +291,33 @@ class SummaryScreen extends ConsumerWidget {
                   ),
                 ),
               if (formState.arrivalFlight != null) const SizedBox(height: 12),
+
+              // 투어 때 타는 비행기(081). 여정 순서대로 — 오는 편과 집에 가는 편 사이.
+              if (formState.tourFlights.isNotEmpty) ...[
+                _SectionCard(
+                  title: l10n.regStepTourFlights,
+                  icon: Icons.connecting_airports,
+                  onEdit: () => context.go('/registration/$programId'),
+                  children: [
+                    for (final leg in formState.tourFlights) ...[
+                      TourLegCard(
+                        leg: leg,
+                        tourName: options
+                            .where((o) => o['id'] == leg['tour_id'])
+                            .map(
+                              (o) => tourNameOf(
+                                o,
+                                Localizations.localeOf(context).languageCode,
+                              ),
+                            )
+                            .firstOrNull,
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
 
               // 출발 비행기
               if (formState.departureFlight != null)

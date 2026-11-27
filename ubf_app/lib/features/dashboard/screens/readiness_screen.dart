@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../program/providers/program_provider.dart';
+import 'participant_editor.dart';
 import '../../../core/constants/world_countries.dart';
 
 // 준비 현황 화면 (A003)
@@ -62,7 +63,10 @@ class ReadinessScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 _SectionTitle(l10n.rdySectionBlocked),
                 const SizedBox(height: 10),
-                _Blocked(rows: data['blocked'] as List<dynamic>? ?? []),
+                _Blocked(
+                  programId: programId,
+                  rows: data['blocked'] as List<dynamic>? ?? [],
+                ),
                 const SizedBox(height: 32),
               ],
             ),
@@ -735,12 +739,13 @@ class _StepRow extends StatelessWidget {
 }
 
 // ─── 연락이 필요한 사람 ───────────────────────────────────────
-class _Blocked extends StatelessWidget {
+class _Blocked extends ConsumerWidget {
+  final String programId;
   final List<dynamic> rows;
-  const _Blocked({required this.rows});
+  const _Blocked({required this.programId, required this.rows});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     if (rows.isEmpty) return _Empty(message: l10n.rdyNoBlocked);
 
@@ -763,6 +768,18 @@ class _Blocked extends StatelessWidget {
                 final domestic = r['kind'] == 'domestic';
                 return ListTile(
                   dense: true,
+                  // 막힌 사람을 보다가 바로 채워 넣을 수 있게(전화로 듣고 적는 일이 많다).
+                  onTap: r['registration_id'] == null
+                      ? null
+                      : () => openParticipantById(
+                          context,
+                          ref,
+                          programId: programId,
+                          registrationId: '${r['registration_id']}',
+                          onChanged: () => ref.invalidate(
+                            programReadinessProvider(programId),
+                          ),
+                        ),
                   leading: CircleAvatar(
                     radius: 15,
                     backgroundColor: (domestic

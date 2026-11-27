@@ -13,6 +13,7 @@ import '../../sos/widgets/sos_fab.dart';
 import '../widgets/cost_bar.dart';
 import 'steps/personal_info_step.dart';
 import 'steps/flight_info_step.dart';
+import 'steps/tour_flights_step.dart';
 import 'steps/food_step.dart';
 import 'steps/options_step.dart';
 import 'steps/overview_step.dart';
@@ -184,6 +185,25 @@ class _RegistrationFlowScreenState
         // 되살리면(_domesticWantsFlight) 다시 들어온다.
         final skipFlightSteps = sameCountryAsHost && !_domesticWantsFlight;
 
+        // 투어를 고른 사람에게만 "투어 이동" 단계를 넣는다(081). 투어는
+        // 이 단계보다 앞에서 고르므로, 고르고 빼는 사이에 지금 보고 있는
+        // 쪽 번호가 밀리지 않는다.
+        final pickedIds = ref.watch(
+          registrationFormProvider(
+            widget.programId,
+          ).select((s) => s.selectedOptions),
+        );
+        final hasTours = options.any((o) => pickedIds.contains(o['id']));
+        final tourStep = (
+          title: l10n.regStepTourFlights,
+          widget: TourFlightsStep(
+            programId: widget.programId,
+            program: program,
+            options: options,
+            flightStepsShown: !skipFlightSteps,
+          ),
+        );
+
         // 스텝 조립. 조건부 스텝은 맨 뒤에 붙인다(인덱스가 밀리지 않게).
         //
         // 순서에는 뜻이 있다(064).
@@ -242,6 +262,8 @@ class _RegistrationFlowScreenState
               title: l10n.regStepPickup,
               widget: PickupStep(programId: widget.programId),
             ),
+          // 개최국 참가자도 투어 때는 비행기를 탈 수 있다.
+          if (skipFlightSteps && hasTours) tourStep,
           // 개최국 참석자는 항공편 스텝 자체를 넣지 않는다. 배너에서 되살릴 수 있다.
           if (!skipFlightSteps) ...[
             (
@@ -253,6 +275,8 @@ class _RegistrationFlowScreenState
                 sameCountryAsHost: false,
               ),
             ),
+            // 오는 편 → 투어 때 타는 편 → 집에 가는 편. 여정 순서대로 적는다.
+            if (hasTours) tourStep,
             (
               title: l10n.regStepDeparture,
               widget: FlightInfoStep(

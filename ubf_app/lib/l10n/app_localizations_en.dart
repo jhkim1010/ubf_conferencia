@@ -4391,4 +4391,151 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get peOpen => 'Open to edit';
+
+  @override
+  String get regStepTourFlights => 'Tour travel';
+
+  @override
+  String tfIntro(String tours) {
+    return 'Your tours: $tours. Please add the flights to and from the tour too. If you haven\'t bought the ticket yet, a date is enough. If the tour goes by bus, you can leave this empty.';
+  }
+
+  @override
+  String get tfKindOut => 'Flight to the tour';
+
+  @override
+  String get tfKindReturn => 'Flight back from the tour';
+
+  @override
+  String get tfKindOther => 'Other flight';
+
+  @override
+  String get tfArrivalLeg => 'Flight to the conference';
+
+  @override
+  String get tfHomeLeg => 'Flight home';
+
+  @override
+  String get tfHomeNextStep => 'You\'ll enter it in the next step';
+
+  @override
+  String get tfHomeFromTourHint =>
+      'In the next step, enter the flight leaving from the tour\'s airport';
+
+  @override
+  String get tfNotEntered => 'Not entered yet';
+
+  @override
+  String get tfDirectHome => 'I go home straight from the tour';
+
+  @override
+  String get tfDirectHomeSub => 'I won\'t come back to the conference city';
+
+  @override
+  String get tfAddOut => 'Add flight to the tour';
+
+  @override
+  String get tfAddReturn => 'Add flight back';
+
+  @override
+  String get tfAddOther => 'Add another flight (connection, domestic…)';
+
+  @override
+  String get tfConfirmed => 'Booked';
+
+  @override
+  String get tfNoTicket => 'No ticket yet';
+
+  @override
+  String get tfTapToEdit => 'Tap to edit';
+
+  @override
+  String get tfSheetTitle => 'Flight';
+
+  @override
+  String get tfWhichKind => 'Which flight is this?';
+
+  @override
+  String get tfTour => 'Tour';
+
+  @override
+  String get tfDate => 'Date';
+
+  @override
+  String get tfTime => 'Time (e.g. 08:10)';
+
+  @override
+  String get tfFrom => 'From (airport)';
+
+  @override
+  String get tfTo => 'To (airport)';
+
+  @override
+  String get tfNotBooked =>
+      'I haven\'t bought the ticket yet — just the date for now';
+
+  @override
+  String get tfNote => 'Note (how you get from the airport, etc.)';
+
+  @override
+  String get tfWithCompanions => 'My companions are on the same flight';
+
+  @override
+  String get tfDeleteLeg => 'Remove flight';
+
+  @override
+  String get tfNeedSomething => 'Enter a date or a flight number';
+
+  @override
+  String get tfSaved => 'Tour travel saved';
+
+  @override
+  String get tfNoLegs => 'No flights entered';
+
+  @override
+  String get tfmTitle => 'Tour travel schedule';
+
+  @override
+  String get tfmAll => 'All';
+
+  @override
+  String get tfmDirect => 'Home from tour';
+
+  @override
+  String tfmMissing(int total, int ret, int home) {
+    return 'Of $total people on tours, $ret haven\'t entered the flight back and $home haven\'t entered the flight home.';
+  }
+
+  @override
+  String get tfmShowNames => 'See who';
+
+  @override
+  String tfmDirectFrom(String airport) {
+    return 'Leaves from $airport · no pickup';
+  }
+
+  @override
+  String get tfmDateOnly => 'Date only · time unknown';
+
+  @override
+  String get tfmNoDate => 'Date unknown';
+
+  @override
+  String get tfmEmpty => 'Nobody has entered a tour flight yet.';
+
+  @override
+  String get tfmMissingReturn => 'Missing flight back';
+
+  @override
+  String get tfmMissingHome => 'Missing flight home';
+
+  @override
+  String get dashRosterMenu => 'Participants · edit details';
+
+  @override
+  String get dashRosterMenuSub =>
+      'Open anyone to fix name, companions, tours and flights';
+
+  @override
+  String get peOpenHint => 'Tap a name to edit their details';
 }

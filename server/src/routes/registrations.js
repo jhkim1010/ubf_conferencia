@@ -10,6 +10,7 @@ import { notifyProgramAdmins } from '../services/telegram.js';
 import { cancelRegistration } from '../services/registration_cancel.js';
 import { normalizeCancelReason } from '../services/cancel_reason.js';
 import { coverOf } from '../services/companion_cover.js';
+import { normalizeTourFlights } from '../services/tour_flights.js';
 
 const router = Router();
 
@@ -54,6 +55,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     phone, hotelOptionKey, hotelNightsBefore, hotelNightsAfter,
     hotelBeforeSelf, hotelAfterSelf,
     needsPickup, pickupFrom,
+    tourFlights, homeFromTour,
   } = req.body;
 
   // 말씀 공부 언어. 참석자가 직접 고른 값이다 — 앱 표시 언어나 국가로 유추하면
@@ -141,7 +143,7 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
     // 기존 등록 여부 확인 (수정인지 신규인지 구분)
     const [existing] = await sql`
       SELECT id, discount_option_key, discount_status, discount_amount, discount_note,
-             hotel_before_self, hotel_after_self
+             hotel_before_self, hotel_after_self, tour_flights, home_from_tour
       FROM registrations
       WHERE program_id = ${req.params.programId} AND user_id = ${req.user.userId}
     `;
@@ -282,6 +284,17 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
       ? hotelAfterSelf === true
       : existing?.hotel_after_self === true;
     const billedNights = chargeableNights({ ...stay, beforeSelf, afterSelf });
+
+    // 투어 때 타는 비행기(081). 안 보낸 저장(예전 앱)은 저장된 값을 따른다.
+    // 보냈든 안 보냈든 **지금 고른 투어로 다시 다듬는다** — 투어를 뺐는데
+    // "이과수 가는 편" 이 남으면 담당자가 그 사람을 공항에 태우러 간다.
+    const homeFromTourVal = sent('homeFromTour')
+      ? homeFromTour === true
+      : existing?.home_from_tour === true;
+    const tourFlightsVal = normalizeTourFlights(
+      sent('tourFlights') ? tourFlights : (existing?.tour_flights ?? []),
+      { tourIds: picked_ids, homeFromTour: homeFromTourVal },
+    );
     // 남은 밤을 전부 스스로 해결하면 우리가 잡을 방이 없다. 등급이 남아
     // 있으면 값은 0 인데 명단에는 등급이 찍혀, 담당자가 그 사람 방을
     // 잡는다. 화면도 비우지만 화면만 믿을 수는 없다.
@@ -316,7 +329,8 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         discount_amount, discount_note, study_language, study_languages,
         hotel_option_key, hotel_nights_before, hotel_nights_after,
         hotel_before_self, hotel_after_self,
-        needs_pickup, pickup_from
+        needs_pickup, pickup_from,
+        tour_flights, home_from_tour
       )
       VALUES (
         ${req.params.programId}, ${req.user.userId},
@@ -352,7 +366,9 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
         ${beforeSelf},
         ${afterSelf},
         ${needsPickup !== false},
-        ${pickupFrom?.toString().trim() || null}
+        ${pickupFrom?.toString().trim() || null},
+        ${JSON.stringify(tourFlightsVal)},
+        ${homeFromTourVal && picked_ids.length > 0}
       )
       ON CONFLICT (program_id, user_id)
       DO UPDATE SET
@@ -406,6 +422,9 @@ router.put('/:programId/me', requireAuth, async (req, res) => {
           THEN EXCLUDED.needs_pickup ELSE registrations.needs_pickup END,
         pickup_from = CASE WHEN ${pickupFrom !== undefined}
           THEN EXCLUDED.pickup_from ELSE registrations.pickup_from END,
+        -- 둘 다 이미 "안 보냈으면 저장된 값" 으로 정해져 있다(081).
+        tour_flights = EXCLUDED.tour_flights,
+        home_from_tour = EXCLUDED.home_from_tour,
         updated_at = NOW()
       RETURNING id
     `;

@@ -42,11 +42,15 @@ class DashboardScreen extends ConsumerWidget {
           error: (_, _) => Text(l10n.dashTitle),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: l10n.dashEditSettings,
-            onPressed: () => context.push('/leader/program/$programId/edit'),
-          ),
+          // 수양회 설정은 여러 분야에 걸쳐 있어 **전부 맡은 사람**만
+          // 저장할 수 있다(서버 requireScope(EVERY_SCOPE)). 분야를 좁힌
+          // 공동 관리자에게 보이면 들어가서 저장할 때 막힌다.
+          if (seesEverything(mine))
+            IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: l10n.dashEditSettings,
+              onPressed: () => context.push('/leader/program/$programId/edit'),
+            ),
           // 내보내기 메뉴
           PopupMenuButton<String>(
             icon: const Icon(Icons.download),
@@ -106,6 +110,17 @@ class DashboardScreen extends ConsumerWidget {
             // 넓으면 세 개씩 늘어놓는다.
             _MenuGrid(
               items: [
+                // 한 사람의 정보를 고치는 길(2026-11). 예전에는 "전체 등록"
+                // 숫자 카드를 눌러야 표가 열려서, 공동 관리자들은 고칠 수
+                // 있다는 것 자체를 몰랐다. 메뉴 맨 앞에 이름을 붙여 둔다.
+                if (sees('registration'))
+                  (
+                    icon: Icons.edit_note,
+                    color: Colors.blue,
+                    title: l10n.dashRosterMenu,
+                    subtitle: l10n.dashRosterMenuSub,
+                    onTap: () => _openTable(context, programId, RosterView.all),
+                  ),
                 if (sees('registration'))
                   (
                     icon: Icons.fact_check_outlined,
@@ -186,6 +201,19 @@ class DashboardScreen extends ConsumerWidget {
                     subtitle: l10n.dashDispatchSubtitle,
                     onTap: () =>
                         context.push('/leader/program/$programId/dispatch'),
+                  ),
+                // 투어 때 오가는 비행기(081). 투어를 신청한 사람이 있을 때만.
+                if ((sees('transport') || sees('registration')) &&
+                    ((statsAsync.valueOrNull?['tour_signup_count'] as num?) ??
+                            0) >
+                        0)
+                  (
+                    icon: Icons.connecting_airports,
+                    color: const Color(0xFF6A3FB5),
+                    title: l10n.tfmTitle,
+                    subtitle: l10n.regStepTourFlights,
+                    onTap: () =>
+                        context.push('/leader/program/$programId/tour-flights'),
                   ),
               ],
             ),

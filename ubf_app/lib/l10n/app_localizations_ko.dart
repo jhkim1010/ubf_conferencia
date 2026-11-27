@@ -4290,4 +4290,148 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get peOpen => '열어서 고치기';
+
+  @override
+  String get regStepTourFlights => '투어 이동';
+
+  @override
+  String tfIntro(String tours) {
+    return '신청하신 투어: $tours. 투어에 가고 오는 비행기도 적어 주세요. 표를 아직 사지 않았으면 날짜만 적어도 됩니다. 버스로 가는 투어라면 비워 두고 넘어가셔도 됩니다.';
+  }
+
+  @override
+  String get tfKindOut => '투어 가는 편';
+
+  @override
+  String get tfKindReturn => '투어에서 돌아오는 편';
+
+  @override
+  String get tfKindOther => '기타 구간';
+
+  @override
+  String get tfArrivalLeg => '수양회에 오는 편';
+
+  @override
+  String get tfHomeLeg => '집에 가는 편';
+
+  @override
+  String get tfHomeNextStep => '다음 단계에서 적습니다';
+
+  @override
+  String get tfHomeFromTourHint => '다음 단계에서 투어지 공항에서 출발하는 편을 적어 주세요';
+
+  @override
+  String get tfNotEntered => '아직 적지 않으셨습니다';
+
+  @override
+  String get tfDirectHome => '투어지에서 바로 집에 갑니다';
+
+  @override
+  String get tfDirectHomeSub => '수양회 장소 쪽으로 돌아오지 않습니다';
+
+  @override
+  String get tfAddOut => '투어 가는 편 적기';
+
+  @override
+  String get tfAddReturn => '돌아오는 편 적기';
+
+  @override
+  String get tfAddOther => '다른 구간 더하기 (경유·국내선 등)';
+
+  @override
+  String get tfConfirmed => '확정';
+
+  @override
+  String get tfNoTicket => '표 아직 없음';
+
+  @override
+  String get tfTapToEdit => '눌러서 고치기';
+
+  @override
+  String get tfSheetTitle => '항공편 구간';
+
+  @override
+  String get tfWhichKind => '어떤 구간인가요?';
+
+  @override
+  String get tfTour => '투어';
+
+  @override
+  String get tfDate => '날짜';
+
+  @override
+  String get tfTime => '시각 (예: 08:10)';
+
+  @override
+  String get tfFrom => '출발 공항';
+
+  @override
+  String get tfTo => '도착 공항';
+
+  @override
+  String get tfNotBooked => '아직 표를 사지 않았습니다 — 날짜만 적어 둡니다';
+
+  @override
+  String get tfNote => '메모 (공항에서 어떻게 오시는지 등)';
+
+  @override
+  String get tfWithCompanions => '함께 오시는 분도 같은 편입니다';
+
+  @override
+  String get tfDeleteLeg => '구간 지우기';
+
+  @override
+  String get tfNeedSomething => '날짜나 항공편 번호를 적어 주세요';
+
+  @override
+  String get tfSaved => '투어 이동을 저장했습니다';
+
+  @override
+  String get tfNoLegs => '적힌 구간이 없습니다';
+
+  @override
+  String get tfmTitle => '투어 이동 일정';
+
+  @override
+  String get tfmAll => '전체';
+
+  @override
+  String get tfmDirect => '바로 귀국';
+
+  @override
+  String tfmMissing(int total, int ret, int home) {
+    return '투어 신청 $total명 중 $ret명이 돌아오는 편을, $home명이 집에 가는 편을 아직 적지 않았습니다.';
+  }
+
+  @override
+  String get tfmShowNames => '명단 보기';
+
+  @override
+  String tfmDirectFrom(String airport) {
+    return '$airport 에서 출발 · 픽업 없음';
+  }
+
+  @override
+  String get tfmDateOnly => '날짜만 적음 · 시각 모름';
+
+  @override
+  String get tfmNoDate => '날짜 모름';
+
+  @override
+  String get tfmEmpty => '투어 때 비행기를 탄다고 적은 사람이 아직 없습니다.';
+
+  @override
+  String get tfmMissingReturn => '돌아오는 편을 안 적은 사람';
+
+  @override
+  String get tfmMissingHome => '집에 가는 편을 안 적은 사람';
+
+  @override
+  String get dashRosterMenu => '참가자 명단 · 정보 고치기';
+
+  @override
+  String get dashRosterMenuSub => '한 사람씩 열어 이름·동반자·투어·항공을 고칩니다';
+
+  @override
+  String get peOpenHint => '이름을 누르면 정보를 고칠 수 있습니다';
 }

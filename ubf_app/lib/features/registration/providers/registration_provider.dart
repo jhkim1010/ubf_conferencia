@@ -26,6 +26,30 @@ final myCompanionsProvider =
       return rows.cast<Map<String, dynamic>>();
     });
 
+// ─── 투어 때 타는 비행기(081) ─────────────────────────────────
+
+/// 저장된 값(JSON)을 구간 목록으로. 모르는 꼴은 버린다.
+List<Map<String, dynamic>> tourLegsFrom(Object? raw) => raw is List
+    ? raw.whereType<Map>().map((m) => Map<String, dynamic>.from(m)).toList()
+    : <Map<String, dynamic>>[];
+
+/// 날짜순, 같은 날이면 가는 편 → 돌아오는 편 → 기타. 서버와 같은 순서다.
+List<Map<String, dynamic>> sortTourLegs(List<Map<String, dynamic>> legs) {
+  const order = {'tour_out': 0, 'tour_return': 1, 'other': 2};
+  final indexed = [for (var i = 0; i < legs.length; i++) (i, legs[i])];
+  indexed.sort((a, b) {
+    final da = (a.$2['date'] as String?) ?? '9999';
+    final db = (b.$2['date'] as String?) ?? '9999';
+    if (da != db) return da.compareTo(db);
+    final ta = (a.$2['time'] as String?) ?? '99';
+    final tb = (b.$2['time'] as String?) ?? '99';
+    if (ta != tb) return ta.compareTo(tb);
+    final k = (order[a.$2['kind']] ?? 2) - (order[b.$2['kind']] ?? 2);
+    return k != 0 ? k : a.$1 - b.$1;
+  });
+  return [for (final e in indexed) e.$2];
+}
+
 // ─── 등록 폼 상태 ────────────────────────────────────────────
 
 class RegistrationFormState {
@@ -78,6 +102,13 @@ class RegistrationFormState {
   final bool hotelBeforeSelf;
   final bool hotelAfterSelf;
 
+  /// 투어 때 타는 비행기 구간들(081). 집에 가는 편은 [departureFlight] 다.
+  /// 한 칸의 꼴은 서버의 services/tour_flights.js 를 보라.
+  final List<Map<String, dynamic>> tourFlights;
+
+  /// 투어지에서 바로 집에 간다 — 투어에서 돌아오는 편이 없다(081).
+  final bool homeFromTour;
+
   const RegistrationFormState({
     required this.programId,
     this.country,
@@ -109,6 +140,8 @@ class RegistrationFormState {
     this.hotelNightsAfter = 0,
     this.hotelBeforeSelf = false,
     this.hotelAfterSelf = false,
+    this.tourFlights = const [],
+    this.homeFromTour = false,
   });
 
   RegistrationFormState copyWith({
@@ -145,6 +178,8 @@ class RegistrationFormState {
     int? hotelNightsAfter,
     bool? hotelBeforeSelf,
     bool? hotelAfterSelf,
+    List<Map<String, dynamic>>? tourFlights,
+    bool? homeFromTour,
     bool clearHotel = false,
     // 등급만 비운다(074). clearHotel 은 박수까지 지우므로 쓸 수 없다.
     bool clearHotelKey = false,
@@ -205,6 +240,8 @@ class RegistrationFormState {
       hotelAfterSelf: clearHotel
           ? false
           : (hotelAfterSelf ?? this.hotelAfterSelf),
+      tourFlights: tourFlights ?? this.tourFlights,
+      homeFromTour: homeFromTour ?? this.homeFromTour,
     );
   }
 
@@ -239,6 +276,8 @@ class RegistrationFormState {
     'hotelNightsAfter': hotelNightsAfter,
     'hotelBeforeSelf': hotelBeforeSelf,
     'hotelAfterSelf': hotelAfterSelf,
+    'tourFlights': tourFlights,
+    'homeFromTour': homeFromTour,
   };
 
   factory RegistrationFormState.fromJson(Map<String, dynamic> json) =>
@@ -273,6 +312,8 @@ class RegistrationFormState {
         hotelNightsAfter: json['hotelNightsAfter'] as int? ?? 0,
         hotelBeforeSelf: json['hotelBeforeSelf'] as bool? ?? false,
         hotelAfterSelf: json['hotelAfterSelf'] as bool? ?? false,
+        tourFlights: tourLegsFrom(json['tourFlights']),
+        homeFromTour: json['homeFromTour'] as bool? ?? false,
       );
 }
 
@@ -466,6 +507,37 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
     );
   }
 
+  // ─── 투어 때 타는 비행기(081) ───────────────────────────────
+
+  /// [index] 가 null 이면 새 구간을 더한다.
+  void saveTourLeg(int? index, Map<String, dynamic> leg) {
+    final list = [...state.tourFlights];
+    if (index == null || index < 0 || index >= list.length) {
+      list.add(leg);
+    } else {
+      list[index] = leg;
+    }
+    _update(state.copyWith(tourFlights: sortTourLegs(list)));
+  }
+
+  void removeTourLeg(int index) {
+    final list = [...state.tourFlights];
+    if (index < 0 || index >= list.length) return;
+    list.removeAt(index);
+    _update(state.copyWith(tourFlights: list));
+  }
+
+  /// 바로 집에 가면 돌아오는 편은 없다. 남겨 두면 담당자가 그날 밤
+  /// 공항에 픽업을 보낸다. 서버도 같은 규칙으로 지운다.
+  void setHomeFromTour(bool v) => _update(
+    state.copyWith(
+      homeFromTour: v,
+      tourFlights: v
+          ? state.tourFlights.where((l) => l['kind'] != 'tour_return').toList()
+          : state.tourFlights,
+    ),
+  );
+
   // ─── 서버 저장 (임시저장 버튼) ─────────────────────────────
 
   Future<void> saveProgress(List<Map<String, dynamic>> allOptions) async {
@@ -507,6 +579,8 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       'hotelNightsAfter': state.hotelNightsAfter,
       'hotelBeforeSelf': state.hotelBeforeSelf,
       'hotelAfterSelf': state.hotelAfterSelf,
+      'tourFlights': state.tourFlights,
+      'homeFromTour': state.homeFromTour,
     });
   }
 
@@ -556,6 +630,8 @@ class RegistrationFormNotifier extends StateNotifier<RegistrationFormState> {
       hotelNightsAfter: data['hotel_nights_after'] as int? ?? 0,
       hotelBeforeSelf: data['hotel_before_self'] as bool? ?? false,
       hotelAfterSelf: data['hotel_after_self'] as bool? ?? false,
+      tourFlights: tourLegsFrom(data['tour_flights']),
+      homeFromTour: data['home_from_tour'] as bool? ?? false,
     );
     state = loaded;
     // DB에서 불러온 내용도 바로 draft로 저장

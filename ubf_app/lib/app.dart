@@ -41,6 +41,7 @@ import 'features/setup/screens/setup_screen.dart';
 import 'features/assignment/screens/assignment_screen.dart';
 import 'features/transport/screens/dispatch_screen.dart';
 import 'features/transport/screens/my_transport_screen.dart';
+import 'features/transport/screens/tour_flights_screen.dart';
 
 class UbfApp extends ConsumerStatefulWidget {
   const UbfApp({super.key});
@@ -195,6 +196,11 @@ class _UbfAppState extends ConsumerState<UbfApp> {
         GoRoute(
           path: '/leader/program/:id/dispatch',
           builder: (_, s) => DispatchScreen(programId: s.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: '/leader/program/:id/tour-flights',
+          builder: (_, s) =>
+              TourFlightsScreen(programId: s.pathParameters['id']!),
         ),
         GoRoute(
           path: '/program/:id/my-transport',

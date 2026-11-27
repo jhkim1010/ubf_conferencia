@@ -6,6 +6,7 @@ import { recountRegistrationTotal, recountNamesakes, companionNamesOf } from '..
 import { jointCompanionHeadcount } from '../services/companion_cover.js';
 import { noteAdminEdit } from '../services/edit_mail.js';
 import { planTravelEdit } from '../services/travel_edit.js';
+import { normalizeTourFlights, tourMovements } from '../services/tour_flights.js';
 import { cleanProfile, planTours } from '../services/profile_edit.js';
 import { listCompanions, saveCompanionList } from '../services/companion_save.js';
 import { normalizeOptions } from '../services/option_media.js';
@@ -60,6 +61,7 @@ import {
   scopesFor,
   requireScope,
   SCOPES,
+  EVERY_SCOPE,
 } from '../middleware/auth.js';
 import { isValidBotToken } from '../services/telegram.js';
 import { cancelRegistration, restoreRegistration } from '../services/registration_cancel.js';
@@ -622,7 +624,15 @@ router.post('/', requireAuth, requireLeader, async (req, res) => {
 });
 
 // PATCH /programs/:id - 프로그램 설정 수정 (소유 리더만)
-router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
+// 만든 사람만이 아니라 **전부 맡은 공동 관리자**도 고친다. 예전에는
+// leader_id 로 만든 사람만 받아서, 공동 관리자가 설정 화면에서 저장을
+// 누르면 "권한 없음" 이 났다 — 같은 화면을 보는데 저장만 안 됐다.
+router.patch(
+  '/:id',
+  requireAuth,
+  requireProgramAdmin,
+  requireScope(EVERY_SCOPE),
+  async (req, res) => {
   const {
     name, location, startDate, endDate, enabledSections,
     venueUrl, themeTitle, themeVerse, themeVerseI18n,
@@ -693,9 +703,9 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
              theme_title, theme_title_i18n,
              fee_basic_desc_i18n, fee_premium_desc_i18n
       FROM programs
-      WHERE id = ${req.params.id} AND leader_id = ${req.user.leaderId} AND is_active = true
+      WHERE id = ${req.params.id} AND is_active = true
     `;
-    if (!program) return res.status(403).json({ error: '권한 없음' });
+    if (!program) return res.status(404).json({ error: '프로그램을 찾을 수 없습니다' });
 
     // 한쪽만 고치는 호출이 구간을 거꾸로 만들 수 있다(073) — 최소만 12 로
     // 올렸는데 기존 최대가 8 인 경우다. 기존 값과 견주어 막는다.
@@ -963,7 +973,8 @@ router.patch('/:id', requireAuth, requireLeader, async (req, res) => {
     console.error('프로그램 수정 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
-});
+  },
+);
 
 // DELETE /programs/:id - 수양회 삭제 (소유 리더만)
 //
@@ -1260,6 +1271,8 @@ router.get('/:id/registrations', requireAuth, requireProgramAdmin,
                   AND COALESCE(btrim(r.bible_name), '') = ''
              THEN NULLIF(btrim(COALESCE(u.name, '')), '') END AS account_name,
         r.arrival_flight, r.departure_flight,
+        -- 투어 때 타는 비행기(081). 참가자 편집 창의 항공 탭이 쓴다.
+        r.tour_flights, r.home_from_tour,
         -- 확정 항공편인지. 예상 날짜만 적은 사람을 담당자가 구분해야 한다.
         flight_confirmed(r.arrival_flight) AS arrival_confirmed,
         flight_confirmed(r.departure_flight) AS departure_confirmed,
@@ -1453,7 +1466,8 @@ async function applyTravel(programId, registrationId, body) {
     SELECT r.id, r.country, r.selected_options,
            r.arrival_flight, r.departure_flight,
            r.hotel_option_key, r.hotel_nights_before, r.hotel_nights_after,
-           r.hotel_before_self, r.hotel_after_self
+           r.hotel_before_self, r.hotel_after_self,
+           r.tour_flights, r.home_from_tour
       FROM registrations r
      WHERE r.id = ${registrationId} AND r.program_id = ${programId}
   `;
@@ -1478,6 +1492,19 @@ async function applyTravel(programId, registrationId, body) {
 
   const plan = planTravelEdit({ existing, program, tours, body });
 
+  // 투어 때 타는 비행기(081). 본문에 없으면 지금 값 — 다만 지금 고른 투어로
+  // 늘 다시 다듬는다(투어 탭에서 투어를 뺀 뒤에도 이 함수가 불린다).
+  const sentKey = (k) => Object.prototype.hasOwnProperty.call(body ?? {}, k);
+  const homeFromTour =
+    picked.length > 0 &&
+    (sentKey('homeFromTour')
+      ? body.homeFromTour === true
+      : existing.home_from_tour === true);
+  const tourFlights = normalizeTourFlights(
+    sentKey('tourFlights') ? body.tourFlights : (existing.tour_flights ?? []),
+    { tourIds: picked, homeFromTour },
+  );
+
   await sql`
     UPDATE registrations
        SET arrival_flight = ${plan.arrival ? JSON.stringify(plan.arrival) : null},
@@ -1487,6 +1514,8 @@ async function applyTravel(programId, registrationId, body) {
            hotel_nights_after = ${plan.nightsAfter},
            hotel_before_self = ${plan.beforeSelf},
            hotel_after_self = ${plan.afterSelf},
+           tour_flights = ${JSON.stringify(tourFlights)},
+           home_from_tour = ${homeFromTour},
            updated_at = NOW()
      WHERE id = ${registrationId}
   `;
@@ -1502,6 +1531,8 @@ async function applyTravel(programId, registrationId, body) {
     hotel_before_self: plan.beforeSelf,
     hotel_after_self: plan.afterSelf,
     hotel_dropped: plan.hotelDropped,
+    tour_flights: tourFlights,
+    home_from_tour: homeFromTour,
     total_cost: total,
   };
 }
@@ -1785,9 +1816,10 @@ router.patch(
         JOIN programs p ON p.id = r.program_id
         WHERE r.id = ${req.params.registrationId}
           AND r.program_id = ${req.params.id}
-          AND p.leader_id = ${req.user.leaderId}
       `;
-      if (!target) return res.status(403).json({ error: '권한 없음' });
+      // 권한은 위의 requireProgramAdmin·requireScope 가 이미 봤다. 여기서
+      // leader_id 를 또 보면 장부를 맡은 공동 관리자가 늘 막힌다.
+      if (!target) return res.status(404).json({ error: '등록을 찾을 수 없습니다' });
 
       await sql`
         UPDATE registrations SET
@@ -1820,12 +1852,8 @@ router.get(
   requireScope('medical'),
   async (req, res) => {
     try {
-      const [program] = await sql`
-        SELECT id FROM programs
-        WHERE id = ${req.params.id} AND leader_id = ${req.user.leaderId}
-      `;
-      if (!program) return res.status(403).json({ error: '권한 없음' });
-
+      // 권한은 requireProgramAdmin·requireScope('medical') 가 본다. 예전에는
+      // 여기서 leader_id 를 또 봐서 의료를 맡은 공동 관리자도 막혔다.
       const [row] = await sql`
         SELECT id, real_name, medical_conditions
         FROM registrations
@@ -2244,6 +2272,52 @@ router.get('/:id/option-signups', requireAuth, async (req, res) => {
     res.status(500).json({ error: '서버 오류' });
   }
 });
+
+// GET /programs/:id/tour-flights — 투어 때 오가는 비행기, 날짜·편별로 (081)
+//
+// 담당자의 "공항 이동 일정" 화면. 투어 날 아침 공항 배차와 돌아오는 날
+// 밤 픽업을 편 단위로 잡으려면, 누가 어느 편인지가 한눈에 보여야 한다.
+// 묶는 규칙과 "아직 안 적은 사람" 의 기준은 services/tour_flights.js 에 있다.
+router.get(
+  '/:id/tour-flights',
+  requireAuth,
+  requireProgramAdmin,
+  requireScope('transport', 'registration'),
+  async (req, res) => {
+    const programId = req.params.id;
+    try {
+      const tours = await sql`
+        SELECT id, name, name_i18n, start_date, end_date
+          FROM program_options
+         WHERE program_id = ${programId} AND is_active = true
+         ORDER BY start_date NULLS LAST, name
+      `;
+      const rows = await sql`
+        SELECT r.id AS registration_id,
+               display_name(r.bible_name, r.real_name) AS name,
+               r.selected_options, r.tour_flights, r.home_from_tour,
+               r.departure_flight,
+               COALESCE((
+                 SELECT json_agg(json_build_object('tour_ids', c.tour_ids))
+                   FROM companions c
+                  WHERE c.registration_id = r.id AND c.registers_separately = false
+               ), '[]'::json) AS companions
+          FROM registrations r
+         WHERE r.program_id = ${programId}
+           AND counts_as_participant(r.real_name, r.submitted, r.cancelled_at)
+           AND EXISTS (
+             SELECT 1 FROM program_options o
+              WHERE o.program_id = ${programId} AND o.is_active = true
+                AND o.id = ANY(r.selected_options))
+         ORDER BY r.real_name
+      `;
+      res.json({ tours, ...tourMovements(rows) });
+    } catch (err) {
+      console.error('투어 항공편 조회 오류:', err);
+      res.status(500).json({ error: '서버 오류' });
+    }
+  },
+);
 
 // GET /programs/:id/tour-signups - 투어별 신청 상황 (담당자 전용)
 //

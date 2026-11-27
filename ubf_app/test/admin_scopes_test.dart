@@ -44,4 +44,10 @@ void main() {
   test('전부면 무엇이든 본다', () {
     expect(canSee(null, 'medical'), isTrue);
   });
+
+  test('설정은 전부 맡은 사람만 — 하나하나 다 골라 받아도 전부다', () {
+    expect(seesEverything(null), isTrue);
+    expect(seesEverything(adminScopes.map((s) => s.key).toSet()), isTrue);
+    expect(seesEverything({'ledger', 'rooms'}), isFalse);
+  });
 }

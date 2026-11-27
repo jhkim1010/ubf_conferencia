@@ -22,10 +22,21 @@ export const SCOPES = [
 
 /// 이 사람이 이 수양회에서 맡은 분야.
 /// null = 전부 · false = 권한 없음 · 배열 = 그 분야만.
+///
+/// requireScope(EVERY_SCOPE) 는 **전부 맡은 사람만** 통과시킨다 — 수양회
+/// 설정(참가비·숙박·날짜·표어)처럼 여러 분야에 한꺼번에 걸친 것이다.
+/// 만든 사람과 분야를 좁히지 않은 공동 관리자가 여기에 든다.
+export const EVERY_SCOPE = Symbol('every-scope');
+
 export function requireScope(...needed) {
   return (req, res, next) => {
     const mine = req.adminScopes;
     if (mine === null || mine === undefined) return next(); // 전부
+    if (needed.includes(EVERY_SCOPE)) {
+      // 분야를 하나하나 다 골라 준 사람도 "전부" 다.
+      if (SCOPES.every((s) => mine.includes(s))) return next();
+      return res.status(403).json({ error: '이 분야는 맡지 않으셨습니다' });
+    }
     if (needed.some((n) => mine.includes(n))) return next();
     return res.status(403).json({ error: '이 분야는 맡지 않으셨습니다' });
   };

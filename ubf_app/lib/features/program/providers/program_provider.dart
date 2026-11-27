@@ -31,6 +31,12 @@ final programTourSignupsProvider = FutureProvider.autoDispose
       (_, programId) => ApiClient.getTourSignups(programId),
     );
 
+// 투어 때 오가는 비행기, 날짜·편별(081). 담당자의 "투어 이동 일정" 화면.
+final programTourFlightsProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>?, String>(
+      (_, programId) => ApiClient.getTourFlights(programId),
+    );
+
 /// 투어별 신청자 — 참가자가 보는 쪽(062).
 ///
 /// 투어를 고를 때만 필요하므로 프로그램 본문에 얹지 않고 따로 부른다.

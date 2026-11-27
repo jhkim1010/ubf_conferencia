@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { SCOPES, requireScope } from '../src/services/admin_scopes.js';
+import { SCOPES, EVERY_SCOPE, requireScope } from '../src/services/admin_scopes.js';
 
 // 공동 관리자가 맡은 분야 (059)
 //
@@ -92,4 +92,13 @@ test('여럿 중 하나만 맡아도 통과', () => {
 test('막을 때는 무엇이 막혔는지 말한다', () => {
   const { denied } = run(['rooms'], ['ledger']);
   assert.match(denied.error, /맡지 않으셨습니다/);
+});
+
+test('EVERY_SCOPE 는 전부 맡은 사람만 통과시킨다 — 수양회 설정', () => {
+  assert.equal(run(null, [EVERY_SCOPE]).allowed, true);
+  assert.equal(run(undefined, [EVERY_SCOPE]).allowed, true);
+  // 하나하나 다 골라 준 사람도 전부다.
+  assert.equal(run([...SCOPES], [EVERY_SCOPE]).allowed, true);
+  assert.equal(run(SCOPES.slice(1), [EVERY_SCOPE]).allowed, false);
+  assert.equal(run(['ledger'], [EVERY_SCOPE]).allowed, false);
 });
